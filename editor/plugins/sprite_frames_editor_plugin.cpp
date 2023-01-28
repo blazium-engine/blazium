@@ -1965,6 +1965,25 @@ SpriteFramesEditor::SpriteFramesEditor() {
 	delete_anim->set_disabled(true);
 	delete_anim->connect(SceneStringName(pressed), callable_mp(this, &SpriteFramesEditor::_animation_remove));
 
+	hbc_animlist->add_child(memnew(VSeparator));
+
+	anim_speed = memnew(SpinBox);
+	anim_speed->set_suffix(TTR("FPS"));
+	anim_speed->set_min(0);
+	anim_speed->set_max(120);
+	anim_speed->set_step(0.01);
+	anim_speed->set_custom_arrow_step(1);
+	anim_speed->set_tooltip_text(TTR("Animation Speed"));
+	anim_speed->connect("value_changed", callable_mp(this, &SpriteFramesEditor::_animation_speed_changed));
+	hbc_animlist->add_child(anim_speed);
+
+	anim_loop = memnew(Button);
+	anim_loop->set_toggle_mode(true);
+	anim_loop->set_flat(true);
+	anim_loop->set_tooltip_text(TTR("Animation Looping"));
+	anim_loop->connect("pressed", callable_mp(this, &SpriteFramesEditor::_animation_loop_changed));
+	hbc_animlist->add_child(anim_loop);
+
 	autoplay_container = memnew(HBoxContainer);
 	hbc_animlist->add_child(autoplay_container);
 

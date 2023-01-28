@@ -33,6 +33,7 @@
 
 #include "editor/plugins/editor_plugin.h"
 #include "scene/gui/split_container.h"
+#include "scene/resources/image_texture.h"
 
 class AcceptDialog;
 class Button;
@@ -100,7 +101,7 @@ class SpriteFramesEditor : public HSplitContainer {
 	Ref<Texture2D> autoplay_icon;
 	Ref<Texture2D> stop_icon;
 	Ref<Texture2D> pause_icon;
-	Ref<Texture2D> empty_icon;
+	Ref<Texture2D> empty_icon = memnew(ImageTexture);
 
 	HBoxContainer *playback_container = nullptr;
 	Button *stop = nullptr;
