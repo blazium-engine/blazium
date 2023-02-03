@@ -375,6 +375,33 @@ Variant ProjectSettings::get_setting_with_override(const StringName &p_name) con
 		WARN_PRINT("Property not found: " + String(name));
 		return Variant();
 	}
+
+	bool getenv_enabled = true;
+#ifndef DEBUG_ENABLED
+	if (props.has("debug/settings/environment_variables/enable_release")) {
+		getenv_enabled = props["debug/settings/environment_variables/enable_release"].variant;
+	} else {
+		getenv_enabled = false;
+	}
+#endif
+	if (getenv_enabled) {
+		String env_var = String(name).replace("/", "_").to_upper();
+		String env_val = OS::get_singleton()->get_environment(env_var);
+
+		if (!env_val.is_empty()) {
+			// Work around ThreadSanitizer lock order complaint
+			// when using print_line()
+			String msg = String(p_name) + " set to " + env_val;
+			OS::get_singleton()->print("%s\n", msg.utf8().get_data());
+
+			if (env_val.is_valid_int()) {
+				// Allow "0" => 0 => false
+				return env_val.to_int();
+			}
+			return env_val;
+		}
+	}
+
 	return props[name].variant;
 }
 
