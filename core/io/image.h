@@ -144,6 +144,11 @@ public:
 		ASTC_FORMAT_8x8,
 	};
 
+	enum PNGFlags {
+		PNG_FLAG_NOT_SRGB = 1 << 0,
+		PNG_FLAG_FAST = 1 << 1,
+	};
+
 	static ImageMemLoadFunc _png_mem_loader_func;
 	static ImageMemLoadFunc _png_mem_unpacker_func;
 	static ImageMemLoadFunc _jpg_mem_loader_func;
@@ -188,6 +193,7 @@ private:
 	int width = 0;
 	int height = 0;
 	bool mipmaps = false;
+	BitField<PNGFlags> png_flags = PNG_FLAG_FAST;
 
 	void _copy_internals_from(const Image &p_image) {
 		format = p_image.format;
@@ -195,6 +201,7 @@ private:
 		height = p_image.height;
 		mipmaps = p_image.mipmaps;
 		data = p_image.data;
+		png_flags = p_image.png_flags;
 	}
 
 	_FORCE_INLINE_ void _get_mipmap_offset_and_size(int p_mipmap, int64_t &r_offset, int &r_width, int &r_height) const; //get where the mipmap begins in data
@@ -313,6 +320,8 @@ public:
 
 	Error load(const String &p_path);
 	static Ref<Image> load_from_file(const String &p_path);
+	void set_png_flags(BitField<PNGFlags> p_flags);
+	BitField<PNGFlags> get_png_flags() const;
 	Error save_png(const String &p_path) const;
 	Error save_jpg(const String &p_path, float p_quality = 0.75) const;
 	Vector<uint8_t> save_png_to_buffer() const;
@@ -448,6 +457,7 @@ public:
 		height = p_image->height;
 		mipmaps = p_image->mipmaps;
 		data = p_image->data;
+		png_flags = p_image->png_flags;
 	}
 
 	Dictionary compute_image_metrics(const Ref<Image> p_compared_image, bool p_luma_metric = true);
@@ -461,5 +471,6 @@ VARIANT_ENUM_CAST(Image::UsedChannels)
 VARIANT_ENUM_CAST(Image::AlphaMode)
 VARIANT_ENUM_CAST(Image::RoughnessChannel)
 VARIANT_ENUM_CAST(Image::ASTCFormat)
+VARIANT_BITFIELD_CAST(Image::PNGFlags)
 
 #endif // IMAGE_H
