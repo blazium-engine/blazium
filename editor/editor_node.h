@@ -82,7 +82,6 @@ class EditorLog;
 class EditorMainScreen;
 class EditorNativeShaderSourceVisualizer;
 class EditorPluginList;
-class EditorQuickOpen;
 class EditorHScrollBox;
 class EditorResourcePreview;
 class EditorResourceConversionPlugin;
@@ -92,6 +91,7 @@ class EditorSelectionHistory;
 class EditorSettingsDialog;
 class EditorTitleBar;
 class ExportTemplateManager;
+class EditorQuickOpenDialog;
 class FBXImporterManager;
 class FileSystemDock;
 class HistoryDock;
@@ -259,13 +259,13 @@ private:
 	EditorSelectionHistory editor_history;
 
 	EditorCommandPalette *command_palette = nullptr;
+	EditorQuickOpenDialog *quick_open_dialog = nullptr;
 	EditorExport *editor_export = nullptr;
 	EditorLog *log = nullptr;
 	EditorNativeShaderSourceVisualizer *native_shader_source_visualizer = nullptr;
 	EditorPluginList *editor_plugins_force_input_forwarding = nullptr;
 	EditorPluginList *editor_plugins_force_over = nullptr;
 	EditorPluginList *editor_plugins_over = nullptr;
-	EditorQuickOpen *quick_open = nullptr;
 	EditorResourcePreview *resource_preview = nullptr;
 	EditorSelection *editor_selection = nullptr;
 	EditorSettingsDialog *editor_settings_dialog = nullptr;
@@ -576,7 +576,7 @@ private:
 	void _inherit_request(String p_file);
 	void _instantiate_request(const Vector<String> &p_files);
 
-	void _quick_opened();
+	void _quick_opened(const String &p_file_path);
 	void _open_command_palette();
 
 	void _project_run_started();
@@ -917,6 +917,8 @@ public:
 
 	Dictionary drag_resource(const Ref<Resource> &p_res, Control *p_from);
 	Dictionary drag_files_and_dirs(const Vector<String> &p_paths, Control *p_from);
+
+	EditorQuickOpenDialog *get_quick_open_dialog() { return quick_open_dialog; }
 
 	void add_tool_menu_item(const String &p_name, const Callable &p_callback);
 	void add_tool_submenu_item(const String &p_name, PopupMenu *p_submenu);
