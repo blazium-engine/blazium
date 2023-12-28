@@ -786,8 +786,7 @@ Error Node::_rpc_bind(const Variant **p_args, int p_argcount, Callable::CallErro
 		return ERR_INVALID_PARAMETER;
 	}
 
-	Variant::Type type = p_args[0]->get_type();
-	if (type != Variant::STRING_NAME && type != Variant::STRING) {
+	if (!p_args[0]->is_string()) {
 		r_error.error = Callable::CallError::CALL_ERROR_INVALID_ARGUMENT;
 		r_error.argument = 0;
 		r_error.expected = Variant::STRING_NAME;
@@ -815,8 +814,7 @@ Error Node::_rpc_id_bind(const Variant **p_args, int p_argcount, Callable::CallE
 		return ERR_INVALID_PARAMETER;
 	}
 
-	Variant::Type type = p_args[1]->get_type();
-	if (type != Variant::STRING_NAME && type != Variant::STRING) {
+	if (!p_args[1]->is_string()) {
 		r_error.error = Callable::CallError::CALL_ERROR_INVALID_ARGUMENT;
 		r_error.argument = 1;
 		r_error.expected = Variant::STRING_NAME;
@@ -3555,7 +3553,7 @@ Variant Node::_call_deferred_thread_group_bind(const Variant **p_args, int p_arg
 		return Variant();
 	}
 
-	if (p_args[0]->get_type() != Variant::STRING_NAME && p_args[0]->get_type() != Variant::STRING) {
+	if (!p_args[0]->is_string()) {
 		r_error.error = Callable::CallError::CALL_ERROR_INVALID_ARGUMENT;
 		r_error.argument = 0;
 		r_error.expected = Variant::STRING_NAME;
@@ -3578,7 +3576,7 @@ Variant Node::_call_thread_safe_bind(const Variant **p_args, int p_argcount, Cal
 		return Variant();
 	}
 
-	if (p_args[0]->get_type() != Variant::STRING_NAME && p_args[0]->get_type() != Variant::STRING) {
+	if (!p_args[0]->is_string()) {
 		r_error.error = Callable::CallError::CALL_ERROR_INVALID_ARGUMENT;
 		r_error.argument = 0;
 		r_error.expected = Variant::STRING_NAME;

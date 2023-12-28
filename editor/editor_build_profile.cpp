@@ -653,7 +653,7 @@ void EditorBuildProfileManager::_class_list_item_selected() {
 	}
 
 	Variant md = item->get_metadata(0);
-	if (md.get_type() == Variant::STRING || md.get_type() == Variant::STRING_NAME) {
+	if (md.is_string()) {
 		description_bit->parse_symbol("class|" + md.operator String() + "|");
 	} else if (md.get_type() == Variant::INT) {
 		String build_option_description = EditorBuildProfile::get_build_option_description(EditorBuildProfile::BuildOption((int)md));
@@ -674,7 +674,7 @@ void EditorBuildProfileManager::_class_list_item_edited() {
 	bool checked = item->is_checked(0);
 
 	Variant md = item->get_metadata(0);
-	if (md.get_type() == Variant::STRING || md.get_type() == Variant::STRING_NAME) {
+	if (md.is_string()) {
 		String class_selected = md;
 		edited->set_disable_class(class_selected, !checked);
 		_update_edited_profile();
@@ -695,7 +695,7 @@ void EditorBuildProfileManager::_class_list_item_collapsed(Object *p_item) {
 	}
 
 	Variant md = item->get_metadata(0);
-	if (md.get_type() != Variant::STRING && md.get_type() != Variant::STRING_NAME) {
+	if (!md.is_string()) {
 		return;
 	}
 
@@ -710,7 +710,7 @@ void EditorBuildProfileManager::_update_edited_profile() {
 
 	if (class_list->get_selected()) {
 		Variant md = class_list->get_selected()->get_metadata(0);
-		if (md.get_type() == Variant::STRING || md.get_type() == Variant::STRING_NAME) {
+		if (md.is_string()) {
 			class_selected = md;
 		} else if (md.get_type() == Variant::INT) {
 			build_option_selected = md;

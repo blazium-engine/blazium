@@ -967,7 +967,7 @@ bool LineEdit::can_drop_data(const Point2 &p_point, const Variant &p_data) const
 		return drop_override;
 	}
 
-	return is_editable() && p_data.get_type() == Variant::STRING;
+	return is_editable() && p_data.is_string();
 }
 
 void LineEdit::drop_data(const Point2 &p_point, const Variant &p_data) {

@@ -84,7 +84,7 @@ void GDScriptEditorTranslationParserPlugin::get_comments(Vector<String> *r_ids_c
 
 bool GDScriptEditorTranslationParserPlugin::_is_constant_string(const GDScriptParser::ExpressionNode *p_expression) {
 	ERR_FAIL_NULL_V(p_expression, false);
-	return p_expression->is_constant && (p_expression->reduced_value.get_type() == Variant::STRING || p_expression->reduced_value.get_type() == Variant::STRING_NAME);
+	return p_expression->is_constant && p_expression->reduced_value.is_string();
 }
 
 String GDScriptEditorTranslationParserPlugin::_parse_comment(int p_line, bool &r_skip) const {
