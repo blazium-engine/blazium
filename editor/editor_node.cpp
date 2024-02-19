@@ -4880,7 +4880,6 @@ String EditorNode::_get_system_info() const {
 		driver_name = "Vulkan";
 	} else if (driver_name == "d3d12") {
 		driver_name = "Direct3D 12";
-#if defined(GLES3_ENABLED)
 	} else if (driver_name == "opengl3_angle") {
 		driver_name = "OpenGL ES 3/ANGLE";
 	} else if (driver_name == "opengl3_es") {
@@ -4891,7 +4890,8 @@ String EditorNode::_get_system_info() const {
 		} else {
 			driver_name = "OpenGL ES 3";
 		}
-#endif
+	} else if (driver_name == "metal") {
+		driver_name = "Metal";
 	}
 
 	// Join info.
