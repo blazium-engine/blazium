@@ -39,6 +39,7 @@
 
 class ScrollContainer;
 class Timer;
+class PanelContainer;
 
 class PopupMenu : public Popup {
 	GDCLASS(PopupMenu, Popup);
@@ -97,6 +98,9 @@ class PopupMenu : public Popup {
 		Item(bool p_dummy) {}
 	};
 
+	mutable Rect2i pre_popup_rect;
+	void _update_shadow_offsets() const;
+
 	static inline PropertyListHelper base_property_helper;
 	PropertyListHelper property_helper;
 
@@ -152,6 +156,7 @@ class PopupMenu : public Popup {
 	uint64_t search_time_msec = 0;
 	String search_string = "";
 
+	PanelContainer *panel = nullptr;
 	ScrollContainer *scroll_container = nullptr;
 	Control *control = nullptr;
 
@@ -214,6 +219,8 @@ class PopupMenu : public Popup {
 	int _get_item_checkable_type(int p_index) const;
 
 protected:
+	virtual Rect2i _popup_adjust_rect() const override;
+
 	virtual void add_child_notify(Node *p_child) override;
 	virtual void remove_child_notify(Node *p_child) override;
 	virtual void _input_from_window(const Ref<InputEvent> &p_event) override;
