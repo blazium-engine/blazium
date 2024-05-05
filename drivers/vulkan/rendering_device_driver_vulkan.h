@@ -128,6 +128,12 @@ class RenderingDeviceDriverVulkan : public RenderingDeviceDriver {
 	ShaderCapabilities shader_capabilities;
 	StorageBufferCapabilities storage_buffer_capabilities;
 	bool pipeline_cache_control_support = false;
+
+#if defined(SWAPPY_FRAME_PACING_ENABLED)
+	// Swappy frame pacer for Android.
+	bool swappy_frame_pacer_enable = false;
+	uint8_t swappy_mode = 2; // See default value for display/window/frame_pacing/android/swappy_mode.
+#endif
 	DeviceFunctions device_functions;
 
 	void _register_requested_device_extension(const CharString &p_extension_name, bool p_required);
@@ -332,9 +338,13 @@ private:
 		LocalVector<uint32_t> command_queues_acquired_semaphores;
 		RenderPassID render_pass;
 		uint32_t image_index = 0;
+#ifdef ANDROID_ENABLED
+		uint64_t refresh_duration = 0;
+#endif
 	};
 
 	void _swap_chain_release(SwapChain *p_swap_chain);
+	VkExtent2D native_display_size;
 
 public:
 	virtual SwapChainID swap_chain_create(RenderingContextDriver::SurfaceID p_surface) override final;
@@ -342,6 +352,7 @@ public:
 	virtual FramebufferID swap_chain_acquire_framebuffer(CommandQueueID p_cmd_queue, SwapChainID p_swap_chain, bool &r_resize_required) override final;
 	virtual RenderPassID swap_chain_get_render_pass(SwapChainID p_swap_chain) override final;
 	virtual DataFormat swap_chain_get_format(SwapChainID p_swap_chain) override final;
+	virtual void swap_chain_set_max_fps(SwapChainID p_swap_chain, int p_max_fps) override final;
 	virtual void swap_chain_free(SwapChainID p_swap_chain) override final;
 
 	/*********************/
