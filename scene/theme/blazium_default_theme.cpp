@@ -405,6 +405,7 @@ void update_theme_icons(Ref<Theme> &p_theme, const Color &p_font_color, const Co
 	p_theme->set_icon("folded_arrow", "ColorPicker", icons["arrow_right"]);
 	p_theme->set_icon("folded_arrow_mirrored", "ColorPicker", icons["arrow_left"]);
 	p_theme->set_icon("expanded_arrow", "ColorPicker", icons["arrow_down"]);
+	p_theme->set_icon("menu_option", "ColorPicker", icons["tabs_menu_hl"]);
 	p_theme->set_icon("screen_picker", "ColorPicker", icons["color_picker_pipette"]);
 	p_theme->set_icon("shape_circle", "ColorPicker", icons["picker_shape_circle"]);
 	p_theme->set_icon("shape_rect", "ColorPicker", icons["picker_shape_rectangle"]);
@@ -450,6 +451,9 @@ void update_theme_icons(Ref<Theme> &p_theme, const Color &p_font_color, const Co
 	p_theme->set_icon("folder", "FileDialog", icons["folder"]);
 	p_theme->set_icon("file", "FileDialog", icons["file"]);
 	p_theme->set_icon("create_folder", "FileDialog", icons["folder_create"]);
+	p_theme->set_icon("load", "FileDialog", icons["load"]);
+	p_theme->set_icon("save", "FileDialog", icons["save"]);
+	p_theme->set_icon("clear", "FileDialog", icons["clear"]);
 
 	p_theme->set_icon("checked", "PopupMenu", icons["checked"]);
 	p_theme->set_icon("checked_disabled", "PopupMenu", icons["checked_disabled"]);

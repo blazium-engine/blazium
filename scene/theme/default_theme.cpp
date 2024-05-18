@@ -699,6 +699,9 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 
 	// File Dialog
 
+	theme->set_icon("load", "FileDialog", icons["load"]);
+	theme->set_icon("save", "FileDialog", icons["save"]);
+	theme->set_icon("clear", "FileDialog", icons["clear"]);
 	theme->set_icon("parent_folder", "FileDialog", icons["folder_up"]);
 	theme->set_icon("back_folder", "FileDialog", icons["arrow_left"]);
 	theme->set_icon("forward_folder", "FileDialog", icons["arrow_right"]);
@@ -1061,6 +1064,7 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_constant("center_slider_grabbers", "ColorPicker", 1);
 	theme->set_constant("colorize_sliders", "ColorPicker", 1);
 
+	theme->set_icon("menu_option", "ColorPicker", icons["tabs_menu_hl"]);
 	theme->set_icon("expanded_arrow", "ColorPicker", icons["arrow_down"]);
 	theme->set_icon("folded_arrow", "ColorPicker", icons["arrow_right"]);
 	theme->set_icon("folded_arrow_mirrored", "ColorPicker", icons["arrow_left"]);

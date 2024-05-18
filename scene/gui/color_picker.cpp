@@ -33,6 +33,7 @@
 #include "scene/gui/aspect_ratio_container.h"
 #include "scene/gui/color_button.h"
 #include "scene/gui/color_mode.h"
+#include "scene/gui/file_dialog.h"
 #include "scene/gui/foldable_container.h"
 #include "scene/gui/grid_container.h"
 #include "scene/gui/label.h"
@@ -47,6 +48,7 @@
 #include "scene/gui/spin_box.h"
 #include "scene/gui/texture_rect.h"
 #include "scene/resources/atlas_texture.h"
+#include "scene/resources/color_palette.h"
 #include "scene/resources/gradient_texture.h"
 #include "scene/resources/image_texture.h"
 #include "scene/resources/style_box_flat.h"
@@ -102,6 +104,7 @@ void ColorPicker::_notification(int p_what) {
 			btn_pick->set_button_icon(theme_cache.screen_picker);
 
 			add_preset_button->set_button_icon(theme_cache.add_preset);
+			menu_btn->set_button_icon(theme_cache.menu_option);
 
 			preset_foldable->begin_bulk_theme_override();
 			preset_foldable->add_theme_icon_override("folded_arrow", theme_cache.folded_arrow);
@@ -592,6 +595,14 @@ void ColorPicker::set_editor_settings(Object *p_editor_settings) {
 	_update_presets();
 	_update_recent_presets();
 }
+
+void ColorPicker::set_quick_open_callback(const Callable &p_file_selected) {
+	quick_open_callback = p_file_selected;
+}
+
+void ColorPicker::set_palette_saved_callback(const Callable &p_palette_saved) {
+	palette_saved_callback = p_palette_saved;
+}
 #endif // TOOLS_ENABLED
 
 HSlider *ColorPicker::get_slider(int p_idx) {
@@ -732,14 +743,32 @@ void ColorPicker::_update_color(bool p_update_sliders) {
 #ifdef TOOLS_ENABLED
 void ColorPicker::_update_presets() {
 	if (editor_settings) {
-		// Rebuild swatch color buttons, keeping the add-preset button in the first position.
-		for (int i = 0; i < preset_hbc->get_child_count(); i++) {
-			memdelete(preset_hbc->get_child(0));
-		}
-		for (const Color &preset : preset_cache) {
-			_add_preset_button(preset);
+		String cached_name = editor_settings->call(SNAME("get_project_metadata"), "color_picker", "palette_name", String());
+		palette_path = editor_settings->call(SNAME("get_project_metadata"), "color_picker", "palette_path", String());
+		bool palette_edited = editor_settings->call(SNAME("get_project_metadata"), "color_picker", "palette_edited", false);
+		if (!cached_name.is_empty()) {
+			palette_name->set_text(cached_name);
+			if (add_preset_button->is_pressed() && !presets.is_empty()) {
+				palette_name->show();
+			}
+
+			if (palette_edited) {
+				palette_name->set_text(vformat("%s*", palette_name->get_text().replace("*", "")));
+				palette_name->set_tooltip_text(ETR("The changes to this palette have not been saved to a file."));
+			}
 		}
 	}
+
+	for (int i = 0; i < preset_hbc->get_child_count(); i++) {
+		memdelete(preset_hbc->get_child(0));
+	}
+
+	presets = preset_cache;
+	for (const Color &preset : preset_cache) {
+		_add_preset_button(preset);
+	}
+
+	_notification(NOTIFICATION_VISIBILITY_CHANGED);
 }
 
 void ColorPicker::_update_recent_presets() {
@@ -851,6 +880,106 @@ void ColorPicker::_add_recent_preset_button(const Color &p_color) {
 	btn_preset_new->connect(SceneStringName(toggled), callable_mp(this, &ColorPicker::_recent_preset_pressed).bind(btn_preset_new));
 }
 
+void ColorPicker::_load_palette() {
+	List<String> extensions;
+	ResourceLoader::get_recognized_extensions_for_type("ColorPalette", &extensions);
+
+	file_dialog->set_title(RTR("Load Color Palette"));
+	file_dialog->clear_filters();
+	for (const String &K : extensions) {
+		file_dialog->add_filter("*." + K);
+	}
+
+	file_dialog->set_file_mode(FileDialog::FILE_MODE_OPEN_FILE);
+	file_dialog->set_current_file("");
+	file_dialog->popup_centered_ratio();
+}
+
+void ColorPicker::_save_palette(bool p_is_save_as) {
+	if (!p_is_save_as && !palette_path.is_empty()) {
+		file_dialog->set_file_mode(FileDialog::FILE_MODE_SAVE_FILE);
+		_palette_file_selected(palette_path);
+		return;
+	} else {
+		List<String> extensions;
+		ResourceLoader::get_recognized_extensions_for_type("ColorPalette", &extensions);
+
+		file_dialog->set_title(RTR("Save Color Palette"));
+		file_dialog->clear_filters();
+		for (const String &K : extensions) {
+			file_dialog->add_filter("*." + K);
+		}
+
+		file_dialog->set_file_mode(FileDialog::FILE_MODE_SAVE_FILE);
+		file_dialog->set_current_file("new_palette.tres");
+		file_dialog->popup_centered_ratio();
+	}
+}
+
+void ColorPicker::_quick_open_palette_file_selected(const String &p_path) {
+	if (!file_dialog) {
+		file_dialog = memnew(FileDialog);
+		add_child(file_dialog, false, INTERNAL_MODE_FRONT);
+		file_dialog->force_parent_owned();
+		file_dialog->connect("file_selected", callable_mp(this, &ColorPicker::_palette_file_selected));
+		file_dialog->set_access(FileDialog::ACCESS_FILESYSTEM);
+		file_dialog->set_current_dir(Engine::get_singleton()->is_editor_hint() ? "res://" : "user://");
+	}
+	file_dialog->set_file_mode(FileDialog::FILE_MODE_OPEN_FILE);
+	_palette_file_selected(p_path);
+}
+
+void ColorPicker::_palette_file_selected(const String &p_path) {
+	switch (file_dialog->get_file_mode()) {
+		case FileDialog::FileMode::FILE_MODE_OPEN_FILE: {
+			Ref<ColorPalette> palette = ResourceLoader::load(p_path, "", ResourceFormatLoader::CACHE_MODE_IGNORE);
+			ERR_FAIL_COND_MSG(palette.is_null(), vformat("Cannot open color palette file for reading at: %s", p_path));
+			preset_cache.clear();
+			presets.clear();
+
+			PackedColorArray saved_presets = palette->get_colors();
+			for (const Color &saved_preset : saved_presets) {
+				preset_cache.push_back(saved_preset);
+				presets.push_back(saved_preset);
+			}
+
+#ifdef TOOLS_ENABLED
+			if (editor_settings) {
+				const StringName set_project_metadata = SNAME("set_project_metadata");
+				editor_settings->call(set_project_metadata, "color_picker", "presets", saved_presets);
+				editor_settings->call(set_project_metadata, "color_picker", "palette_edited", false);
+			}
+#endif
+		} break;
+		case FileDialog::FileMode::FILE_MODE_SAVE_FILE: {
+			ColorPalette *palette = memnew(ColorPalette);
+			palette->set_colors(get_presets());
+			Error error = ResourceSaver::save(palette, p_path);
+			ERR_FAIL_COND_MSG(error != Error::OK, vformat("Cannot open color palette file for writing at: %s", p_path));
+#ifdef TOOLS_ENABLED
+			if (palette_saved_callback.is_valid()) {
+				palette_saved_callback.call_deferred(p_path);
+			}
+#endif // TOOLS_ENABLED
+		} break;
+		default:
+			break;
+	}
+
+	palette_name->set_text(p_path.get_file().get_basename());
+	palette_name->set_tooltip_text("");
+	palette_name->show();
+	palette_path = p_path;
+#ifdef TOOLS_ENABLED
+	if (editor_settings) {
+		editor_settings->call(SNAME("set_project_metadata"), "color_picker", "palette_name", palette_name->get_text());
+		editor_settings->call(SNAME("set_project_metadata"), "color_picker", "palette_path", palette_path);
+		editor_settings->call(SNAME("set_project_metadata"), "color_picker", "palette_edited", false);
+	}
+	_update_presets();
+#endif // TOOLS_ENABLED
+}
+
 Variant ColorPicker::_get_drag_data_fw(const Point2 &p_point, Control *p_from_control) {
 	ColorButton *dragged_preset_button = Object::cast_to<ColorButton>(p_from_control);
 
@@ -908,10 +1037,17 @@ void ColorPicker::add_preset(const Color &p_color) {
 		_add_preset_button(p_color);
 	}
 
+	if (!palette_name->get_text().is_empty()) {
+		palette_name->set_text(vformat("%s*", palette_name->get_text().trim_suffix("*")));
+		palette_name->set_tooltip_text(ETR("The changes to this palette have not been saved to a file."));
+	}
+
 #ifdef TOOLS_ENABLED
 	if (editor_settings) {
 		PackedColorArray arr_to_save = get_presets();
-		editor_settings->call(SNAME("set_project_metadata"), "color_picker", "presets", arr_to_save);
+		const StringName set_project_metadata = SNAME("set_project_metadata");
+		editor_settings->call(set_project_metadata, "color_picker", "presets", arr_to_save);
+		editor_settings->call(set_project_metadata, "color_picker", "palette_edited", true);
 	}
 #endif
 }
@@ -952,10 +1088,22 @@ void ColorPicker::erase_preset(const Color &p_color) {
 			}
 		}
 
+		palette_name->set_text(vformat("%s*", palette_name->get_text().replace("*", "")));
+		palette_name->set_tooltip_text(ETR("The changes to this palette have not been saved to a file."));
+		if (presets.is_empty()) {
+			palette_name->set_text("");
+			palette_path = String();
+			palette_name->hide();
+		}
+
 #ifdef TOOLS_ENABLED
 		if (editor_settings) {
 			PackedColorArray arr_to_save = get_presets();
-			editor_settings->call(SNAME("set_project_metadata"), "color_picker", "presets", arr_to_save);
+			const StringName set_project_metadata = SNAME("set_project_metadata");
+			editor_settings->call(set_project_metadata, "color_picker", "presets", arr_to_save);
+			editor_settings->call(set_project_metadata, "color_picker", "palette_edited", true);
+			editor_settings->call(set_project_metadata, "color_picker", "palette_name", palette_name->get_text());
+			editor_settings->call(set_project_metadata, "color_picker", "palette_path", palette_path);
 		}
 #endif
 	}
@@ -1604,6 +1752,105 @@ void ColorPicker::_pick_finished() {
 	set_process_internal(false);
 }
 
+void ColorPicker::_update_menu_items() {
+	if (!options_menu) {
+		options_menu = memnew(PopupMenu);
+		add_child(options_menu, false, INTERNAL_MODE_FRONT);
+		options_menu->force_parent_owned();
+		options_menu->connect("id_pressed", callable_mp(this, &ColorPicker::_options_menu_cbk));
+	}
+
+	options_menu->clear();
+	options_menu->reset_size();
+
+	if (!presets.is_empty()) {
+		options_menu->add_icon_item(get_theme_icon(SNAME("save"), SNAME("FileDialog")), RTR("Save"), static_cast<int>(MenuOption::MENU_SAVE));
+		options_menu->set_item_tooltip(-1, ETR("Save the current color palette to reuse later."));
+	}
+	if (!palette_path.is_empty()) {
+		options_menu->add_icon_item(get_theme_icon(SNAME("save"), SNAME("FileDialog")), RTR("Save As"), static_cast<int>(MenuOption::MENU_SAVE_AS));
+		options_menu->set_item_tooltip(-1, ETR("Save the current color palette as a new to reuse later."));
+	}
+	options_menu->add_icon_item(get_theme_icon(SNAME("load"), SNAME("FileDialog")), RTR("Load"), static_cast<int>(MenuOption::MENU_LOAD));
+	options_menu->set_item_tooltip(-1, ETR("Load existing color palette."));
+
+	if (Engine::get_singleton()->is_editor_hint()) {
+		options_menu->add_icon_item(get_theme_icon(SNAME("load"), SNAME("FileDialog")), RTR("Quick Load"), static_cast<int>(MenuOption::MENU_QUICKLOAD));
+		options_menu->set_item_tooltip(-1, ETR("Load existing color palette."));
+	}
+
+	if (!presets.is_empty()) {
+		options_menu->add_icon_item(get_theme_icon(SNAME("clear"), SNAME("FileDialog")), RTR("Clear"), static_cast<int>(MenuOption::MENU_CLEAR));
+		options_menu->set_item_tooltip(-1, ETR("Clear the currently loaded color palettes in the picker."));
+	}
+}
+
+void ColorPicker::_update_menu() {
+	_update_menu_items();
+	Rect2 gt = menu_btn->get_screen_rect();
+	menu_btn->reset_size();
+	int min_size = menu_btn->get_minimum_size().width;
+	Vector2 popup_pos = gt.get_end() - Vector2(min_size, 0);
+	options_menu->set_position(popup_pos);
+	options_menu->popup();
+}
+
+void ColorPicker::_options_menu_cbk(int p_which) {
+	if (!file_dialog) {
+		file_dialog = memnew(FileDialog);
+		add_child(file_dialog, false, INTERNAL_MODE_FRONT);
+		file_dialog->force_parent_owned();
+		file_dialog->connect("file_selected", callable_mp(this, &ColorPicker::_palette_file_selected));
+		file_dialog->set_access(FileDialog::ACCESS_FILESYSTEM);
+		file_dialog->set_current_dir(Engine::get_singleton()->is_editor_hint() ? "res://" : "user://");
+	}
+
+	MenuOption option = static_cast<MenuOption>(p_which);
+	switch (option) {
+		case MenuOption::MENU_SAVE:
+			_save_palette(false);
+			break;
+		case MenuOption::MENU_SAVE_AS:
+			_save_palette(true);
+			break;
+		case MenuOption::MENU_LOAD:
+			_load_palette();
+			break;
+
+#ifdef TOOLS_ENABLED
+		case MenuOption::MENU_QUICKLOAD:
+			if (quick_open_callback.is_valid()) {
+				file_dialog->set_file_mode(FileDialog::FILE_MODE_OPEN_FILE);
+				quick_open_callback.call_deferred();
+			}
+			break;
+#endif // TOOLS_ENABLED
+		case MenuOption::MENU_CLEAR: {
+			PackedColorArray colors = get_presets();
+			for (Color c : colors) {
+				erase_preset(c);
+			}
+
+			palette_name->set_text("");
+			palette_name->set_tooltip_text("");
+			palette_path = String();
+
+#ifdef TOOLS_ENABLED
+			if (editor_settings) {
+				editor_settings->call(SNAME("set_project_metadata"), "color_picker", "palette_name", palette_name->get_text());
+				editor_settings->call(SNAME("set_project_metadata"), "color_picker", "palette_path", palette_path);
+				editor_settings->call(SNAME("set_project_metadata"), "color_picker", "palette_edited", false);
+			}
+#endif // TOOLS_ENABLED
+
+		}
+
+		break;
+		default:
+			break;
+	}
+}
+
 void ColorPicker::_pick_button_pressed_legacy() {
 	if (!is_inside_tree()) {
 		return;
@@ -1899,6 +2146,7 @@ void ColorPicker::_bind_methods() {
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, ColorPicker, center_slider_grabbers);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, ColorPicker, colorize_sliders);
 
+	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, ColorPicker, menu_option);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, ColorPicker, screen_picker);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, ColorPicker, folded_arrow);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, ColorPicker, folded_arrow_mirrored);
@@ -2086,11 +2334,21 @@ ColorPicker::ColorPicker() {
 	add_preset_button->connect(SNAME("pressed"), callable_mp(this, &ColorPicker::_preset_foldable_button_pressed).bind(0));
 	preset_foldable->add_title_bar_control(add_preset_button);
 
+	VBoxContainer *preset_vb = memnew(VBoxContainer);
+	preset_vb->set_v_size_flags(SIZE_EXPAND_FILL);
+	preset_foldable->add_child(preset_vb);
+
+	palette_name = memnew(Label);
+	palette_name->hide();
+	palette_name->set_mouse_filter(MOUSE_FILTER_PASS);
+	preset_vb->add_child(palette_name);
+
 	ScrollContainer *preset_scroll = memnew(ScrollContainer);
 	preset_scroll->add_theme_constant_override("h_scroll_bar_separation", 4);
 	preset_scroll->set_follow_focus(true);
+	preset_scroll->set_v_size_flags(SIZE_EXPAND_FILL);
 	preset_scroll->set_vertical_scroll_mode(ScrollContainer::SCROLL_MODE_DISABLED);
-	preset_foldable->add_child(preset_scroll);
+	preset_vb->add_child(preset_scroll);
 
 	preset_hbc = memnew(HBoxContainer);
 	preset_hbc->set_h_size_flags(SIZE_EXPAND_FILL);
@@ -2102,6 +2360,13 @@ ColorPicker::ColorPicker() {
 
 	recent_preset_foldable = memnew(FoldableContainer);
 	recent_preset_foldable->set_text(ETR("Recent Colors"));
+
+	menu_btn = memnew(Button);
+	menu_btn->set_flat(true);
+	menu_btn->set_tooltip_text(ETR("Show all options available."));
+	menu_btn->set_focus_mode(FOCUS_NONE);
+	menu_btn->connect(SceneStringName(pressed), callable_mp(this, &ColorPicker::_update_menu));
+	preset_foldable->add_title_bar_control(menu_btn);
 
 	ScrollContainer *recent_preset_scroll = memnew(ScrollContainer);
 	recent_preset_scroll->add_theme_constant_override("h_scroll_bar_separation", 4);
