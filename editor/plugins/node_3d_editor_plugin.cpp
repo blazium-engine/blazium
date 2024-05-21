@@ -1072,20 +1072,17 @@ void Node3DEditorViewport::_select_region() {
 		found_nodes.insert(sp);
 
 		Node *node = Object::cast_to<Node>(sp);
-
-		// Selection requires that the node is the edited scene or its descendant, and has an owner.
 		if (node != edited_scene) {
-			if (!node->get_owner() || !edited_scene->is_ancestor_of(node)) {
-				continue;
-			}
 			node = edited_scene->get_deepest_editable_node(node);
-			while (node != edited_scene) {
-				Node *node_owner = node->get_owner();
-				if (node_owner == edited_scene || (node_owner != nullptr && edited_scene->is_editable_instance(node_owner))) {
-					break;
-				}
-				node = node->get_parent();
+		}
+
+		// Prevent selection of nodes not owned by the edited scene.
+		while (node && node != edited_scene->get_parent()) {
+			Node *node_owner = node->get_owner();
+			if (node_owner == edited_scene || node == edited_scene || (node_owner != nullptr && edited_scene->is_editable_instance(node_owner))) {
+				break;
 			}
+			node = node->get_parent();
 		}
 
 		// Replace the node by the group if grouped
@@ -1585,7 +1582,7 @@ void Node3DEditorViewport::_list_select(Ref<InputEventMouseButton> b) {
 			} else {
 				Node *node_owner = node->get_owner();
 				if (node == edited_scene || node_owner == edited_scene || (node_owner != nullptr && edited_scene->is_editable_instance(node_owner))) {
-					if (!selection_results.has(node)) {
+					if (selection_results.has(node)) {
 						selection_results.append(node);
 					}
 					break;
