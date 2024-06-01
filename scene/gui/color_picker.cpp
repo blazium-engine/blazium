@@ -805,7 +805,7 @@ void ColorPicker::_add_preset_button(const Color &p_color) {
 	preset_hbc->move_child(btn_preset_new, 0);
 	btn_preset_new->set_pressed_no_signal(color == p_color);
 	btn_preset_new->connect(SceneStringName(gui_input), callable_mp(this, &ColorPicker::_preset_input).bind(p_color));
-	btn_preset_new->connect("toggled", callable_mp(this, &ColorPicker::_preset_pressed).bind(btn_preset_new));
+	btn_preset_new->connect(SceneStringName(toggled), callable_mp(this, &ColorPicker::_preset_pressed).bind(btn_preset_new));
 }
 
 void ColorPicker::_add_recent_preset_button(const Color &p_color) {
@@ -821,7 +821,7 @@ void ColorPicker::_add_recent_preset_button(const Color &p_color) {
 	recent_preset_hbc->add_child(btn_preset_new);
 	recent_preset_hbc->move_child(btn_preset_new, 0);
 	btn_preset_new->set_pressed_no_signal(color == p_color);
-	btn_preset_new->connect("toggled", callable_mp(this, &ColorPicker::_recent_preset_pressed).bind(btn_preset_new));
+	btn_preset_new->connect(SceneStringName(toggled), callable_mp(this, &ColorPicker::_recent_preset_pressed).bind(btn_preset_new));
 }
 
 Variant ColorPicker::_get_drag_data_fw(const Point2 &p_point, Control *p_from_control) {

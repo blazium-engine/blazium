@@ -1025,7 +1025,7 @@ ExportTemplateManager::ExportTemplateManager() {
 
 	CheckButton *download_override_checkbox = memnew(CheckButton);
 	download_override_checkbox->set_text(TTR("Download from URL:"));
-	download_override_checkbox->connect("toggled", callable_mp(this, &ExportTemplateManager::_download_override_changed));
+	download_override_checkbox->connect(SceneStringName(toggled), callable_mp(this, &ExportTemplateManager::_download_override_changed));
 	install_file_hb->add_child(download_override_checkbox);
 
 	download_override_edit = memnew(LineEdit);
