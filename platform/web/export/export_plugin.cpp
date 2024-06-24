@@ -540,6 +540,9 @@ void EditorExportPlatformWeb::get_export_options(List<ExportOption> *r_options) 
 }
 
 bool EditorExportPlatformWeb::get_export_option_visibility(const EditorExportPreset *p_preset, const String &p_option) const {
+	if (p_option == "custom_template/debug" || p_option == "custom_template/release") {
+		return p_preset->are_advanced_options_enabled();
+	}
 	if (p_option.begins_with("blazium/web_headers") && p_option != "blazium/web_headers/enabled") {
 		return p_preset->get("blazium/web_headers/enabled");
 	}
