@@ -10,15 +10,16 @@ env:
   BLAZIUM_CPP_BRANCH: blazium-dev
 
 concurrency:
-  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-cpp-tests
+  group: ci-${{ github.actor }}-${{ github.head_ref || github.run_number }}-${{ github.ref }}-cpp-tests
   cancel-in-progress: true
 
 jobs:
   blazium-cpp-tests:
-    runs-on: "ubuntu-20.04"
-    name: "Build and test Blazium CPP"
+    runs-on: ubuntu-20.04
+    name: Build and test Blazium CPP
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -31,15 +32,15 @@ jobs:
         with:
           repository: blazium-engine/blazium-cpp
           ref: ${{ env.BLAZIUM_CPP_BRANCH }}
-          submodules: 'recursive'
-          path: 'blazium-cpp'
+          submodules: recursive
+          path: blazium-cpp
 
       # Download generated API dump
       - name: Download GDExtension interface and API dump
         uses: ./.github/actions/download-artifact
         with:
-          name: 'blazium-api-dump'
-          path: './blazium-api'
+          name: blazium-api-dump
+          path: ./blazium-api
 
       # Extract and override existing files with generated files
       - name: Extract GDExtension interface and API dump
@@ -58,11 +59,11 @@ jobs:
           cd ../..
 
   gdextension-c-compile:
-    runs-on: "ubuntu-20.04"
-    name: "Check GDExtension header with a C compiler"
+    runs-on: 'ubuntu-20.04'
+    name: 'Check GDExtension header with a C compiler'
     steps:
       - uses: actions/checkout@v4
 
-      - name: "Run C compiler on gdextension_interface.h"
+      - name: 'Run C compiler on gdextension_interface.h'
         run: |
           gcc -c core/extension/gdextension_interface.h
