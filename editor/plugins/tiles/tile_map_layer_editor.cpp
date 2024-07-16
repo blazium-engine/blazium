@@ -53,8 +53,14 @@
 #include "scene/gui/popup_menu.h"
 #include "scene/gui/separator.h"
 #include "scene/gui/spin_box.h"
+#include "scene/gui/split_container.h"
 #include "scene/gui/tab_bar.h"
 #include "scene/gui/tree.h"
+
+#include "core/input/input.h"
+#include "core/math/geometry_2d.h"
+#include "core/math/random_pcg.h"
+#include "core/os/keyboard.h"
 
 TileMapLayer *TileMapLayerSubEditorPlugin::_get_edited_layer() const {
 	return Object::cast_to<TileMapLayer>(ObjectDB::get_instance(edited_tile_map_layer_id));
