@@ -92,9 +92,6 @@ void Skeleton2DEditor::_menu_option(int p_option) {
 	}
 }
 
-void Skeleton2DEditor::_bind_methods() {
-}
-
 Skeleton2DEditor::Skeleton2DEditor() {
 	options = memnew(MenuButton);
 

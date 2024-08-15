@@ -37,9 +37,6 @@
 #include "scene/gui/box_container.h"
 #include "scene/gui/button.h"
 
-void PhysicalBone3DEditor::_bind_methods() {
-}
-
 void PhysicalBone3DEditor::_on_toggle_button_transform_joint(bool p_is_pressed) {
 	_set_move_joint();
 }
