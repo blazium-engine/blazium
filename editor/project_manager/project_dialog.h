@@ -35,6 +35,7 @@
 
 class Button;
 class ButtonGroup;
+class CheckBox;
 class CheckButton;
 class EditorFileDialog;
 class LineEdit;
@@ -90,6 +91,8 @@ private:
 	TextureRect *install_status_rect = nullptr;
 
 	OptionButton *vcs_metadata_selection = nullptr;
+
+	CheckBox *edit_check_box = nullptr;
 
 	EditorFileDialog *fdialog_project = nullptr;
 	EditorFileDialog *fdialog_install = nullptr;
