@@ -37,7 +37,7 @@
 #include "core/object/script_language.h"
 #include "core/os/os.h"
 #include "core/string/string_builder.h"
-#include "core/string/translation.h"
+#include "core/string/translation_server.h"
 #include "scene/gui/label.h"
 #include "scene/gui/popup_menu.h"
 #include "scene/gui/scroll_bar.h"
