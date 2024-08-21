@@ -6139,6 +6139,7 @@ DisplayServerWindows::DisplayServerWindows(const String &p_rendering_driver, Win
 				if (rendering_context->initialize() == OK) {
 					WARN_PRINT("Your video card drivers seem not to support Direct3D 12, switching to Vulkan.");
 					rendering_driver = "vulkan";
+					OS::get_singleton()->set_current_rendering_driver_name(rendering_driver);
 					failed = false;
 				}
 			}
@@ -6152,6 +6153,7 @@ DisplayServerWindows::DisplayServerWindows(const String &p_rendering_driver, Win
 				if (rendering_context->initialize() == OK) {
 					WARN_PRINT("Your video card drivers seem not to support Vulkan, switching to Direct3D 12.");
 					rendering_driver = "d3d12";
+					OS::get_singleton()->set_current_rendering_driver_name(rendering_driver);
 					failed = false;
 				}
 			}
@@ -6230,6 +6232,7 @@ DisplayServerWindows::DisplayServerWindows(const String &p_rendering_driver, Win
 				}
 			}
 			rendering_driver = "opengl3_angle";
+			OS::get_singleton()->set_current_rendering_driver_name(rendering_driver);
 		}
 	}
 
