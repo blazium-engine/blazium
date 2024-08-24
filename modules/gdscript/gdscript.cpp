@@ -912,7 +912,7 @@ void GDScript::get_members(HashSet<StringName> *p_members) {
 	}
 }
 
-const Variant GDScript::get_rpc_config() const {
+Variant GDScript::get_rpc_config() const {
 	return rpc_config;
 }
 
