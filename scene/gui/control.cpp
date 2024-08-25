@@ -2920,7 +2920,7 @@ bool Control::has_theme_constant(const StringName &p_name, const StringName &p_t
 
 void Control::add_theme_icon_override(const StringName &p_name, const Ref<Texture2D> &p_icon) {
 	ERR_MAIN_THREAD_GUARD;
-	ERR_FAIL_COND(!p_icon.is_valid());
+	ERR_FAIL_COND(p_icon.is_null());
 
 	if (data.theme_icon_override.has(p_name)) {
 		data.theme_icon_override[p_name]->disconnect_changed(callable_mp(this, &Control::_notify_theme_override_changed));
@@ -2933,7 +2933,7 @@ void Control::add_theme_icon_override(const StringName &p_name, const Ref<Textur
 
 void Control::add_theme_style_override(const StringName &p_name, const Ref<StyleBox> &p_style) {
 	ERR_MAIN_THREAD_GUARD;
-	ERR_FAIL_COND(!p_style.is_valid());
+	ERR_FAIL_COND(p_style.is_null());
 
 	if (data.theme_style_override.has(p_name)) {
 		data.theme_style_override[p_name]->disconnect_changed(callable_mp(this, &Control::_notify_theme_override_changed));
@@ -2946,7 +2946,7 @@ void Control::add_theme_style_override(const StringName &p_name, const Ref<Style
 
 void Control::add_theme_font_override(const StringName &p_name, const Ref<Font> &p_font) {
 	ERR_MAIN_THREAD_GUARD;
-	ERR_FAIL_COND(!p_font.is_valid());
+	ERR_FAIL_COND(p_font.is_null());
 
 	if (data.theme_font_override.has(p_name)) {
 		data.theme_font_override[p_name]->disconnect_changed(callable_mp(this, &Control::_notify_theme_override_changed));

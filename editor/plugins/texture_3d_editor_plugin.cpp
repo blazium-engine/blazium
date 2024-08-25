@@ -167,13 +167,13 @@ void Texture3DEditor::_update_gui() {
 }
 
 void Texture3DEditor::edit(Ref<Texture3D> p_texture) {
-	if (!texture.is_null()) {
+	if (texture.is_valid()) {
 		texture->disconnect_changed(callable_mp(this, &Texture3DEditor::_texture_changed));
 	}
 
 	texture = p_texture;
 
-	if (!texture.is_null()) {
+	if (texture.is_valid()) {
 		if (shader.is_null()) {
 			_make_shaders();
 		}
@@ -237,7 +237,7 @@ Texture3DEditor::Texture3DEditor() {
 }
 
 Texture3DEditor::~Texture3DEditor() {
-	if (!texture.is_null()) {
+	if (texture.is_valid()) {
 		texture->disconnect_changed(callable_mp(this, &Texture3DEditor::_texture_changed));
 	}
 }
