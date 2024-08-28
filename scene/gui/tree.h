@@ -182,6 +182,9 @@ private:
 			if (parent->first_child == this) {
 				parent->first_child = next;
 			}
+			if (parent->last_child == this) {
+				parent->last_child = prev;
+			}
 		}
 	}
 
