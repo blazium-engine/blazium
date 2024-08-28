@@ -3108,7 +3108,7 @@ RenderingDeviceDriverMetal::Result<id<MTLFunction>> RenderingDeviceDriverMetal::
 	NSArray<MTLFunctionConstant *> *constants = function.functionConstantsDictionary.allValues;
 	bool is_sorted = true;
 	for (uint32_t i = 1; i < constants.count; i++) {
-		if (constants[i - 1].index < constants[i].index) {
+		if (constants[i - 1].index > constants[i].index) {
 			is_sorted = false;
 			break;
 		}
