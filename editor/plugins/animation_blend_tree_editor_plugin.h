@@ -32,8 +32,9 @@
 #define ANIMATION_BLEND_TREE_EDITOR_PLUGIN_H
 
 #include "core/object/script_language.h"
+#include "editor/editor_inspector.h"
 #include "editor/plugins/animation_tree_editor_plugin.h"
-
+#include "scene/gui/dialogs.h"
 class AcceptDialog;
 class AnimationNodeBlendTree;
 class Button;
@@ -46,6 +47,8 @@ class ProgressBar;
 class PanelContainer;
 class Tree;
 class TreeItem;
+class EditorInspectorPluginAnimationNodeAnimation;
+class AnimationNodeAnimation;
 
 class AnimationNodeBlendTreeEditor : public AnimationTreeNodeEditorPlugin {
 	GDCLASS(AnimationNodeBlendTreeEditor, AnimationTreeNodeEditorPlugin);
@@ -146,6 +149,8 @@ class AnimationNodeBlendTreeEditor : public AnimationTreeNodeEditorPlugin {
 		MENU_LOAD_FILE_CONFIRM = 1002
 	};
 
+	Ref<EditorInspectorPluginAnimationNodeAnimation> animation_node_inspector_plugin;
+
 protected:
 	void _notification(int p_what);
 	static void _bind_methods();
@@ -164,6 +169,48 @@ public:
 	void update_graph();
 
 	AnimationNodeBlendTreeEditor();
+	~AnimationNodeBlendTreeEditor();
+};
+
+// EditorPluginAnimationNodeAnimation
+
+class EditorInspectorPluginAnimationNodeAnimation : public EditorInspectorPlugin {
+	GDCLASS(EditorInspectorPluginAnimationNodeAnimation, EditorInspectorPlugin);
+
+public:
+	virtual bool can_handle(Object *p_object) override;
+	virtual bool parse_property(Object *p_object, const Variant::Type p_type, const String &p_path, const PropertyHint p_hint, const String &p_hint_text, const BitField<PropertyUsageFlags> p_usage, const bool p_wide) override;
+};
+
+class AnimationNodeAnimationEditorDialog : public ConfirmationDialog {
+	GDCLASS(AnimationNodeAnimationEditorDialog, ConfirmationDialog);
+
+	friend class AnimationNodeAnimationEditor;
+
+	OptionButton *select_start = nullptr;
+	OptionButton *select_end = nullptr;
+
+public:
+	AnimationNodeAnimationEditorDialog();
+	~AnimationNodeAnimationEditorDialog();
+};
+
+class AnimationNodeAnimationEditor : public VBoxContainer {
+	GDCLASS(AnimationNodeAnimationEditor, VBoxContainer);
+
+	Ref<AnimationNodeAnimation> animation_node_animation;
+	Button *button = nullptr;
+	AnimationNodeAnimationEditorDialog *dialog = nullptr;
+	void _open_set_custom_timeline_from_marker_dialog();
+	void _validate_markers(int p_id);
+	void _confirm_set_custom_timeline_from_marker_dialog();
+
+public:
+	AnimationNodeAnimationEditor(Ref<AnimationNodeAnimation> p_animation_node_animation);
+	~AnimationNodeAnimationEditor();
+
+protected:
+	void _notification(int p_what);
 };
 
 #endif // ANIMATION_BLEND_TREE_EDITOR_PLUGIN_H
