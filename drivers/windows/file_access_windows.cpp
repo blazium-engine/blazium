@@ -407,11 +407,10 @@ uint64_t FileAccessWindows::_get_modified_time(const String &p_file) {
 		return 0;
 	}
 
-	String file = p_file;
-	if (file.ends_with("/") && file != "/") {
+	String file = fix_path(p_file);
+	if (file.ends_with("\\") && file != "\\") {
 		file = file.substr(0, file.length() - 1);
 	}
-	file = fix_path(file);
 
 	HANDLE handle = CreateFileW((LPCWSTR)(file.utf16().get_data()), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
 
