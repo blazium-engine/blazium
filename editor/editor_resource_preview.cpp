@@ -150,6 +150,10 @@ void EditorResourcePreview::_preview_ready(const String &p_path, int p_hash, con
 
 		if (!p_path.begins_with("ID:")) {
 			modified_time = FileAccess::get_modified_time(p_path);
+			String import_path = p_path + ".import";
+			if (FileAccess::exists(import_path)) {
+				modified_time = MAX(modified_time, FileAccess::get_modified_time(import_path));
+			}
 		}
 
 		Item item;
@@ -240,7 +244,14 @@ void EditorResourcePreview::_generate_preview(Ref<ImageTexture> &r_texture, Ref<
 			}
 			Ref<FileAccess> f = FileAccess::open(cache_base + ".txt", FileAccess::WRITE);
 			ERR_FAIL_COND_MSG(f.is_null(), "Cannot create file '" + cache_base + ".txt'. Check user write permissions.");
-			_write_preview_cache(f, thumbnail_size, has_small_texture, FileAccess::get_modified_time(p_item.path), FileAccess::get_md5(p_item.path), p_metadata);
+
+			uint64_t modtime = FileAccess::get_modified_time(p_item.path);
+			String import_path = p_item.path + ".import";
+			if (FileAccess::exists(import_path)) {
+				modtime = MAX(modtime, FileAccess::get_modified_time(import_path));
+			}
+
+			_write_preview_cache(f, thumbnail_size, has_small_texture, modtime, FileAccess::get_md5(p_item.path), p_metadata);
 		}
 	}
 
@@ -301,6 +312,11 @@ void EditorResourcePreview::_iterate() {
 		_generate_preview(texture, small_texture, item, cache_base, preview_metadata);
 	} else {
 		uint64_t modtime = FileAccess::get_modified_time(item.path);
+		String import_path = item.path + ".import";
+		if (FileAccess::exists(import_path)) {
+			modtime = MAX(modtime, FileAccess::get_modified_time(import_path));
+		}
+
 		int tsize;
 		bool has_small_texture;
 		uint64_t last_modtime;
@@ -516,6 +532,11 @@ void EditorResourcePreview::check_for_invalidation(const String &p_path) {
 
 		if (cache.has(p_path)) {
 			uint64_t modified_time = FileAccess::get_modified_time(p_path);
+			String import_path = p_path + ".import";
+			if (FileAccess::exists(import_path)) {
+				modified_time = MAX(modified_time, FileAccess::get_modified_time(import_path));
+			}
+
 			if (modified_time != cache[p_path].modified_time) {
 				cache.erase(p_path);
 				call_invalidated = true;
