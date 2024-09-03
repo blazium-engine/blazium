@@ -174,10 +174,6 @@
 
 #include "modules/modules_enabled.gen.h" // For gdscript, mono.
 
-#if defined(GLES3_ENABLED)
-#include "drivers/gles3/rasterizer_gles3.h"
-#endif
-
 EditorNode *EditorNode::singleton = nullptr;
 
 static const String EDITOR_NODE_CONFIG_SECTION = "EditorNode";
@@ -4938,7 +4934,7 @@ String EditorNode::_get_system_info() const {
 	} else if (driver_name == "opengl3_es") {
 		driver_name = "OpenGL ES 3";
 	} else if (driver_name == "opengl3") {
-		if (RasterizerGLES3::is_gles_over_gl()) {
+		if (OS::get_singleton()->get_gles_over_gl()) {
 			driver_name = "OpenGL 3";
 		} else {
 			driver_name = "OpenGL ES 3";
