@@ -29,7 +29,6 @@
 /**************************************************************************/
 
 #include "window.h"
-#include "window.compat.inc"
 
 #include "core/config/project_settings.h"
 #include "core/input/shortcut.h"
