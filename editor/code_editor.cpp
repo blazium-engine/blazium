@@ -118,6 +118,7 @@ void FindReplaceBar::_notification(int p_what) {
 			hide_button->set_texture_hover(get_editor_theme_icon(SNAME("Close")));
 			hide_button->set_texture_pressed(get_editor_theme_icon(SNAME("Close")));
 			hide_button->set_custom_minimum_size(hide_button->get_texture_normal()->get_size());
+			_update_toggle_replace_button(replace_text->is_visible_in_tree());
 		} break;
 
 		case NOTIFICATION_VISIBILITY_CHANGED: {
@@ -551,6 +552,14 @@ void FindReplaceBar::_hide_bar(bool p_force_focus) {
 	hide();
 }
 
+void FindReplaceBar::_update_toggle_replace_button(bool p_replace_visible) {
+	String tooltip = p_replace_visible ? TTR("Hide Replace") : TTR("Show Replace");
+	String shortcut = ED_GET_SHORTCUT(p_replace_visible ? "script_text_editor/find" : "script_text_editor/replace")->get_as_text();
+	toggle_replace_button->set_tooltip_text(vformat("%s (%s)", tooltip, shortcut));
+	StringName rtl_compliant_arrow = is_layout_rtl() ? SNAME("GuiTreeArrowLeft") : SNAME("GuiTreeArrowRight");
+	toggle_replace_button->set_icon(get_editor_theme_icon(p_replace_visible ? SNAME("GuiTreeArrowDown") : rtl_compliant_arrow));
+}
+
 void FindReplaceBar::_show_search(bool p_with_replace, bool p_show_only) {
 	show();
 	if (p_show_only) {
@@ -594,6 +603,7 @@ void FindReplaceBar::popup_search(bool p_show_only) {
 	hbc_button_replace->hide();
 	hbc_option_replace->hide();
 	selection_only->set_pressed(false);
+	_update_toggle_replace_button(false);
 
 	_show_search(false, p_show_only);
 }
@@ -603,6 +613,7 @@ void FindReplaceBar::popup_replace() {
 		replace_text->show();
 		hbc_button_replace->show();
 		hbc_option_replace->show();
+		_update_toggle_replace_button(true);
 	}
 
 	selection_only->set_pressed(text_editor->has_selection(0) && text_editor->get_selection_from_line(0) < text_editor->get_selection_to_line(0));
@@ -654,6 +665,11 @@ void FindReplaceBar::_replace_text_submitted(const String &p_text) {
 		_replace();
 		search_next();
 	}
+}
+
+void FindReplaceBar::_toggle_replace_pressed() {
+	bool replace_visible = replace_text->is_visible_in_tree();
+	replace_visible ? popup_search(true) : popup_replace();
 }
 
 String FindReplaceBar::get_search_text() const {
@@ -714,6 +730,12 @@ void FindReplaceBar::_bind_methods() {
 }
 
 FindReplaceBar::FindReplaceBar() {
+	toggle_replace_button = memnew(Button);
+	add_child(toggle_replace_button);
+	toggle_replace_button->set_flat(true);
+	toggle_replace_button->set_focus_mode(FOCUS_NONE);
+	toggle_replace_button->connect(SceneStringName(pressed), callable_mp(this, &FindReplaceBar::_toggle_replace_pressed));
+
 	vbc_lineedit = memnew(VBoxContainer);
 	add_child(vbc_lineedit);
 	vbc_lineedit->set_alignment(BoxContainer::ALIGNMENT_CENTER);
