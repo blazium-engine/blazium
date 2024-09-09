@@ -1535,6 +1535,10 @@ void main() {
 				continue; //not masked
 			}
 
+			if (directional_lights.data[i].bake_mode == LIGHT_BAKE_STATIC && bool(instances.data[draw_call.instance_index].flags & INSTANCE_FLAGS_USE_LIGHTMAP)) {
+				continue; // Statically baked light and object uses lightmap, skip.
+			}
+
 			float shadow = 1.0;
 
 			if (directional_lights.data[i].shadow_opacity > 0.001) {
@@ -1646,6 +1650,10 @@ void main() {
 		for (uint i = 0; i < scene_data.directional_light_count; i++) {
 			if (!bool(directional_lights.data[i].mask & instances.data[draw_call.instance_index].layer_mask)) {
 				continue; //not masked
+			}
+
+			if (directional_lights.data[i].bake_mode == LIGHT_BAKE_STATIC && bool(instances.data[draw_call.instance_index].flags & INSTANCE_FLAGS_USE_LIGHTMAP)) {
+				continue; // Statically baked light and object uses lightmap, skip.
 			}
 
 			// We're not doing light transmittence
