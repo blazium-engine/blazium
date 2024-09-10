@@ -3006,7 +3006,11 @@ bool DisplayServerX11::window_is_focused(WindowID p_window) const {
 
 	const WindowData &wd = windows[p_window];
 
-	return wd.focused;
+	Window focused_window;
+	int focus_ret_state;
+	XGetInputFocus(x11_display, &focused_window, &focus_ret_state);
+
+	return wd.x11_window == focused_window;
 }
 
 bool DisplayServerX11::window_can_draw(WindowID p_window) const {
