@@ -35,6 +35,7 @@
 #include "editor/editor_string_names.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/button.h"
+#include "scene/gui/check_box.h"
 #include "scene/gui/flow_container.h"
 #include "scene/gui/label.h"
 #include "scene/gui/line_edit.h"
@@ -177,15 +178,42 @@ void EditorNetworkProfiler::add_node_data(const NodeInfo &p_info) {
 }
 
 void EditorNetworkProfiler::_activate_pressed() {
+	_update_button_text();
+
 	if (activate->is_pressed()) {
 		refresh_timer->start();
+	} else {
+		refresh_timer->stop();
+	}
+
+	emit_signal(SNAME("enable_profiling"), activate->is_pressed());
+}
+
+void EditorNetworkProfiler::_update_button_text() {
+	if (activate->is_pressed()) {
 		activate->set_icon(theme_cache.stop_icon);
 		activate->set_text(TTR("Stop"));
 	} else {
-		refresh_timer->stop();
 		activate->set_icon(theme_cache.play_icon);
 		activate->set_text(TTR("Start"));
 	}
+}
+
+void EditorNetworkProfiler::started() {
+	if (EditorSettings::get_singleton()->get_project_metadata("debug_options", "autostart_network_profiler", false)) {
+		set_profiling(true);
+		refresh_timer->start();
+	}
+}
+
+void EditorNetworkProfiler::stopped() {
+	set_profiling(false);
+	refresh_timer->stop();
+}
+
+void EditorNetworkProfiler::set_profiling(bool p_pressed) {
+	activate->set_pressed(p_pressed);
+	_update_button_text();
 	emit_signal(SNAME("enable_profiling"), activate->is_pressed());
 }
 
@@ -197,6 +225,10 @@ void EditorNetworkProfiler::_clear_pressed() {
 	set_bandwidth(0, 0);
 	refresh_rpc_data();
 	refresh_replication_data();
+}
+
+void EditorNetworkProfiler::_autostart_toggled(bool p_toggled_on) {
+	EditorSettings::get_singleton()->set_project_metadata("debug_options", "autostart_network_profiler", p_toggled_on);
 }
 
 void EditorNetworkProfiler::_replication_button_clicked(TreeItem *p_item, int p_column, int p_idx, MouseButton p_button) {
@@ -282,6 +314,12 @@ EditorNetworkProfiler::EditorNetworkProfiler() {
 	HBoxContainer *right_hbox = memnew(HBoxContainer);
 	right_hbox->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
 	main_flow->add_child(right_hbox);
+
+	CheckBox *autostart_checkbox = memnew(CheckBox);
+	autostart_checkbox->set_text(TTR("Autostart"));
+	autostart_checkbox->set_pressed(EditorSettings::get_singleton()->get_project_metadata("debug_options", "autostart_network_profiler", false));
+	autostart_checkbox->connect(SceneStringName(toggled), callable_mp(this, &EditorNetworkProfiler::_autostart_toggled));
+	right_hbox->add_child(autostart_checkbox);
 
 	Label *lb = memnew(Label);
 	// TRANSLATORS: This is the label for the network profiler's incoming bandwidth.
