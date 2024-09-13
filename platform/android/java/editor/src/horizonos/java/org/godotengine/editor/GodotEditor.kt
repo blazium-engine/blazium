@@ -36,7 +36,7 @@ import app.blazium.godot.utils.isNativeXRDevice
 /**
  * Primary window of the Godot Editor.
  *
- * This is the implementation of the editor used when running on Meta devices.
+ * This is the implementation of the editor used when running on HorizonOS devices.
  */
 open class GodotEditor : BaseGodotEditor() {
 
