@@ -288,6 +288,7 @@ void SplitContainer::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_SORT_CHILDREN: {
+			dirty = true;
 			_resort_children();
 		} break;
 
@@ -307,6 +308,8 @@ void SplitContainer::_resort_children() {
 	Control *first = _get_child(0);
 	if (!first) {
 		dragger_control->hide();
+		middle_sep = -1;
+		dirty = false;
 		return;
 	}
 	bool first_visible = first && first->is_visible();
@@ -317,12 +320,16 @@ void SplitContainer::_resort_children() {
 			first->set_rect(Rect2(Point2(), get_size()));
 		}
 		dragger_control->hide();
+		middle_sep = -1;
+		dirty = false;
 		return;
 	}
 	bool second_visible = second && second->is_visible();
 
 	if (!first_visible && !second_visible) {
 		dragger_control->hide();
+		middle_sep = -1;
+		dirty = false;
 		return;
 	}
 
@@ -344,6 +351,7 @@ void SplitContainer::_resort_children() {
 			target->set_rect(Rect2(Point2(), size));
 		} else {
 			int sep = _get_separation();
+			dirty = false;
 			_compute_middle_sep(first, second, sep);
 			int dragger_thickness = MAX(sep, theme_cache.minimum_grab_thickness);
 			int dragger_ofs = Math::round((dragger_thickness - sep) * 0.5);
@@ -420,6 +428,7 @@ void SplitContainer::_compute_middle_sep(Control *p_first, Control *p_second, in
 
 	int size = get_size()[axis];
 
+	int prev_middle_sep = middle_sep;
 	if (first_expanded && second_expanded) {
 		float ratio = p_first->get_stretch_ratio() / (p_first->get_stretch_ratio() + p_second->get_stretch_ratio());
 		middle_sep = size * ratio + (rtl ? Math::round(p_sep * 0.5) : -Math::round(p_sep * 0.5));
@@ -435,8 +444,14 @@ void SplitContainer::_compute_middle_sep(Control *p_first, Control *p_second, in
 		} else {
 			split_offset = first_visible ? size - middle_sep - p_sep : -middle_sep;
 		}
+		dirty = false;
 		return;
 	}
+
+	if (dirty && prev_middle_sep > -1) {
+		split_offset += prev_middle_sep - middle_sep;
+	}
+	dirty = false;
 
 	if (rtl) {
 		split_offset = CLAMP(split_offset, -middle_sep + p_sep + first_ms, size - middle_sep - second_ms);
