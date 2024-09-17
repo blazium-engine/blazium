@@ -200,6 +200,9 @@ void EditorNetworkProfiler::_update_button_text() {
 }
 
 void EditorNetworkProfiler::started() {
+	_clear_pressed();
+	activate->set_disabled(false);
+
 	if (EditorSettings::get_singleton()->get_project_metadata("debug_options", "autostart_network_profiler", false)) {
 		set_profiling(true);
 		refresh_timer->start();
@@ -207,6 +210,7 @@ void EditorNetworkProfiler::started() {
 }
 
 void EditorNetworkProfiler::stopped() {
+	activate->set_disabled(true);
 	set_profiling(false);
 	refresh_timer->stop();
 }
@@ -225,6 +229,7 @@ void EditorNetworkProfiler::_clear_pressed() {
 	set_bandwidth(0, 0);
 	refresh_rpc_data();
 	refresh_replication_data();
+	clear_button->set_disabled(true);
 }
 
 void EditorNetworkProfiler::_autostart_toggled(bool p_toggled_on) {
@@ -242,6 +247,9 @@ void EditorNetworkProfiler::_replication_button_clicked(TreeItem *p_item, int p_
 }
 
 void EditorNetworkProfiler::add_rpc_frame_data(const RPCNodeInfo &p_frame) {
+	if (clear_button->is_disabled()) {
+		clear_button->set_disabled(false);
+	}
 	dirty = true;
 	if (!rpc_data.has(p_frame.node)) {
 		rpc_data.insert(p_frame.node, p_frame);
@@ -258,6 +266,9 @@ void EditorNetworkProfiler::add_rpc_frame_data(const RPCNodeInfo &p_frame) {
 }
 
 void EditorNetworkProfiler::add_sync_frame_data(const SyncInfo &p_frame) {
+	if (clear_button->is_disabled()) {
+		clear_button->set_disabled(false);
+	}
 	dirty = true;
 	if (!sync_data.has(p_frame.synchronizer)) {
 		sync_data[p_frame.synchronizer] = p_frame;
@@ -303,11 +314,13 @@ EditorNetworkProfiler::EditorNetworkProfiler() {
 	activate = memnew(Button);
 	activate->set_toggle_mode(true);
 	activate->set_text(TTR("Start"));
+	activate->set_disabled(true);
 	activate->connect(SceneStringName(pressed), callable_mp(this, &EditorNetworkProfiler::_activate_pressed));
 	left_hb->add_child(activate);
 
 	clear_button = memnew(Button);
 	clear_button->set_text(TTR("Clear"));
+	clear_button->set_disabled(true);
 	clear_button->connect(SceneStringName(pressed), callable_mp(this, &EditorNetworkProfiler::_clear_pressed));
 	left_hb->add_child(clear_button);
 
