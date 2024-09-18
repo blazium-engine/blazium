@@ -524,6 +524,8 @@ void GPUParticles3D::_notification(int p_what) {
 			material->disconnect("emission_shape_changed", callable_mp((Node3D *)this, &GPUParticles3D::update_gizmos));
 		} break;
 
+		case NOTIFICATION_SUSPENDED:
+		case NOTIFICATION_UNSUSPENDED:
 		case NOTIFICATION_PAUSED:
 		case NOTIFICATION_UNPAUSED: {
 			if (is_inside_tree()) {

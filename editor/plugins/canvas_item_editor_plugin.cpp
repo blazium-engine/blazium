@@ -4050,7 +4050,6 @@ void CanvasItemEditor::_update_editor_settings() {
 	grid_snap_button->set_button_icon(get_editor_theme_icon(SNAME("SnapGrid")));
 	snap_config_menu->set_button_icon(get_editor_theme_icon(SNAME("SnapEnable")));
 	skeleton_menu->set_button_icon(get_editor_theme_icon(SNAME("Bone")));
-	override_camera_button->set_button_icon(get_editor_theme_icon(SNAME("Camera2D")));
 	select_handle = get_editor_theme_icon(SNAME("EditorHandle"));
 	anchor_handle = get_editor_theme_icon(SNAME("EditorControlAnchor"));
 	lock_button->set_button_icon(get_editor_theme_icon(SNAME("Lock")));
@@ -4088,8 +4087,6 @@ void CanvasItemEditor::_notification(int p_what) {
 			button_grid_toggle->set_pressed_no_signal(_is_grid_visible());
 			_update_lock_and_group_button();
 
-			EditorRunBar::get_singleton()->connect("play_pressed", callable_mp(this, &CanvasItemEditor::_update_override_camera_button).bind(true));
-			EditorRunBar::get_singleton()->connect("stop_pressed", callable_mp(this, &CanvasItemEditor::_update_override_camera_button).bind(false));
 			ProjectSettings::get_singleton()->connect("settings_changed", callable_mp(this, &CanvasItemEditor::_project_settings_changed));
 		} break;
 
@@ -4186,15 +4183,6 @@ void CanvasItemEditor::_notification(int p_what) {
 				break;
 			}
 			_update_editor_settings();
-		} break;
-
-		case NOTIFICATION_VISIBILITY_CHANGED: {
-			if (!is_visible() && override_camera_button->is_pressed()) {
-				EditorDebuggerNode *debugger = EditorDebuggerNode::get_singleton();
-
-				debugger->set_camera_override(EditorDebuggerNode::OVERRIDE_NONE);
-				override_camera_button->set_pressed(false);
-			}
 		} break;
 
 		case NOTIFICATION_APPLICATION_FOCUS_OUT:
@@ -4384,16 +4372,6 @@ void CanvasItemEditor::_toggle_grid() {
 	button_grid_toggle->set_pressed_no_signal(_is_grid_visible());
 }
 
-void CanvasItemEditor::_button_override_camera(bool p_pressed) {
-	EditorDebuggerNode *debugger = EditorDebuggerNode::get_singleton();
-
-	if (p_pressed) {
-		debugger->set_camera_override(EditorDebuggerNode::OVERRIDE_2D);
-	} else {
-		debugger->set_camera_override(EditorDebuggerNode::OVERRIDE_NONE);
-	}
-}
-
 void CanvasItemEditor::_insert_animation_keys(bool p_location, bool p_rotation, bool p_scale, bool p_on_existing) {
 	const HashMap<Node *, Object *> &selection = editor_selection->get_selection();
 
@@ -4478,17 +4456,6 @@ void CanvasItemEditor::_prepare_view_menu() {
 	Node *root = EditorNode::get_singleton()->get_edited_scene();
 	bool has_guides = root && (root->has_meta("_edit_horizontal_guides_") || root->has_meta("_edit_vertical_guides_"));
 	popup->set_item_disabled(popup->get_item_index(CLEAR_GUIDES), !has_guides);
-}
-
-void CanvasItemEditor::_update_override_camera_button(bool p_game_running) {
-	if (p_game_running) {
-		override_camera_button->show();
-		override_camera_button->set_tooltip_text(TTR("Project Camera Override\nOverrides the running project's camera with the editor viewport camera."));
-	} else {
-		override_camera_button->hide();
-		override_camera_button->set_pressed(false);
-		override_camera_button->set_tooltip_text(TTR("Project Camera Override\nNo project instance running. Run the project from the editor to use this feature."));
-	}
 }
 
 void CanvasItemEditor::_popup_callback(int p_op) {
@@ -5589,13 +5556,6 @@ CanvasItemEditor::CanvasItemEditor() {
 	title_right_hb->add_theme_constant_override(SNAME("separation"), 8 * EDSCALE);
 	title_right_hb->set_h_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_END);
 	main_flow->add_child(title_right_hb);
-
-	override_camera_button = memnew(Button);
-	override_camera_button->set_theme_type_variation("FlatButton");
-	override_camera_button->connect(SceneStringName(toggled), callable_mp(this, &CanvasItemEditor::_button_override_camera));
-	override_camera_button->set_toggle_mode(true);
-	title_right_hb->add_child(override_camera_button);
-	_update_override_camera_button(false);
 
 	lock_button = memnew(Button);
 	lock_button->set_theme_type_variation("FlatButton");

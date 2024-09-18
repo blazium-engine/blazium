@@ -907,6 +907,8 @@ void EditorSettings::_load_defaults(Ref<ConfigFile> p_extra_config) {
 	EDITOR_SETTING(Variant::INT, PROPERTY_HINT_ENUM, "editors/visual_editors/grid_pattern", 1, "Lines,Dots")
 	EDITOR_SETTING(Variant::INT, PROPERTY_HINT_RANGE, "editors/visual_editors/visual_shader/port_preview_size", 160, "100,400,0.01")
 
+	EDITOR_SETTING_BASIC(Variant::BOOL, PROPERTY_HINT_NONE, "editors/game/embedded_game", true, "");
+
 	// Export (EditorExportPlugin)
 	_initial_set("export/ssh/ssh", "");
 	_initial_set("export/ssh/scp", "");
