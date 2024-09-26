@@ -58,6 +58,8 @@ import app.blazium.godot.input.GodotEditText
 import app.blazium.godot.input.GodotInputHandler
 import app.blazium.godot.io.directory.DirectoryAccessHandler
 import app.blazium.godot.io.file.FileAccessHandler
+import app.blazium.godot.plugin.AndroidRuntimePlugin
+import app.blazium.godot.plugin.GodotPlugin
 import app.blazium.godot.plugin.GodotPluginRegistry
 import app.blazium.godot.tts.GodotTTS
 import app.blazium.godot.utils.CommandLineFileParser
@@ -228,7 +230,9 @@ class Godot(private val context: Context) {
 			window.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
 
 			Log.v(TAG, "Initializing Blazium plugin registry")
-			GodotPluginRegistry.initializePluginRegistry(this, primaryHost.getHostPlugins(this))
+			val runtimePlugins = mutableSetOf<GodotPlugin>(AndroidRuntimePlugin(this))
+			runtimePlugins.addAll(primaryHost.getHostPlugins(this))
+			GodotPluginRegistry.initializePluginRegistry(this, runtimePlugins)
 			if (io == null) {
 				io = GodotIO(activity)
 			}
