@@ -1735,7 +1735,7 @@ public:
 
 #ifndef DISABLE_DEPRECATED
 	// Never actually used, should be removed when we can break compatibility.
-	enum Features{
+	enum Features {
 		FEATURE_SHADERS,
 		FEATURE_MULTITHREADED,
 	};
