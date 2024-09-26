@@ -1208,7 +1208,7 @@ vertex VaryingsPos vertClear(AttributesPos attributes [[stage_in]], constant Cle
     return varyings;
 }
 )",
-								  ClearAttKey::DEPTH_INDEX];
+				ClearAttKey::DEPTH_INDEX];
 
 		return new_func(msl, @"vertClear", nil);
 	}
