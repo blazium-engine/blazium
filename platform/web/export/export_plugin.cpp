@@ -360,6 +360,9 @@ Error EditorExportPlatformWeb::_build_main_js(const Ref<EditorExportPreset> &p_p
 }
 
 Error EditorExportPlatformWeb::_build_pwa(const Ref<EditorExportPreset> &p_preset, const String p_path, const Vector<SharedObject> &p_shared_objects) {
+	List<String> preset_features;
+	get_preset_features(p_preset, &preset_features);
+
 	String proj_name = GLOBAL_GET("application/config/name");
 	if (proj_name.is_empty()) {
 		proj_name = "Blazium Game";
@@ -385,7 +388,10 @@ Error EditorExportPlatformWeb::_build_pwa(const Ref<EditorExportPreset> &p_prese
 		cache_files.push_back(name + ".icon.png");
 		cache_files.push_back(name + ".apple-touch-icon.png");
 	}
-	cache_files.push_back(name + ".worker.js");
+
+	if (preset_features.find("threads")) {
+		cache_files.push_back(name + ".worker.js");
+	}
 	cache_files.push_back(name + ".audio.worklet.js");
 	cache_files.push_back(name + ".audio.position.worklet.js");
 	replaces["___GODOT_CACHE___"] = Variant(cache_files).to_json_string();
