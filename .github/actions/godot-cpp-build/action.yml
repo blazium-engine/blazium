@@ -1,0 +1,39 @@
+name: Build blazium-cpp
+description: Build blazium-cpp with the provided options.
+
+env:
+  BLAZIUM_CPP_BRANCH: blazium-dev
+
+inputs:
+  bin:
+    description: Path to the Blazium binary.
+    required: true
+    type: string
+  scons-flags:
+    description: Additional SCons flags.
+    type: string
+  scons-cache:
+    description: The SCons cache path.
+    default: ${{ github.workspace }}/.scons_cache/
+    type: string
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        repository: blazium-engine/blazium-cpp
+        ref: ${{ env.BLAZIUM_CPP_BRANCH }}
+        path: blazium-cpp
+
+    - name: Extract API
+      shell: sh
+      run: ${{ inputs.bin }} --headless --dump-gdextension-interface --dump-extension-api
+
+    - name: SCons Build
+      shell: sh
+      env:
+        SCONS_CACHE: ${{ inputs.scons-cache }}
+      run: scons --directory=./blazium-cpp/test "gdextension_dir=${{ github.workspace }}" ${{ inputs.scons-flags }}
