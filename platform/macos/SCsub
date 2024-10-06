@@ -26,7 +26,9 @@ def generate_bundle(target, source, env):
         target_bin = lipo(bin_dir + "/" + prefix, env.extra_suffix + env.module_version_string)
 
         # Assemble .app bundle and update version info.
-        app_dir = Dir("#bin/" + (prefix + env.extra_suffix + env.module_version_string).replace(".", "_") + ".app").abspath
+        app_dir = Dir(
+            "#bin/" + (prefix + env.extra_suffix + env.module_version_string).replace(".", "_") + ".app"
+        ).abspath
         templ = Dir("#misc/dist/macos_tools.app").abspath
         if os.path.exists(app_dir):
             shutil.rmtree(app_dir)
@@ -37,6 +39,10 @@ def generate_bundle(target, source, env):
             shutil.copy(target_bin, app_dir + "/Contents/MacOS/Blazium")
         if "mono" in env.module_version_string:
             shutil.copytree(Dir("#bin/GodotSharp").abspath, app_dir + "/Contents/Resources/GodotSharp")
+        shutil.copy(
+            File("#platform/macos/icons/Blazium_" + env.version_info["external_status"] + ".icns").abspath,
+            app_dir + "/Contents/Resources/Blazium.icns",
+        )
         version = get_build_version(False)
         short_version = get_build_version(True)
         with open(Dir("#misc/dist/macos").abspath + "/editor_info_plist.template", "rt", encoding="utf-8") as fin:
