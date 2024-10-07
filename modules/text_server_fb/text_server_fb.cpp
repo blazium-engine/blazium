@@ -152,11 +152,11 @@ bool TextServerFallback::_has(const RID &p_rid) {
 
 String TextServerFallback::_get_support_data_filename() const {
 	return "";
-};
+}
 
 String TextServerFallback::_get_support_data_info() const {
 	return "Not supported";
-};
+}
 
 bool TextServerFallback::_load_support_data(const String &p_filename) {
 	return false; // No extra data used.
@@ -4762,7 +4762,7 @@ PackedInt32Array TextServerFallback::_string_get_word_breaks(const String &p_str
 
 TextServerFallback::TextServerFallback() {
 	_insert_feature_sets();
-};
+}
 
 void TextServerFallback::_cleanup() {
 	for (const KeyValue<SystemFontKey, SystemFontCache> &E : system_fonts) {
@@ -4781,4 +4781,4 @@ TextServerFallback::~TextServerFallback() {
 		FT_Done_FreeType(ft_library);
 	}
 #endif
-};
+}

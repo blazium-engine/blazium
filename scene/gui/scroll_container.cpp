@@ -456,7 +456,7 @@ void ScrollContainer::update_scrollbars() {
 
 void ScrollContainer::_scroll_moved(float) {
 	queue_sort();
-};
+}
 
 void ScrollContainer::set_h_scroll(int p_pos) {
 	h_scroll->set_value(p_pos);
@@ -622,7 +622,7 @@ void ScrollContainer::_bind_methods() {
 	BIND_THEME_ITEM_CUSTOM(Theme::DATA_TYPE_CONSTANT, ScrollContainer, v_separation, "h_scroll_bar_separation");
 
 	GLOBAL_DEF("gui/common/default_scroll_deadzone", 0);
-};
+}
 
 ScrollContainer::ScrollContainer() {
 	h_scroll = memnew(HScrollBar);
@@ -638,4 +638,4 @@ ScrollContainer::ScrollContainer() {
 	deadzone = GLOBAL_GET("gui/common/default_scroll_deadzone");
 
 	set_clip_contents(true);
-};
+}

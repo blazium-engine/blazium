@@ -1416,7 +1416,7 @@ void AnimationPlayerEditor::_seek_value_changed(float p_value, bool p_timeline_o
 	}
 
 	track_editor->set_anim_pos(pos);
-};
+}
 
 void AnimationPlayerEditor::_animation_player_changed(Object *p_pl) {
 	_update_player();
