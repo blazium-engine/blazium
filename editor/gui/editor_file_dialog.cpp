@@ -353,7 +353,7 @@ void EditorFileDialog::shortcut_input(const Ref<InputEvent> &p_event) {
 
 void EditorFileDialog::set_enable_multiple_selection(bool p_enable) {
 	item_list->set_select_mode(p_enable ? ItemList::SELECT_MULTI : ItemList::SELECT_SINGLE);
-};
+}
 
 Vector<String> EditorFileDialog::get_selected_files() const {
 	Vector<String> list;
@@ -363,7 +363,7 @@ Vector<String> EditorFileDialog::get_selected_files() const {
 		}
 	}
 	return list;
-};
+}
 
 void EditorFileDialog::update_dir() {
 	if (drives->is_visible()) {

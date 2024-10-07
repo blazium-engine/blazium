@@ -1103,7 +1103,7 @@ void TreeItem::clear_children() {
 	first_child = nullptr;
 	last_child = nullptr;
 	children_cache.clear();
-};
+}
 
 int TreeItem::get_index() {
 	int idx = 0;
@@ -4831,7 +4831,7 @@ void Tree::clear() {
 	_determine_hovered_item();
 
 	queue_redraw();
-};
+}
 
 void Tree::set_hide_root(bool p_enabled) {
 	if (hide_root == p_enabled) {
