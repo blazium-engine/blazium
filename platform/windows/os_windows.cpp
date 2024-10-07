@@ -1468,7 +1468,7 @@ public:
 		locale = p_locale;
 		n_sub = p_nsub;
 		rtl = p_rtl;
-	};
+	}
 
 	virtual ~FallbackTextAnalysisSource() {}
 };

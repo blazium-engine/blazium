@@ -98,7 +98,7 @@ public:
 
 	Vector3 get_random_point(uint32_t p_navigation_layers, bool p_uniformly) const;
 
-	real_t get_surface_area() const { return surface_area; };
+	real_t get_surface_area() const { return surface_area; }
 
 	bool sync();
 
