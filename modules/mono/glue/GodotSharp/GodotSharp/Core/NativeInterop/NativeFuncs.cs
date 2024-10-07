@@ -402,6 +402,14 @@ namespace Godot.NativeInterop
 
         public static partial void godotsharp_array_make_read_only(ref godot_array p_self);
 
+        public static partial void godotsharp_array_set_typed(
+            ref godot_array p_self,
+            uint p_elem_type,
+            in godot_string_name p_elem_class_name,
+            in godot_ref p_elem_script);
+
+        public static partial godot_bool godotsharp_array_is_typed(ref godot_array p_self);
+
         public static partial void godotsharp_array_max(ref godot_array p_self, out godot_variant r_value);
 
         public static partial void godotsharp_array_min(ref godot_array p_self, out godot_variant r_value);

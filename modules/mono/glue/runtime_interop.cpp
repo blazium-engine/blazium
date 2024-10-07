@@ -1098,6 +1098,20 @@ void godotsharp_array_make_read_only(Array *p_self) {
 	p_self->make_read_only();
 }
 
+void godotsharp_array_set_typed(Array *p_self, uint32_t p_elem_type, const StringName *p_elem_class_name, const Ref<CSharpScript> *p_elem_script) {
+	Variant elem_script_variant;
+	StringName elem_class_name = *p_elem_class_name;
+	if (p_elem_script && p_elem_script->is_valid()) {
+		elem_script_variant = Variant(p_elem_script->ptr());
+		elem_class_name = p_elem_script->ptr()->get_instance_base_type();
+	}
+	p_self->set_typed(p_elem_type, elem_class_name, p_elem_script->ptr());
+}
+
+bool godotsharp_array_is_typed(const Array *p_self) {
+	return p_self->is_typed();
+}
+
 void godotsharp_array_max(const Array *p_self, Variant *r_value) {
 	*r_value = p_self->max();
 }
@@ -1585,6 +1599,8 @@ static const void *unmanaged_callbacks[]{
 	(void *)godotsharp_array_insert,
 	(void *)godotsharp_array_last_index_of,
 	(void *)godotsharp_array_make_read_only,
+	(void *)godotsharp_array_set_typed,
+	(void *)godotsharp_array_is_typed,
 	(void *)godotsharp_array_max,
 	(void *)godotsharp_array_min,
 	(void *)godotsharp_array_pick_random,
