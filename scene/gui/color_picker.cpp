@@ -100,7 +100,7 @@ void ColorPicker::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_THEME_CHANGED: {
-			btn_pick->set_icon(theme_cache.screen_picker);
+			btn_pick->set_button_icon(theme_cache.screen_picker);
 
 			preset_foldable->set_button_icon(0, theme_cache.add_preset);
 
@@ -143,7 +143,7 @@ void ColorPicker::_notification(int p_what) {
 			shape_popup->set_item_icon(shape_popup->get_item_index(SHAPE_OKHSL_CIRCLE), theme_cache.shape_circle);
 
 			if (current_shape != SHAPE_NONE) {
-				btn_shape->set_icon(shape_popup->get_item_icon(current_shape));
+				btn_shape->set_button_icon(shape_popup->get_item_icon(current_shape));
 			}
 
 			Size2 preset_size = Size2(0, MAX(theme_cache.preset_size, 16 * theme_cache.base_scale));
@@ -151,9 +151,9 @@ void ColorPicker::_notification(int p_what) {
 			recent_preset_hbc->set_custom_minimum_size(preset_size);
 
 			if (text_is_constructor) {
-				text_type->set_icon(theme_cache.hex_code_icon);
+				text_type->set_button_icon(theme_cache.hex_code_icon);
 			} else {
-				text_type->set_icon(theme_cache.hex_icon);
+				text_type->set_button_icon(theme_cache.hex_icon);
 			}
 
 			int margin = MAX(theme_cache.content_margin, 0);
@@ -743,12 +743,12 @@ void ColorPicker::_update_recent_presets() {
 void ColorPicker::_text_type_toggled() {
 	text_is_constructor = !text_is_constructor;
 	if (text_is_constructor) {
-		text_type->set_icon(theme_cache.hex_code_icon);
+		text_type->set_button_icon(theme_cache.hex_code_icon);
 
 		c_text->set_editable(false);
 		c_text->set_tooltip_text(RTR("Copy this constructor in a script."));
 	} else {
-		text_type->set_icon(theme_cache.hex_icon);
+		text_type->set_button_icon(theme_cache.hex_icon);
 
 		c_text->set_editable(true);
 		c_text->set_tooltip_text(ETR("Enter a hex code (\"#ff0000\") or named color (\"red\")."));
@@ -775,7 +775,7 @@ void ColorPicker::set_picker_shape(PickerShapeType p_shape) {
 	}
 	if (p_shape != SHAPE_NONE) {
 		shape_popup->set_item_checked(p_shape, true);
-		btn_shape->set_icon(shape_popup->get_item_icon(p_shape));
+		btn_shape->set_button_icon(shape_popup->get_item_icon(p_shape));
 	}
 
 	current_shape = p_shape;

@@ -3239,8 +3239,8 @@ void Node3DEditorViewport::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_THEME_CHANGED: {
-			view_menu->set_icon(get_editor_theme_icon(SNAME("Camera")));
-			preview_camera->set_icon(get_editor_theme_icon(SNAME("Camera3D")));
+			view_menu->set_button_icon(get_editor_theme_icon(SNAME("Camera")));
+			preview_camera->set_button_icon(get_editor_theme_icon(SNAME("Camera3D")));
 			Control *gui_base = EditorNode::get_singleton()->get_gui_base();
 
 			const Ref<StyleBox> &information_3d_stylebox = gui_base->get_theme_stylebox(SNAME("Information3dViewport"), EditorStringName(EditorStyles));
@@ -8179,17 +8179,17 @@ void Node3DEditor::_update_theme() {
 	select_popup->set_item_icon(TOOL_LIST_SELECT, get_editor_theme_icon(SNAME("ListSelect")));
 	select_popup->set_item_icon(TOOL_RULER, get_editor_theme_icon(SNAME("Ruler")));
 
-	override_camera_button->set_icon(get_editor_theme_icon(SNAME("Camera3D")));
-	lock_button->set_icon(get_editor_theme_icon(SNAME("Lock")));
-	unlock_button->set_icon(get_editor_theme_icon(SNAME("Unlock")));
-	group_button->set_icon(get_editor_theme_icon(SNAME("Group")));
-	ungroup_button->set_icon(get_editor_theme_icon(SNAME("Ungroup")));
+	override_camera_button->set_button_icon(get_editor_theme_icon(SNAME("Camera3D")));
+	lock_button->set_button_icon(get_editor_theme_icon(SNAME("Lock")));
+	unlock_button->set_button_icon(get_editor_theme_icon(SNAME("Unlock")));
+	group_button->set_button_icon(get_editor_theme_icon(SNAME("Group")));
+	ungroup_button->set_button_icon(get_editor_theme_icon(SNAME("Ungroup")));
 
-	transform_menu->set_icon(get_editor_theme_icon(SNAME("Transform")));
-	view_menu->set_icon(get_editor_theme_icon(SNAME("GuiVisibilityVisible")));
+	transform_menu->set_button_icon(get_editor_theme_icon(SNAME("Transform")));
+	view_menu->set_button_icon(get_editor_theme_icon(SNAME("GuiVisibilityVisible")));
 
-	tool_option_button[TOOL_OPT_LOCAL_COORDS]->set_icon(get_editor_theme_icon(SNAME("Object")));
-	tool_option_button[TOOL_OPT_USE_SNAP]->set_icon(get_editor_theme_icon(SNAME("Snap")));
+	tool_option_button[TOOL_OPT_LOCAL_COORDS]->set_button_icon(get_editor_theme_icon(SNAME("Object")));
+	tool_option_button[TOOL_OPT_USE_SNAP]->set_button_icon(get_editor_theme_icon(SNAME("Snap")));
 
 	view_menu->get_popup()->set_item_icon(view_menu->get_popup()->get_item_index(MENU_VIEW_USE_1_VIEWPORT), get_editor_theme_icon(SNAME("Panels1")));
 	view_menu->get_popup()->set_item_icon(view_menu->get_popup()->get_item_index(MENU_VIEW_USE_2_VIEWPORTS), get_editor_theme_icon(SNAME("Panels2")));
@@ -8198,9 +8198,9 @@ void Node3DEditor::_update_theme() {
 	view_menu->get_popup()->set_item_icon(view_menu->get_popup()->get_item_index(MENU_VIEW_USE_3_VIEWPORTS_ALT), get_editor_theme_icon(SNAME("Panels3Alt")));
 	view_menu->get_popup()->set_item_icon(view_menu->get_popup()->get_item_index(MENU_VIEW_USE_4_VIEWPORTS), get_editor_theme_icon(SNAME("Panels4")));
 
-	sun_button->set_icon(get_editor_theme_icon(SNAME("PreviewSun")));
-	environ_button->set_icon(get_editor_theme_icon(SNAME("PreviewEnvironment")));
-	sun_environ_settings->set_icon(get_editor_theme_icon(SNAME("GuiTabMenuHl")));
+	sun_button->set_button_icon(get_editor_theme_icon(SNAME("PreviewSun")));
+	environ_button->set_button_icon(get_editor_theme_icon(SNAME("PreviewEnvironment")));
+	sun_environ_settings->set_button_icon(get_editor_theme_icon(SNAME("GuiTabMenuHl")));
 
 	sun_title->add_theme_font_override(SceneStringName(font), get_theme_font(SNAME("title_font"), SNAME("Window")));
 	environ_title->add_theme_font_override(SceneStringName(font), get_theme_font(SNAME("title_font"), SNAME("Window")));

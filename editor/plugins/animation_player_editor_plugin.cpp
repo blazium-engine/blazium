@@ -123,7 +123,7 @@ void AnimationPlayerEditor::_notification(int p_what) {
 				// Need the last frame after it stopped.
 				frame->set_value(player->get_current_animation_position());
 				track_editor->set_anim_pos(player->get_current_animation_position());
-				stop->set_icon(stop_icon);
+				stop->set_button_icon(stop_icon);
 			}
 
 			last_active = player->is_playing();
@@ -155,17 +155,17 @@ void AnimationPlayerEditor::_notification(int p_what) {
 			stop_icon = get_editor_theme_icon(SNAME("Stop"));
 			pause_icon = get_editor_theme_icon(SNAME("Pause"));
 			if (player && player->is_playing()) {
-				stop->set_icon(pause_icon);
+				stop->set_button_icon(pause_icon);
 			} else {
-				stop->set_icon(stop_icon);
+				stop->set_button_icon(stop_icon);
 			}
 
-			autoplay->set_icon(get_editor_theme_icon(SNAME("AutoPlay")));
-			play->set_icon(get_editor_theme_icon(SNAME("PlayStart")));
-			play_from->set_icon(get_editor_theme_icon(SNAME("Play")));
-			play_bw->set_icon(get_editor_theme_icon(SNAME("PlayStartBackwards")));
-			play_bw_from->set_icon(get_editor_theme_icon(SNAME("PlayBackwards")));
-			tool_anim->set_icon(get_editor_theme_icon(SNAME("Animation")));
+			autoplay->set_button_icon(get_editor_theme_icon(SNAME("AutoPlay")));
+			play->set_button_icon(get_editor_theme_icon(SNAME("PlayStart")));
+			play_from->set_button_icon(get_editor_theme_icon(SNAME("Play")));
+			play_bw->set_button_icon(get_editor_theme_icon(SNAME("PlayStartBackwards")));
+			play_bw_from->set_button_icon(get_editor_theme_icon(SNAME("PlayBackwards")));
+			tool_anim->set_button_icon(get_editor_theme_icon(SNAME("Animation")));
 
 			autoplay_icon = get_editor_theme_icon(SNAME("AutoPlay"));
 			reset_icon = get_editor_theme_icon(SNAME("Reload"));
@@ -179,10 +179,10 @@ void AnimationPlayerEditor::_notification(int p_what) {
 				autoplay_reset_icon = ImageTexture::create_from_image(autoplay_reset_img);
 			}
 
-			onion_toggle->set_icon(get_editor_theme_icon(SNAME("Onion")));
-			onion_skinning->set_icon(get_editor_theme_icon(SNAME("GuiTabMenuHl")));
+			onion_toggle->set_button_icon(get_editor_theme_icon(SNAME("Onion")));
+			onion_skinning->set_button_icon(get_editor_theme_icon(SNAME("GuiTabMenuHl")));
 
-			pin->set_icon(get_editor_theme_icon(SNAME("Pin")));
+			pin->set_button_icon(get_editor_theme_icon(SNAME("Pin")));
 
 			track_editor->get_edit_menu()->add_theme_style_override(CoreStringName(normal), get_theme_stylebox(CoreStringName(normal), SNAME("Button")));
 
@@ -317,7 +317,7 @@ void AnimationPlayerEditor::_play_pressed() {
 	}
 
 	//unstop
-	stop->set_icon(pause_icon);
+	stop->set_button_icon(pause_icon);
 }
 
 void AnimationPlayerEditor::_play_from_pressed() {
@@ -341,7 +341,7 @@ void AnimationPlayerEditor::_play_from_pressed() {
 	}
 
 	//unstop
-	stop->set_icon(pause_icon);
+	stop->set_button_icon(pause_icon);
 }
 
 String AnimationPlayerEditor::_get_current() const {
@@ -369,7 +369,7 @@ void AnimationPlayerEditor::_play_bw_pressed() {
 	}
 
 	//unstop
-	stop->set_icon(pause_icon);
+	stop->set_button_icon(pause_icon);
 }
 
 void AnimationPlayerEditor::_play_bw_from_pressed() {
@@ -393,7 +393,7 @@ void AnimationPlayerEditor::_play_bw_from_pressed() {
 	}
 
 	//unstop
-	stop->set_icon(pause_icon);
+	stop->set_button_icon(pause_icon);
 }
 
 void AnimationPlayerEditor::_stop_pressed() {
@@ -410,7 +410,7 @@ void AnimationPlayerEditor::_stop_pressed() {
 		frame->set_value(0);
 		track_editor->set_anim_pos(0);
 	}
-	stop->set_icon(stop_icon);
+	stop->set_button_icon(stop_icon);
 }
 
 void AnimationPlayerEditor::_animation_selected(int p_which) {
@@ -978,9 +978,9 @@ void AnimationPlayerEditor::_update_animation() {
 	updating = true;
 
 	if (player->is_playing()) {
-		stop->set_icon(pause_icon);
+		stop->set_button_icon(pause_icon);
 	} else {
-		stop->set_icon(stop_icon);
+		stop->set_button_icon(stop_icon);
 	}
 
 	scale->set_text(String::num(player->get_speed_scale(), 2));
