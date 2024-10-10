@@ -241,12 +241,16 @@ const Engine = (function () {
 			 */
 			installServiceWorker: function () {
 				if (this.config.serviceWorker && 'serviceWorker' in navigator) {
-					let serviceWorkerPath = this.config.serviceWorker;
-					// Prepend .proxy/ to the serviceWorkerPath value if needed
-					if (window.DiscordEmbed?.isDiscordEmbed()) {
-						serviceWorkerPath = `.proxy/${serviceWorkerPath}`;
+					try {
+						let serviceWorkerPath = this.config.serviceWorker;
+						// Prepend .proxy/ to the serviceWorkerPath value if needed
+						if (window.DiscordEmbed?.isDiscordEmbed()) {
+							serviceWorkerPath = `.proxy/${serviceWorkerPath}`;
+						}
+						return navigator.serviceWorker.register(serviceWorkerPath);
+					} catch (e) {
+						return Promise.reject(e);
 					}
-					return navigator.serviceWorker.register(serviceWorkerPath);
 				}
 				return Promise.resolve();
 			},
