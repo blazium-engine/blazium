@@ -193,6 +193,8 @@ module.exports = [
 			...htmlPlugin.configs.recommended.rules,
 			'@html-eslint/indent': ['error', 'tab'],
 			'@html-eslint/require-closing-tags': ['error', { 'selfClosing': 'never' }],
+			'no-alert': 'off',
+			'no-console': 'off',
 		},
 	},
 
