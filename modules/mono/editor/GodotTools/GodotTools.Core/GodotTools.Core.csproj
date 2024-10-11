@@ -2,8 +2,9 @@
 
   <PropertyGroup>
     <ProjectGuid>{639E48BD-44E5-4091-8EDD-22D36DC0768D}</ProjectGuid>
-    <TargetFramework>net8.0</TargetFramework>
-    <LangVersion>12</LangVersion>
+    <TargetFramework>net6.0</TargetFramework>
+    <EnablePreviewFeatures>true</EnablePreviewFeatures>
+    <LangVersion>11</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 

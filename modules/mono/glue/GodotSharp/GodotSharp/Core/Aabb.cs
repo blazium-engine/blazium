@@ -480,7 +480,7 @@ namespace Godot
         public readonly bool IntersectsPlane(Plane plane)
         {
             ReadOnlySpan<Vector3> points =
-            [
+            stackalloc Vector3[] {
                 new Vector3(_position.X, _position.Y, _position.Z),
                 new Vector3(_position.X, _position.Y, _position.Z + _size.Z),
                 new Vector3(_position.X, _position.Y + _size.Y, _position.Z),
@@ -489,7 +489,7 @@ namespace Godot
                 new Vector3(_position.X + _size.X, _position.Y, _position.Z + _size.Z),
                 new Vector3(_position.X + _size.X, _position.Y + _size.Y, _position.Z),
                 new Vector3(_position.X + _size.X, _position.Y + _size.Y, _position.Z + _size.Z)
-            ];
+            };
 
             bool over = false;
             bool under = false;
