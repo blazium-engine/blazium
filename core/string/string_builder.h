@@ -40,7 +40,7 @@ class StringBuilder {
 	Vector<String> strings;
 	Vector<const char *> c_strings;
 
-	// -1 means it's a Godot String
+	// -1 means it's a Blazium String
 	// a natural number means C string.
 	Vector<int32_t> appended_strings;
 

@@ -43,7 +43,7 @@
 // - Must have recursive semnantics (or simulate, as this one does).
 // The implementation keeps the lock count in TS. Therefore, only
 // one object of each version of the template can exists; hence the Tag argument.
-// Tags must be unique across the Godot codebase.
+// Tags must be unique across the Blazium codebase.
 // Also, don't forget to declare the thread_local variable on each use.
 template <int Tag>
 class SafeBinaryMutex {

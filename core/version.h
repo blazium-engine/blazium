@@ -41,7 +41,7 @@
 #define _MKSTR(m_x) _STR(m_x)
 #endif
 
-// Godot versions are of the form <major>.<minor> for the initial release,
+// Blazium versions are of the form <major>.<minor> for the initial release,
 // and then <major>.<minor>.<patch> for subsequent bugfix releases where <patch> != 0
 // That's arbitrary, but we find it pretty and it's the current policy.
 
@@ -62,7 +62,7 @@
 // Example: 3.1.4 will be 0x030104, making comparison easy from script.
 #define VERSION_HEX 0x10000 * VERSION_MAJOR + 0x100 * VERSION_MINOR + VERSION_PATCH
 
-// Describes the full configuration of that Godot version, including the version number,
+// Describes the full configuration of that Redot version, including the version number,
 // the status (beta, stable, etc.) and potential module-specific features (e.g. mono).
 // Example: "3.1.4.stable.mono"
 #define VERSION_FULL_CONFIG VERSION_NUMBER "." VERSION_STATUS VERSION_MODULE_CONFIG
@@ -72,8 +72,8 @@
 // Example: "3.1.4.stable.mono.official"
 #define VERSION_FULL_BUILD VERSION_FULL_CONFIG "." VERSION_BUILD
 
-// Same as above, but prepended with Godot's name and a cosmetic "v" for "version".
-// Example: "Godot v3.1.4.stable.official.mono"
+// Same as above, but prepended with Blazium's name and a cosmetic "v" for "version".
+// Example: "Blazium v3.1.4.stable.official.mono"
 #define VERSION_FULL_NAME VERSION_NAME " v" VERSION_FULL_BUILD
 
 // Git commit hash, generated at build time in `core/version_hash.gen.cpp`.

@@ -38,7 +38,7 @@
 #include "core/templates/list.h"
 #include "core/templates/rb_map.h"
 
-// Godot's packed file magic header ("GDPC" in ASCII).
+// Blazium's packed file magic header ("GDPC" in ASCII).
 #define PACK_HEADER_MAGIC 0x43504447
 // The current packed file format version number.
 #define PACK_FORMAT_VERSION 2

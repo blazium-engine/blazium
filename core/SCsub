@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from misc.utility.scons_hints import *
 
 Import("env")
 
@@ -157,7 +158,7 @@ if env["builtin_zstd"]:
 env.core_sources += thirdparty_obj
 
 
-# Godot source files
+# Blazium source files
 
 env.add_source_files(env.core_sources, "*.cpp")
 
