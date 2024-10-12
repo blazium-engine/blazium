@@ -54,7 +54,7 @@ for compilation instructions for every supported platform.
 ## Community and contributing
 
 Blazium is not only an engine but an ever-growing community of users and engine
-developers. Please visit our [Discord server](https://discord.gg/redot)!
+developers. Please visit our [Discord server](https://discord.gg/vmJMrGAcb2)!
 
 To get started contributing to the project, see the [contributing guide](CONTRIBUTING.md).
 This document also includes guidelines for reporting bugs.
@@ -62,4 +62,4 @@ This document also includes guidelines for reporting bugs.
 Follow [Blazium on X (Twitter)](https://github.com/blazium-engine/)!
 ## Documentation and demos
 
-The class reference is accessible from the Redot editor.
+The class reference is accessible from the Blazium editor.

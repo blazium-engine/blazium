@@ -3,7 +3,7 @@
 This document summarizes the most important points for people interested in
 contributing to Blazium, especially via bug reports or pull requests.
 
-The [Blazium Discord](https://discord.gg/redot) documentation has a dedicated Contributing section
+The [Blazium Discord](https://discord.gg/vmJMrGAcb2) documentation has a dedicated Contributing section
 which details these points and more, and is a recommended read.
 
 ## Table of contents
@@ -35,7 +35,7 @@ call a _regression_), please mention it and clarify which versions you tested
 
 **The main issue tracker is for bug reports and does not accept feature proposals.**
 
-Instead, head to the [Blazium Discord](https://discord.gg/redot).
+Instead, head to the [Blazium Discord](https://discord.gg/vmJMrGAcb2).
 
 ## Contributing pull requests
 
@@ -52,7 +52,7 @@ Similar rules can be applied when contributing bug fixes - it's always best to
 discuss the implementation in the bug report first if you are not 100% about
 what would be the best fix.
 
-Visit the [Blazium Discord](https://discord.gg/redot) for information and guides related to contribution and pull requests.
+Visit the [Blazium Discord](https://discord.gg/vmJMrGAcb2) for information and guides related to contribution and pull requests.
 
 ### Be mindful of your commits
 
@@ -170,17 +170,17 @@ for an overview of the translation resources and what they correspond to.
 
 ## Communicating with developers
 
-The Blazium Engine community is largely centralized on the [Blazium Discord](https://discord.gg/redot) at this time, feel free to drop by!
+The Blazium Engine community is largely centralized on the [Blazium Discord](https://discord.gg/vmJMrGAcb2) at this time, feel free to drop by!
 
 To communicate with developers (e.g. to discuss a feature you want to implement
 or a bug you want to fix), the following channels can be used:
 
-- [Blazium Discord](https://discord.gg/redot): General community chat and development can all be found here.
+- [Blazium Discord](https://discord.gg/vmJMrGAcb2): General community chat and development can all be found here.
 - [Bug tracker](https://github.com/Blazium-Engine/blazium-engine/issues): If there is an
   existing issue about a topic you want to discuss, you can participate directly.
   If not, you can open a new issue. Please mind the guidelines outlined above
   for bug reporting.
-- Feature Proposals should be made on the [Blazium Discord](https://discord.gg/redot) for now.
+- Feature Proposals should be made on the [Blazium Discord](https://discord.gg/vmJMrGAcb2) for now.
 - [Blazium](https://github.com/blazium-engine/) on X (Twitter)
 
 Thanks for your interest in contributing!
