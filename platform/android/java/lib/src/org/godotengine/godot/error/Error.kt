@@ -31,7 +31,7 @@
 package org.godotengine.godot.error
 
 /**
- * Godot error list.
+ * Blazium error list.
  *
  * This enum MUST match its native counterpart in 'core/error/error_list.h'
  */

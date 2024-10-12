@@ -36,7 +36,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to indicate a method is being invoked from the Godot game logic.
+ * Annotation to indicate a method is being invoked from the Blazium game logic.
  *
  * At runtime, annotated plugin methods are detected and automatically registered.
  */

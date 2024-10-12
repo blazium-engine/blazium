@@ -40,7 +40,7 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 /**
- * Godot's GL renderer implementation.
+ * Blazium's GL renderer implementation.
  */
 public class GodotRenderer implements GLSurfaceView.Renderer {
 	private final String TAG = GodotRenderer.class.getSimpleName();
@@ -68,7 +68,7 @@ public class GodotRenderer implements GLSurfaceView.Renderer {
 
 	@Override
 	public void onRenderThreadExiting() {
-		Log.d(TAG, "Destroying Godot Engine");
+		Log.d(TAG, "Destroying Blazium Engine");
 		GodotLib.ondestroy();
 	}
 

@@ -72,7 +72,7 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * Base fragment for Android apps intending to use Godot for part of the app's UI.
+ * Base fragment for Android apps intending to use Blazium for part of the app's UI.
  */
 public class GodotFragment extends Fragment implements IDownloaderClient, GodotHost {
 	private static final String TAG = GodotFragment.class.getSimpleName();

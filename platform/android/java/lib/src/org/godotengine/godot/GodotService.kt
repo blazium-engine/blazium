@@ -7,7 +7,7 @@ import android.os.IBinder
 import android.util.Log
 
 /**
- * Godot service responsible for hosting the Godot engine instance.
+ * Blazium service responsible for hosting the Blazium engine instance.
  *
  * Note: Still in development, so it's made private and inaccessible until completed.
  */

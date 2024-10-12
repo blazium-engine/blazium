@@ -45,7 +45,7 @@ import org.godotengine.godot.utils.PermissionsUtil
 import org.godotengine.godot.utils.ProcessPhoenix
 
 /**
- * Drives the 'run project' window of the Godot Editor.
+ * Drives the 'run project' window of the Blazium Editor.
  */
 open class GodotGame : GodotEditor() {
 

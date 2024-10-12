@@ -17,11 +17,11 @@ ext.versions = [
 ]
 
 ext.getExportPackageName = { ->
-    // Retrieve the app id from the project property set by the Godot build command.
+    // Retrieve the app id from the project property set by the Blazium build command.
     String appId = project.hasProperty("export_package_name") ? project.property("export_package_name") : ""
     // Check if the app id is valid, otherwise use the default.
     if (appId == null || appId.isEmpty()) {
-        appId = "com.godot.game"
+        appId = "com.blazium.game"
     }
     return appId
 }
@@ -219,7 +219,7 @@ ext.getExportPath = {
 ext.getExportFilename = {
     String exportFilename = project.hasProperty("export_filename") ? project.property("export_filename") : ""
     if (exportFilename == null || exportFilename.isEmpty()) {
-        exportFilename = "godot_android"
+        exportFilename = "blazium_android"
     }
     return exportFilename
 }

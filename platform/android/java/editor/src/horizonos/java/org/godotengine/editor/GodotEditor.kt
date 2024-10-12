@@ -34,7 +34,7 @@ import org.godotengine.godot.GodotLib
 import org.godotengine.godot.utils.isNativeXRDevice
 
 /**
- * Primary window of the Godot Editor.
+ * Primary window of the Blazium Editor.
  *
  * This is the implementation of the editor used when running on HorizonOS devices.
  */

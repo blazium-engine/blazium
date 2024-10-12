@@ -31,7 +31,7 @@
 package org.godotengine.editor
 
 /**
- * Primary window of the Godot Editor.
+ * Primary window of the Blazium Editor.
  *
  * This is the implementation of the editor used when running on regular Android devices.
  */
