@@ -62,7 +62,7 @@
 // Example: 3.1.4 will be 0x030104, making comparison easy from script.
 #define VERSION_HEX 0x10000 * VERSION_MAJOR + 0x100 * VERSION_MINOR + VERSION_PATCH
 
-// Describes the full configuration of that Redot version, including the version number,
+// Describes the full configuration of that Blazium version, including the version number,
 // the status (beta, stable, etc.) and potential module-specific features (e.g. mono).
 // Example: "3.1.4.stable.mono"
 #define VERSION_FULL_CONFIG VERSION_NUMBER "." VERSION_STATUS VERSION_MODULE_CONFIG
