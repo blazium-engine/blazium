@@ -199,14 +199,6 @@ def configure(env: "SConsEnvironment"):
     cc_version = get_compiler_version(env)
     cc_semver = (cc_version["major"], cc_version["minor"], cc_version["patch"])
 
-<<<<<<< HEAD
-=======
-    # Minimum emscripten requirements.
-    if cc_semver < (3, 1, 62):
-        print_error("The minimum emscripten version to build Blazium is 3.1.62, detected: %s.%s.%s" % cc_semver)
-        sys.exit(255)
-
->>>>>>> a534a98048 (Alot of rebranding, check for errors please)
     env.Prepend(CPPPATH=["#platform/web"])
     env.Append(CPPDEFINES=["WEB_ENABLED", "UNIX_ENABLED"])
 
