@@ -1,9 +1,9 @@
-# Exhaustive licensing information for files in the Godot Engine repository
+# Exhaustive licensing information for files in the Blazium Engine repository
 # =========================================================================
 #
 # This file aims at documenting the copyright and license for every source
-# file in the Godot Engine repository, and especially outline the files
-# whose license differs from the MIT/Expat license used by Godot Engine.
+# file in the Blazium Engine repository, and especially outline the files
+# whose license differs from the MIT/Expat license used by Blazium Engine.
 #
 # It is written as a machine-readable format following the debian/copyright
 # specification. Globbing patterns (e.g. "Files: *") mean that they affect
@@ -27,23 +27,24 @@
 #   License: Zlib
 # The exact copyright for each file in that library *may* differ, and some
 # files or code snippets might be distributed under other compatible licenses
-# (e.g. a public domain dedication), but as far as Godot Engine is concerned
+# (e.g. a public domain dedication), but as far as Blazium Engine is concerned
 # the library is considered as a whole under the Zlib license.
 #
 # Note: When linking dynamically against thirdparty libraries instead of
-# building them into the Godot binary, you may remove the corresponding
+# building them into the Blazium binary, you may remove the corresponding
 # license details from this file.
 
 -----------------------------------------------------------------------
 
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: Godot Engine
-Upstream-Contact: Rémi Verschelde <contact@godotengine.org>
-Source: https://github.com/godotengine/godot
+Upstream-Name: Blazium Engine
+Upstream-Contact: [PUT NAME NAME] <blaziumengine@gmail.com>
+Source: https://github.com/blazium-engine/blazium
 
 Files: *
-Comment: Godot Engine
-Copyright: 2014-present, Godot Engine contributors
+Comment: Blazium Engine
+Copyright: 2024-present, Blazium Engine contributors
+ 2014-present, Godot Engine contributors
  2007-2014, Juan Linietsky, Ariel Manzur
 License: Expat
 
@@ -51,14 +52,55 @@ Files: ./icon.png
  ./icon.svg
  ./logo.png
  ./logo.svg
-Comment: Godot Engine logo
-Copyright: 2017, Andrea Calabró
+Comment: Blazium Engine logo
+Copyright: 2024, [LOGE (on X/Twitter)
 License: CC-BY-4.0
 
 Files: ./core/math/convex_hull.cpp
  ./core/math/convex_hull.h
 Comment: Bullet Continuous Collision Detection and Physics Library
 Copyright: 2011, Ole Kniemeyer, MAXON, www.maxon.net
+ 2024-present, Blazium Engine contributors
+ 2014-present, Godot Engine contributors
+ 2007-2014, Juan Linietsky, Ariel Manzur
+License: Expat and Zlib
+
+Files: ./modules/godot_physics_2d/godot_joints_2d.cpp
+Comment: Chipmunk2D Joint Constraints
+Copyright: 2007, Scott Lembcke
+License: Expat
+
+Files: ./modules/godot_physics_3d/gjk_epa.cpp
+ ./modules/godot_physics_3d/joints/godot_generic_6dof_joint_3d.cpp
+ ./modules/godot_physics_3d/joints/godot_generic_6dof_joint_3d.h
+ ./modules/godot_physics_3d/joints/godot_hinge_joint_3d.cpp
+ ./modules/godot_physics_3d/joints/godot_hinge_joint_3d_sw.h
+ ./modules/godot_physics_3d/joints/godot_jacobian_entry_3d_sw.h
+ ./modules/godot_physics_3d/joints/godot_pin_joint_3d.cpp
+ ./modules/godot_physics_3d/joints/godot_pin_joint_3d.h
+ ./modules/godot_physics_3d/joints/godot_slider_joint_3d.cpp
+ ./modules/godot_physics_3d/joints/godot_slider_joint_3d.h
+ ./modules/godot_physics_3d/godot_soft_body_3d.cpp
+ ./modules/godot_physics_3d/godot_soft_body_3d.h
+ ./modules/godot_physics_3d/godot_shape_3d.cpp
+ ./modules/godot_physics_3d/godot_shape_3d.h
+Comment: Bullet Continuous Collision Detection and Physics Library
+Copyright: 2003-2008, Erwin Coumans
+ 2024-present, Blazium Engine contributors
+ 2014-present, Godot Engine contributors
+ 2007-2014, Juan Linietsky, Ariel Manzur
+License: Expat and Zlib
+
+Files: ./modules/godot_physics_3d/godot_collision_solver_3d_sat.cpp
+Comment: Open Dynamics Engine
+Copyright: 2001-2003, Russell L. Smith, Alen Ladavac, Nguyen Binh
+License: BSD-3-clause
+
+Files: ./modules/godot_physics_3d/joints/godot_cone_twist_joint_3d.cpp
+ ./modules/godot_physics_3d/joints/godot_cone_twist_joint_3d.h
+Comment: Bullet Continuous Collision Detection and Physics Library
+Copyright: 2007, Starbreeze Studios
+ 2024-present, Blazium Engine contributors
  2014-present, Godot Engine contributors
  2007-2014, Juan Linietsky, Ariel Manzur
 License: Expat and Zlib
@@ -66,11 +108,13 @@ License: Expat and Zlib
 Files: ./modules/lightmapper_rd/lm_compute.glsl
 Comment: Joint Non-Local Means (JNLM) denoiser
 Copyright: 2020, Manuel Prandini
+ 2024-present, Blazium Engine contributors
  2014-present, Godot Engine contributors
  2007-2014, Juan Linietsky, Ariel Manzur
 License: Expat
 
-Files: ./platform/android/java/lib/aidl/com/android/*
+Files: ./platform/android/java/editor/src/main/java/com/android/*
+ ./platform/android/java/lib/aidl/com/android/*
  ./platform/android/java/lib/res/layout/status_bar_ongoing_event_progress_bar.xml
  ./platform/android/java/lib/src/com/google/android/*
  ./platform/android/java/lib/src/org/godotengine/godot/input/InputManagerCompat.java
@@ -88,47 +132,10 @@ License: Apache-2.0
 Files: ./scene/animation/easing_equations.h
 Comment: Robert Penner's Easing Functions
 Copyright: 2001, Robert Penner
+ 2024-present, Blazium Engine contributors
  2014-present, Godot Engine contributors
  2007-2014, Juan Linietsky, Ariel Manzur
 License: Expat
-
-Files: ./servers/physics_2d/godot_joints_2d.cpp
-Comment: Chipmunk2D Joint Constraints
-Copyright: 2007, Scott Lembcke
-License: Expat
-
-Files: ./servers/physics_3d/collision_solver_3d_sat.cpp
-Comment: Open Dynamics Engine
-Copyright: 2001-2003, Russell L. Smith, Alen Ladavac, Nguyen Binh
-License: BSD-3-clause
-
-Files: ./servers/physics_3d/gjk_epa.cpp
- ./servers/physics_3d/joints/generic_6dof_joint_3d_sw.cpp
- ./servers/physics_3d/joints/generic_6dof_joint_3d_sw.h
- ./servers/physics_3d/joints/hinge_joint_3d_sw.cpp
- ./servers/physics_3d/joints/hinge_joint_3d_sw.h
- ./servers/physics_3d/joints/jacobian_entry_3d_sw.h
- ./servers/physics_3d/joints/pin_joint_3d_sw.cpp
- ./servers/physics_3d/joints/pin_joint_3d_sw.h
- ./servers/physics_3d/joints/slider_joint_3d_sw.cpp
- ./servers/physics_3d/joints/slider_joint_3d_sw.h
- ./servers/physics_3d/soft_body_3d_sw.cpp
- ./servers/physics_3d/soft_body_3d_sw.h
- ./servers/physics_3d/shape_3d_sw.cpp
- ./servers/physics_3d/shape_3d_sw.h
-Comment: Bullet Continuous Collision Detection and Physics Library
-Copyright: 2003-2008, Erwin Coumans
- 2014-present, Godot Engine contributors
- 2007-2014, Juan Linietsky, Ariel Manzur
-License: Expat and Zlib
-
-Files: ./servers/physics_3d/joints/cone_twist_joint_3d_sw.cpp
- ./servers/physics_3d/joints/cone_twist_joint_3d_sw.h
-Comment: Bullet Continuous Collision Detection and Physics Library
-Copyright: 2007, Starbreeze Studios
- 2014-present, Godot Engine contributors
- 2007-2014, Juan Linietsky, Ariel Manzur
-License: Expat and Zlib
 
 Files: ./servers/rendering/renderer_rd/shaders/ss_effects_downsample.glsl
  ./servers/rendering/renderer_rd/shaders/ssao_blur.glsl
@@ -474,6 +481,11 @@ Files: ./thirdparty/rvo2/
 Comment: RVO2
 Copyright: 2016, University of North Carolina at Chapel Hill
 License: Apache-2.0
+
+Files: ./thirdparty/spirv-cross/
+Comment: SPIRV-Cross
+Copyright: 2015-2021, Arm Limited
+License: Apache-2.0 or Expat
 
 Files: ./thirdparty/spirv-reflect/
 Comment: SPIRV-Reflect
