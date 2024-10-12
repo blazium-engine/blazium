@@ -31,13 +31,7 @@
 package org.godotengine.godot.io.file
 
 /**
-<<<<<<< HEAD:platform/android/java/lib/src/org/godotengine/godot/io/file/FileErrors.kt
  * Set of errors that may occur when performing data access.
-=======
- * Primary window of the Blazium Editor.
- *
- * This is the implementation of the editor used when running on HorizonOS devices.
->>>>>>> a534a98048 (Alot of rebranding, check for errors please):platform/android/java/editor/src/horizonos/java/org/godotengine/editor/GodotEditor.kt
  */
 internal enum class FileErrors(val nativeValue: Int) {
 	OK(0),

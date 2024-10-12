@@ -209,15 +209,8 @@ class Godot(private val context: Context) : SensorEventListener {
 			val window = activity.window
 			window.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
 
-<<<<<<< HEAD
 			Log.v(TAG, "Initializing Godot plugin registry")
 			GodotPluginRegistry.initializePluginRegistry(this, primaryHost.getHostPlugins(this))
-=======
-			Log.v(TAG, "Initializing Blazium plugin registry")
-			val runtimePlugins = mutableSetOf<GodotPlugin>(AndroidRuntimePlugin(this))
-			runtimePlugins.addAll(primaryHost.getHostPlugins(this))
-			GodotPluginRegistry.initializePluginRegistry(this, runtimePlugins)
->>>>>>> a534a98048 (Alot of rebranding, check for errors please)
 			if (io == null) {
 				io = GodotIO(activity)
 			}
@@ -318,59 +311,7 @@ class Godot(private val context: Context) : SensorEventListener {
 	}
 
 	/**
-<<<<<<< HEAD
 	 * Initializes the native layer of the Godot engine.
-=======
-	 * Toggle immersive mode.
-	 * Must be called from the UI thread.
-	 */
-	private fun enableImmersiveMode(enabled: Boolean, override: Boolean = false) {
-		val activity = getActivity() ?: return
-		val window = activity.window ?: return
-
-		if (!useImmersive.compareAndSet(!enabled, enabled) && !override) {
-			return
-		}
-
-		WindowCompat.setDecorFitsSystemWindows(window, !enabled)
-		val controller = WindowInsetsControllerCompat(window, window.decorView)
-		if (enabled) {
-			controller.hide(WindowInsetsCompat.Type.systemBars())
-			controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-		} else {
-			val fullScreenThemeValue = TypedValue()
-			val hasStatusBar = if (activity.theme.resolveAttribute(android.R.attr.windowFullscreen, fullScreenThemeValue, true) && fullScreenThemeValue.type == TypedValue.TYPE_INT_BOOLEAN) {
-				fullScreenThemeValue.data == 0
-			} else {
-				// Fallback to checking the editor build
-				!isEditorBuild()
-			}
-
-			val types = if (hasStatusBar) {
-				WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.statusBars()
-			} else {
-				WindowInsetsCompat.Type.navigationBars()
-			}
-			controller.show(types)
-		}
-	}
-
-	/**
-	 * Invoked from the render thread to toggle the immersive mode.
-	 */
-	@Keep
-	private fun nativeEnableImmersiveMode(enabled: Boolean) {
-		runOnUiThread {
-			enableImmersiveMode(enabled)
-		}
-	}
-
-	@Keep
-	fun isInImmersiveMode() = useImmersive.get()
-
-	/**
-	 * Initializes the native layer of the Blazium engine.
->>>>>>> a534a98048 (Alot of rebranding, check for errors please)
 	 *
 	 * This must be preceded by [onCreate] and followed by [onInitRenderView] to complete
 	 * initialization of the engine.

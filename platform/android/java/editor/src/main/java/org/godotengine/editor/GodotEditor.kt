@@ -55,13 +55,9 @@ import kotlin.math.min
  *
  * This provides the basic templates for the activities making up this application.
  * Each derived activity runs in its own process, which enable up to have several instances of
-<<<<<<< HEAD:platform/android/java/editor/src/main/java/org/godotengine/editor/GodotEditor.kt
  * the Godot engine up and running at the same time.
  *
  * It also plays the role of the primary editor window.
-=======
- * the Blazium engine up and running at the same time.
->>>>>>> a534a98048 (Alot of rebranding, check for errors please):platform/android/java/editor/src/main/java/org/godotengine/editor/BaseGodotEditor.kt
  */
 open class GodotEditor : GodotActivity() {
 
