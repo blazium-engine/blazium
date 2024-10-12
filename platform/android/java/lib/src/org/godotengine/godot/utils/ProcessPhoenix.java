@@ -44,6 +44,12 @@ import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
  */
 public final class ProcessPhoenix extends Activity {
   private static final String KEY_RESTART_INTENTS = "phoenix_restart_intents";
+<<<<<<< HEAD
+=======
+  // -- BLAZIUM start --
+  private static final String KEY_RESTART_ACTIVITY_OPTIONS = "phoenix_restart_activity_options";
+  // -- BLAZIUM end --
+>>>>>>> a534a98048 (Alot of rebranding, check for errors please)
   private static final String KEY_MAIN_PROCESS_PID = "phoenix_main_process_pid";
 
   /**
@@ -56,6 +62,10 @@ public final class ProcessPhoenix extends Activity {
     triggerRebirth(context, getRestartIntent(context));
   }
 
+<<<<<<< HEAD
+=======
+  // -- BLAZIUM start --
+>>>>>>> a534a98048 (Alot of rebranding, check for errors please)
   /**
    * Call to restart the application process using the specified intents.
    * <p>
@@ -94,7 +104,7 @@ public final class ProcessPhoenix extends Activity {
     Runtime.getRuntime().exit(0); // Kill kill kill!
   }
 
-  // -- GODOT end --
+  // -- BLAZIUM end --
 
   private static Intent getRestartIntent(Context context) {
     String packageName = context.getPackageName();
@@ -111,11 +121,21 @@ public final class ProcessPhoenix extends Activity {
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
+<<<<<<< HEAD
     // -- GODOT start --
     ArrayList<Intent> intents = getIntent().getParcelableArrayListExtra(KEY_RESTART_INTENTS);
     startActivities(intents.toArray(new Intent[intents.size()]));
     forceQuit(this, getIntent().getIntExtra(KEY_MAIN_PROCESS_PID, -1));
     // -- GODOT end --
+=======
+    // -- BLAZIUM start --
+    Intent launchIntent = getIntent();
+    ArrayList<Intent> intents = launchIntent.getParcelableArrayListExtra(KEY_RESTART_INTENTS);
+    Bundle activityOptions = launchIntent.getBundleExtra(KEY_RESTART_ACTIVITY_OPTIONS);
+    startActivities(intents.toArray(new Intent[intents.size()]), activityOptions);
+    forceQuit(this, launchIntent.getIntExtra(KEY_MAIN_PROCESS_PID, -1));
+    // -- BLAZIUM end --
+>>>>>>> a534a98048 (Alot of rebranding, check for errors please)
   }
 
   /**

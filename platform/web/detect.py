@@ -32,7 +32,7 @@ def get_opts():
 
     return [
         ("initial_memory", "Initial WASM memory (in MiB)", 32),
-        # Matches default values from before Emscripten 3.1.27. New defaults are too low for Godot.
+        # Matches default values from before Emscripten 3.1.27. New defaults are too low for Blazium.
         ("stack_size", "WASM stack size (in KiB)", 5120),
         ("default_pthread_stack_size", "WASM pthread default stack size (in KiB)", 2048),
         BoolVariable("use_assertions", "Use Emscripten runtime assertions", False),
@@ -199,6 +199,14 @@ def configure(env: "SConsEnvironment"):
     cc_version = get_compiler_version(env)
     cc_semver = (cc_version["major"], cc_version["minor"], cc_version["patch"])
 
+<<<<<<< HEAD
+=======
+    # Minimum emscripten requirements.
+    if cc_semver < (3, 1, 62):
+        print_error("The minimum emscripten version to build Blazium is 3.1.62, detected: %s.%s.%s" % cc_semver)
+        sys.exit(255)
+
+>>>>>>> a534a98048 (Alot of rebranding, check for errors please)
     env.Prepend(CPPPATH=["#platform/web"])
     env.Append(CPPDEFINES=["WEB_ENABLED", "UNIX_ENABLED"])
 
@@ -278,8 +286,8 @@ def configure(env: "SConsEnvironment"):
     # Reduce code size by generating less support code (e.g. skip NodeJS support).
     env.Append(LINKFLAGS=["-sENVIRONMENT=web,worker"])
 
-    # Wrap the JavaScript support code around a closure named Godot.
-    env.Append(LINKFLAGS=["-sMODULARIZE=1", "-sEXPORT_NAME='Godot'"])
+    # Wrap the JavaScript support code around a closure named Blazium.
+    env.Append(LINKFLAGS=["-sMODULARIZE=1", "-sEXPORT_NAME='Blazium'"])
 
     # Force long jump mode to 'wasm'
     env.Append(CCFLAGS=["-sSUPPORT_LONGJMP='wasm'"])

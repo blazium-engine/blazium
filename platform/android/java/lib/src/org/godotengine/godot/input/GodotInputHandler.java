@@ -251,7 +251,7 @@ public class GodotInputHandler implements InputManager.InputDeviceListener {
 					final float value = event.getAxisValue(axis);
 					/*
 					  As all axes are polled for each event, only fire an axis event if the value has actually changed.
-					  Prevents flooding Godot with repeated events.
+					  Prevents flooding Blazium with repeated events.
 					 */
 					if (joystick.axesValues.indexOfKey(axis) < 0 || (float)joystick.axesValues.get(axis) != value) {
 						// save value to prevent repeats
@@ -370,7 +370,7 @@ public class GodotInputHandler implements InputManager.InputDeviceListener {
 		Collections.sort(joystick.axes);
 		for (int idx = 0; idx < joystick.axes.size(); idx++) {
 			//Helps with creating new joypad mappings.
-			Log.i(TAG, " - Mapping Android axis " + joystick.axes.get(idx) + " to Godot axis " + idx);
+			Log.i(TAG, " - Mapping Android axis " + joystick.axes.get(idx) + " to Blazium axis " + idx);
 		}
 		mJoysticksDevices.put(deviceId, joystick);
 

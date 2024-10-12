@@ -40,7 +40,7 @@ public interface GodotRenderView {
 	void initInputDevices();
 
 	/**
-	 * Starts the thread that will drive Godot's rendering.
+	 * Starts the thread that will drive Blazium's rendering.
 	 */
 	void startRenderer();
 

@@ -39,34 +39,34 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Denotate a component (e.g: Activity, Fragment) that hosts the {@link Godot} engine.
+ * Denotate a component (e.g: Activity, Fragment) that hosts the {@link Blazium} engine.
  */
 public interface GodotHost {
 	/**
-	 * Provides a set of command line parameters to setup the {@link Godot} engine.
+	 * Provides a set of command line parameters to setup the {@link Blazium} engine.
 	 */
 	default List<String> getCommandLine() {
 		return Collections.emptyList();
 	}
 
 	/**
-	 * Invoked on the render thread when setup of the {@link Godot} engine is complete.
+	 * Invoked on the render thread when setup of the {@link Blazium} engine is complete.
 	 */
 	default void onGodotSetupCompleted() {}
 
 	/**
-	 * Invoked on the render thread when the {@link Godot} engine main loop has started.
+	 * Invoked on the render thread when the {@link Blazium} engine main loop has started.
 	 */
 	default void onGodotMainLoopStarted() {}
 
 	/**
-	 * Invoked on the render thread to terminate the given {@link Godot} engine instance.
+	 * Invoked on the render thread to terminate the given {@link Blazium} engine instance.
 	 */
 	default void onGodotForceQuit(Godot instance) {}
 
 	/**
-	 * Invoked on the render thread to terminate the {@link Godot} engine instance with the given id.
-	 * @param godotInstanceId id of the Godot instance to terminate. See {@code onNewGodotInstanceRequested}
+	 * Invoked on the render thread to terminate the {@link Blazium} engine instance with the given id.
+	 * @param godotInstanceId id of the Blazium instance to terminate. See {@code onNewGodotInstanceRequested}
 	 *
 	 * @return true if successful, false otherwise.
 	 */
@@ -75,13 +75,13 @@ public interface GodotHost {
 	}
 
 	/**
-	 * Invoked on the render thread when the Godot instance wants to be restarted. It's up to the host
+	 * Invoked on the render thread when the Blazium instance wants to be restarted. It's up to the host
 	 * to perform the appropriate action(s).
 	 */
 	default void onGodotRestartRequested(Godot instance) {}
 
 	/**
-	 * Invoked on the render thread when a new Godot instance is requested. It's up to the host to
+	 * Invoked on the render thread when a new Blazium instance is requested. It's up to the host to
 	 * perform the appropriate action(s).
 	 *
 	 * @param args Arguments used to initialize the new instance.
@@ -93,17 +93,17 @@ public interface GodotHost {
 	}
 
 	/**
-	 * Provide access to the Activity hosting the {@link Godot} engine.
+	 * Provide access to the Activity hosting the {@link Blazium} engine.
 	 */
 	Activity getActivity();
 
 	/**
-	 * Provide access to the hosted {@link Godot} engine.
+	 * Provide access to the hosted {@link Blazium} engine.
 	 */
 	Godot getGodot();
 
 	/**
-	 * Returns a set of {@link GodotPlugin} to be registered with the hosted {@link Godot} engine.
+	 * Returns a set of {@link GodotPlugin} to be registered with the hosted {@link Blazium} engine.
 	 */
 	default Set<GodotPlugin> getHostPlugins(Godot engine) {
 		return Collections.emptySet();

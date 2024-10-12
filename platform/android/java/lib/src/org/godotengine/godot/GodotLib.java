@@ -52,7 +52,7 @@ public class GodotLib {
 	}
 
 	/**
-	 * Invoked on the main thread to initialize Godot native layer.
+	 * Invoked on the main thread to initialize Blazium native layer.
 	 */
 	public static native boolean initialize(Activity activity,
 			Godot p_instance,
@@ -64,14 +64,14 @@ public class GodotLib {
 			boolean use_apk_expansion);
 
 	/**
-	 * Invoked on the main thread to clean up Godot native layer.
+	 * Invoked on the main thread to clean up Blazium native layer.
 	 * @see androidx.fragment.app.Fragment#onDestroy()
 	 */
 	public static native void ondestroy();
 
 	/**
-	 * Invoked on the GL thread to complete setup for the Godot native layer logic.
-	 * @param p_cmdline Command line arguments used to configure Godot native layer components.
+	 * Invoked on the GL thread to complete setup for the Blazium native layer logic.
+	 * @param p_cmdline Command line arguments used to configure Blazium native layer components.
 	 */
 	public static native boolean setup(String[] p_cmdline, GodotTTS tts);
 
@@ -182,30 +182,30 @@ public class GodotLib {
 	public static native void focusout();
 
 	/**
-	 * Used to access Godot global properties.
+	 * Used to access Blazium global properties.
 	 * @param p_key Property key
 	 * @return String value of the property
 	 */
 	public static native String getGlobal(String p_key);
 
 	/**
-	 * Used to access Godot's editor settings.
+	 * Used to access Blazium's editor settings.
 	 * @param settingKey Setting key
 	 * @return String value of the setting
 	 */
 	public static native String getEditorSetting(String settingKey);
 
 	/**
-	 * Invoke method |p_method| on the Godot object specified by |p_id|
-	 * @param p_id Id of the Godot object to invoke
+	 * Invoke method |p_method| on the Blazium object specified by |p_id|
+	 * @param p_id Id of the Blazium object to invoke
 	 * @param p_method Name of the method to invoke
 	 * @param p_params Parameters to use for method invocation
 	 */
 	public static native void callobject(long p_id, String p_method, Object[] p_params);
 
 	/**
-	 * Invoke method |p_method| on the Godot object specified by |p_id| during idle time.
-	 * @param p_id Id of the Godot object to invoke
+	 * Invoke method |p_method| on the Blazium object specified by |p_id| during idle time.
+	 * @param p_id Id of the Blazium object to invoke
 	 * @param p_method Name of the method to invoke
 	 * @param p_params Parameters to use for method invocation
 	 */

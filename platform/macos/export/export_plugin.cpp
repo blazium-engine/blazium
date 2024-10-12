@@ -902,7 +902,7 @@ void EditorExportPlatformMacOS::_fix_plist(const Ref<EditorExportPreset> &p_pres
 }
 
 /**
- * If we're running the macOS version of the Godot editor we'll:
+ * If we're running the macOS version of the Blazium editor we'll:
  * - export our application bundle to a temporary folder
  * - attempt to code sign it
  * - and then wrap it up in a DMG
