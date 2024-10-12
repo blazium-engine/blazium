@@ -167,6 +167,9 @@ gmon.out
 # Mypy
 .mypy_cache
 
+# Netbeans
+/target/
+
 # Qt Creator
 *.config
 *.creator
