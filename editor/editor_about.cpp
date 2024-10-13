@@ -252,7 +252,7 @@ EditorAbout::EditorAbout() {
 	tc->add_child(_populate_list(TTR("Blazium Authors"), dev_sections, dev_src, 0b1)); // First section (Project Founders) is always one column.
 
 	// Blazium Donors.
-        // This will need to be deleted in another PR
+	// This will need to be deleted in another PR
 
 	List<String> donor_sections;
 	donor_sections.push_back(TTR("Patrons"));
