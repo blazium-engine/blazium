@@ -971,7 +971,7 @@ void UnixTerminalLogger::log_error(const char *p_function, const char *p_file, i
 	}
 
 	// Disable color codes if stdout is not a TTY.
-	// This prevents Godot from writing ANSI escape codes when redirecting
+	// This prevents Blazium from writing ANSI escape codes when redirecting
 	// stdout and stderr to a file.
 	const bool tty = isatty(fileno(stdout));
 	const char *gray = tty ? "\E[0;90m" : "";
