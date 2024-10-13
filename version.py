@@ -1,9 +1,9 @@
-short_name = "godot"
-name = "Godot Engine"
+short_name = "blazium"
+name = "Blazium Engine"
 major = 4
 minor = 4
 patch = 0
 status = "dev"
 module_config = ""
-website = "https://godotengine.org"
+website = "https://blazium.app"
 docs = "latest"
