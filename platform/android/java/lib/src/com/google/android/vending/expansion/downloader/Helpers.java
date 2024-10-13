@@ -128,7 +128,10 @@ public class Helpers {
             File file = new File(path);
             file.delete();
         } catch (Exception e) {
-            Log.w(Constants.TAG, "file: '" + path + "' couldn't be deleted", e);
+            StringBuilder logData = new StringBuilder("file: '");
+            logData.append(path);
+            logData.append("' couldn't be deleted");
+            Log.w(Constants.TAG, logData.toString(), e);
         }
     }
 
@@ -213,16 +216,23 @@ public class Helpers {
      * @return String the file name of the expansion file
      */
     public static String getExpansionAPKFileName(Context c, boolean mainFile, int versionCode) {
-        return (mainFile ? "main." : "patch.") + versionCode + "." + c.getPackageName() + ".obb";
+        StringBuilder apkPath = new StringBuilder((mainFile ? "main." : "patch."));
+        apkPath.append(versionCode);
+        apkPath.append(".");
+        apkPath.append(c.getPackageName());
+        apkPath.append(".obb");
+        return apkPath.toString();
     }
 
     /**
      * Returns the filename (where the file should be saved) from info about a download
      */
     static public String generateSaveFileName(Context c, String fileName) {
-        String path = getSaveFilePath(c)
-                + File.separator + fileName;
-        return path;
+        StringBuilder path = new StringBuilder();
+        path.append(getSaveFilePath(c));
+        path.append(File.separator);
+        path.append(fileName);
+        return path.toString();
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -234,8 +244,11 @@ public class Helpers {
             return c.getObbDir().toString();
         } else {
             File root = Environment.getExternalStorageDirectory();
-            String path = root.toString() + Constants.EXP_PATH + c.getPackageName();
-            return path;
+            StringBuilder path = new StringBuilder();
+            path.append(root.toString());
+            path.append(Constants.EXP_PATH);
+            path.append(c.getPackageName());
+            return path.toString();
         }
     }
 
