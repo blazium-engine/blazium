@@ -39,7 +39,7 @@
 // The default icon theme is designed to be used for a dark theme. This map stores
 // Color values to convert to other colors for better readability on a light theme.
 class EditorColorMap {
-	// Godot Color values are used to avoid the ambiguity of strings
+	// Blazium Color values are used to avoid the ambiguity of strings
 	// (where "#ffffff", "fff", and "white" are all equivalent).
 	static HashMap<Color, Color> color_conversion_map;
 	// The names of the icons to never convert, even if one of their colors

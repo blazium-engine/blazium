@@ -48,7 +48,7 @@
 #include "scene/resources/packed_scene.h"
 
 EditorFileSystem *EditorFileSystem::singleton = nullptr;
-//the name is the version, to keep compatibility with different versions of Godot
+//the name is the version, to keep compatibility with different versions of Blazium
 #define CACHE_FILE_NAME "filesystem_cache8"
 
 int EditorFileSystemDirectory::find_file_index(const String &p_file) const {
