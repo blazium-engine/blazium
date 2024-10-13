@@ -547,7 +547,6 @@ bool ProjectConverter3To4::validate_conversion() {
 		String conventer_text = "; Project was converted by built-in tool to Blazium 4";
 
                 //Do NOT change the 'project.godot' in this set of lines, it will break engine's ability to import godot projects
-                //TODO have a C++ dev come in here, and add support for .redot, and .blazium files
 		ERR_FAIL_COND_V_MSG(!FileAccess::exists("project.godot"), false, "Current directory doesn't contain any Blazium 3 project");
 
 		Error err = OK;
