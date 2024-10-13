@@ -52,9 +52,6 @@ jobs:
       #   continue-on-error: true
 
       - name: Build blazium-cpp test extension
-        env: # Keep synced with blazium-build.
-          SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
-          SCONS_CACHE_LIMIT: 7168
         run: scons --directory=./blazium-cpp/test target=template_debug dev_build=yes verbose=yes
 
       # - name: Save Godot build cache
