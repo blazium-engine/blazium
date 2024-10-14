@@ -141,7 +141,7 @@ TEST_CASE("[Marshalls] Floating point double precision decoding") {
 }
 
 TEST_CASE("[Marshalls] C string encoding") {
-	char cstring[] = "Godot"; // 5 characters
+	char cstring[] = "Blazium"; // 5 characters
 	uint8_t data[6];
 
 	int actual_size = encode_cstring(cstring, data);

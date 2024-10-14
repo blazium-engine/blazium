@@ -173,7 +173,7 @@
 int test_main(int argc, char *argv[]) {
 	bool run_tests = true;
 
-	// Convert arguments to Godot's command-line.
+	// Convert arguments to Blazium's command-line.
 	List<String> args;
 
 	for (int i = 0; i < argc; i++) {
@@ -212,10 +212,10 @@ int test_main(int argc, char *argv[]) {
 	}
 
 	if (test_args.size() > 0) {
-		// Convert Godot command line arguments back to standard arguments.
+		// Convert Blazium command line arguments back to standard arguments.
 		char **doctest_args = new char *[test_args.size()];
 		for (uint32_t x = 0; x < test_args.size(); x++) {
-			// Operation to convert Godot string to non wchar string.
+			// Operation to convert Blazium string to non wchar string.
 			CharString cs = test_args[x].utf8();
 			const char *str = cs.get_data();
 			// Allocate the string copy.
@@ -237,8 +237,8 @@ int test_main(int argc, char *argv[]) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-struct GodotTestCaseListener : public doctest::IReporter {
-	GodotTestCaseListener(const doctest::ContextOptions &p_in) {}
+struct BlaziumTestCaseListener : public doctest::IReporter {
+	BlaziumTestCaseListener(const doctest::ContextOptions &p_in) {}
 
 	SignalWatcher *signal_watcher = nullptr;
 
@@ -446,4 +446,4 @@ private:
 	}
 };
 
-REGISTER_LISTENER("GodotTestCaseListener", 1, GodotTestCaseListener);
+REGISTER_LISTENER("BlaziumTestCaseListener", 1, BlaziumTestCaseListener);
