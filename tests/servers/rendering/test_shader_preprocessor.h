@@ -229,7 +229,7 @@ TEST_CASE("[ShaderPreprocessor] Concatenation") {
 
 TEST_CASE("[ShaderPreprocessor] Nested concatenation") {
 	// Concatenation ## should not expand adjacent tokens if they are macros,
-	// but this is currently not implemented in Godot's shader preprocessor.
+	// but this is currently not implemented in Blazium's shader preprocessor.
 	// To force expanding, an extra macro should be required (B in this case).
 
 	String code(
