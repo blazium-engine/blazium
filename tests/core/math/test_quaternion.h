@@ -292,7 +292,7 @@ TEST_CASE("[Quaternion] Product") {
 
 	// Test ZYX dynamic-axes since test data is available online.
 	// Rotate first about X axis, then new Y axis, then new Z axis.
-	// (Godot uses YXZ Yaw-Pitch-Roll order).
+	// (Blazium uses YXZ Yaw-Pitch-Roll order).
 	Quaternion q_yp = q_y * q_p;
 	CHECK(q_yp[0] == doctest::Approx(0.239118));
 	CHECK(q_yp[1] == doctest::Approx(0.369644));
