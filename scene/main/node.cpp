@@ -1843,11 +1843,13 @@ TypedArray<Node> Node::find_children(const String &p_pattern, const String &p_ty
 	bool is_type_global_class = !is_type_empty && ScriptServer::is_global_class(p_type);
 	String type_global_path = is_type_global_class ? ScriptServer::get_global_class_path(p_type) : "";
 
-	TypedArray<Node> to_search;
-	to_search.append(this);
+	LocalVector<Node *> to_search;
+	to_search.push_back((Node *) this);
 	bool is_adding_children = true;
 	while (!to_search.is_empty()) {
-		Node *entry = Object::cast_to<Node>(to_search.pop_front());
+		// Pop the next entry off the search stack
+		Node *entry = Object::cast_to<Node>(to_search[0]);
+		to_search.remove_at(0);
 
 		// Add all the children to the list to search
 		entry->_update_children_cache();
@@ -1859,7 +1861,7 @@ TypedArray<Node> Node::find_children(const String &p_pattern, const String &p_ty
 					continue;
 				}
 
-				to_search.append(cptr[i]);
+				to_search.push_back(cptr[i]);
 			}
 
 			// Stop further child adding if we don't want recursive
