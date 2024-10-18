@@ -5293,38 +5293,38 @@ CanvasItemEditor::CanvasItemEditor() {
 	controls_vb->set_begin(Point2(4, 4));
 	controls_vb->set_end(-Point2(4, 4));
 
-	ED_SHORTCUT("canvas_item_editor/cancel_transform", TTR("Cancel Transformation"), Key::ESCAPE);
+	ED_SHORTCUT("canvas_item_editor/cancel_transform", TTRC("Cancel Transformation"), Key::ESCAPE);
 
 	// To ensure that scripts can parse the list of shortcuts correctly, we have to define
 	// those shortcuts one by one. Define shortcut before using it (by EditorZoomWidget).
-	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_3.125_percent", TTR("Zoom to 3.125%"),
+	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_3.125_percent", TTRC("Zoom to 3.125%"),
 			{ int32_t(KeyModifierMask::SHIFT | Key::KEY_5), int32_t(KeyModifierMask::SHIFT | Key::KP_5) });
 
-	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_6.25_percent", TTR("Zoom to 6.25%"),
+	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_6.25_percent", TTRC("Zoom to 6.25%"),
 			{ int32_t(KeyModifierMask::SHIFT | Key::KEY_4), int32_t(KeyModifierMask::SHIFT | Key::KP_4) });
 
-	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_12.5_percent", TTR("Zoom to 12.5%"),
+	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_12.5_percent", TTRC("Zoom to 12.5%"),
 			{ int32_t(KeyModifierMask::SHIFT | Key::KEY_3), int32_t(KeyModifierMask::SHIFT | Key::KP_3) });
 
-	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_25_percent", TTR("Zoom to 25%"),
+	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_25_percent", TTRC("Zoom to 25%"),
 			{ int32_t(KeyModifierMask::SHIFT | Key::KEY_2), int32_t(KeyModifierMask::SHIFT | Key::KP_2) });
 
-	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_50_percent", TTR("Zoom to 50%"),
+	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_50_percent", TTRC("Zoom to 50%"),
 			{ int32_t(KeyModifierMask::SHIFT | Key::KEY_1), int32_t(KeyModifierMask::SHIFT | Key::KP_1) });
 
-	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_100_percent", TTR("Zoom to 100%"),
+	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_100_percent", TTRC("Zoom to 100%"),
 			{ int32_t(Key::KEY_1), int32_t(KeyModifierMask::CMD_OR_CTRL | Key::KEY_0), int32_t(Key::KP_1), int32_t(KeyModifierMask::CMD_OR_CTRL | Key::KP_0) });
 
-	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_200_percent", TTR("Zoom to 200%"),
+	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_200_percent", TTRC("Zoom to 200%"),
 			{ int32_t(Key::KEY_2), int32_t(Key::KP_2) });
 
-	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_400_percent", TTR("Zoom to 400%"),
+	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_400_percent", TTRC("Zoom to 400%"),
 			{ int32_t(Key::KEY_3), int32_t(Key::KP_3) });
 
-	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_800_percent", TTR("Zoom to 800%"),
+	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_800_percent", TTRC("Zoom to 800%"),
 			{ int32_t(Key::KEY_4), int32_t(Key::KP_4) });
 
-	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_1600_percent", TTR("Zoom to 1600%"),
+	ED_SHORTCUT_ARRAY("canvas_item_editor/zoom_1600_percent", TTRC("Zoom to 1600%"),
 			{ int32_t(Key::KEY_5), int32_t(Key::KP_5) });
 
 	HBoxContainer *controls_hb = memnew(HBoxContainer);
@@ -5374,19 +5374,19 @@ CanvasItemEditor::CanvasItemEditor() {
 	select_popup = select_options->get_popup();
 
 	select_popup->add_item(TTR("Select"), TOOL_SELECT);
-	select_popup->set_item_shortcut(TOOL_SELECT, ED_SHORTCUT("canvas_item_editor/select_mode", TTR("Select Mode"), Key::Q));
+	select_popup->set_item_shortcut(TOOL_SELECT, ED_SHORTCUT("canvas_item_editor/select_mode", TTRC("Select Mode"), Key::Q));
 	select_popup->set_item_tooltip(TOOL_SELECT, "Select Mode\n" + keycode_get_string((Key)KeyModifierMask::CMD_OR_CTRL) + TTR("Drag: Rotate selected node around pivot.") + "\n" + TTR("Alt+Drag: Move selected node.") + "\n" + keycode_get_string((Key)KeyModifierMask::CMD_OR_CTRL) + TTR("Alt+Drag: Scale selected node.") + "\n" + TTR("V: Set selected node's pivot position.") + "\n" + TTR("Alt+RMB: Show list of all nodes at position clicked, including locked.") + "\n" + TTR("RMB: Add node at position clicked."));
 
 	select_popup->add_item("Move", TOOL_MOVE);
-	select_popup->set_item_shortcut(TOOL_MOVE, ED_SHORTCUT("canvas_item_editor/move_mode", TTR("Move Mode"), Key::W));
+	select_popup->set_item_shortcut(TOOL_MOVE, ED_SHORTCUT("canvas_item_editor/move_mode", TTRC("Move Mode"), Key::W));
 	select_popup->set_item_tooltip(TOOL_MOVE, TTR("Move Mode"));
 
 	select_popup->add_item("Rotate", TOOL_ROTATE);
-	select_popup->set_item_shortcut(TOOL_ROTATE, ED_SHORTCUT("canvas_item_editor/rotate_mode", TTR("Rotate Mode"), Key::E));
+	select_popup->set_item_shortcut(TOOL_ROTATE, ED_SHORTCUT("canvas_item_editor/rotate_mode", TTRC("Rotate Mode"), Key::E));
 	select_popup->set_item_tooltip(TOOL_ROTATE, TTR("Rotate Mode"));
 
 	select_popup->add_item("Scale", TOOL_SCALE);
-	select_popup->set_item_shortcut(TOOL_SCALE, ED_SHORTCUT("canvas_item_editor/scale_mode", TTR("Scale Mode"), Key::S));
+	select_popup->set_item_shortcut(TOOL_SCALE, ED_SHORTCUT("canvas_item_editor/scale_mode", TTRC("Scale Mode"), Key::S));
 	select_popup->set_item_tooltip(TOOL_SCALE, TTR("Scale Mode\nShift: Scale proportionally."));
 
 	select_popup->add_item("List", TOOL_LIST_SELECT);
@@ -5396,11 +5396,11 @@ CanvasItemEditor::CanvasItemEditor() {
 	select_popup->set_item_tooltip(TOOL_EDIT_PIVOT, TTR("Pivot Mode\nClick to change object's rotation pivot."));
 
 	select_popup->add_item("Pan", TOOL_PAN);
-	select_popup->set_item_shortcut(TOOL_PAN, ED_SHORTCUT("canvas_item_editor/pan_mode", TTR("Pan Mode"), Key::G));
+	select_popup->set_item_shortcut(TOOL_PAN, ED_SHORTCUT("canvas_item_editor/pan_mode", TTRC("Pan Mode"), Key::G));
 	select_popup->set_item_tooltip(TOOL_PAN, TTR("Pan Mode\nYou can also use Pan View shortcut (Space by default) to pan in any mode."));
 
 	select_popup->add_item("Ruler", TOOL_RULER);
-	select_popup->set_item_shortcut(TOOL_RULER, ED_SHORTCUT("canvas_item_editor/ruler_mode", TTR("Ruler Mode"), Key::R));
+	select_popup->set_item_shortcut(TOOL_RULER, ED_SHORTCUT("canvas_item_editor/ruler_mode", TTRC("Ruler Mode"), Key::R));
 	select_popup->set_item_tooltip(TOOL_RULER, TTR("Ruler Mode"));
 
 	select_options->connect("item_selected", callable_mp(this, &CanvasItemEditor::set_current_tool));
@@ -5412,14 +5412,14 @@ CanvasItemEditor::CanvasItemEditor() {
 	button_center_view->set_theme_type_variation(SceneStringName(FlatButton));
 	button_center_view->set_tooltip_text(TTR("Center View"));
 	button_center_view->connect(SceneStringName(pressed), callable_mp(this, &CanvasItemEditor::_popup_callback).bind(VIEW_CENTER_TO_SELECTION));
-	button_center_view->set_shortcut(ED_SHORTCUT("canvas_item_editor/center_selection", TTR("Center Selection"), Key::F));
+	button_center_view->set_shortcut(ED_SHORTCUT("canvas_item_editor/center_selection", TTRC("Center Selection"), Key::F));
 	main_menu_hbox->add_child(button_center_view);
 
 	button_frame_view = memnew(Button);
 	button_frame_view->set_shortcut_context(this);
 	button_frame_view->set_theme_type_variation(SceneStringName(FlatButton));
 	button_frame_view->connect(SceneStringName(pressed), callable_mp(this, &CanvasItemEditor::_popup_callback).bind(VIEW_FRAME_TO_SELECTION));
-	button_frame_view->set_shortcut(ED_SHORTCUT("canvas_item_editor/frame_selection", TTR("Frame Selection"), KeyModifierMask::SHIFT | Key::F));
+	button_frame_view->set_shortcut(ED_SHORTCUT("canvas_item_editor/frame_selection", TTRC("Frame Selection"), KeyModifierMask::SHIFT | Key::F));
 	main_menu_hbox->add_child(button_frame_view);
 
 	main_menu_hbox->add_child(memnew(VSeparator));
@@ -5431,7 +5431,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	button_grid_toggle->set_toggle_mode(true);
 	button_grid_toggle->set_pressed(_is_grid_visible());
 	button_grid_toggle->connect(SceneStringName(toggled), callable_mp(this, &CanvasItemEditor::_toggle_grid).unbind(1));
-	button_grid_toggle->set_shortcut(ED_SHORTCUT("canvas_item_editor/toggle_grid", TTR("Toggle Grid"), KeyModifierMask::CMD_OR_CTRL | Key::APOSTROPHE));
+	button_grid_toggle->set_shortcut(ED_SHORTCUT("canvas_item_editor/toggle_grid", TTRC("Toggle Grid"), KeyModifierMask::CMD_OR_CTRL | Key::APOSTROPHE));
 	main_menu_hbox->add_child(button_grid_toggle);
 
 	grid_snap_button = memnew(Button);
@@ -5441,7 +5441,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	grid_snap_button->set_toggle_mode(true);
 	grid_snap_button->connect(SceneStringName(toggled), callable_mp(this, &CanvasItemEditor::_button_toggle_grid_snap));
 	grid_snap_button->set_tooltip_text(TTR("Toggle grid snapping."));
-	grid_snap_button->set_shortcut(ED_SHORTCUT("canvas_item_editor/use_grid_snap", TTR("Use Grid Snap"), KeyModifierMask::SHIFT | Key::G));
+	grid_snap_button->set_shortcut(ED_SHORTCUT("canvas_item_editor/use_grid_snap", TTRC("Use Grid Snap"), KeyModifierMask::SHIFT | Key::G));
 	main_menu_hbox->add_child(grid_snap_button);
 
 	smart_snap_button = memnew(Button);
@@ -5451,7 +5451,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	smart_snap_button->set_toggle_mode(true);
 	smart_snap_button->connect(SceneStringName(toggled), callable_mp(this, &CanvasItemEditor::_button_toggle_smart_snap));
 	smart_snap_button->set_tooltip_text(TTR("Toggle smart snapping."));
-	smart_snap_button->set_shortcut(ED_SHORTCUT("canvas_item_editor/use_smart_snap", TTR("Use Smart Snap"), KeyModifierMask::SHIFT | Key::S));
+	smart_snap_button->set_shortcut(ED_SHORTCUT("canvas_item_editor/use_smart_snap", TTRC("Use Smart Snap"), KeyModifierMask::SHIFT | Key::S));
 	main_menu_hbox->add_child(smart_snap_button);
 
 	main_menu_hbox->add_child(memnew(VSeparator));
@@ -5467,24 +5467,24 @@ CanvasItemEditor::CanvasItemEditor() {
 	PopupMenu *p = snap_config_menu->get_popup();
 	p->connect(SceneStringName(id_pressed), callable_mp(this, &CanvasItemEditor::_popup_callback));
 	p->set_hide_on_checkable_item_selection(false);
-	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/use_rotation_snap", TTR("Use Rotation Snap")), SNAP_USE_ROTATION);
-	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/use_scale_snap", TTR("Use Scale Snap")), SNAP_USE_SCALE);
-	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/snap_relative", TTR("Snap Relative")), SNAP_RELATIVE);
-	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/use_pixel_snap", TTR("Use Pixel Snap")), SNAP_USE_PIXEL);
+	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/use_rotation_snap", TTRC("Use Rotation Snap")), SNAP_USE_ROTATION);
+	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/use_scale_snap", TTRC("Use Scale Snap")), SNAP_USE_SCALE);
+	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/snap_relative", TTRC("Snap Relative")), SNAP_RELATIVE);
+	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/use_pixel_snap", TTRC("Use Pixel Snap")), SNAP_USE_PIXEL);
 
 	smartsnap_config_popup = memnew(PopupMenu);
 	smartsnap_config_popup->connect(SceneStringName(id_pressed), callable_mp(this, &CanvasItemEditor::_popup_callback));
 	smartsnap_config_popup->set_hide_on_checkable_item_selection(false);
-	smartsnap_config_popup->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/snap_node_parent", TTR("Snap to Parent")), SNAP_USE_NODE_PARENT);
-	smartsnap_config_popup->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/snap_node_anchors", TTR("Snap to Node Anchor")), SNAP_USE_NODE_ANCHORS);
-	smartsnap_config_popup->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/snap_node_sides", TTR("Snap to Node Sides")), SNAP_USE_NODE_SIDES);
-	smartsnap_config_popup->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/snap_node_center", TTR("Snap to Node Center")), SNAP_USE_NODE_CENTER);
-	smartsnap_config_popup->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/snap_other_nodes", TTR("Snap to Other Nodes")), SNAP_USE_OTHER_NODES);
-	smartsnap_config_popup->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/snap_guides", TTR("Snap to Guides")), SNAP_USE_GUIDES);
+	smartsnap_config_popup->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/snap_node_parent", TTRC("Snap to Parent")), SNAP_USE_NODE_PARENT);
+	smartsnap_config_popup->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/snap_node_anchors", TTRC("Snap to Node Anchor")), SNAP_USE_NODE_ANCHORS);
+	smartsnap_config_popup->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/snap_node_sides", TTRC("Snap to Node Sides")), SNAP_USE_NODE_SIDES);
+	smartsnap_config_popup->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/snap_node_center", TTRC("Snap to Node Center")), SNAP_USE_NODE_CENTER);
+	smartsnap_config_popup->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/snap_other_nodes", TTRC("Snap to Other Nodes")), SNAP_USE_OTHER_NODES);
+	smartsnap_config_popup->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/snap_guides", TTRC("Snap to Guides")), SNAP_USE_GUIDES);
 	p->add_submenu_node_item(TTR("Smart Snapping"), smartsnap_config_popup);
 
 	p->add_separator();
-	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/configure_snap", TTR("Configure Snap...")), SNAP_CONFIGURE);
+	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/configure_snap", TTRC("Configure Snap...")), SNAP_CONFIGURE);
 
 	main_menu_hbox->add_child(memnew(VSeparator));
 
@@ -5498,11 +5498,10 @@ CanvasItemEditor::CanvasItemEditor() {
 
 	p = skeleton_menu->get_popup();
 	p->set_hide_on_checkable_item_selection(false);
-	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/skeleton_show_bones", TTR("Show Bones")), SKELETON_SHOW_BONES);
+	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/skeleton_show_bones", TTRC("Show Bones")), SKELETON_SHOW_BONES);
 	p->add_separator();
-	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/skeleton_make_bones", TTR("Make Bone2D Node(s) from Node(s)"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::B), SKELETON_MAKE_BONES);
+	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/skeleton_make_bones", TTRC("Make Bone2D Node(s) from Node(s)"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::B), SKELETON_MAKE_BONES);
 	p->connect(SceneStringName(id_pressed), callable_mp(this, &CanvasItemEditor::_popup_callback));
-
 	main_menu_hbox->add_child(memnew(VSeparator));
 
 	view_menu = memnew(MenuButton);
@@ -5525,32 +5524,33 @@ CanvasItemEditor::CanvasItemEditor() {
 	grid_menu->add_radio_check_item(TTR("Show"), GRID_VISIBILITY_SHOW);
 	grid_menu->add_radio_check_item(TTR("Show When Snapping"), GRID_VISIBILITY_SHOW_WHEN_SNAPPING);
 	grid_menu->add_radio_check_item(TTR("Hide"), GRID_VISIBILITY_HIDE);
+
 	p->add_submenu_node_item(TTR("Grid"), grid_menu);
 
-	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_helpers", TTR("Show Helpers"), Key::H), SHOW_HELPERS);
-	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_rulers", TTR("Show Rulers")), SHOW_RULERS);
-	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_guides", TTR("Show Guides"), Key::Y), SHOW_GUIDES);
-	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_origin", TTR("Show Origin")), SHOW_ORIGIN);
-	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_viewport", TTR("Show Viewport")), SHOW_VIEWPORT);
+	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_helpers", TTRC("Show Helpers"), Key::H), SHOW_HELPERS);
+	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_rulers", TTRC("Show Rulers")), SHOW_RULERS);
+	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_guides", TTRC("Show Guides"), Key::Y), SHOW_GUIDES);
+	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_origin", TTRC("Show Origin")), SHOW_ORIGIN);
+	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_viewport", TTRC("Show Viewport")), SHOW_VIEWPORT);
 	p->add_separator();
 
 	gizmos_menu = memnew(PopupMenu);
 	gizmos_menu->set_name("GizmosMenu");
 	gizmos_menu->connect(SceneStringName(id_pressed), callable_mp(this, &CanvasItemEditor::_popup_callback));
 	gizmos_menu->set_hide_on_checkable_item_selection(false);
-	gizmos_menu->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_position_gizmos", TTR("Position")), SHOW_POSITION_GIZMOS);
-	gizmos_menu->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_lock_gizmos", TTR("Lock")), SHOW_LOCK_GIZMOS);
-	gizmos_menu->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_group_gizmos", TTR("Group")), SHOW_GROUP_GIZMOS);
-	gizmos_menu->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_transformation_gizmos", TTR("Transformation")), SHOW_TRANSFORMATION_GIZMOS);
+	gizmos_menu->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_position_gizmos", TTRC("Position")), SHOW_POSITION_GIZMOS);
+	gizmos_menu->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_lock_gizmos", TTRC("Lock")), SHOW_LOCK_GIZMOS);
+	gizmos_menu->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_group_gizmos", TTRC("Group")), SHOW_GROUP_GIZMOS);
+	gizmos_menu->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/show_transformation_gizmos", TTRC("Transformation")), SHOW_TRANSFORMATION_GIZMOS);
 	p->add_child(gizmos_menu);
 	p->add_submenu_item(TTR("Gizmos"), "GizmosMenu");
 
 	p->add_separator();
-	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/center_selection", TTR("Center Selection"), Key::F), VIEW_CENTER_TO_SELECTION);
-	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/frame_selection", TTR("Frame Selection"), KeyModifierMask::SHIFT | Key::F), VIEW_FRAME_TO_SELECTION);
-	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/clear_guides", TTR("Clear Guides")), CLEAR_GUIDES);
+	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/center_selection", TTRC("Center Selection"), Key::F), VIEW_CENTER_TO_SELECTION);
+	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/frame_selection", TTRC("Frame Selection"), KeyModifierMask::SHIFT | Key::F), VIEW_FRAME_TO_SELECTION);
+	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/clear_guides", TTRC("Clear Guides")), CLEAR_GUIDES);
 	p->add_separator();
-	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/preview_canvas_scale", TTR("Preview Canvas Scale")), PREVIEW_CANVAS_SCALE);
+	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/preview_canvas_scale", TTRC("Preview Canvas Scale")), PREVIEW_CANVAS_SCALE);
 
 	HBoxContainer *title_right_hb = memnew(HBoxContainer);
 	title_right_hb->add_theme_constant_override(SNAME("separation"), 8 * EDSCALE);
@@ -5643,8 +5643,8 @@ CanvasItemEditor::CanvasItemEditor() {
 	key_insert_button->set_theme_type_variation(SceneStringName(FlatButton));
 	key_insert_button->set_focus_mode(FOCUS_NONE);
 	key_insert_button->connect(SceneStringName(pressed), callable_mp(this, &CanvasItemEditor::_popup_callback).bind(ANIM_INSERT_KEY));
-	key_insert_button->set_tooltip_text(TTR("Insert keys (based on mask)."));
-	key_insert_button->set_shortcut(ED_SHORTCUT("canvas_item_editor/anim_insert_key", TTR("Insert Key"), Key::INSERT));
+	key_insert_button->set_tooltip_text(TTRC("Insert keys (based on mask)."));
+	key_insert_button->set_shortcut(ED_SHORTCUT("canvas_item_editor/anim_insert_key", TTRC("Insert Key"), Key::INSERT));
 	key_insert_button->set_shortcut_context(this);
 	animation_hb->add_child(key_insert_button);
 
@@ -5652,8 +5652,8 @@ CanvasItemEditor::CanvasItemEditor() {
 	key_auto_insert_button->set_theme_type_variation(SceneStringName(FlatButton));
 	key_auto_insert_button->set_toggle_mode(true);
 	key_auto_insert_button->set_focus_mode(FOCUS_NONE);
-	key_auto_insert_button->set_tooltip_text(TTR("Auto insert keys when objects are translated, rotated or scaled (based on mask).\nKeys are only added to existing tracks, no new tracks will be created.\nKeys must be inserted manually for the first time."));
-	key_auto_insert_button->set_shortcut(ED_SHORTCUT("canvas_item_editor/anim_auto_insert_key", TTR("Auto Insert Key")));
+	key_auto_insert_button->set_tooltip_text(TTRC("Auto insert keys when objects are translated, rotated or scaled (based on mask).\nKeys are only added to existing tracks, no new tracks will be created.\nKeys must be inserted manually for the first time."));
+	key_auto_insert_button->set_shortcut(ED_SHORTCUT("canvas_item_editor/anim_auto_insert_key", TTRC("Auto Insert Key")));
 	key_auto_insert_button->set_shortcut_context(this);
 	animation_hb->add_child(key_auto_insert_button);
 
@@ -5669,11 +5669,11 @@ CanvasItemEditor::CanvasItemEditor() {
 	p = animation_menu->get_popup();
 
 	p->add_shortcut(ED_GET_SHORTCUT("canvas_item_editor/anim_insert_key"), ANIM_INSERT_KEY);
-	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/anim_insert_key_existing_tracks", TTR("Insert Key (Existing Tracks)"), KeyModifierMask::CMD_OR_CTRL + Key::INSERT), ANIM_INSERT_KEY_EXISTING);
+	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/anim_insert_key_existing_tracks", TTRC("Insert Key (Existing Tracks)"), KeyModifierMask::CMD_OR_CTRL + Key::INSERT), ANIM_INSERT_KEY_EXISTING);
 	p->add_separator();
-	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/anim_copy_pose", TTR("Copy Pose")), ANIM_COPY_POSE);
-	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/anim_paste_pose", TTR("Paste Pose")), ANIM_PASTE_POSE);
-	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/anim_clear_pose", TTR("Clear Pose"), KeyModifierMask::SHIFT | Key::K), ANIM_CLEAR_POSE);
+	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/anim_copy_pose", TTRC("Copy Pose")), ANIM_COPY_POSE);
+	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/anim_paste_pose", TTRC("Paste Pose")), ANIM_PASTE_POSE);
+	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/anim_clear_pose", TTRC("Clear Pose"), KeyModifierMask::SHIFT | Key::K), ANIM_CLEAR_POSE);
 
 	snap_dialog = memnew(SnapDialog);
 	snap_dialog->connect(SceneStringName(confirmed), callable_mp(this, &CanvasItemEditor::_snap_changed));
@@ -5692,12 +5692,11 @@ CanvasItemEditor::CanvasItemEditor() {
 	add_child(add_node_menu);
 	add_node_menu->connect(SceneStringName(id_pressed), callable_mp(this, &CanvasItemEditor::_add_node_pressed));
 
-	multiply_grid_step_shortcut = ED_SHORTCUT("canvas_item_editor/multiply_grid_step", TTR("Multiply grid step by 2"), Key::KP_MULTIPLY);
-	divide_grid_step_shortcut = ED_SHORTCUT("canvas_item_editor/divide_grid_step", TTR("Divide grid step by 2"), Key::KP_DIVIDE);
+	multiply_grid_step_shortcut = ED_SHORTCUT("canvas_item_editor/multiply_grid_step", TTRC("Multiply grid step by 2"), Key::KP_MULTIPLY);
+	divide_grid_step_shortcut = ED_SHORTCUT("canvas_item_editor/divide_grid_step", TTRC("Divide grid step by 2"), Key::KP_DIVIDE);
 
 	skeleton_menu->get_popup()->set_item_checked(skeleton_menu->get_popup()->get_item_index(SKELETON_SHOW_BONES), true);
 
-	// Store the singleton instance.
 	singleton = this;
 
 	set_process_shortcut_input(true);
