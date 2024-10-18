@@ -36,7 +36,7 @@
 #include "tests/test_macros.h"
 
 namespace TestSpriteFrames {
-const String test_animation_name = "GodotTest";
+const String test_animation_name = "BlaziumTest";
 
 TEST_CASE("[SpriteFrames] Constructor methods") {
 	const SpriteFrames frames;
