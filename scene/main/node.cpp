@@ -1844,7 +1844,7 @@ TypedArray<Node> Node::find_children(const String &p_pattern, const String &p_ty
 	String type_global_path = is_type_global_class ? ScriptServer::get_global_class_path(p_type) : "";
 
 	LocalVector<Node *> to_search;
-	to_search.push_back((Node *) this);
+	to_search.push_back((Node *)this);
 	bool is_adding_children = true;
 	while (!to_search.is_empty()) {
 		// Pop the next entry off the search stack
