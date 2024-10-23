@@ -53,6 +53,7 @@ import app.blazium.godot.error.Error
 import app.blazium.godot.utils.PermissionsUtil
 import app.blazium.godot.utils.ProcessPhoenix
 import app.blazium.godot.utils.isHorizonOSDevice
+import app.blazium.godot.utils.isPicoOSDevice
 import app.blazium.godot.utils.isNativeXRDevice
 import java.util.*
 import kotlin.math.min
@@ -519,6 +520,10 @@ abstract class BaseGodotEditor : GodotActivity() {
 
 		if (featureTag == "horizonos") {
 			return isHorizonOSDevice()
+		}
+
+		if (featureTag == "picoos") {
+			return isPicoOSDevice()
 		}
 
         return false
