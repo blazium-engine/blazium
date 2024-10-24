@@ -38,7 +38,7 @@
 
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: Blazium Engine
-Upstream-Contact: [PUT NAME NAME] <blaziumengine@gmail.com>
+Upstream-Contact: https://chat.blazium.app
 Source: https://github.com/blazium-engine/blazium
 
 Files: *
