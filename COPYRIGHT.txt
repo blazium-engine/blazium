@@ -53,8 +53,8 @@ Files: ./icon.png
  ./logo.png
  ./logo.svg
 Comment: Blazium Engine logo
-Copyright: 2024, [LOGE (on X/Twitter)
-License: CC-BY-4.0
+Copyright: 2024, KenshiroTM, Nicholas Santos Shiden
+License: CC0
 
 Files: ./core/math/convex_hull.cpp
  ./core/math/convex_hull.h
