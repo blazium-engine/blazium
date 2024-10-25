@@ -43,7 +43,7 @@ codebase of both through a more genuinely community-driven model than Godot.
 ### Binary downloads
 
 Official binaries for the Blazium editor and the export templates will be found
-[on the Blazium website](https://redotengine.org/download) once it's set up and on the [GitHub page](https://github.com/blazium-engine/blazium) until then.
+[on the Blazium website](https://blazium.app) once it's set up and on the [GitHub page](https://github.com/blazium-engine/blazium) until then.
 
 ### Compiling from source
 
@@ -53,7 +53,7 @@ for compilation instructions for every supported platform.
 ## Community and contributing
 
 Blazium is not only an engine but an ever-growing community of users and engine
-developers. Please visit our [Discord server](https://discord.gg/vmJMrGAcb2)!
+developers.
 
 The best way to get in touch with the core engine developers is to join the
 [Official Discord Server](https://chat.blazium.app).

@@ -162,8 +162,7 @@ for information on writing tests in Blazium's C++ codebase.
 
 ## Contributing to Blazium translations
 
-You can contribute to Blazium translations on [Hosted Weblate](https://hosted.weblate.org/projects/blazium-engine/),
-an open source and web-based translation platform.
+In the future you can contribute to Blazium translations, a link will be provide in the future for this.
 
 Please refer to Blazium's [editor and documentation localization guidelines](https://docs.blazium.app/en/latest/contributing/documentation/editor_and_docs_localization.html)
 for an overview of the translation resources and what they correspond to.
@@ -181,7 +180,7 @@ or a bug you want to fix), the following channels can be used:
   If not, you can open a new issue. Please mind the guidelines outlined above
   for bug reporting.
 - Feature Proposals should be made on the [Blazium Discord](https://chat.blazium.app) for now.
-- [Blazium](https://github.com/blazium-engine/) on X (Twitter)
+- [Blazium](https://github.com/blazium-engine/) on [X (Twitter)](https://x.com/BlaziumEngine)
 
 Thanks for your interest in contributing!
 
