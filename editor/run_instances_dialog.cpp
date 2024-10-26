@@ -196,7 +196,7 @@ void RunInstancesDialog::_instance_tree_rmb(const Vector2 &p_pos, MouseButton p_
 }
 
 void RunInstancesDialog::popup_dialog() {
-	popup_centered(Vector2i(1200, 600) * EDSCALE);
+	popup_centered(Vector2(1200, 600) * EDSCALE);
 }
 
 int RunInstancesDialog::get_instance_count() const {
