@@ -2761,7 +2761,7 @@ Error DisplayServerWindows::dialog_show(String p_title, String p_description, Ve
 	config.pszContent = (LPCWSTR)(message.get_data());
 	config.hwndParent = windows[window_id].hWnd;
 
-	const int button_count = MIN((int)buttons.size(), 8);
+	const int button_count = buttons.size();
 	config.cButtons = button_count;
 
 	// No dynamic stack array size :(
