@@ -6,6 +6,8 @@ import os
 import re
 import subprocess
 import sys
+import textwrap
+import zlib
 from collections import OrderedDict
 from io import StringIO, TextIOBase
 from pathlib import Path
@@ -149,30 +151,36 @@ def get_version_info(module_version_string="", silent=False):
         if not silent:
             print_info(f"Using version status '{version_info['status']}', overriding the original '{version.status}'.")
 
+    return version_info
+
+
+def get_git_info():
+    os.chdir(base_folder_path)
+
     # Parse Git hash if we're in a Git repo.
-    githash = ""
-    gitfolder = ".git"
+    git_hash = ""
+    git_folder = ".git"
 
     if os.path.isfile(".git"):
         with open(".git", "r", encoding="utf-8") as file:
             module_folder = file.readline().strip()
         if module_folder.startswith("gitdir: "):
-            gitfolder = module_folder[8:]
+            git_folder = module_folder[8:]
 
-    if os.path.isfile(os.path.join(gitfolder, "HEAD")):
-        with open(os.path.join(gitfolder, "HEAD"), "r", encoding="utf8") as file:
+    if os.path.isfile(os.path.join(git_folder, "HEAD")):
+        with open(os.path.join(git_folder, "HEAD"), "r", encoding="utf8") as file:
             head = file.readline().strip()
         if head.startswith("ref: "):
             ref = head[5:]
             # If this directory is a Git worktree instead of a root clone.
-            parts = gitfolder.split("/")
+            parts = git_folder.split("/")
             if len(parts) > 2 and parts[-2] == "worktrees":
-                gitfolder = "/".join(parts[0:-2])
-            head = os.path.join(gitfolder, ref)
-            packedrefs = os.path.join(gitfolder, "packed-refs")
+                git_folder = "/".join(parts[0:-2])
+            head = os.path.join(git_folder, ref)
+            packedrefs = os.path.join(git_folder, "packed-refs")
             if os.path.isfile(head):
                 with open(head, "r", encoding="utf-8") as file:
-                    githash = file.readline().strip()
+                    git_hash = file.readline().strip()
             elif os.path.isfile(packedrefs):
                 # Git may pack refs into a single file. This code searches .git/packed-refs file for the current ref's hash.
                 # https://mirrors.edge.kernel.org/pub/software/scm/git/docs/git-pack-refs.html
@@ -181,26 +189,26 @@ def get_version_info(module_version_string="", silent=False):
                         continue
                     (line_hash, line_ref) = line.split(" ")
                     if ref == line_ref:
-                        githash = line_hash
+                        git_hash = line_hash
                         break
         else:
-            githash = head
-
-    version_info["git_hash"] = githash
-    # Fallback to 0 as a timestamp (will be treated as "unknown" in the engine).
-    version_info["git_timestamp"] = 0
+            git_hash = head
 
     # Get the UNIX timestamp of the build commit.
+    git_timestamp = 0
     if os.path.exists(".git"):
         try:
-            version_info["git_timestamp"] = subprocess.check_output(
-                ["git", "log", "-1", "--pretty=format:%ct", "--no-show-signature", githash]
-            ).decode("utf-8")
+            git_timestamp = subprocess.check_output(
+                ["git", "log", "-1", "--pretty=format:%ct", "--no-show-signature", git_hash], encoding="utf-8"
+            )
         except (subprocess.CalledProcessError, OSError):
             # `git` not found in PATH.
             pass
 
-    return version_info
+    return {
+        "git_hash": git_hash,
+        "git_timestamp": git_timestamp,
+    }
 
 
 def get_cmdline_bool(option, default):
@@ -1411,6 +1419,11 @@ def generate_vs_project(env, original_args, project_name="blazium"):
         sys.exit()
 
 
+############################################################
+# FILE GENERATION & FORMATTING
+############################################################
+
+
 def generate_copyright_header(filename: str) -> str:
     MARGIN = 70
     TEMPLATE = """\
@@ -1444,15 +1457,14 @@ def generate_copyright_header(filename: str) -> str:
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 """
-    filename = filename.split("/")[-1].ljust(MARGIN)
-    if len(filename) > MARGIN:
+    if len(filename := os.path.basename(filename).ljust(MARGIN)) > MARGIN:
         print_warning(f'Filename "{filename}" too large for copyright header.')
     return TEMPLATE % filename
 
 
 @contextlib.contextmanager
 def generated_wrapper(
-    path,  # FIXME: type with `Union[str, Node, List[Node]]` when pytest conflicts are resolved
+    path: str,
     guard: Optional[bool] = None,
 ) -> Generator[TextIOBase, None, None]:
     """
@@ -1460,26 +1472,11 @@ def generated_wrapper(
     for generated scripts. Meant to be invoked via `with` statement similar to
     creating a file.
 
-    - `path`: The path of the file to be created. Can be passed a raw string, an
-    isolated SCons target, or a full SCons target list. If a target list contains
-    multiple entries, produces a warning & only creates the first entry.
+    - `path`: The path of the file to be created.
     - `guard`: Optional bool to determine if `#pragma once` should be added. If
     unassigned, the value is determined by file extension.
     """
 
-    # Handle unfiltered SCons target[s] passed as path.
-    if not isinstance(path, str):
-        if isinstance(path, list):
-            if len(path) > 1:
-                print_warning(
-                    f"Attempting to use generated wrapper with multiple targets; will only use first entry: {path[0]}"
-                )
-            path = path[0]
-        if not hasattr(path, "get_abspath"):
-            raise TypeError(f'Expected type "str", "Node" or "List[Node]"; was passed {type(path)}.')
-        path = path.get_abspath()
-
-    path = str(path).replace("\\", "/")
     if guard is None:
         guard = path.endswith((".h", ".hh", ".hpp", ".hxx", ".inc"))
 
@@ -1495,6 +1492,50 @@ def generated_wrapper(
             file.write(str_io.getvalue().strip() or "/* NO CONTENT */")
 
         file.write("\n")
+
+
+def get_buffer(path: str) -> bytes:
+    with open(path, "rb") as file:
+        return file.read()
+
+
+def compress_buffer(buffer: bytes) -> bytes:
+    # Use maximum zlib compression level to further reduce file size
+    # (at the cost of initial build times).
+    return zlib.compress(buffer, zlib.Z_BEST_COMPRESSION)
+
+
+def format_buffer(buffer: bytes, indent: int = 0, width: int = 120, initial_indent: bool = False) -> str:
+    return textwrap.fill(
+        ", ".join(str(byte) for byte in buffer),
+        width=width,
+        initial_indent="\t" * indent if initial_indent else "",
+        subsequent_indent="\t" * indent,
+        tabsize=4,
+    )
+
+
+############################################################
+# CSTRING PARSING
+############################################################
+
+C_ESCAPABLES = [
+    ("\\", "\\\\"),
+    ("\a", "\\a"),
+    ("\b", "\\b"),
+    ("\f", "\\f"),
+    ("\n", "\\n"),
+    ("\r", "\\r"),
+    ("\t", "\\t"),
+    ("\v", "\\v"),
+    # ("'", "\\'"),  # Skip, as we're only dealing with full strings.
+    ('"', '\\"'),
+]
+C_ESCAPE_TABLE = str.maketrans(dict((x, y) for x, y in C_ESCAPABLES))
+
+
+def to_escaped_cstring(value: str) -> str:
+    return value.translate(C_ESCAPE_TABLE)
 
 
 def to_raw_cstring(value: Union[str, List[str]]) -> str:
@@ -1534,4 +1575,8 @@ def to_raw_cstring(value: Union[str, List[str]]) -> str:
 
         split += [segment]
 
-    return " ".join(f'R"<!>({x.decode()})<!>"' for x in split)
+    if len(split) == 1:
+        return f'R"<!>({split[0].decode()})<!>"'
+    else:
+        # Wrap multiple segments in parenthesis to suppress `string-concatenation` warnings on clang.
+        return "({})".format(" ".join(f'R"<!>({segment.decode()})<!>"' for segment in split))
