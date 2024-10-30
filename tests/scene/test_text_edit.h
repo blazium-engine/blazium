@@ -8203,52 +8203,53 @@ TEST_CASE("[SceneTree][TextEdit] gutters") {
 		CHECK(DS->get_cursor_shape() == DisplayServer::CURSOR_ARROW);
 
 		// Hover over gutter.
-		SEND_GUI_MOUSE_MOTION_EVENT(Point2(5, line_height + line_height / 2), MouseButtonMask::NONE, Key::NONE);
+		const int margin_left = text_edit->get_theme_stylebox(CoreStringName(normal), SNAME("TextEdit"))->get_margin(SIDE_LEFT);
+		SEND_GUI_MOUSE_MOTION_EVENT(Point2(5 + margin_left, line_height + line_height / 2), MouseButtonMask::NONE, Key::NONE);
 		CHECK(text_edit->get_hovered_gutter() == Vector2i(0, 1));
 		SIGNAL_CHECK_FALSE("gutter_clicked");
 		CHECK(DS->get_cursor_shape() == DisplayServer::CURSOR_POINTING_HAND);
 
 		// Click on gutter.
-		SEND_GUI_MOUSE_BUTTON_EVENT(Point2(5, line_height / 2), MouseButton::LEFT, MouseButtonMask::LEFT, Key::NONE);
+		SEND_GUI_MOUSE_BUTTON_EVENT(Point2(5 + margin_left, line_height / 2), MouseButton::LEFT, MouseButtonMask::LEFT, Key::NONE);
 		CHECK(text_edit->get_hovered_gutter() == Vector2i(0, 0));
 		SIGNAL_CHECK("gutter_clicked", build_array(build_array(0, 0)));
 
 		// Click on gutter on another line.
-		SEND_GUI_MOUSE_BUTTON_EVENT(Point2(5, line_height * 3 + line_height / 2), MouseButton::LEFT, MouseButtonMask::LEFT, Key::NONE);
+		SEND_GUI_MOUSE_BUTTON_EVENT(Point2(5 + margin_left, line_height * 3 + line_height / 2), MouseButton::LEFT, MouseButtonMask::LEFT, Key::NONE);
 		CHECK(text_edit->get_hovered_gutter() == Vector2i(0, 3));
 		SIGNAL_CHECK("gutter_clicked", build_array(build_array(3, 0)));
 
 		// Unclickable gutter can be hovered.
-		SEND_GUI_MOUSE_MOTION_EVENT(Point2(15, line_height + line_height / 2), MouseButtonMask::NONE, Key::NONE);
+		SEND_GUI_MOUSE_MOTION_EVENT(Point2(15 + margin_left, line_height + line_height / 2), MouseButtonMask::NONE, Key::NONE);
 		CHECK(text_edit->get_hovered_gutter() == Vector2i(1, 1));
 		SIGNAL_CHECK_FALSE("gutter_clicked");
 		CHECK(DS->get_cursor_shape() == DisplayServer::CURSOR_ARROW);
 
 		// Unclickable gutter can be clicked.
-		SEND_GUI_MOUSE_BUTTON_EVENT(Point2(15, line_height * 2 + line_height / 2), MouseButton::LEFT, MouseButtonMask::LEFT, Key::NONE);
+		SEND_GUI_MOUSE_BUTTON_EVENT(Point2(15 + margin_left, line_height * 2 + line_height / 2), MouseButton::LEFT, MouseButtonMask::LEFT, Key::NONE);
 		CHECK(text_edit->get_hovered_gutter() == Vector2i(1, 2));
 		SIGNAL_CHECK("gutter_clicked", build_array(build_array(2, 1)));
 		CHECK(DS->get_cursor_shape() == DisplayServer::CURSOR_ARROW);
 
 		// Hover past last line.
-		SEND_GUI_MOUSE_MOTION_EVENT(Point2(5, line_height * 5), MouseButtonMask::NONE, Key::NONE);
+		SEND_GUI_MOUSE_MOTION_EVENT(Point2(5 + margin_left, line_height * 5), MouseButtonMask::NONE, Key::NONE);
 		CHECK(text_edit->get_hovered_gutter() == Vector2i(-1, -1));
 		SIGNAL_CHECK_FALSE("gutter_clicked");
 		CHECK(DS->get_cursor_shape() == DisplayServer::CURSOR_ARROW);
 
 		// Click on gutter past last line.
-		SEND_GUI_MOUSE_BUTTON_EVENT(Point2(5, line_height * 5), MouseButton::LEFT, MouseButtonMask::LEFT, Key::NONE);
+		SEND_GUI_MOUSE_BUTTON_EVENT(Point2(5 + margin_left, line_height * 5), MouseButton::LEFT, MouseButtonMask::LEFT, Key::NONE);
 		CHECK(text_edit->get_hovered_gutter() == Vector2i(-1, -1));
 		SIGNAL_CHECK_FALSE("gutter_clicked");
 
 		// Mouse exit resets hover.
-		SEND_GUI_MOUSE_MOTION_EVENT(Point2(5, line_height + line_height / 2), MouseButtonMask::NONE, Key::NONE);
+		SEND_GUI_MOUSE_MOTION_EVENT(Point2(5 + margin_left, line_height + line_height / 2), MouseButtonMask::NONE, Key::NONE);
 		CHECK(text_edit->get_hovered_gutter() == Vector2i(0, 1));
 		SEND_GUI_MOUSE_MOTION_EVENT(Point2(-1, -1), MouseButtonMask::NONE, Key::NONE);
 		CHECK(text_edit->get_hovered_gutter() == Vector2i(-1, -1));
 
 		// Removing gutter updates hover.
-		SEND_GUI_MOUSE_MOTION_EVENT(Point2(25, line_height + line_height / 2), MouseButtonMask::NONE, Key::NONE);
+		SEND_GUI_MOUSE_MOTION_EVENT(Point2(25 + margin_left, line_height + line_height / 2), MouseButtonMask::NONE, Key::NONE);
 		CHECK(text_edit->get_hovered_gutter() == Vector2i(2, 1));
 		text_edit->remove_gutter(2);
 		CHECK(text_edit->get_hovered_gutter() == Vector2i(-1, -1));
