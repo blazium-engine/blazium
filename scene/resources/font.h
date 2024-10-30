@@ -198,6 +198,7 @@ class FontFile : public Font {
 	TextServer::Hinting hinting = TextServer::HINTING_LIGHT;
 	TextServer::SubpixelPositioning subpixel_positioning = TextServer::SUBPIXEL_POSITIONING_AUTO;
 	TextServer::FontLCDSubpixelLayout lcd_subpixel_layout = TextServer::FONT_LCD_SUBPIXEL_LAYOUT_HRGB;
+	bool keep_rounding_remainders = true;
 	real_t oversampling = 0.f;
 
 #ifndef DISABLE_DEPRECATED
@@ -283,6 +284,9 @@ public:
 
 	virtual void set_lcd_subpixel_layout(TextServer::FontLCDSubpixelLayout p_subpixel_layout);
 	virtual TextServer::FontLCDSubpixelLayout get_lcd_subpixel_layout() const;
+
+	virtual void set_keep_rounding_remainders(bool p_keep_rounding_remainders);
+	virtual bool get_keep_rounding_remainders() const;
 
 	virtual void set_oversampling(real_t p_oversampling);
 	virtual real_t get_oversampling() const;
@@ -485,6 +489,7 @@ class SystemFont : public Font {
 	TextServer::Hinting hinting = TextServer::HINTING_LIGHT;
 	TextServer::SubpixelPositioning subpixel_positioning = TextServer::SUBPIXEL_POSITIONING_AUTO;
 	TextServer::FontLCDSubpixelLayout lcd_subpixel_layout = TextServer::FONT_LCD_SUBPIXEL_LAYOUT_HRGB;
+	bool keep_rounding_remainders = true;
 	real_t oversampling = 0.f;
 	bool msdf = false;
 	int msdf_pixel_range = 16;
@@ -525,6 +530,9 @@ public:
 
 	virtual void set_lcd_subpixel_layout(TextServer::FontLCDSubpixelLayout p_subpixel_layout);
 	virtual TextServer::FontLCDSubpixelLayout get_lcd_subpixel_layout() const;
+
+	virtual void set_keep_rounding_remainders(bool p_keep_rounding_remainders);
+	virtual bool get_keep_rounding_remainders() const;
 
 	virtual void set_oversampling(real_t p_oversampling);
 	virtual real_t get_oversampling() const;

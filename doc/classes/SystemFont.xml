@@ -43,6 +43,9 @@
 		<member name="hinting" type="int" setter="set_hinting" getter="get_hinting" enum="TextServer.Hinting" default="1">
 			Font hinting mode.
 		</member>
+		<member name="keep_rounding_remainders" type="bool" setter="set_keep_rounding_remainders" getter="get_keep_rounding_remainders" default="true">
+			If set to [code]true[/code], when aligning glyphs to the pixel boundaries rounding remainders are accumulated to ensure more uniform glyph distribution. This setting has no effect if subpixel positioning is enabled.
+		</member>
 		<member name="lcd_subpixel_layout" type="int" setter="set_lcd_subpixel_layout" getter="get_lcd_subpixel_layout" enum="TextServer.FontLCDSubpixelLayout" default="1">
 			LCD subpixel layout used for font anti-aliasing. See [enum TextServer.FontLCDSubpixelLayout].
 		</member>
