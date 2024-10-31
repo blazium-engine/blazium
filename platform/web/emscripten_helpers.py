@@ -21,22 +21,6 @@ def run_closure_compiler(target, source, env, for_signature):
     return " ".join(cmd)
 
 
-def get_build_version():
-    import version
-
-    name = "custom_build"
-    if os.getenv("BUILD_NAME") is not None:
-        name = os.getenv("BUILD_NAME")
-    v = "%d.%d" % (version.major, version.minor)
-    if version.patch > 0:
-        v += ".%d" % version.patch
-    status = version.status
-    if os.getenv("GODOT_VERSION_STATUS") is not None:
-        status = str(os.getenv("GODOT_VERSION_STATUS"))
-    v += ".%s.%s" % (status, name)
-    return v
-
-
 # Same output of EXTERNAL_VERSION_FULL_BUILD found in core/version.h
 def get_external_build_version():
     import version
