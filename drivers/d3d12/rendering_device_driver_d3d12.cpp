@@ -3249,7 +3249,7 @@ Vector<uint8_t> RenderingDeviceDriverD3D12::shader_compile_binary_from_spirv(Vec
 							DEV_ASSERT(binding_info.res_class == (uint32_t)RES_CLASS_INVALID || binding_info.res_class == (uint32_t)res_class);
 							binding_info.res_class = res_class;
 						} else if (p_dxil_type == DXIL_RES_SAMPLER) {
-							binding_info.has_sampler = (uint32_t)true;
+							binding_info.has_sampler = (uint32_t) true;
 						} else {
 							CRASH_NOW();
 						}
@@ -6231,6 +6231,8 @@ uint64_t RenderingDeviceDriverD3D12::api_trait_get(ApiTrait p_trait) {
 			return false;
 		case API_TRAIT_CLEARS_WITH_COPY_ENGINE:
 			return false;
+		case API_TRAIT_BUFFERS_REQUIRE_TRANSITIONS:
+			return !barrier_capabilities.enhanced_barriers_supported;
 		default:
 			return RenderingDeviceDriver::api_trait_get(p_trait);
 	}
