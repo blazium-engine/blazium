@@ -2195,7 +2195,7 @@ SpriteFramesEditor::SpriteFramesEditor() {
 
 	updating = false;
 
-	edited_anim = "default";
+	edited_anim = SceneStringName(default_);
 
 	delete_dialog = memnew(ConfirmationDialog);
 	add_child(delete_dialog);
