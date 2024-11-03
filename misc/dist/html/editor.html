@@ -350,6 +350,9 @@ a:active {
 		</div>
 		<script>
 window.addEventListener('load', () => {
+	preloadZip(document.getElementById('zip-file')).then(function (zip) {
+		startEditor(zip);
+	});
 	function notifyUpdate(sw) {
 		const btn = document.getElementById('btn-tab-update');
 		btn.onclick = function () {
