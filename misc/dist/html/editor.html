@@ -349,75 +349,6 @@ a:active {
 			</div>
 		</div>
 		<script>
-window.addEventListener('load', () => {
-	preloadZip(document.getElementById('zip-file')).then(function (zip) {
-		startEditor(zip);
-	});
-	function notifyUpdate(sw) {
-		const btn = document.getElementById('btn-tab-update');
-		btn.onclick = function () {
-			if (!window.confirm('Are you sure you want to update?\nClicking "OK" will reload all active instances!')) {
-				return;
-			}
-			sw.postMessage('update');
-			btn.innerHTML = 'Updating...';
-			btn.disabled = true;
-		};
-		btn.style.display = '';
-	}
-	if ('serviceWorker' in navigator) {
-		navigator.serviceWorker.register('service.worker.js').then(function (reg) {
-			if (reg.waiting) {
-				notifyUpdate(reg.waiting);
-			}
-			reg.addEventListener('updatefound', function () {
-				const update = reg.installing;
-				update.addEventListener('statechange', function () {
-					if (update.state === 'installed') {
-						// It's a new install, claim and perform aggressive caching.
-						if (!reg.active) {
-							update.postMessage('claim');
-						} else {
-							notifyUpdate(update);
-						}
-					}
-				});
-			});
-		});
-	}
-
-	const missing = Engine.getMissingFeatures({
-		threads: ___GODOT_THREADS_ENABLED___,
-	});
-	if (missing.length) {
-		// Display error dialog as threading support is required for the editor.
-		document.getElementById('startButton').disabled = 'disabled';
-		document.getElementById('welcome-modal-description').style.display = 'none';
-		document.getElementById('welcome-modal-missing-description').style.display = 'block';
-		document.getElementById('welcome-modal-dismiss').style.display = 'none';
-		const list = document.getElementById('welcome-modal-missing-list');
-		for (let i = 0; i < missing.length; i++) {
-			const node = document.createElement('li');
-			node.innerText = missing[i];
-			list.appendChild(node);
-		}
-	}
-
-	if (missing.length || localStorage.getItem('welcomeModalDismissed') !== 'true') {
-		document.getElementById('welcome-modal').style.display = 'block';
-		document.getElementById('welcome-modal-dismiss').focus();
-	}
-});
-
-function closeWelcomeModal(dontShowAgain) { // eslint-disable-line no-unused-vars
-	document.getElementById('welcome-modal').style.display = 'none';
-	if (dontShowAgain) {
-		localStorage.setItem('welcomeModalDismissed', 'true');
-	}
-}
-		</script>
-		<script src="blazium.editor.js"></script>
-		<script>
 let editor = null;
 let game = null;
 let setStatusMode;
@@ -755,6 +686,79 @@ function preloadZip(target) {
 		}
 	});
 }
+window.addEventListener('load', () => {
+	function notifyUpdate(sw) {
+		const btn = document.getElementById('btn-tab-update');
+		btn.onclick = function () {
+			if (!window.confirm('Are you sure you want to update?\nClicking "OK" will reload all active instances!')) {
+				return;
+			}
+			sw.postMessage('update');
+			btn.innerHTML = 'Updating...';
+			btn.disabled = true;
+		};
+		btn.style.display = '';
+	}
+	if ('serviceWorker' in navigator) {
+		navigator.serviceWorker.register('service.worker.js').then(function (reg) {
+			if (reg.waiting) {
+				notifyUpdate(reg.waiting);
+			}
+			reg.addEventListener('updatefound', function () {
+				const update = reg.installing;
+				update.addEventListener('statechange', function () {
+					if (update.state === 'installed') {
+						// It's a new install, claim and perform aggressive caching.
+						if (!reg.active) {
+							update.postMessage('claim');
+						} else {
+							notifyUpdate(update);
+						}
+					}
+				});
+			});
+		});
+	}
+
+	const missing = Engine.getMissingFeatures({
+		threads: ___GODOT_THREADS_ENABLED___,
+	});
+	if (missing.length) {
+		// Display error dialog as threading support is required for the editor.
+		document.getElementById('startButton').disabled = 'disabled';
+		document.getElementById('welcome-modal-description').style.display = 'none';
+		document.getElementById('welcome-modal-missing-description').style.display = 'block';
+		document.getElementById('welcome-modal-dismiss').style.display = 'none';
+		const list = document.getElementById('welcome-modal-missing-list');
+		for (let i = 0; i < missing.length; i++) {
+			const node = document.createElement('li');
+			node.innerText = missing[i];
+			list.appendChild(node);
+		}
+	}
+
+	if (missing.length || localStorage.getItem('welcomeModalDismissed') !== 'true') {
+		document.getElementById('welcome-modal').style.display = 'block';
+		document.getElementById('welcome-modal-dismiss').focus();
+	}
+
+	setTimeout(() => {
+        preloadZip(document.getElementById('zip-file')).then(function (zip) {
+            startEditor(zip);
+        });
+    }, 100);
+});
+
+function closeWelcomeModal(dontShowAgain) { // eslint-disable-line no-unused-vars
+	document.getElementById('welcome-modal').style.display = 'none';
+	if (dontShowAgain) {
+		localStorage.setItem('welcomeModalDismissed', 'true');
+	}
+}
+		</script>
+		<script src="blazium.editor.js"></script>
+		<script>
+
 
 document.getElementById('startButton').onclick = function () {
 	preloadZip(document.getElementById('zip-file')).then(function (zip) {
