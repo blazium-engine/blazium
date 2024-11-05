@@ -125,6 +125,14 @@ class NavMap : public NavRid {
 	int pm_edge_connection_count = 0;
 	int pm_edge_free_count = 0;
 
+	struct ConnectionPair {
+		gd::Edge::Connection connections[2];
+		int size = 0;
+	};
+
+	HashMap<gd::EdgeKey, ConnectionPair, gd::EdgeKey> connection_pairs_map;
+	LocalVector<gd::Edge::Connection> free_edges;
+
 public:
 	NavMap();
 	~NavMap();
