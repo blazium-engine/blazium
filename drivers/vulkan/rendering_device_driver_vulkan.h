@@ -617,6 +617,12 @@ public:
 	virtual void command_begin_label(CommandBufferID p_cmd_buffer, const char *p_label_name, const Color &p_color) override final;
 	virtual void command_end_label(CommandBufferID p_cmd_buffer) override final;
 
+	/****************/
+	/**** DEBUG *****/
+	/****************/
+
+	static String get_vulkan_result(VkResult err);
+
 	/********************/
 	/**** SUBMISSION ****/
 	/********************/
