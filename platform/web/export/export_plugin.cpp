@@ -357,9 +357,6 @@ Error EditorExportPlatformWeb::_build_js_files(const Ref<EditorExportPreset> &p_
 }
 
 Error EditorExportPlatformWeb::_build_pwa(const Ref<EditorExportPreset> &p_preset, const String p_path, const Vector<SharedObject> &p_shared_objects) {
-	List<String> preset_features;
-	get_preset_features(p_preset, &preset_features);
-
 	String proj_name = GLOBAL_GET("application/config/name");
 	if (proj_name.is_empty()) {
 		proj_name = "Blazium Game";
@@ -386,9 +383,6 @@ Error EditorExportPlatformWeb::_build_pwa(const Ref<EditorExportPreset> &p_prese
 		cache_files.push_back(name + ".apple-touch-icon.png");
 	}
 
-	if (preset_features.find("threads")) {
-		cache_files.push_back(name + ".worker.js");
-	}
 	cache_files.push_back(name + ".audio.worklet.js");
 	cache_files.push_back(name + ".audio.position.worklet.js");
 	replaces["___GODOT_CACHE___"] = Variant(cache_files).to_json_string();
@@ -1039,7 +1033,6 @@ Error EditorExportPlatformWeb::_export_project(const Ref<EditorExportPreset> &p_
 		DirAccess::remove_file_or_error(basepath + ".html");
 		DirAccess::remove_file_or_error(basepath + ".offline.html");
 		DirAccess::remove_file_or_error(basepath + ".js");
-		DirAccess::remove_file_or_error(basepath + ".worker.js");
 		DirAccess::remove_file_or_error(basepath + ".audio.worklet.js");
 		DirAccess::remove_file_or_error(basepath + ".audio.position.worklet.js");
 		DirAccess::remove_file_or_error(basepath + ".service.worker.js");

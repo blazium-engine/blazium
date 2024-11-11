@@ -38,7 +38,7 @@ def create_engine_file(env, target, source, externs, threads_enabled):
     return env.Substfile(target=target, source=[env.File(s) for s in source], SUBST_DICT=subst_dict)
 
 
-def create_template_zip(env, js, wasm, worker, side):
+def create_template_zip(env, js, wasm, side):
     binary_name = "blazium.editor" if env.editor_build else "blazium"
     zip_dir = env.Dir(env.GetTemplateZipPath())
     in_files = [
@@ -53,9 +53,6 @@ def create_template_zip(env, js, wasm, worker, side):
         zip_dir.File(binary_name + ".audio.worklet.js"),
         zip_dir.File(binary_name + ".audio.position.worklet.js"),
     ]
-    if env["threads"]:
-        in_files.append(worker)
-        out_files.append(zip_dir.File(binary_name + ".worker.js"))
     # Dynamic linking (extensions) specific.
     if env["dlink_enabled"]:
         in_files.append(side)  # Side wasm (contains the actual Godot code).
@@ -74,8 +71,6 @@ def create_template_zip(env, js, wasm, worker, side):
             "logo.svg",
             "favicon.png",
         ]
-        if env["threads"]:
-            cache.append("blazium.editor.worker.js")
         opt_cache = ["blazium.editor.wasm"]
         subst_dict = {
             "___GODOT_VERSION___": get_external_build_version(),
