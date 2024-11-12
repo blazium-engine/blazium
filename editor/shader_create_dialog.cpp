@@ -31,6 +31,7 @@
 #include "shader_create_dialog.h"
 
 #include "core/config/project_settings.h"
+#include "editor/editor_node.h"
 #include "editor/gui/editor_file_dialog.h"
 #include "editor/gui/editor_validation_panel.h"
 #include "editor/themes/editor_scale.h"
@@ -246,6 +247,7 @@ void fog() {
 			alert->popup_centered();
 			return;
 		}
+		EditorNode::get_singleton()->ensure_uid_file(lpath);
 
 		emit_signal(SNAME("shader_include_created"), shader_inc);
 	} else {
@@ -264,6 +266,7 @@ void fog() {
 				alert->popup_centered();
 				return;
 			}
+			EditorNode::get_singleton()->ensure_uid_file(lpath);
 		}
 
 		emit_signal(SNAME("shader_created"), shader);
