@@ -12,7 +12,7 @@ def generate_bundle(target, source, env):
 
     if env.editor_build:
         # Editor bundle.
-        prefix = "godot." + env["platform"] + "." + env["target"]
+        prefix = "blazium." + env["platform"] + "." + env["target"]
         if env.dev_build:
             prefix += ".dev"
         if env["precision"] == "double":
@@ -73,9 +73,9 @@ def generate_bundle(target, source, env):
 
     else:
         # Template bundle.
-        app_prefix = "godot." + env["platform"]
-        rel_prefix = "godot." + env["platform"] + "." + "template_release"
-        dbg_prefix = "godot." + env["platform"] + "." + "template_debug"
+        app_prefix = "blazium." + env["platform"]
+        rel_prefix = "blazium." + env["platform"] + "." + "template_release"
+        dbg_prefix = "blazium." + env["platform"] + "." + "template_debug"
         if env.dev_build:
             app_prefix += ".dev"
             rel_prefix += ".dev"
@@ -98,9 +98,9 @@ def generate_bundle(target, source, env):
         if not os.path.isdir(app_dir + "/Contents/MacOS"):
             os.mkdir(app_dir + "/Contents/MacOS")
         if rel_target_bin != "":
-            shutil.copy(rel_target_bin, app_dir + "/Contents/MacOS/godot_macos_release.universal")
+            shutil.copy(rel_target_bin, app_dir + "/Contents/MacOS/blazium_macos_release.universal")
         if dbg_target_bin != "":
-            shutil.copy(dbg_target_bin, app_dir + "/Contents/MacOS/godot_macos_debug.universal")
+            shutil.copy(dbg_target_bin, app_dir + "/Contents/MacOS/blazium_macos_debug.universal")
 
         # ZIP .app bundle.
         zip_dir = env.Dir(

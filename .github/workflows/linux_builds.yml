@@ -30,7 +30,7 @@ jobs:
             cache-name: linux-editor-mono
             target: editor
             scons-flags: module_mono_enabled=yes
-            bin: ./bin/godot.linuxbsd.editor.x86_64.mono
+            bin: ./bin/blazium.linuxbsd.editor.x86_64.mono
             build-mono: true
             doc-test: true
             proj-conv: true
@@ -51,7 +51,7 @@ jobs:
               use_asan=yes
               use_ubsan=yes
               linker=mold
-            bin: ./bin/godot.linuxbsd.editor.dev.double.x86_64.san
+            bin: ./bin/blazium.linuxbsd.editor.dev.double.x86_64.san
             proj-test: true
 
           - name: Editor with clang sanitizers (target=editor, dev_build=yes, use_asan=yes, use_ubsan=yes, use_llvm=yes, linker=lld)
@@ -63,7 +63,7 @@ jobs:
               use_ubsan=yes
               use_llvm=yes
               linker=lld
-            bin: ./bin/godot.linuxbsd.editor.dev.x86_64.llvm.san
+            bin: ./bin/blazium.linuxbsd.editor.dev.x86_64.llvm.san
             # Test our oldest supported SCons/Python versions on one arbitrary editor build.
             legacy-scons: true
 
@@ -75,20 +75,20 @@ jobs:
               use_tsan=yes
               use_llvm=yes
               linker=lld
-            bin: ./bin/godot.linuxbsd.editor.dev.x86_64.llvm.san
+            bin: ./bin/blazium.linuxbsd.editor.dev.x86_64.llvm.san
 
           - name: Template w/ Mono, release (target=template_release)
             cache-name: linux-template-mono
             target: template_release
             scons-flags: module_mono_enabled=yes
-            bin: ./bin/godot.linuxbsd.template_release.x86_64.mono
+            bin: ./bin/blazium.linuxbsd.template_release.x86_64.mono
             artifact: true
 
           - name: Template w/ Mono, debug (target=template_debug)
             cache-name: linux-template-mono-debug
             target: template_debug
             scons-flags: module_mono_enabled=yes
-            bin: ./bin/godot.linuxbsd.template_debug.x86_64.mono
+            bin: ./bin/blazium.linuxbsd.template_debug.x86_64.mono
             artifact: true
 
           - name: Minimal template (target=template_release, everything disabled)
@@ -104,7 +104,7 @@ jobs:
               deprecated=no
               minizip=no
               brotli=no
-            bin: ./bin/godot.linuxbsd.template_release.x86_64
+            bin: ./bin/blazium.linuxbsd.template_release.x86_64
             artifact: true
 
     steps:
@@ -207,8 +207,8 @@ jobs:
       - name: Prepare artifact
         if: matrix.artifact
         run: |
-          strip bin/godot.*
-          chmod +x bin/godot.*
+          strip bin/blazium.*
+          chmod +x bin/blazium.*
 
       - name: Upload artifact
         uses: ./.github/actions/upload-artifact
