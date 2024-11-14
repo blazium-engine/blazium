@@ -659,7 +659,9 @@ def detect_darwin_sdk_path(platform, env):
             raise
 
 
-def is_vanilla_clang(env):
+def is_apple_clang(env):
+    if env["platform"] not in ["macos", "ios"]:
+        return False
     if not using_clang(env):
         return False
     try:
@@ -667,7 +669,7 @@ def is_vanilla_clang(env):
     except (subprocess.CalledProcessError, OSError):
         print_warning("Couldn't parse CXX environment variable to infer compiler version.")
         return False
-    return not version.startswith("Apple")
+    return version.startswith("Apple")
 
 
 def get_compiler_version(env):
