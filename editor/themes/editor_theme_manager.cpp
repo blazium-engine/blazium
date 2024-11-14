@@ -252,7 +252,7 @@ EditorThemeManager::ThemeConfiguration EditorThemeManager::_create_theme_config(
 	config.color_picker_button_height = 28 * EDSCALE;
 	config.subresource_hue_tint = EDITOR_GET("docks/property_editor/subresource_hue_tint");
 
-	config.default_contrast = 0.3; // Make sure to keep this in sync with the editor settings definition.
+	config.default_contrast = 0.24; // Make sure to keep this in sync with the editor settings definition.
 
 	// Handle main theme preset.
 	{
@@ -289,15 +289,19 @@ EditorThemeManager::ThemeConfiguration EditorThemeManager::_create_theme_config(
 			if (config.preset == "Breeze Dark") {
 				preset_accent_color = Color(0.26, 0.76, 1.00);
 				preset_base_color = Color(0.24, 0.26, 0.28);
-				preset_contrast = config.default_contrast;
+				preset_contrast = 0.3;
+			} else if (config.preset == "Godot") {
+				preset_accent_color = Color(0.44, 0.73, 0.98);
+				preset_base_color = Color(0.21, 0.24, 0.29);
+				preset_contrast = 0.3;
 			} else if (config.preset == "Godot 2") {
 				preset_accent_color = Color(0.53, 0.67, 0.89);
 				preset_base_color = Color(0.24, 0.23, 0.27);
-				preset_contrast = config.default_contrast;
+				preset_contrast = 0.3;
 			} else if (config.preset == "Gray") {
 				preset_accent_color = Color(0.44, 0.73, 0.98);
 				preset_base_color = Color(0.24, 0.24, 0.24);
-				preset_contrast = config.default_contrast;
+				preset_contrast = 0.3;
 			} else if (config.preset == "Indigo") {
 				preset_accent_color = Color(0.37, 0.54, 0.91);
 				preset_base_color = Color(0.17, 0.17, 0.20);
@@ -323,8 +327,8 @@ EditorThemeManager::ThemeConfiguration EditorThemeManager::_create_theme_config(
 				preset_contrast = 0.0;
 				preset_draw_extra_borders = true;
 			} else { // Default
-				preset_accent_color = Color(0.44, 0.73, 0.98);
-				preset_base_color = Color(0.21, 0.24, 0.29);
+				preset_accent_color = Color(0.733, 0.604, 0.969);
+				preset_base_color = Color(0.141, 0.157, 0.231);
 				preset_contrast = config.default_contrast;
 			}
 
