@@ -218,6 +218,12 @@ void EditorExportPlatformWeb::_fix_html(Vector<uint8_t> &p_html, const Ref<Edito
 	replaces["$GODOT_PROJECT_NAME"] = GLOBAL_GET("application/config/name");
 	replaces["$GODOT_HEAD_INCLUDE"] = head_include + custom_head_include;
 	replaces["$GODOT_SPLASH_COLOR"] = "#" + Color(GLOBAL_GET("application/boot_splash/bg_color")).to_html(false);
+
+	LocalVector<String> godot_splash_classes;
+	godot_splash_classes.push_back("show-image--" + String(GLOBAL_GET("application/boot_splash/show_image")));
+	godot_splash_classes.push_back("fullsize--" + String(GLOBAL_GET("application/boot_splash/fullsize")));
+	godot_splash_classes.push_back("use-filter--" + String(GLOBAL_GET("application/boot_splash/use_filter")));
+	replaces["$GODOT_SPLASH_CLASSES"] = String(" ").join(godot_splash_classes);
 	replaces["$GODOT_SPLASH"] = p_name + ".png";
 
 	_replace_strings(replaces, p_html);
