@@ -818,7 +818,7 @@ String OS_Unix::get_locale() const {
 	}
 
 	String locale = get_environment("LANG");
-	int tp = locale.find(".");
+	int tp = locale.find_char('.');
 	if (tp != -1) {
 		locale = locale.substr(0, tp);
 	}

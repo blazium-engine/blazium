@@ -3144,7 +3144,7 @@ void EditorInspector::update_tree() {
 
 		if (!array_prefix.is_empty()) {
 			path = path.trim_prefix(array_prefix);
-			int char_index = path.find("/");
+			int char_index = path.find_char('/');
 			if (char_index >= 0) {
 				path = path.right(-char_index - 1);
 			} else {
@@ -3184,10 +3184,10 @@ void EditorInspector::update_tree() {
 		}
 
 		// Get the property label's string.
-		String name_override = (path.contains("/")) ? path.substr(path.rfind("/") + 1) : path;
+		String name_override = (path.contains("/")) ? path.substr(path.rfind_char('/') + 1) : path;
 		String feature_tag;
 		{
-			const int dot = name_override.find(".");
+			const int dot = name_override.find_char('.');
 			if (dot != -1) {
 				feature_tag = name_override.substr(dot);
 				name_override = name_override.substr(0, dot);
@@ -3202,7 +3202,7 @@ void EditorInspector::update_tree() {
 		const String property_label_string = EditorPropertyNameProcessor::get_singleton()->process_name(name_override, name_style, p.name, doc_name) + feature_tag;
 
 		// Remove the property from the path.
-		int idx = path.rfind("/");
+		int idx = path.rfind_char('/');
 		if (idx > -1) {
 			path = path.left(idx);
 		} else {
@@ -3333,7 +3333,7 @@ void EditorInspector::update_tree() {
 				array_element_prefix = class_name_components[0];
 				editor_inspector_array = memnew(EditorInspectorArray(all_read_only));
 
-				String array_label = path.contains("/") ? path.substr(path.rfind("/") + 1) : path;
+				String array_label = path.contains("/") ? path.substr(path.rfind_char('/') + 1) : path;
 				array_label = EditorPropertyNameProcessor::get_singleton()->process_name(property_label_string, property_name_style, p.name, doc_name);
 				int page = per_array_page.has(array_element_prefix) ? per_array_page[array_element_prefix] : 0;
 				editor_inspector_array->setup_with_move_element_function(object, array_label, array_element_prefix, page, c, use_folding);

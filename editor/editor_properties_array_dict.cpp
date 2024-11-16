@@ -742,10 +742,10 @@ void EditorPropertyArray::setup(Variant::Type p_array_type, const String &p_hint
 	// The format of p_hint_string is:
 	// subType/subTypeHint:nextSubtype ... etc.
 	if (!p_hint_string.is_empty()) {
-		int hint_subtype_separator = p_hint_string.find(":");
+		int hint_subtype_separator = p_hint_string.find_char(':');
 		if (hint_subtype_separator >= 0) {
 			String subtype_string = p_hint_string.substr(0, hint_subtype_separator);
-			int slash_pos = subtype_string.find("/");
+			int slash_pos = subtype_string.find_char('/');
 			if (slash_pos >= 0) {
 				subtype_hint = PropertyHint(subtype_string.substr(slash_pos + 1, subtype_string.size() - slash_pos - 1).to_int());
 				subtype_string = subtype_string.substr(0, slash_pos);
