@@ -980,6 +980,7 @@ class AnimationTrackKeyEditEditor : public EditorProperty {
 		Variant value;
 	} key_data_cache;
 
+	void _time_edit_spun();
 	void _time_edit_entered();
 	void _time_edit_exited();
 
@@ -999,7 +1000,6 @@ class AnimationMarkerKeyEditEditor : public EditorProperty {
 
 	EditorSpinSlider *spinner = nullptr;
 
-	void _time_edit_entered();
 	void _time_edit_exited();
 
 public:

@@ -69,6 +69,7 @@ void EditorSpinSlider::gui_input(const Ref<InputEvent> &p_event) {
 					} else {
 						set_value(get_value() - get_step());
 					}
+					emit_signal("updown_pressed");
 					return;
 				}
 				_grab_start();
@@ -698,6 +699,7 @@ void EditorSpinSlider::_bind_methods() {
 
 	ADD_SIGNAL(MethodInfo("grabbed"));
 	ADD_SIGNAL(MethodInfo("ungrabbed"));
+	ADD_SIGNAL(MethodInfo("updown_pressed"));
 	ADD_SIGNAL(MethodInfo("value_focus_entered"));
 	ADD_SIGNAL(MethodInfo("value_focus_exited"));
 
