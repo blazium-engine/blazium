@@ -239,6 +239,8 @@ def configure(env: "SConsEnvironment"):
             "QuartzCore",
             "-framework",
             "Security",
+            "-framework",
+            "UniformTypeIdentifiers",
         ]
     )
     env.Append(LIBS=["pthread", "z"])
