@@ -295,6 +295,7 @@ private:
 	struct ItemMeta : public Item {
 		Variant meta;
 		MetaUnderline underline = META_UNDERLINE_ALWAYS;
+		String tooltip;
 		ItemMeta() { type = ITEM_META; }
 	};
 
@@ -709,6 +710,7 @@ public:
 	void push_indent(int p_level);
 	void push_list(int p_level, ListType p_list, bool p_capitalize, const String &p_bullet = String::utf8("•"));
 	void push_meta(const Variant &p_meta, MetaUnderline p_underline_mode = META_UNDERLINE_ALWAYS);
+	void push_meta_with_tooltip(const Variant &p_meta, MetaUnderline p_underline_mode = META_UNDERLINE_ALWAYS, const String &p_tooltip = String());
 	void push_hint(const String &p_string);
 	void push_table(int p_columns, InlineAlignment p_alignment = INLINE_ALIGNMENT_TOP, int p_align_to_row = -1);
 	void push_fade(int p_start_index, int p_length);
