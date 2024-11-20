@@ -35,6 +35,7 @@ import app.blazium.godot.io.directory.DirectoryAccessHandler;
 import app.blazium.godot.io.file.FileAccessHandler;
 import app.blazium.godot.tts.GodotTTS;
 import app.blazium.godot.utils.GodotNetUtils;
+import app.blazium.godot.variant.Callable;
 
 import android.app.Activity;
 import android.content.res.AssetManager;
@@ -200,16 +201,26 @@ public class GodotLib {
 	 * @param p_id Id of the Godot object to invoke
 	 * @param p_method Name of the method to invoke
 	 * @param p_params Parameters to use for method invocation
+	 *
+	 * @deprecated Use {@link Callable#call(long, String, Object...)} instead.
 	 */
-	public static native void callobject(long p_id, String p_method, Object[] p_params);
+	@Deprecated
+	public static void callobject(long p_id, String p_method, Object[] p_params) {
+		Callable.call(p_id, p_method, p_params);
+	}
 
 	/**
 	 * Invoke method |p_method| on the Godot object specified by |p_id| during idle time.
 	 * @param p_id Id of the Godot object to invoke
 	 * @param p_method Name of the method to invoke
 	 * @param p_params Parameters to use for method invocation
+	 *
+	 * @deprecated Use {@link Callable#callDeferred(long, String, Object...)} instead.
 	 */
-	public static native void calldeferred(long p_id, String p_method, Object[] p_params);
+	@Deprecated
+	public static void calldeferred(long p_id, String p_method, Object[] p_params) {
+		Callable.callDeferred(p_id, p_method, p_params);
+	}
 
 	/**
 	 * Forward the results from a permission request.

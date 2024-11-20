@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  string_android.h                                                      */
+/*  Callable.kt                                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,34 +28,67 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef STRING_ANDROID_H
-#define STRING_ANDROID_H
+package app.blazium.godot.variant
 
-#include "thread_jandroid.h"
-
-#include "core/string/ustring.h"
-
-#include <jni.h>
+import androidx.annotation.Keep
 
 /**
- * Converts JNI jstring to Blazium String.
- * @param source Source JNI string. If null an empty string is returned.
- * @param env JNI environment instance. If null obtained by get_jni_env().
- * @return Blazium string instance.
+ * Android version of a Godot built-in Callable type representing a method or a standalone function.
  */
-static inline String jstring_to_string(jstring source, JNIEnv *env = nullptr) {
-	String result;
-	if (source) {
-		if (!env) {
-			env = get_jni_env();
-		}
-		const char *const source_utf8 = env->GetStringUTFChars(source, nullptr);
-		if (source_utf8) {
-			result.parse_utf8(source_utf8);
-			env->ReleaseStringUTFChars(source, source_utf8);
-		}
-	}
-	return result;
-}
+@Keep
+class Callable private constructor(private val nativeCallablePointer: Long) {
 
-#endif // STRING_ANDROID_H
+	companion object {
+		/**
+		 * Invoke method [methodName] on the Godot object specified by [godotObjectId]
+		 */
+		@JvmStatic
+		fun call(godotObjectId: Long, methodName: String, vararg methodParameters: Any): Any? {
+			return nativeCallObject(godotObjectId, methodName, methodParameters)
+		}
+
+		/**
+		 * Invoke method [methodName] on the Godot object specified by [godotObjectId] during idle time.
+		 */
+		@JvmStatic
+		fun callDeferred(godotObjectId: Long, methodName: String, vararg methodParameters: Any) {
+			nativeCallObjectDeferred(godotObjectId, methodName, methodParameters)
+		}
+
+		@JvmStatic
+		private external fun nativeCall(pointer: Long, params: Array<out Any>): Any?
+
+		@JvmStatic
+		private external fun nativeCallObject(godotObjectId: Long, methodName: String, params: Array<out Any>): Any?
+
+		@JvmStatic
+		private external fun nativeCallObjectDeferred(godotObjectId: Long, methodName: String, params: Array<out Any>)
+
+		@JvmStatic
+		private external fun releaseNativePointer(nativePointer: Long)
+	}
+
+	/**
+	 * Calls the method represented by this [Callable]. Arguments can be passed and should match the method's signature.
+	 */
+	internal fun call(vararg params: Any): Any? {
+		if (nativeCallablePointer == 0L) {
+			return null
+		}
+
+		return nativeCall(nativeCallablePointer, params)
+	}
+
+	/**
+	 * Used to provide access to the native callable pointer to the native logic.
+	 */
+	private fun getNativePointer() = nativeCallablePointer
+
+	/** Note that [finalize] is deprecated and shouldn't be used, unfortunately its replacement,
+	 * [java.lang.ref.Cleaner], is only available on Android api 33 and higher.
+	 * So we resort to using it for the time being until our min api catches up to api 33.
+	 **/
+	protected fun finalize() {
+		releaseNativePointer(nativeCallablePointer)
+	}
+}
