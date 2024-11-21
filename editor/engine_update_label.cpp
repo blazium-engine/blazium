@@ -47,7 +47,8 @@ bool EngineUpdateLabel::_can_check_updates() const {
 void EngineUpdateLabel::_check_update() {
 	checked_update = true;
 	_set_status(UpdateStatus::BUSY);
-	http->request("https://godotengine.org/versions.json");
+	String version_url = VERSION_URL;
+	http->request(version_url);
 }
 
 void EngineUpdateLabel::_http_request_completed(int p_result, int p_response_code, const PackedStringArray &p_headers, const PackedByteArray &p_body) {
