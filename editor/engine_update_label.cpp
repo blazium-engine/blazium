@@ -32,6 +32,7 @@
 
 #include "core/io/json.h"
 #include "core/os/time.h"
+#include "core/version.h"
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
 #include "editor/themes/editor_scale.h"
