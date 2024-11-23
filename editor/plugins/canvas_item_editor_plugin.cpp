@@ -4445,6 +4445,14 @@ void CanvasItemEditor::_insert_animation_keys(bool p_location, bool p_rotation, 
 	te->commit_insert_queue();
 }
 
+void CanvasItemEditor::_prepare_view_menu() {
+	PopupMenu *popup = view_menu->get_popup();
+
+	Node *root = EditorNode::get_singleton()->get_edited_scene();
+	bool has_guides = root && (root->has_meta("_edit_horizontal_guides_") || root->has_meta("_edit_vertical_guides_"));
+	popup->set_item_disabled(popup->get_item_index(CLEAR_GUIDES), !has_guides);
+}
+
 void CanvasItemEditor::_update_override_camera_button(bool p_game_running) {
 	if (p_game_running) {
 		override_camera_button->set_disabled(false);
@@ -5583,9 +5591,10 @@ CanvasItemEditor::CanvasItemEditor() {
 	view_menu->set_switch_on_hover(true);
 	view_menu->set_shortcut_context(this);
 	main_menu_hbox->add_child(view_menu);
-	view_menu->get_popup()->connect(SceneStringName(id_pressed), callable_mp(this, &CanvasItemEditor::_popup_callback));
 
 	p = view_menu->get_popup();
+	p->connect(SceneStringName(id_pressed), callable_mp(this, &CanvasItemEditor::_popup_callback));
+	p->connect("about_to_popup", callable_mp(this, &CanvasItemEditor::_prepare_view_menu));
 	p->set_hide_on_checkable_item_selection(false);
 
 	grid_menu = memnew(PopupMenu);
