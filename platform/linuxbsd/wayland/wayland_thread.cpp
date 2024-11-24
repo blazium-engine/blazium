@@ -200,10 +200,7 @@ bool WaylandThread::_seat_state_configure_key_event(SeatState &p_ss, Ref<InputEv
 
 	Key physical_keycode = KeyMappingXKB::get_scancode(p_keycode);
 	KeyLocation key_location = KeyMappingXKB::get_location(p_keycode);
-
-	if (physical_keycode == Key::NONE) {
-		return false;
-	}
+	uint32_t unicode = xkb_state_key_get_utf32(p_ss.xkb_state, p_keycode);
 
 	Key keycode = Key::NONE;
 	if (num_sys > 0 && syms) {
@@ -218,6 +215,10 @@ bool WaylandThread::_seat_state_configure_key_event(SeatState &p_ss, Ref<InputEv
 		keycode -= 'a' - 'A';
 	}
 
+	if (physical_keycode == Key::NONE && keycode == Key::NONE && unicode == 0) {
+		return false;
+	}
+
 	p_event->set_window_id(DisplayServer::MAIN_WINDOW_ID);
 
 	// Set all pressed modifiers.
@@ -230,8 +231,6 @@ bool WaylandThread::_seat_state_configure_key_event(SeatState &p_ss, Ref<InputEv
 	p_event->set_keycode(keycode);
 	p_event->set_physical_keycode(physical_keycode);
 	p_event->set_location(key_location);
-
-	uint32_t unicode = xkb_state_key_get_utf32(p_ss.xkb_state, p_keycode);
 
 	if (unicode != 0) {
 		p_event->set_key_label(fix_key_label(unicode, keycode));
