@@ -69,6 +69,7 @@ static const char *global_var_type_names[RS::GLOBAL_VAR_TYPE_MAX] = {
 	"sampler2DArray",
 	"sampler3D",
 	"samplerCube",
+	"samplerExternalOES",
 };
 
 class ShaderGlobalsEditorInterface : public Object {
@@ -236,6 +237,11 @@ protected:
 					pinfo.hint = PROPERTY_HINT_RESOURCE_TYPE;
 					pinfo.hint_string = "Cubemap,CompressedCubemap";
 				} break;
+				case RS::GLOBAL_VAR_TYPE_SAMPLEREXT: {
+					pinfo.type = Variant::OBJECT;
+					pinfo.hint = PROPERTY_HINT_RESOURCE_TYPE;
+					pinfo.hint_string = "ExternalTexture";
+				} break;
 				default: {
 				} break;
 			}
@@ -341,6 +347,9 @@ static Variant create_var(RS::GlobalShaderParameterType p_type) {
 			return "";
 		}
 		case RS::GLOBAL_VAR_TYPE_SAMPLERCUBE: {
+			return "";
+		}
+		case RS::GLOBAL_VAR_TYPE_SAMPLEREXT: {
 			return "";
 		}
 		default: {
