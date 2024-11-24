@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="LobbyClient" inherits="Blazium" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		A node used to connect to a blazium lobby websocket server.
+	</brief_description>
+	<description>
+		A node used to connect to a lobby server. It can be used to do matchmaking. You care do operations such as create lobbys, join lobbys, etc.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="connect_to_lobby">
+			<return type="void" />
+			<param index="0" name="game_id" type="String" />
+			<param index="1" name="lobby_url" type="String" />
+			<description>
+				Connect to a Blazium Lobby Server using a [game_id] and [lobby_url]. The default [lobby_url] is wss://lobby.blazium.app and it connects to the free Blazium Lobby server.
+			</description>
+		</method>
+		<method name="create_lobby">
+			<return type="void" />
+			<description>
+				Create a lobby and become host. If you are already in a lobby, you cannot create one. You need to leave first.
+				Will generate either error signal or lobby_created.
+			</description>
+		</method>
+		<method name="join_lobby">
+			<return type="void" />
+			<param index="0" name="lobby_name" type="String" />
+			<description>
+				Joint a lobby. If you are already in a lobby, you cannot join another one. You need to leave first.
+				Will generate either error signal or lobby_joined.
+			</description>
+		</method>
+		<method name="kick_peer">
+			<return type="void" />
+			<param index="0" name="peer_id" type="String" />
+			<description>
+				Kick a peer. You need to be host to do this operation.
+				Will generate either error signal or peer_left.
+			</description>
+		</method>
+		<method name="leave_lobby">
+			<return type="void" />
+			<description>
+				Leave a lobby. You need to be in a lobby to leave one.
+				Will generate either error signal or lobby_left.
+			</description>
+		</method>
+		<method name="list_lobby">
+			<return type="void" />
+			<description>
+				Lists all lobbies.
+				Will generate either error signal or lobby_list.
+			</description>
+		</method>
+		<method name="lobby_ready">
+			<return type="void" />
+			<description>
+				Ready up in the lobby. You need to be in a lobby and unready to run this.
+				Will generate either error signal or peer_ready.
+			</description>
+		</method>
+		<method name="lobby_unready">
+			<return type="void" />
+			<description>
+				Ready up in the lobby. You need to be in a lobby and ready to run this.
+				Will generate either error signal or peer_unready.
+			</description>
+		</method>
+		<method name="seal_lobby">
+			<return type="void" />
+			<description>
+				Seals the lobby. You need to be the host to do this and the lobby needs to be unsealed.
+				Will generate either error signal or lobby_sealed.
+			</description>
+		</method>
+		<method name="unseal_lobby">
+			<return type="void" />
+			<description>
+				Unseals the lobby. You need to be the host to do this and the lobby needs to be sealed.
+				Will generate either error signal or lobby_unsealed.
+			</description>
+		</method>
+		<method name="view_lobby">
+			<return type="void" />
+			<param index="0" name="lobby_name" type="String" />
+			<description>
+				View data from a lobby. Returns lobby settings and peers.
+				Will generate either error signal or lobby_view.
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="append_error">
+			<param index="0" name="logs" type="String" />
+			<description>
+				Signals an error.
+			</description>
+		</signal>
+		<signal name="append_log">
+			<param index="0" name="command" type="String" />
+			<param index="1" name="logs" type="String" />
+			<description>
+				Signals a log from a command.
+			</description>
+		</signal>
+		<signal name="lobby_created">
+			<param index="0" name="lobby" type="String" />
+			<description>
+				Signal generated after a lobby is created.
+			</description>
+		</signal>
+		<signal name="lobby_joined">
+			<param index="0" name="lobby" type="String" />
+			<description>
+				Signal generated after you joint a lobby.
+			</description>
+		</signal>
+		<signal name="lobby_left">
+			<description>
+				Signal generated after you leave a lobby.
+			</description>
+		</signal>
+		<signal name="lobby_list">
+			<param index="0" name="lobbies" type="Array" />
+			<description>
+				Signal generated after you list lobbies.
+			</description>
+		</signal>
+		<signal name="lobby_sealed">
+			<description>
+				Signal generated after the host seals the lobby.
+			</description>
+		</signal>
+		<signal name="lobby_unsealed">
+			<description>
+				Signal generated after the host unseals the lobby.
+			</description>
+		</signal>
+		<signal name="lobby_view">
+			<param index="0" name="host" type="String" />
+			<param index="1" name="sealed" type="bool" />
+			<param index="2" name="peer_ids" type="Array" />
+			<param index="3" name="peer_names" type="Array" />
+			<param index="4" name="peer_readys" type="Array" />
+			<description>
+				Signal generated after you call view_lobby.
+			</description>
+		</signal>
+		<signal name="peer_joined">
+			<param index="0" name="peer" type="String" />
+			<description>
+				Signal generated after a peer joins the lobby.
+			</description>
+		</signal>
+		<signal name="peer_left">
+			<param index="0" name="peer" type="String" />
+			<description>
+				Signal generated after a peer leaves the lobby.
+			</description>
+		</signal>
+		<signal name="peer_ready">
+			<param index="0" name="peer" type="String" />
+			<description>
+				Signal generated after a peer is ready.
+			</description>
+		</signal>
+		<signal name="peer_unready">
+			<param index="0" name="peer" type="String" />
+			<description>
+				Signal generated after a peer is unready.
+			</description>
+		</signal>
+	</signals>
+	<members>
+		<member name="server" type="String" setter="set_server" getter="get_server" default="&quot;blazium.app&quot;">
+			Base server url for blazium services.
+		</member>
+	</members>
+</class>
