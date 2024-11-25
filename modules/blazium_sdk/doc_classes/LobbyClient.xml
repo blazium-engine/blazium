@@ -10,7 +10,7 @@
 	</tutorials>
 	<methods>
 		<method name="connect_to_lobby">
-			<return type="void" />
+			<return type="bool" />
 			<param index="0" name="game_id" type="String" />
 			<description>
 				Connect to a Blazium Lobby Server using a [game_id]. The default [server_url] is wss://lobby.blazium.app and it connects to the free Blazium Lobby server.

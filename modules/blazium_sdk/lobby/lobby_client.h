@@ -214,7 +214,7 @@ protected:
 	static void _bind_methods();
 
 public:
-    void connect_to_lobby(const String &game_id);
+    bool connect_to_lobby(const String &game_id);
     void set_server_url(String server_url) { this->server_url = server_url; }
     String get_server_url() { return server_url; }
     Ref<CreateLobbyResponse> create_lobby(int max_players, const String &password);

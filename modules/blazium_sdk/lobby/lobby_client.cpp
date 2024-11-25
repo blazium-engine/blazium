@@ -1,4 +1,4 @@
-#include "./blazium_lobby.h"
+#include "./lobby_client.h"
 #include "scene/main/node.h"
 LobbyClient::LobbyClient() {
     _socket = Ref<WebSocketPeer>(WebSocketPeer::create());
@@ -45,16 +45,17 @@ void LobbyClient::_bind_methods() {
     ADD_SIGNAL(MethodInfo("append_log", PropertyInfo(Variant::STRING, "command"), PropertyInfo(Variant::STRING, "command"), PropertyInfo(Variant::STRING, "logs")));
 }
 
-void LobbyClient::connect_to_lobby(const String &game_id) {
+bool LobbyClient::connect_to_lobby(const String &game_id) {
     String lobby_url = get_server_url();
     String url = lobby_url + "?gameID=" + game_id;
     Error err = _socket->connect_to_url(url);
     if (err != OK) {
         emit_signal("append_log", "error", "Unable to connect to lobby server at: " + url);
-        return;
+        return false;
     }
     set_process_internal(true);
     emit_signal("append_log", "connect_to_lobby","Connected to: " + url);
+    return true;
 }
 
 String LobbyClient::_increment_counter() {

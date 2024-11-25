@@ -1,5 +1,5 @@
 #include "register_types.h"
-#include "lobby/blazium_lobby.h"
+#include "lobby/lobby_client.h"
 #include "blazium_client.h"
 
 void initialize_blazium_sdk_module(ModuleInitializationLevel p_level) {

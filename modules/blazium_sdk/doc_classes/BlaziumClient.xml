@@ -4,7 +4,7 @@
 		An abstract base node used to connect to a blazium services.
 	</brief_description>
 	<description>
-		Am abstract base node used to connect to a blazium services. See implementations of it:
+		An abstract base node used to connect to a blazium services. See implementations of it:
 		- [LobbyClient]
 	</description>
 	<tutorials>
