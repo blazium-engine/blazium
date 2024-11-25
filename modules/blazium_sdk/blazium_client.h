@@ -4,7 +4,8 @@
 #include "scene/main/node.h"
 
 class BlaziumClient : public Node {
-    GDCLASS(BlaziumClient, Node);
+	GDCLASS(BlaziumClient, Node);
+
 protected:
 	static void _bind_methods() {}
 };
