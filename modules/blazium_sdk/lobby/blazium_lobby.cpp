@@ -39,7 +39,7 @@ void LobbyClient::_bind_methods() {
     ADD_SIGNAL(MethodInfo("lobby_sealed"));
     ADD_SIGNAL(MethodInfo("lobby_unsealed"));
     ADD_SIGNAL(MethodInfo("peer_joined", PropertyInfo(Variant::STRING, "peer")));
-    ADD_SIGNAL(MethodInfo("peer_left", PropertyInfo(Variant::STRING, "peer")));
+    ADD_SIGNAL(MethodInfo("peer_left", PropertyInfo(Variant::STRING, "peer"), PropertyInfo(Variant::BOOL, "kicked")));
     ADD_SIGNAL(MethodInfo("peer_ready", PropertyInfo(Variant::STRING, "peer")));
     ADD_SIGNAL(MethodInfo("peer_unready", PropertyInfo(Variant::STRING, "peer")));
     ADD_SIGNAL(MethodInfo("append_log", PropertyInfo(Variant::STRING, "command"), PropertyInfo(Variant::STRING, "command"), PropertyInfo(Variant::STRING, "logs")));

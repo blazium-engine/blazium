@@ -134,7 +134,7 @@ public:
         LobbyInfo() {}
     };
     class LobbyPeer: public RefCounted {
-        GDCLASS(LobbyClient::LobbyPeer, RefCounted);
+        GDCLASS(LobbyPeer, RefCounted);
         String id;
         String name;
         bool ready = false;
