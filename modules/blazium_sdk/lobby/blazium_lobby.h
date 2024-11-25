@@ -51,7 +51,7 @@ public:
         GDCLASS(LobbyResponse, RefCounted);
     protected:
         static void _bind_methods() {
-            ADD_SIGNAL(MethodInfo("finished", PropertyInfo(Variant::OBJECT, "result")));
+            ADD_SIGNAL(MethodInfo("finished", PropertyInfo(Variant::OBJECT, "result", PROPERTY_HINT_RESOURCE_TYPE, "LobbyResult")));
         }
     public:
         class LobbyResult: public RefCounted {
@@ -79,7 +79,7 @@ public:
         GDCLASS(ListLobbyResponse, RefCounted);
     protected:
         static void _bind_methods() {
-            ADD_SIGNAL(MethodInfo("finished", PropertyInfo(Variant::OBJECT, "result")));
+            ADD_SIGNAL(MethodInfo("finished", PropertyInfo(Variant::OBJECT, "result", PROPERTY_HINT_RESOURCE_TYPE, "ListLobbyResult")));
         }
     public:
         class ListLobbyResult: public RefCounted {
@@ -162,7 +162,7 @@ public:
         GDCLASS(ViewLobbyResponse, RefCounted);
     protected:
         static void _bind_methods() {
-            ADD_SIGNAL(MethodInfo("finished", PropertyInfo(Variant::OBJECT, "result")));
+            ADD_SIGNAL(MethodInfo("finished", PropertyInfo(Variant::OBJECT, "result", PROPERTY_HINT_RESOURCE_TYPE, "ViewLobbyResult")));
         }
     public:
         class ViewLobbyResult: public RefCounted {
