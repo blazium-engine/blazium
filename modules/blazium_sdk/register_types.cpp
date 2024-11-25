@@ -1,5 +1,6 @@
 #include "register_types.h"
 #include "lobby/lobby_client.h"
+#include "pogr/pogr_client.h"
 #include "blazium_client.h"
 
 void initialize_blazium_sdk_module(ModuleInitializationLevel p_level) {
@@ -16,6 +17,8 @@ void initialize_blazium_sdk_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(LobbyClient::ListLobbyResponse);
 		GDREGISTER_CLASS(LobbyClient::ViewLobbyResponse::ViewLobbyResult);
 		GDREGISTER_CLASS(LobbyClient::ViewLobbyResponse);
+		GDREGISTER_CLASS(POGRClient);
+		GDREGISTER_CLASS(POGRClient::POGRResponse);
 	}
 }
 
