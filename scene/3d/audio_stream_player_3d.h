@@ -109,6 +109,9 @@ private:
 
 	DopplerTracking doppler_tracking = DOPPLER_TRACKING_DISABLED;
 
+	float doppler_strength = 1.0f;
+	float doppler_clamp = 8.0f;
+
 	float _get_attenuation_db(float p_distance) const;
 
 	float panning_strength = 1.0f;
@@ -185,6 +188,12 @@ public:
 
 	void set_doppler_tracking(DopplerTracking p_tracking);
 	DopplerTracking get_doppler_tracking() const;
+
+	void set_doppler_strength(float p_doppler_strength);
+	float get_doppler_strength() const;
+
+	void set_doppler_clamp(float p_doppler_clamp);
+	float get_doppler_clamp() const;
 
 	void set_stream_paused(bool p_pause);
 	bool get_stream_paused() const;

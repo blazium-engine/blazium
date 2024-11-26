@@ -72,6 +72,12 @@
 			The bus on which this audio is playing.
 			[b]Note:[/b] When setting this property, keep in mind that no validation is performed to see if the given name matches an existing bus. This is because audio bus layouts might be loaded after this property is set. If this given name can't be resolved at runtime, it will fall back to [code]"Master"[/code].
 		</member>
+		<member name="doppler_clamp" type="float" setter="set_doppler_clamp" getter="get_doppler_clamp" default="8.0">
+			Clamps pitch change of the doppler effect, e.g. if set to 5 the audio playback speed will be clamped between 5 times slower and 5 times faster then normal.
+		</member>
+		<member name="doppler_strength" type="float" setter="set_doppler_strength" getter="get_doppler_strength" default="1.0">
+			Strength of the doppler effect.
+		</member>
 		<member name="doppler_tracking" type="int" setter="set_doppler_tracking" getter="get_doppler_tracking" enum="AudioStreamPlayer3D.DopplerTracking" default="0">
 			Decides in which step the Doppler effect should be calculated.
 		</member>
