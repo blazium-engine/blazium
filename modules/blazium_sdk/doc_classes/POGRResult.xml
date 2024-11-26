@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="POGRResult" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A result from a response from a pogr.io request.
+	</brief_description>
+	<description>
+		A result from a response from a pogr.io request.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="has_error" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns true if there is an error.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="error" type="String" setter="" getter="get_error" default="&quot;&quot;">
+			The error message, if any.
+		</member>
+		<member name="result" type="String" setter="" getter="get_result" default="&quot;&quot;">
+			The result, if any.
+		</member>
+	</members>
+</class>

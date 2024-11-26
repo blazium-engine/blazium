@@ -21,6 +21,9 @@ def get_doc_classes():
         "AuthoritativeClient",
         "LobbyCallResponse",
         "LobbyCallResult",
+        "POGRClient",
+        "POGRResult",
+        "POGRResponse",
     ]
 
 

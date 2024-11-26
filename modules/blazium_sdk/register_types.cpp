@@ -32,6 +32,7 @@
 #include "blazium_client.h"
 #include "lobby/authoritative_client.h"
 #include "lobby/lobby_client.h"
+#include "pogr/pogr_client.h"
 
 void initialize_blazium_sdk_module(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE) {
@@ -48,6 +49,9 @@ void initialize_blazium_sdk_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(AuthoritativeClient);
 		GDREGISTER_CLASS(AuthoritativeClient::LobbyCallResponse);
 		GDREGISTER_CLASS(AuthoritativeClient::LobbyCallResponse::LobbyCallResult);
+		GDREGISTER_CLASS(POGRClient);
+		GDREGISTER_CLASS(POGRClient::POGRResponse);
+		GDREGISTER_CLASS(POGRClient::POGRResult);
 	}
 }
 
