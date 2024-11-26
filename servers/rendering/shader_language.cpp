@@ -39,7 +39,7 @@
 
 #define HAS_WARNING(flag) (warning_flags & flag)
 
-int ShaderLanguage::instance_counter = 0;
+SafeNumeric<int> ShaderLanguage::instance_counter;
 
 String ShaderLanguage::get_operator_text(Operator p_op) {
 	static const char *op_names[OP_MAX] = { "==",
@@ -11456,7 +11456,7 @@ ShaderLanguage::ShaderLanguage() {
 	nodes = nullptr;
 	completion_class = TAG_GLOBAL;
 
-	if (instance_counter == 0) {
+	if (instance_counter.get() == 0) {
 		int idx = 0;
 		while (builtin_func_defs[idx].name) {
 			if (builtin_func_defs[idx].tag == SubClassTag::TAG_GLOBAL) {
@@ -11465,7 +11465,7 @@ ShaderLanguage::ShaderLanguage() {
 			idx++;
 		}
 	}
-	instance_counter++;
+	instance_counter.increment();
 
 #ifdef DEBUG_ENABLED
 	warnings_check_map.insert(ShaderWarning::UNUSED_CONSTANT, &used_constants);
@@ -11480,8 +11480,8 @@ ShaderLanguage::ShaderLanguage() {
 
 ShaderLanguage::~ShaderLanguage() {
 	clear();
-	instance_counter--;
-	if (instance_counter == 0) {
+	instance_counter.decrement();
+	if (instance_counter.get() == 0) {
 		global_func_set.clear();
 	}
 }
