@@ -2,7 +2,6 @@
 #define BLAZIUM_SDK_LOBBY_BLAZIUM_LOBBY_H
 
 #include "../blazium_client.h"
-#include "core/io/json.h"
 #include "modules/websocket/websocket_peer.h"
 
 class LobbyClient : public BlaziumClient {
