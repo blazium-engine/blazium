@@ -20,6 +20,9 @@ def get_doc_classes():
         "ListLobbyResult",
         "ViewLobbyResponse",
         "ViewLobbyResult",
+        "POGRClient",
+        "POGRResult",
+        "POGRResponse",
     ]
 
 

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="POGRClient" inherits="BlaziumClient" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Client for the pogr.io analytics website.
+	</brief_description>
+	<description>
+		Client for the pogr.io analytics website.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="data">
+			<return type="POGRResponse" />
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Send unstructured data.
+			</description>
+		</method>
+		<method name="event">
+			<return type="POGRResponse" />
+			<param index="0" name="event_name" type="String" />
+			<param index="1" name="event_data" type="Dictionary" />
+			<param index="2" name="event_flag" type="String" />
+			<param index="3" name="event_key" type="String" />
+			<param index="4" name="event_type" type="String" />
+			<param index="5" name="event_sub_type" type="String" />
+			<description>
+				Send event with unstructured data.
+			</description>
+		</method>
+		<method name="init">
+			<return type="POGRResponse" />
+			<description>
+				Send init request. Needs to be called first.
+			</description>
+		</method>
+		<method name="init_finished">
+			<return type="void" />
+			<param index="0" name="result" type="POGRResult" />
+			<description>
+				Callback called after init is called. Used internally.
+			</description>
+		</method>
+		<method name="logs">
+			<return type="POGRResponse" />
+			<param index="0" name="tags" type="Dictionary" />
+			<param index="1" name="data" type="Dictionary" />
+			<param index="2" name="environment" type="String" />
+			<param index="3" name="log" type="String" />
+			<param index="4" name="service" type="String" />
+			<param index="5" name="severity" type="String" />
+			<param index="6" name="type" type="String" />
+			<description>
+				Add logs to the analytics.
+			</description>
+		</method>
+		<method name="metrics">
+			<return type="POGRResponse" />
+			<param index="0" name="tags" type="Dictionary" />
+			<param index="1" name="environment" type="String" />
+			<param index="2" name="metrics" type="Dictionary" />
+			<param index="3" name="service" type="String" />
+			<description>
+				Add metrics to the analytics.
+			</description>
+		</method>
+		<method name="monitor">
+			<return type="POGRResponse" />
+			<param index="0" name="settings" type="Dictionary" />
+			<description>
+				Send monitor request.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="build_id" type="String" setter="" getter="get_build_id" default="&quot;4.3.stable.custom_build&quot;">
+			Readonly build id.
+		</member>
+		<member name="client_id" type="String" setter="" getter="get_client_id" default="&quot;Blazium&quot;">
+			Readonly client id.
+		</member>
+		<member name="pogr_url" type="String" setter="" getter="get_pogr_url" default="&quot;https://api.pogr.io/v1/intake&quot;">
+			Readonly pogr url.
+		</member>
+		<member name="session_id" type="String" setter="" getter="get_session_id" default="&quot;&quot;">
+			Readonly session id. Updated after a call to init. Cleared after a call to end.
+		</member>
+	</members>
+</class>
