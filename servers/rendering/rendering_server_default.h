@@ -333,6 +333,7 @@ public:
 
 	FUNC2(mesh_set_shadow_mesh, RID, RID)
 
+	FUNC2(mesh_surface_remove, RID, int)
 	FUNC1(mesh_clear, RID)
 
 	/* MULTIMESH API */
