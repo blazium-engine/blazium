@@ -63,6 +63,7 @@ private:
 protected:
 	static void _bind_methods() {
 		ClassDB::bind_method(D_METHOD("init"), &POGRClient::init);
+		ClassDB::bind_method(D_METHOD("end"), &POGRClient::end);
 		ClassDB::bind_method(D_METHOD("init_finished", "result"), &POGRClient::init_finished);
 		ClassDB::bind_method(D_METHOD("data", "data"), &POGRClient::data);
 		ClassDB::bind_method(D_METHOD("event", "event_name", "event_data", "event_flag", "event_key", "event_type", "event_sub_type"), &POGRClient::event);
@@ -189,7 +190,7 @@ public:
 		data["event_key"] = event_key;
 		data["event_type"] = event_type;
 		data["sub_event"] = event_sub_type;
-		response->post_request(POGR_URL + "/end", get_session_headers(), data, this);
+		response->post_request(POGR_URL + "/event", get_session_headers(), data, this);
 		return response;
 	}
 
@@ -216,7 +217,7 @@ public:
 		data["environment"] = p_environment;
 		data["metrics"] = p_metrics;
 		data["service"] = p_service;
-		response->post_request(POGR_URL + "/logs", get_session_headers(), data, this);
+		response->post_request(POGR_URL + "/metrics", get_session_headers(), data, this);
 		return response;
 	}
 
@@ -228,7 +229,7 @@ public:
 		data["cpu_usage"] = Performance::get_singleton()->get_monitor(Performance::Monitor::TIME_FPS);
 		data["dlls_loaded"] = Array();
 		data["memory_usage"] = OS::get_singleton()->get_static_memory_usage();
-		response->post_request(POGR_URL + "/logs", get_session_headers(), data, this);
+		response->post_request(POGR_URL + "/monitor", get_session_headers(), data, this);
 		return response;
 	}
 
