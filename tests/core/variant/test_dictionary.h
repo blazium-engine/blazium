@@ -96,6 +96,20 @@ TEST_CASE("[Dictionary] Assignment using bracket notation ([])") {
 	CHECK(map.size() == length);
 }
 
+TEST_CASE("[Dictionary] List init") {
+	Dictionary dict{
+		{ 0, "int" },
+		{ "packed_string_array", PackedStringArray({ "array", "of", "values" }) },
+		{ "key", Dictionary({ { "nested", 200 } }) },
+		{ Vector2(), "v2" },
+	};
+	CHECK(dict.size() == 4);
+	CHECK(dict[0] == "int");
+	CHECK(PackedStringArray(dict["packed_string_array"])[2] == "values");
+	CHECK(Dictionary(dict["key"])["nested"] == Variant(200));
+	CHECK(dict[Vector2()] == "v2");
+}
+
 TEST_CASE("[Dictionary] get_key_lists()") {
 	Dictionary map;
 	List<Variant> keys;
