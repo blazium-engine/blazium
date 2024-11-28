@@ -18,7 +18,7 @@
 		</method>
 		<method name="create_lobby">
 			<return type="CreateLobbyResponse" />
-			<param index="0" name="name" type="String" />
+			<param index="0" name="title" type="String" />
 			<param index="1" name="max_players" type="int" default="4" />
 			<param index="2" name="password" type="String" default="&quot;&quot;" />
 			<description>
@@ -114,6 +114,12 @@
 		</method>
 	</methods>
 	<members>
+		<member name="connected" type="bool" setter="" getter="get_connected" default="false">
+			True if the client is connected, else false.
+		</member>
+		<member name="lobby_id" type="String" setter="" getter="get_lobby_id" default="&quot;&quot;">
+			The current lobby id.
+		</member>
 		<member name="server_url" type="String" setter="set_server_url" getter="get_server_url" default="&quot;wss://lobby.blazium.app/connect&quot;">
 			Set to what url this lobby should connect to.
 		</member>
@@ -125,6 +131,11 @@
 			<param index="2" name="logs" type="String" />
 			<description>
 				Signals a log from a command.
+			</description>
+		</signal>
+		<signal name="disconnected_from_lobby">
+			<description>
+				Disconnects from the lobby.
 			</description>
 		</signal>
 		<signal name="lobby_created">
