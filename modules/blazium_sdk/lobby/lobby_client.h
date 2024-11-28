@@ -44,6 +44,7 @@ class LobbyClient : public BlaziumClient {
 		LOBBY_LIST
 	};
 	String server_url = "wss://lobby.blazium.app/connect";
+	String lobby_id;
 
 public:
 	class CreateLobbyResponse : public RefCounted {
@@ -58,26 +59,31 @@ public:
 		class CreateLobbyResult : public RefCounted {
 			GDCLASS(CreateLobbyResult, RefCounted);
 			String error;
+			String lobby_id;
 			String lobby_name;
 
 		protected:
 			static void _bind_methods() {
 				ClassDB::bind_method(D_METHOD("has_error"), &CreateLobbyResult::has_error);
 				ClassDB::bind_method(D_METHOD("get_error"), &CreateLobbyResult::get_error);
+				ClassDB::bind_method(D_METHOD("get_lobby_id"), &CreateLobbyResult::get_lobby_id);
 				ClassDB::bind_method(D_METHOD("get_lobby_name"), &CreateLobbyResult::get_lobby_name);
 				ADD_PROPERTY(PropertyInfo(Variant::STRING, "error"), "", "get_error");
+				ADD_PROPERTY(PropertyInfo(Variant::STRING, "lobby_id"), "", "get_lobby_id");
 				ADD_PROPERTY(PropertyInfo(Variant::STRING, "lobby_name"), "", "get_lobby_name");
 			}
 
 		public:
-			void set_error(String p_error) { this->error = p_error; }
-			void set_lobby_name(String p_lobby_name) { this->lobby_name = p_lobby_name; }
+			void set_error(const String &p_error) { this->error = p_error; }
+			void set_lobby_id(const String &p_lobby_id) { this->lobby_id = p_lobby_id; }
+			void set_lobby_name(const String &p_lobby_name) { this->lobby_name = p_lobby_name; }
 
 			bool has_error() const { return !error.is_empty(); }
 			String get_error() const { return error; }
+			String get_lobby_id() const { return lobby_id; }
 			String get_lobby_name() const { return lobby_name; }
-			CreateLobbyResult(const CreateLobbyResult &other) :
-					error(other.error), lobby_name(other.lobby_name) {}
+			CreateLobbyResult(const CreateLobbyResult &p_other) :
+					error(p_other.error), lobby_id(p_other.lobby_id) {}
 			CreateLobbyResult() {}
 		};
 		CreateLobbyResponse(const CreateLobbyResponse &other) {}
@@ -109,11 +115,11 @@ public:
 
 			bool has_error() const { return !error.is_empty(); }
 			String get_error() const { return error; }
-			LobbyResult(const LobbyResult &other) :
-					error(other.error) {}
+			LobbyResult(const LobbyResult &p_other) :
+					error(p_other.error) {}
 			LobbyResult() {}
 		};
-		LobbyResponse(const LobbyResponse &other) {}
+		LobbyResponse(const LobbyResponse &p_other) {}
 		LobbyResponse() {}
 	};
 	class ListLobbyResponse : public RefCounted {
@@ -141,17 +147,17 @@ public:
 			}
 
 		public:
-			void set_error(String p_error) { this->error = p_error; }
-			void set_lobbies(TypedArray<String> p_lobbies) { this->lobbies = p_lobbies; }
+			void set_error(const String &p_error) { this->error = p_error; }
+			void set_lobbies(const TypedArray<String> &p_lobbies) { this->lobbies = p_lobbies; }
 
 			bool has_error() const { return !error.is_empty(); }
 			String get_error() const { return error; }
 			TypedArray<String> get_lobbies() const { return lobbies; }
-			ListLobbyResult(const ListLobbyResult &other) :
-					error(other.error), lobbies(other.lobbies) {}
+			ListLobbyResult(const ListLobbyResult &p_other) :
+					error(p_other.error), lobbies(p_other.lobbies) {}
 			ListLobbyResult() {}
 		};
-		ListLobbyResponse(const ListLobbyResponse &other) {}
+		ListLobbyResponse(const ListLobbyResponse &p_other) {}
 		ListLobbyResponse() {}
 	};
 	class LobbyInfo : public RefCounted {
@@ -171,15 +177,15 @@ public:
 		}
 
 	public:
-		void set_host(String p_host) { this->host = p_host; }
+		void set_host(const String &p_host) { this->host = p_host; }
 		void set_max_players(int p_max_players) { this->max_players = p_max_players; }
 		void set_sealed(bool p_sealed) { this->sealed = p_sealed; }
 
 		String get_host() const { return host; }
 		int get_max_players() const { return max_players; }
 		bool is_sealed() const { return sealed; }
-		LobbyInfo(const LobbyInfo &other) :
-				host(other.host), max_players(other.max_players), sealed(other.sealed) {}
+		LobbyInfo(const LobbyInfo &p_other) :
+				host(p_other.host), max_players(p_other.max_players), sealed(p_other.sealed) {}
 		LobbyInfo() {}
 	};
 	class LobbyPeer : public RefCounted {
@@ -199,15 +205,15 @@ public:
 		}
 
 	public:
-		void set_id(String p_id) { this->id = p_id; }
-		void set_name(String p_name) { this->name = p_name; }
+		void set_id(const String &p_id) { this->id = p_id; }
+		void set_name(const String &p_name) { this->name = p_name; }
 		void set_ready(bool p_ready) { this->ready = p_ready; }
 
 		String get_id() const { return id; }
 		String get_name() const { return name; }
 		bool is_ready() const { return ready; }
-		LobbyPeer(const LobbyPeer &other) :
-				id(other.id), name(other.name), ready(other.ready) {}
+		LobbyPeer(const LobbyPeer &p_other) :
+				id(p_other.id), name(p_other.name), ready(p_other.ready) {}
 		LobbyPeer() {}
 	};
 	class ViewLobbyResponse : public RefCounted {
@@ -236,9 +242,9 @@ public:
 			}
 
 		public:
-			void set_error(String p_error) { this->error = p_error; }
-			void set_peers(TypedArray<LobbyPeer> p_peers) { this->peers = p_peers; }
-			void set_lobby_info(Ref<LobbyInfo> p_lobby_info) { this->lobby_info = p_lobby_info; }
+			void set_error(const String &p_error) { this->error = p_error; }
+			void set_peers(const TypedArray<LobbyPeer> &p_peers) { this->peers = p_peers; }
+			void set_lobby_info(const Ref<LobbyInfo> &p_lobby_info) { this->lobby_info = p_lobby_info; }
 
 			bool has_error() const { return !error.is_empty(); }
 			String get_error() const { return error; }
@@ -250,18 +256,19 @@ public:
 			~ViewLobbyResult() {
 			}
 		};
-		ViewLobbyResponse(const ViewLobbyResponse &other) {}
+		ViewLobbyResponse(const ViewLobbyResponse &p_other) {}
 		ViewLobbyResponse() {}
 	};
 
 private:
 	Ref<WebSocketPeer> _socket;
 	int _counter = 0;
+	bool connected = false;
 	Dictionary _commands;
 
-	String _get_data_from_dict(const Dictionary &dict, const String &key);
-	void _receive_data(const Dictionary &data);
-	void _send_data(const Dictionary &data);
+	String _get_data_from_dict(const Dictionary &p_dict, const String &p_key);
+	void _receive_data(const Dictionary &p_data);
+	void _send_data(const Dictionary &p_data);
 	void _wait_ready();
 	String _increment_counter();
 
@@ -270,22 +277,24 @@ protected:
 	static void _bind_methods();
 
 public:
-	bool connect_to_lobby(const String &game_id);
-	void set_server_url(String p_server_url) { this->server_url = p_server_url; }
+	bool connect_to_lobby(const String &p_game_id);
+	void set_server_url(const String &p_server_url) { this->server_url = p_server_url; }
 	String get_server_url() { return server_url; }
-	Ref<CreateLobbyResponse> create_lobby(int max_players, const String &password);
-	Ref<LobbyResponse> join_lobby(const String &lobby_name, const String &password);
+	bool get_connected() { return connected; }
+	String get_lobby_id() { return lobby_id; }
+	Ref<CreateLobbyResponse> create_lobby(const String &p_lobby_name, int p_max_players, const String &p_password);
+	Ref<LobbyResponse> join_lobby(const String &p_lobby_id, const String &p_password);
 	Ref<LobbyResponse> leave_lobby();
-	Ref<ListLobbyResponse> list_lobby(int start, int count);
-	Ref<ViewLobbyResponse> view_lobby(const String &lobby_name, const String &password);
-	Ref<LobbyResponse> kick_peer(const String &peer_id);
+	Ref<ListLobbyResponse> list_lobby(int p_start, int p_count);
+	Ref<ViewLobbyResponse> view_lobby(const String &p_lobby_id, const String &p_password);
+	Ref<LobbyResponse> kick_peer(const String &p_peer_id);
 	Ref<LobbyResponse> lobby_ready();
 	Ref<LobbyResponse> lobby_unready();
-	Ref<LobbyResponse> set_peer_name(const String &peer_name);
+	Ref<LobbyResponse> set_peer_name(const String &p_peer_name);
 	Ref<LobbyResponse> seal_lobby();
 	Ref<LobbyResponse> unseal_lobby();
-	Ref<LobbyResponse> lobby_data(const String &peer_data);
-	Ref<LobbyResponse> lobby_data_to(const String &peer_data, const String &target_peer);
+	Ref<LobbyResponse> lobby_data(const String &p_peer_data);
+	Ref<LobbyResponse> lobby_data_to(const String &p_peer_data, const String &p_target_peer);
 
 	LobbyClient();
 	~LobbyClient();
