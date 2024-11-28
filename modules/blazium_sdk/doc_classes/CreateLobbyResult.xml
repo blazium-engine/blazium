@@ -20,6 +20,9 @@
 		<member name="error" type="String" setter="" getter="get_error" default="&quot;&quot;">
 			Gets the error message.
 		</member>
+		<member name="lobby_id" type="String" setter="" getter="get_lobby_id" default="&quot;&quot;">
+			Gets the lobby id.
+		</member>
 		<member name="lobby_name" type="String" setter="" getter="get_lobby_name" default="&quot;&quot;">
 			Gets the lobby name.
 		</member>
