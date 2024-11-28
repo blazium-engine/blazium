@@ -12,8 +12,20 @@
 		<member name="host" type="String" setter="" getter="get_host" default="&quot;&quot;">
 			The host id of the lobby.
 		</member>
+		<member name="host_name" type="String" setter="" getter="get_host_name" default="&quot;&quot;">
+			The name of the host of the lobby.
+		</member>
+		<member name="id" type="String" setter="" getter="get_id" default="&quot;&quot;">
+			The id of the lobby.
+		</member>
 		<member name="max_players" type="int" setter="" getter="get_max_players" default="0">
 			The maximum number of players allowed in the lobby.
+		</member>
+		<member name="name" type="String" setter="" getter="get_name" default="&quot;&quot;">
+			The name of the lobby.
+		</member>
+		<member name="players" type="int" setter="" getter="get_players" default="0">
+			The number of players currently in the lobby.
 		</member>
 		<member name="sealed" type="bool" setter="" getter="is_sealed" default="false">
 			Whether the lobby is sealed.
