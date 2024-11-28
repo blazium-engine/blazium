@@ -61,7 +61,7 @@ TEST_CASE("[VariantUtility] Type conversion") {
 
 	converted = VariantUtilityFunctions::type_convert(5, Variant::Type::VECTOR2);
 	CHECK(converted.get_type() == Variant::Type::VECTOR2);
-	CHECK(converted == Variant(Vector2(0, 0)));
+	CHECK(converted == Variant(Vector2(5, 5)));
 
 	converted = VariantUtilityFunctions::type_convert(Vector3(1, 2, 3), Variant::Type::VECTOR2);
 	CHECK(converted.get_type() == Variant::Type::VECTOR2);

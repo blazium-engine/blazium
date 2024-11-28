@@ -256,9 +256,9 @@ class RendererCanvasRenderRD : public RendererCanvasRender {
 		RID texture;
 		struct {
 			bool enabled = false;
-			float z_far;
-			float y_offset;
-			Transform2D directional_xform;
+			float z_far = 0.0f;
+			float y_offset = 0.0f;
+			Transform2D directional_xform = Transform2D();
 		} shadow;
 	};
 

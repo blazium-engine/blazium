@@ -51,6 +51,8 @@
 #include "editor/editor_file_system.h"
 #endif
 
+#include <algorithm>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -446,8 +448,7 @@ godot_packed_array godotsharp_packed_vector2_array_new_mem_copy(const Vector2 *p
 	memnew_placement(&ret, PackedVector2Array);
 	PackedVector2Array *array = reinterpret_cast<PackedVector2Array *>(&ret);
 	array->resize(p_length);
-	Vector2 *dst = array->ptrw();
-	memcpy(dst, p_src, p_length * sizeof(Vector2));
+	std::copy(p_src, p_src + p_length, array->ptrw());
 	return ret;
 }
 

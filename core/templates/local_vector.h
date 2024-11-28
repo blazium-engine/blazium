@@ -36,6 +36,7 @@
 #include "core/templates/sort_array.h"
 #include "core/templates/vector.h"
 
+#include <algorithm>
 #include <initializer_list>
 #include <type_traits>
 
@@ -295,9 +296,8 @@ public:
 
 	operator Vector<T>() const {
 		Vector<T> ret;
-		ret.resize(size());
-		T *w = ret.ptrw();
-		memcpy(w, data, sizeof(T) * count);
+		ret.resize(count);
+		std::copy(data, data + count, ret.ptrw());
 		return ret;
 	}
 

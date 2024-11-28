@@ -189,6 +189,21 @@ struct [[nodiscard]] Vector2 {
 		x = p_x;
 		y = p_y;
 	}
+	_FORCE_INLINE_ explicit Vector2(real_t p_v) {
+		x = p_v;
+		y = p_v;
+	}
+	_FORCE_INLINE_ Vector2(const Vector2 &p_v) noexcept {
+		x = p_v.x;
+		y = p_v.y;
+	}
+	_FORCE_INLINE_ Vector2 &operator=(const Vector2 &p_v) {
+		if (this != &p_v) {
+			x = p_v.x;
+			y = p_v.y;
+		}
+		return *this;
+	}
 };
 
 _FORCE_INLINE_ Vector2 Vector2::plane_project(real_t p_d, const Vector2 &p_vec) const {

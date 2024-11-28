@@ -234,6 +234,8 @@ bool Variant::can_convert(Variant::Type p_type_from, Variant::Type p_type_to) {
 		} break;
 		case VECTOR2: {
 			static const Type valid[] = {
+				INT,
+				FLOAT,
 				VECTOR2I,
 				NIL,
 			};
@@ -243,6 +245,8 @@ bool Variant::can_convert(Variant::Type p_type_from, Variant::Type p_type_to) {
 		} break;
 		case VECTOR2I: {
 			static const Type valid[] = {
+				INT,
+				FLOAT,
 				VECTOR2,
 				NIL,
 			};
@@ -577,6 +581,8 @@ bool Variant::can_convert_strict(Variant::Type p_type_from, Variant::Type p_type
 		} break;
 		case VECTOR2: {
 			static const Type valid[] = {
+				INT,
+				FLOAT,
 				VECTOR2I,
 				NIL,
 			};
@@ -586,6 +592,8 @@ bool Variant::can_convert_strict(Variant::Type p_type_from, Variant::Type p_type
 		} break;
 		case VECTOR2I: {
 			static const Type valid[] = {
+				INT,
+				FLOAT,
 				VECTOR2,
 				NIL,
 			};
@@ -1852,7 +1860,11 @@ String Variant::to_json_string() const {
 }
 
 Variant::operator Vector2() const {
-	if (type == VECTOR2) {
+	if (type == INT) {
+		return Vector2(_data._int, _data._int);
+	} else if (type == FLOAT) {
+		return Vector2(_data._float, _data._float);
+	} else if (type == VECTOR2) {
 		return *reinterpret_cast<const Vector2 *>(_data._mem);
 	} else if (type == VECTOR2I) {
 		return *reinterpret_cast<const Vector2i *>(_data._mem);
@@ -1870,7 +1882,11 @@ Variant::operator Vector2() const {
 }
 
 Variant::operator Vector2i() const {
-	if (type == VECTOR2I) {
+	if (type == INT) {
+		return Vector2(_data._int, _data._int);
+	} else if (type == FLOAT) {
+		return Vector2(_data._float, _data._float);
+	} else if (type == VECTOR2I) {
 		return *reinterpret_cast<const Vector2i *>(_data._mem);
 	} else if (type == VECTOR2) {
 		return *reinterpret_cast<const Vector2 *>(_data._mem);
@@ -2521,12 +2537,12 @@ Variant::Variant(const Vector4i &p_vector4i) :
 
 Variant::Variant(const Vector2 &p_vector2) :
 		type(VECTOR2) {
-	memnew_placement(_data._mem, Vector2(p_vector2));
+	memnew_placement(_data._mem, Vector2(p_vector2.x, p_vector2.y));
 }
 
 Variant::Variant(const Vector2i &p_vector2i) :
 		type(VECTOR2I) {
-	memnew_placement(_data._mem, Vector2i(p_vector2i));
+	memnew_placement(_data._mem, Vector2i(p_vector2i.x, p_vector2i.y));
 }
 
 Variant::Variant(const Rect2 &p_rect2) :
