@@ -1261,7 +1261,7 @@ String String::get_slice(const char *p_splitter, int p_slice) const {
 	}
 
 	int i = 0;
-	int splitter_length = strlen(p_splitter);
+	const int splitter_length = strlen(p_splitter);
 	while (true) {
 		pos = find(p_splitter, pos);
 		if (pos == -1) {
@@ -1412,6 +1412,7 @@ Vector<String> String::split(const char *p_splitter, bool p_allow_empty, int p_m
 
 	int from = 0;
 	int len = length();
+	const int splitter_length = strlen(p_splitter);
 
 	while (true) {
 		int end;
@@ -1442,7 +1443,7 @@ Vector<String> String::split(const char *p_splitter, bool p_allow_empty, int p_m
 			break;
 		}
 
-		from = end + strlen(p_splitter);
+		from = end + splitter_length;
 	}
 
 	return ret;
