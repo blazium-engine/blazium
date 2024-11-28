@@ -89,6 +89,7 @@ public:
 		CreateLobbyResponse(const CreateLobbyResponse &other) {}
 		CreateLobbyResponse() {}
 	};
+
 	class LobbyResponse : public RefCounted {
 		GDCLASS(LobbyResponse, RefCounted);
 
@@ -122,6 +123,57 @@ public:
 		LobbyResponse(const LobbyResponse &p_other) {}
 		LobbyResponse() {}
 	};
+
+	class LobbyInfo : public RefCounted {
+		GDCLASS(LobbyInfo, RefCounted);
+		String id;
+		String name;
+		String host;
+		String host_name;
+		int max_players = 0;
+		int players = 0;
+		bool sealed = false;
+
+	protected:
+		static void _bind_methods() {
+			ClassDB::bind_method(D_METHOD("get_host"), &LobbyInfo::get_host);
+			ClassDB::bind_method(D_METHOD("get_max_players"), &LobbyInfo::get_max_players);
+			ClassDB::bind_method(D_METHOD("is_sealed"), &LobbyInfo::is_sealed);
+			ClassDB::bind_method(D_METHOD("get_id"), &LobbyInfo::get_id);
+			ClassDB::bind_method(D_METHOD("get_name"), &LobbyInfo::get_name);
+			ClassDB::bind_method(D_METHOD("get_host_name"), &LobbyInfo::get_host_name);
+			ClassDB::bind_method(D_METHOD("get_players"), &LobbyInfo::get_players);
+
+			ADD_PROPERTY(PropertyInfo(Variant::STRING, "id"), "", "get_id");
+			ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "", "get_name");
+			ADD_PROPERTY(PropertyInfo(Variant::STRING, "host_name"), "", "get_host_name");
+			ADD_PROPERTY(PropertyInfo(Variant::INT, "players"), "", "get_players");
+			ADD_PROPERTY(PropertyInfo(Variant::STRING, "host"), "", "get_host");
+			ADD_PROPERTY(PropertyInfo(Variant::INT, "max_players"), "", "get_max_players");
+			ADD_PROPERTY(PropertyInfo(Variant::BOOL, "sealed"), "", "is_sealed");
+		}
+
+	public:
+		void set_id(const String &p_id) { this->id = p_id; }
+		void set_name(const String &p_name) { this->name = p_name; }
+		void set_host(const String &p_host) { this->host = p_host; }
+		void set_host_name(const String &p_host_name) { this->host_name = p_host_name; }
+		void set_max_players(int p_max_players) { this->max_players = p_max_players; }
+		void set_players(int p_players) { this->players = p_players; }
+		void set_sealed(bool p_sealed) { this->sealed = p_sealed; }
+
+		String get_id() const { return id; }
+		String get_name() const { return name; }
+		String get_host() const { return host; }
+		String get_host_name() const { return host_name; }
+		int get_max_players() const { return max_players; }
+		int get_players() const { return players; }
+		bool is_sealed() const { return sealed; }
+		LobbyInfo(const LobbyInfo &p_other) :
+				host(p_other.host), max_players(p_other.max_players), sealed(p_other.sealed) {}
+		LobbyInfo() {}
+	};
+
 	class ListLobbyResponse : public RefCounted {
 		GDCLASS(ListLobbyResponse, RefCounted);
 
@@ -135,7 +187,7 @@ public:
 			GDCLASS(ListLobbyResult, RefCounted);
 
 			String error;
-			TypedArray<String> lobbies;
+			TypedArray<LobbyInfo> lobbies;
 
 		protected:
 			static void _bind_methods() {
@@ -148,11 +200,11 @@ public:
 
 		public:
 			void set_error(const String &p_error) { this->error = p_error; }
-			void set_lobbies(const TypedArray<String> &p_lobbies) { this->lobbies = p_lobbies; }
+			void set_lobbies(const TypedArray<LobbyInfo> &p_lobbies) { this->lobbies = p_lobbies; }
 
 			bool has_error() const { return !error.is_empty(); }
 			String get_error() const { return error; }
-			TypedArray<String> get_lobbies() const { return lobbies; }
+			TypedArray<LobbyInfo> get_lobbies() const { return lobbies; }
 			ListLobbyResult(const ListLobbyResult &p_other) :
 					error(p_other.error), lobbies(p_other.lobbies) {}
 			ListLobbyResult() {}
@@ -160,34 +212,7 @@ public:
 		ListLobbyResponse(const ListLobbyResponse &p_other) {}
 		ListLobbyResponse() {}
 	};
-	class LobbyInfo : public RefCounted {
-		GDCLASS(LobbyInfo, RefCounted);
-		String host;
-		int max_players = 0;
-		bool sealed = false;
 
-	protected:
-		static void _bind_methods() {
-			ClassDB::bind_method(D_METHOD("get_host"), &LobbyInfo::get_host);
-			ClassDB::bind_method(D_METHOD("get_max_players"), &LobbyInfo::get_max_players);
-			ClassDB::bind_method(D_METHOD("is_sealed"), &LobbyInfo::is_sealed);
-			ADD_PROPERTY(PropertyInfo(Variant::STRING, "host"), "", "get_host");
-			ADD_PROPERTY(PropertyInfo(Variant::INT, "max_players"), "", "get_max_players");
-			ADD_PROPERTY(PropertyInfo(Variant::BOOL, "sealed"), "", "is_sealed");
-		}
-
-	public:
-		void set_host(const String &p_host) { this->host = p_host; }
-		void set_max_players(int p_max_players) { this->max_players = p_max_players; }
-		void set_sealed(bool p_sealed) { this->sealed = p_sealed; }
-
-		String get_host() const { return host; }
-		int get_max_players() const { return max_players; }
-		bool is_sealed() const { return sealed; }
-		LobbyInfo(const LobbyInfo &p_other) :
-				host(p_other.host), max_players(p_other.max_players), sealed(p_other.sealed) {}
-		LobbyInfo() {}
-	};
 	class LobbyPeer : public RefCounted {
 		GDCLASS(LobbyPeer, RefCounted);
 		String id;

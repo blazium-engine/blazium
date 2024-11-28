@@ -441,21 +441,48 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 		emit_signal("lobby_unsealed");
 	} else if (command == "lobby_list") {
 		Array arr = data_dict.get("lobbies", Array());
-		TypedArray<String> lobbies = arr;
+		TypedArray<Dictionary> lobbies_input = arr;
+		TypedArray<Dictionary> lobbies_output;
+		for (int i = 0; i < lobbies_input.size(); ++i) {
+			Dictionary lobby_dict = lobbies_input[i];
+			String lobby_id = lobby_dict.get("lobby_id", "");
+			String lobby_name = lobby_dict.get("lobby_name", "");
+			String host = lobby_dict.get("host", "");
+			String host_name = lobby_dict.get("host_name", "");
+			bool sealed = lobby_dict.get("sealed", false);
+			int max_players = lobby_dict.get("max_players", 0);
+			int num_players = lobby_dict.get("players", 0);
+			lobby_dict["max_players"] = max_players;
+			Ref<LobbyInfo> lobby_info;
+			lobby_info.instantiate();
+			lobby_info->set_host(host);
+			lobby_info->set_max_players(max_players);
+			lobby_info->set_sealed(sealed);
+			lobby_info->set_players(num_players);
+			lobby_info->set_id(lobby_id);
+			lobby_info->set_name(lobby_name);
+			lobby_info->set_host_name(host_name);
+			
+			lobbies_output.push_back(lobby_info);
+		}
 		if (command_array.size() == 2) {
 			Ref<ListLobbyResponse> response = command_array[1];
 			if (response.is_valid()) {
 				Ref<ListLobbyResponse::ListLobbyResult> result;
 				result.instantiate();
-				result->set_lobbies(lobbies);
+				result->set_lobbies(lobbies_output);
 				response->emit_signal("finished", result);
 			}
 		}
 	} else if (command == "lobby_view") {
 		Dictionary lobby_dict = data_dict.get("lobby", Dictionary());
+		String host_name = lobby_dict.get("host_name", "");
 		String host = lobby_dict.get("host", "");
+		String name = lobby_dict.get("name", "");
+		String id = lobby_dict.get("id", "");
 		bool sealed = lobby_dict.get("sealed", false);
 		int max_players = lobby_dict.get("max_players", 0);
+		int players = lobby_dict.get("players", 0);
 
 		// Iterate through peers and populate arrays
 		Array arr = data_dict["peers"];
@@ -476,6 +503,10 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 		lobby_info->set_host(host);
 		lobby_info->set_sealed(sealed);
 		lobby_info->set_max_players(max_players);
+		lobby_info->set_players(players);
+		lobby_info->set_id(id);
+		lobby_info->set_name(name);
+		lobby_info->set_host_name(host_name);
 		if (command_array.size() == 2) {
 			Ref<ViewLobbyResponse> response = command_array[1];
 			if (response.is_valid()) {
