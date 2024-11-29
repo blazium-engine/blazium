@@ -124,7 +124,7 @@ public:
 	void set_id(const String &p_id) { this->id = p_id; }
 	void set_peer_name(const String &p_peer_name) { this->peer_name = p_peer_name; }
 	void set_ready(bool p_ready) { this->ready = p_ready; }
-		void set_dict(const Dictionary &p_dict) {
+	void set_dict(const Dictionary &p_dict) {
 		this->set_id(p_dict.get("id", ""));
 		this->set_peer_name(p_dict.get("name", ""));
 		this->set_ready(p_dict.get("ready", ""));
