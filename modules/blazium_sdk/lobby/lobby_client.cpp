@@ -80,8 +80,8 @@ void LobbyClient::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("peer_named", PropertyInfo(Variant::STRING, "peer_id"), PropertyInfo(Variant::STRING, "name")));
 	ADD_SIGNAL(MethodInfo("received_data", PropertyInfo(Variant::STRING, "data")));
 	ADD_SIGNAL(MethodInfo("received_data_to", PropertyInfo(Variant::STRING, "data")));
-	ADD_SIGNAL(MethodInfo("lobby_created"));
-	ADD_SIGNAL(MethodInfo("lobby_joined"));
+	ADD_SIGNAL(MethodInfo("lobby_created", PropertyInfo(Variant::OBJECT, "lobby", PROPERTY_HINT_RESOURCE_TYPE, "LobbyInfo"), PropertyInfo(Variant::ARRAY, "peers", PROPERTY_HINT_ARRAY_TYPE, "LobbyPeer")));
+	ADD_SIGNAL(MethodInfo("lobby_joined", PropertyInfo(Variant::OBJECT, "lobby", PROPERTY_HINT_RESOURCE_TYPE, "LobbyInfo"), PropertyInfo(Variant::ARRAY, "peers", PROPERTY_HINT_ARRAY_TYPE, "LobbyPeer")));
 	ADD_SIGNAL(MethodInfo("lobby_left"));
 	ADD_SIGNAL(MethodInfo("lobby_sealed"));
 	ADD_SIGNAL(MethodInfo("lobby_unsealed"));
@@ -115,7 +115,7 @@ String LobbyClient::_increment_counter() {
 	return String::num(_counter++);
 }
 
-Ref<LobbyClient::LobbyResponse> LobbyClient::create_lobby(const String &p_lobby_name, int p_max_players, const String &p_password) {
+Ref<LobbyClient::ViewLobbyResponse> LobbyClient::create_lobby(const String &p_lobby_name, int p_max_players, const String &p_password) {
 	String id = _increment_counter();
 	Dictionary command;
 	command["command"] = "create_lobby";
@@ -126,16 +126,16 @@ Ref<LobbyClient::LobbyResponse> LobbyClient::create_lobby(const String &p_lobby_
 	data_dict["password"] = p_password;
 	data_dict["id"] = id;
 	Array command_array;
-	Ref<LobbyResponse> response;
+	Ref<ViewLobbyResponse> response;
 	response.instantiate();
-	command_array.push_back(LOBBY_REQUEST);
+	command_array.push_back(LOBBY_VIEW);
 	command_array.push_back(response);
 	_commands[id] = command_array;
 	_send_data(command);
 	return response;
 }
 
-Ref<LobbyClient::LobbyResponse> LobbyClient::join_lobby(const String &p_lobby_id, const String &p_password) {
+Ref<LobbyClient::ViewLobbyResponse> LobbyClient::join_lobby(const String &p_lobby_id, const String &p_password) {
 	String id = _increment_counter();
 	Dictionary command;
 	command["command"] = "join_lobby";
@@ -145,9 +145,9 @@ Ref<LobbyClient::LobbyResponse> LobbyClient::join_lobby(const String &p_lobby_id
 	data_dict["password"] = p_password;
 	data_dict["id"] = id;
 	Array command_array;
-	Ref<LobbyResponse> response;
+	Ref<ViewLobbyResponse> response;
 	response.instantiate();
-	command_array.push_back(LOBBY_REQUEST);
+	command_array.push_back(LOBBY_VIEW);
 	command_array.push_back(response);
 	_commands[id] = command_array;
 	_send_data(command);
@@ -390,12 +390,11 @@ void LobbyClient::_send_data(const Dictionary &p_data_dict) {
 }
 
 void update_peers(Dictionary p_data_dict, TypedArray<LobbyPeer> &peers) {
-	Dictionary peers_array = p_data_dict.get("peers", Dictionary());
+	Array peers_array = p_data_dict.get("peers", Array());
 	TypedArray<LobbyPeer> peers_info;
 	peers.clear();
 	for (int i = 0; i < peers_array.size(); ++i) {
-		Ref<LobbyPeer> peer;
-		peer.instantiate();
+		Ref<LobbyPeer> peer = Ref<LobbyPeer>(memnew(LobbyPeer));
 		peer->set_dict(peers_array[i]);
 		peers.push_back(peer);
 	}
@@ -409,22 +408,50 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 	Array command_array = _commands.get(message_id, Array());
 	_commands.erase(message_id);
 	emit_signal("append_log", command, message);
-	if (command_array.size() == 2) {
-		// if we have lobby response
-		Ref<LobbyResponse> response = command_array[1];
-		if (response.is_valid()) {
-			Ref<LobbyResponse::LobbyResult> result = Ref<LobbyResponse::LobbyResult>(memnew(LobbyResponse::LobbyResult));
-			response->emit_signal("finished", result);
+	if (command_array.size() == 2 && command != "error") {
+		int command_type = command_array[0];
+		switch (command_type) {
+			case LOBBY_REQUEST: {
+				Ref<LobbyResponse> response = command_array[1];
+				if (response.is_valid()) {
+					Ref<LobbyResponse::LobbyResult> result = Ref<LobbyResponse::LobbyResult>(memnew(LobbyResponse::LobbyResult));
+					response->emit_signal("finished", result);
+				}
+			}break;
+			case LOBBY_VIEW: {
+				Dictionary lobby_dict = data_dict.get("lobby", Dictionary());
+
+				// Iterate through peers and populate arrays
+				TypedArray<LobbyPeer> peers_info;
+				update_peers(data_dict, peers_info);
+				Ref<LobbyInfo> lobby_info = Ref<LobbyInfo>(memnew(LobbyInfo));
+				lobby_info->set_dict(lobby_dict);
+				if (lobby_info->get_id() == lobby->get_id()) {
+					// Update lobby info because we viewed our own lobby
+					lobby->set_dict(lobby_info->get_dict());
+					peers = peers_info;
+				}
+				if (command_array.size() == 2) {
+					Ref<ViewLobbyResponse> response = command_array[1];
+					if (response.is_valid()) {
+						Ref<ViewLobbyResponse::ViewLobbyResult> result;
+						result.instantiate();
+						result->set_peers(peers_info);
+						result->set_lobby(lobby_info);
+						response->emit_signal("finished", result);
+					}
+				}
+			}break;
 		}
 	}
 	if (command == "lobby_created") {
 		lobby->set_dict(data_dict.get("lobby", Dictionary()));
 		update_peers(data_dict, peers);
-		emit_signal("lobby_created");
+		emit_signal("lobby_created", lobby, peers);
 	} else if (command == "joined_lobby") {
 		lobby->set_dict(data_dict.get("lobby", Dictionary()));
 		update_peers(data_dict, peers);
-		emit_signal("lobby_joined", lobby);
+		emit_signal("lobby_joined", lobby, peers);
 	} else if (command == "lobby_left") {
 		lobby->set_dict(Dictionary());
 		emit_signal("lobby_left");
@@ -457,28 +484,7 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 			}
 		}
 	} else if (command == "lobby_view") {
-		Dictionary lobby_dict = data_dict.get("lobby", Dictionary());
-
-		// Iterate through peers and populate arrays
-		TypedArray<LobbyPeer> peers_info;
-		update_peers(data_dict, peers_info);
-		Ref<LobbyInfo> lobby_info = Ref<LobbyInfo>(memnew(LobbyInfo));
-		lobby_info->set_dict(lobby_dict);
-		if (lobby_info->get_id() == lobby->get_id()) {
-			// Update lobby info because we viewed our own lobby
-			lobby = lobby_info;
-			peers = peers_info;
-		}
-		if (command_array.size() == 2) {
-			Ref<ViewLobbyResponse> response = command_array[1];
-			if (response.is_valid()) {
-				Ref<ViewLobbyResponse::ViewLobbyResult> result;
-				result.instantiate();
-				result->set_peers(peers_info);
-				result->set_lobby(lobby_info);
-				response->emit_signal("finished", result);
-			}
-		}
+		// nothing for now
 	} else if (command == "peer_name") {
 		emit_signal("peer_named", data_dict.get("peer_id", ""), data_dict.get("name", ""));
 	} else if (command == "peer_ready") {
@@ -486,62 +492,17 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 	} else if (command == "peer_unready") {
 		emit_signal("peer_unready", data_dict.get("peer_id", ""));
 	} else if (command == "peer_joined") {
-		String peer_id = data_dict.get("peer_id", "");
-		String peer_name = data_dict.get("peer_name", "");
-		emit_signal("peer_joined", peer_id, peer_name);
+		emit_signal("peer_joined", data_dict.get("peer_id", ""), data_dict.get("peer_name", ""));
 	} else if (command == "peer_left") {
-		// Either if you kick a peer, or a peer leaves
-		String peer_id = data_dict.get("peer_id", "");
-		bool kicked = data_dict.get("kicked", false);
-		if (command_array.size() == 2) {
-			Ref<LobbyResponse> response = command_array[1];
-			if (response.is_valid()) {
-				Ref<LobbyResponse::LobbyResult> result;
-				result.instantiate();
-				response->emit_signal("finished", result);
-			}
-		}
-		emit_signal("peer_left", peer_id, kicked);
+		emit_signal("peer_left", data_dict.get("peer_id", ""), data_dict.get("kicked", false));
 	} else if (command == "lobby_data") {
-		String peer_data = data_dict.get("peer_data", "");
-		if (command_array.size() == 2) {
-			Ref<LobbyResponse> response = command_array[1];
-			if (response.is_valid()) {
-				Ref<LobbyResponse::LobbyResult> result;
-				result.instantiate();
-				response->emit_signal("finished", result);
-			}
-		}
-		emit_signal("received_data", peer_data);
+		emit_signal("received_data", data_dict.get("peer_data", ""));
 	} else if (command == "data_to") {
-		String peer_data = data_dict.get("peer_data", "");
-		if (command_array.size() == 2) {
-			Ref<LobbyResponse> response = command_array[1];
-			if (response.is_valid()) {
-				Ref<LobbyResponse::LobbyResult> result;
-				result.instantiate();
-				response->emit_signal("finished", result);
-			}
-		}
-		emit_signal("received_data_to", peer_data);
+		emit_signal("received_data_to", data_dict.get("peer_data", ""));
 	} else if (command == "lobby_data_sent") {
-		if (command_array.size() == 2) {
-			Ref<LobbyResponse> response = command_array[1];
-			if (response.is_valid()) {
-				Ref<LobbyResponse::LobbyResult> result;
-				result.instantiate();
-				response->emit_signal("finished", result);
-			}
-		}
+		// nothing for now
 	} else if (command == "data_to_sent") {
-		if (command_array.size() == 2) {
-			Ref<LobbyResponse> response = command_array[1];
-			if (response.is_valid()) {
-				Ref<LobbyResponse::LobbyResult> result;
-				result.instantiate();
-				response->emit_signal("finished", result);
-			}
-		}
+		// nothing for now
 	} else if (command == "error") {
 		if (command_array.size() == 2) {
 			int command_type = command_array[0];

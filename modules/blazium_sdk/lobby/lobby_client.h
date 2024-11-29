@@ -65,9 +65,6 @@ protected:
 	}
 
 public:
-	String to_string() const {
-		return vformat("(id %d, lobby_name %d host %s %d/%d sealed %b)", id, lobby_name, host_name, players, max_players, sealed);
-	}
 	void set_id(const String &p_id) { this->id = p_id; }
 	void set_lobby_name(const String &p_lobby_name) { this->lobby_name = p_lobby_name; }
 	void set_host(const String &p_host) { this->host = p_host; }
@@ -75,6 +72,7 @@ public:
 	void set_max_players(int p_max_players) { this->max_players = p_max_players; }
 	void set_players(int p_players) { this->players = p_players; }
 	void set_sealed(bool p_sealed) { this->sealed = p_sealed; }
+
 	void set_dict(const Dictionary &p_dict) {
 		this->set_host(p_dict.get("host", ""));
 		this->set_max_players(p_dict.get("max_players", 0));
@@ -303,8 +301,8 @@ public:
 	TypedArray<LobbyPeer> get_peers() { return peers; }
 
 	bool connect_to_lobby(const String &p_game_id);
-	Ref<LobbyResponse> create_lobby(const String &p_lobby_name, int p_max_players, const String &p_password);
-	Ref<LobbyResponse> join_lobby(const String &p_lobby_id, const String &p_password);
+	Ref<ViewLobbyResponse> create_lobby(const String &p_lobby_name, int p_max_players, const String &p_password);
+	Ref<ViewLobbyResponse> join_lobby(const String &p_lobby_id, const String &p_password);
 	Ref<LobbyResponse> leave_lobby();
 	Ref<ListLobbyResponse> list_lobby(int p_start, int p_count);
 	Ref<ViewLobbyResponse> view_lobby(const String &p_lobby_id, const String &p_password);
