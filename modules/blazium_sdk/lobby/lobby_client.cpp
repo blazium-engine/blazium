@@ -432,7 +432,7 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 					Ref<LobbyResponse::LobbyResult> result = Ref<LobbyResponse::LobbyResult>(memnew(LobbyResponse::LobbyResult));
 					response->emit_signal("finished", result);
 				}
-			}break;
+			} break;
 			case LOBBY_VIEW: {
 				Dictionary lobby_dict = data_dict.get("lobby", Dictionary());
 
@@ -457,7 +457,7 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 						response->emit_signal("finished", result);
 					}
 				}
-			}break;
+			} break;
 		}
 	}
 	if (command == "peer_state") {
