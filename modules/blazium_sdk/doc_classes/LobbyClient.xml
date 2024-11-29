@@ -152,15 +152,15 @@
 			</description>
 		</signal>
 		<signal name="lobby_created">
-+			<param index="0" name="lobby" type="LobbyInfo" />
-+			<param index="1" name="peers" type="LobbyPeer[]" />
+			<param index="0" name="lobby" type="LobbyInfo" />
+			<param index="1" name="peers" type="LobbyPeer[]" />
 			<description>
 				Signal generated after a lobby is created.
 			</description>
 		</signal>
 		<signal name="lobby_joined">
-+			<param index="0" name="lobby" type="LobbyInfo" />
-+			<param index="1" name="peers" type="LobbyPeer[]" />
+			<param index="0" name="lobby" type="LobbyInfo" />
+			<param index="1" name="peers" type="LobbyPeer[]" />
 			<description>
 				Signal generated after you joint a lobby.
 			</description>
