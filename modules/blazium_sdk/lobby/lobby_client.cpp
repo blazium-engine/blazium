@@ -400,6 +400,21 @@ void update_peers(Dictionary p_data_dict, TypedArray<LobbyPeer> &peers) {
 	}
 }
 
+// TODO optimize this
+void sort_peers_by_id(TypedArray<LobbyPeer> &peers) {
+	for (int i = 0; i < peers.size(); ++i) {
+		for (int j = i + 1; j < peers.size(); ++j) {
+			Ref<LobbyPeer> peer_i = peers[i];
+			Ref<LobbyPeer> peer_j = peers[j];
+			if (peer_i->get_id().casecmp_to(peer_j->get_id()) > 0) {
+				Ref<LobbyPeer> temp = peers[i];
+				peers[i] = peers[j];
+				peers[j] = temp;
+			}
+		}
+	}
+}
+
 void LobbyClient::_receive_data(const Dictionary &p_dict) {
 	String command = p_dict.get("command", "error");
 	String message = p_dict.get("message", command);
@@ -424,6 +439,7 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 				// Iterate through peers and populate arrays
 				TypedArray<LobbyPeer> peers_info;
 				update_peers(data_dict, peers_info);
+				sort_peers_by_id(peers_info);
 				Ref<LobbyInfo> lobby_info = Ref<LobbyInfo>(memnew(LobbyInfo));
 				lobby_info->set_dict(lobby_dict);
 				if (lobby_info->get_id() == lobby->get_id()) {
@@ -444,16 +460,21 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 			}break;
 		}
 	}
-	if (command == "lobby_created") {
+	if (command == "peer_state") {
+		peer->set_id(data_dict.get("peer_id", ""));
+	} else if (command == "lobby_created") {
 		lobby->set_dict(data_dict.get("lobby", Dictionary()));
 		update_peers(data_dict, peers);
+		sort_peers_by_id(peers);
 		emit_signal("lobby_created", lobby, peers);
 	} else if (command == "joined_lobby") {
 		lobby->set_dict(data_dict.get("lobby", Dictionary()));
 		update_peers(data_dict, peers);
+		sort_peers_by_id(peers);
 		emit_signal("lobby_joined", lobby, peers);
 	} else if (command == "lobby_left") {
 		lobby->set_dict(Dictionary());
+		peers.clear();
 		emit_signal("lobby_left");
 	} else if (command == "lobby_sealed") {
 		Dictionary lobby_dict = data_dict.get("lobby", Dictionary());
@@ -490,7 +511,10 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 			Ref<LobbyPeer> updated_peer = peers[i];
 			if (updated_peer->get_id() == String(data_dict.get("peer_id", ""))) {
 				updated_peer->set_peer_name(data_dict.get("name", ""));
-				peers[i] = updated_peer;
+				if (peer->get_id() == updated_peer->get_id()) {
+					peer->set_name(updated_peer->get_name());
+				}
+				// if the named peer is the host, update the host name
 				emit_signal("peer_named", updated_peer);
 				break;
 			}
@@ -500,6 +524,9 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 			Ref<LobbyPeer> updated_peer = peers[i];
 			if (updated_peer->get_id() == String(data_dict.get("peer_id", ""))) {
 				updated_peer->set_ready(true);
+				if (peer->get_id() == updated_peer->get_id()) {
+					peer->set_ready(updated_peer->is_ready());
+				}
 				emit_signal("peer_ready", updated_peer);
 				break;
 			}
@@ -509,25 +536,33 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 			Ref<LobbyPeer> updated_peer = peers[i];
 			if (updated_peer->get_id() == String(data_dict.get("peer_id", ""))) {
 				updated_peer->set_ready(false);
+				if (peer->get_id() == updated_peer->get_id()) {
+					peer->set_ready(updated_peer->is_ready());
+				}
 				emit_signal("peer_unready", updated_peer);
 				break;
 			}
 		}
 	} else if (command == "peer_joined") {
 		Ref<LobbyPeer> joining_peer = Ref<LobbyPeer>(memnew(LobbyPeer));
-		joining_peer->set_id(data_dict.get("peer_id", ""));
-		joining_peer->set_peer_name(data_dict.get("peer_name", ""));
+		Dictionary peer_dict = data_dict.get("peer", Dictionary());
+		joining_peer->set_id(peer_dict.get("id", ""));
+		joining_peer->set_peer_name(peer_dict.get("name", ""));
 		peers.append(joining_peer);
+		sort_peers_by_id(peers);
+		lobby->set_players(peers.size());
 		emit_signal("peer_joined", joining_peer);
 	} else if (command == "peer_left") {
 		for (int i = 0; i < peers.size(); ++i) {
 			Ref<LobbyPeer> leaving_peer = peers[i];
 			if (leaving_peer->get_id() == String(data_dict.get("peer_id", ""))) {
 				peers.remove_at(i);
+				lobby->set_players(peers.size());
 				emit_signal("peer_left", leaving_peer, data_dict.get("kicked", false));
 				break;
 			}
 		}
+		sort_peers_by_id(peers);
 	} else if (command == "lobby_data") {
 		emit_signal("received_data", data_dict.get("peer_data", ""));
 	} else if (command == "data_to") {
