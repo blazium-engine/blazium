@@ -28,7 +28,7 @@
 		</method>
 		<method name="join_lobby">
 			<return type="ViewLobbyResponse" />
-			<param index="0" name="lobby_id" type="String" default="&quot;&quot;" >
+			<param index="0" name="lobby_id" type="String" default="&quot;&quot;" />
 			<param index="1" name="password" type="String" default="&quot;&quot;" />
 			<description>
 				Joint a lobby. If you are already in a lobby, you cannot join another one. You need to leave first.
