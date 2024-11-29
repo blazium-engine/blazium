@@ -507,38 +507,45 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 	} else if (command == "lobby_view") {
 		// nothing for now
 	} else if (command == "peer_name") {
+		String peer_id = data_dict.get("peer_id", "");
+		String peer_name = data_dict.get("name", "");
+		if (peer->get_id() == peer_id) {
+			peer->set_peer_name(peer_name);
+		}
 		for (int i = 0; i < peers.size(); ++i) {
 			Ref<LobbyPeer> updated_peer = peers[i];
-			if (updated_peer->get_id() == String(data_dict.get("peer_id", ""))) {
-				updated_peer->set_peer_name(data_dict.get("name", ""));
-				if (peer->get_id() == updated_peer->get_id()) {
-					peer->set_name(updated_peer->get_name());
-				}
+			if (updated_peer->get_id() == peer_id) {
+				updated_peer->set_peer_name(peer_name);
 				// if the named peer is the host, update the host name
+				if (updated_peer->get_id() == lobby->get_host()) {
+					lobby->set_host_name(peer_name);
+				}
 				emit_signal("peer_named", updated_peer);
 				break;
 			}
 		}
 	} else if (command == "peer_ready") {
+		String peer_id = data_dict.get("peer_id", "");
+		if (peer->get_id() == peer_id) {
+			peer->set_ready(true);
+		}
 		for (int i = 0; i < peers.size(); ++i) {
 			Ref<LobbyPeer> updated_peer = peers[i];
-			if (updated_peer->get_id() == String(data_dict.get("peer_id", ""))) {
+			if (updated_peer->get_id() == String(peer_id)) {
 				updated_peer->set_ready(true);
-				if (peer->get_id() == updated_peer->get_id()) {
-					peer->set_ready(updated_peer->is_ready());
-				}
 				emit_signal("peer_ready", updated_peer);
 				break;
 			}
 		}
 	} else if (command == "peer_unready") {
+		String peer_id = data_dict.get("peer_id", "");
+		if (peer->get_id() == peer_id) {
+			peer->set_ready(false);
+		}
 		for (int i = 0; i < peers.size(); ++i) {
 			Ref<LobbyPeer> updated_peer = peers[i];
 			if (updated_peer->get_id() == String(data_dict.get("peer_id", ""))) {
 				updated_peer->set_ready(false);
-				if (peer->get_id() == updated_peer->get_id()) {
-					peer->set_ready(updated_peer->is_ready());
-				}
 				emit_signal("peer_unready", updated_peer);
 				break;
 			}
