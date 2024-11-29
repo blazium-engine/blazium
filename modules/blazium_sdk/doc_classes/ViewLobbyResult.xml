@@ -9,12 +9,6 @@
 	<tutorials>
 	</tutorials>
 	<methods>
-		<method name="get_lobby_info" qualifiers="const">
-			<return type="LobbyInfo" />
-			<description>
-				Gets the lobby info.
-			</description>
-		</method>
 		<method name="has_error" qualifiers="const">
 			<return type="bool" />
 			<description>
@@ -25,6 +19,9 @@
 	<members>
 		<member name="error" type="String" setter="" getter="get_error" default="&quot;&quot;">
 			Gets the error message.
+		</member>
+		<member name="lobby" type="LobbyInfo" setter="" getter="get_lobby">
+			Gets the lobby.
 		</member>
 		<member name="peers" type="LobbyPeer[]" setter="" getter="get_peers" default="[]">
 			Gets the peers.

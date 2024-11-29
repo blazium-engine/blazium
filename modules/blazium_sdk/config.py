@@ -12,8 +12,6 @@ def get_doc_classes():
         "BlaziumClient",
         "LobbyInfo",
         "LobbyPeer",
-        "CreateLobbyResponse",
-        "CreateLobbyResult",
         "LobbyResponse",
         "LobbyResult",
         "ListLobbyResponse",
