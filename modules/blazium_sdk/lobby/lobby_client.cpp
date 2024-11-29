@@ -50,7 +50,6 @@ void LobbyClient::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_peer"), &LobbyClient::get_peer);
 	ClassDB::bind_method(D_METHOD("get_peers"), &LobbyClient::get_peers);
 
-
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "server_url", PROPERTY_HINT_NONE, ""), "set_server_url", "get_server_url");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "connected"), "", "get_connected");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "lobby", PROPERTY_HINT_RESOURCE_TYPE, "LobbyInfo"), "", "get_lobby");

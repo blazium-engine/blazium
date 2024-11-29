@@ -276,6 +276,7 @@ public:
 		ViewLobbyResponse(const ViewLobbyResponse &p_other) {}
 		ViewLobbyResponse() {}
 	};
+
 private:
 	Ref<WebSocketPeer> _socket;
 	int _counter = 0;
