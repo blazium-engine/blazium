@@ -32,6 +32,7 @@
 #define SEPARATOR_H
 
 #include "scene/gui/control.h"
+
 class Separator : public Control {
 	GDCLASS(Separator, Control);
 

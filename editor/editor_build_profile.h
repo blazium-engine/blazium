@@ -35,10 +35,9 @@
 #include "core/object/ref_counted.h"
 #include "editor/editor_help.h"
 #include "scene/gui/dialogs.h"
-#include "scene/gui/option_button.h"
-#include "scene/gui/separator.h"
-#include "scene/gui/split_container.h"
-#include "scene/gui/tree.h"
+
+class Tree;
+class TreeItem;
 
 class EditorBuildProfile : public RefCounted {
 	GDCLASS(EditorBuildProfile, RefCounted);

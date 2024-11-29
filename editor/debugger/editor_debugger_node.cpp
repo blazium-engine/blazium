@@ -46,6 +46,7 @@
 #include "editor/scene_tree_dock.h"
 #include "editor/themes/editor_theme_manager.h"
 #include "scene/gui/menu_button.h"
+#include "scene/gui/popup_menu.h"
 #include "scene/gui/tab_container.h"
 #include "scene/resources/packed_scene.h"
 

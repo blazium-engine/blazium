@@ -31,6 +31,8 @@
 #include "texture_3d_editor_plugin.h"
 
 #include "scene/gui/label.h"
+#include "scene/gui/spin_box.h"
+#include "scene/resources/shader.h"
 
 void Texture3DEditor::_texture_rect_draw() {
 	texture_rect->draw_rect(Rect2(Point2(), texture_rect->get_size()), Color(1, 1, 1, 1));

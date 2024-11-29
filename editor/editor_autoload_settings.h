@@ -32,10 +32,11 @@
 #define EDITOR_AUTOLOAD_SETTINGS_H
 
 #include "scene/gui/box_container.h"
-#include "scene/gui/button.h"
-#include "scene/gui/tree.h"
 
+class Button;
 class EditorFileDialog;
+class LineEdit;
+class Tree;
 
 class EditorAutoloadSettings : public VBoxContainer {
 	GDCLASS(EditorAutoloadSettings, VBoxContainer);

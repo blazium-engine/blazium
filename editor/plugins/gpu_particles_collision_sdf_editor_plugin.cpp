@@ -34,6 +34,9 @@
 #include "editor/editor_node.h"
 #include "editor/editor_string_names.h"
 #include "editor/gui/editor_file_dialog.h"
+#include "scene/3d/gpu_particles_collision_3d.h"
+#include "scene/gui/box_container.h"
+#include "scene/gui/button.h"
 
 void GPUParticlesCollisionSDF3DEditorPlugin::_bake() {
 	if (col_sdf) {

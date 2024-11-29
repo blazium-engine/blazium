@@ -33,9 +33,10 @@
 
 #include "editor/editor_inspector.h"
 #include "scene/gui/split_container.h"
-#include "scene/gui/tree.h"
 
 class SectionedInspectorFilter;
+class Tree;
+class TreeItem;
 
 class SectionedInspector : public HSplitContainer {
 	GDCLASS(SectionedInspector, HSplitContainer);

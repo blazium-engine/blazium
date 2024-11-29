@@ -34,8 +34,11 @@
 #include "editor/editor_undo_redo_manager.h"
 #include "editor/gui/editor_file_dialog.h"
 #include "editor/themes/editor_scale.h"
-#include "scene/gui/control.h"
+#include "scene/gui/button.h"
+#include "scene/gui/item_list.h"
+#include "scene/gui/label.h"
 #include "scene/gui/split_container.h"
+#include "scene/gui/texture_rect.h"
 #include "scene/resources/image_texture.h"
 
 void AtlasMergingDialog::_property_changed(const StringName &p_property, const Variant &p_value, const String &p_field, bool p_changing) {

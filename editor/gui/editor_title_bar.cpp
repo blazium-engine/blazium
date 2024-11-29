@@ -30,6 +30,8 @@
 
 #include "editor_title_bar.h"
 
+#include "scene/main/window.h"
+
 void EditorTitleBar::gui_input(const Ref<InputEvent> &p_event) {
 	if (!can_move) {
 		return;

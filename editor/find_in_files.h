@@ -32,7 +32,17 @@
 #define FIND_IN_FILES_H
 
 #include "core/templates/hash_map.h"
+#include "scene/gui/control.h"
 #include "scene/gui/dialogs.h"
+
+class Button;
+class CheckBox;
+class FileDialog;
+class HBoxContainer;
+class LineEdit;
+class ProgressBar;
+class Tree;
+class TreeItem;
 
 // Performs the actual search
 class FindInFiles : public Node {
@@ -84,11 +94,6 @@ private:
 	Vector<String> _files_to_scan;
 	int _initial_files_count = 0;
 };
-
-class LineEdit;
-class CheckBox;
-class FileDialog;
-class HBoxContainer;
 
 // Prompts search parameters
 class FindInFilesDialog : public AcceptDialog {
@@ -146,11 +151,6 @@ private:
 	HBoxContainer *_filters_container = nullptr;
 	HashMap<String, bool> _filters_preferences;
 };
-
-class Button;
-class Tree;
-class TreeItem;
-class ProgressBar;
 
 // Display search results
 class FindInFilesPanel : public Control {

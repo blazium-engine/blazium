@@ -29,11 +29,18 @@
 /**************************************************************************/
 
 #include "audio_stream_import_settings.h"
+#include "core/io/config_file.h"
 #include "editor/audio_stream_preview.h"
 #include "editor/editor_file_system.h"
 #include "editor/editor_string_names.h"
 #include "editor/themes/editor_scale.h"
+#include "scene/audio/audio_stream_player.h"
+#include "scene/gui/box_container.h"
 #include "scene/gui/check_box.h"
+#include "scene/gui/color_rect.h"
+#include "scene/gui/label.h"
+#include "scene/gui/scroll_bar.h"
+#include "scene/gui/spin_box.h"
 
 AudioStreamImportSettingsDialog *AudioStreamImportSettingsDialog::singleton = nullptr;
 

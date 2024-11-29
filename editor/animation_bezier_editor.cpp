@@ -37,6 +37,8 @@
 #include "editor/gui/editor_spin_slider.h"
 #include "editor/plugins/animation_player_editor_plugin.h"
 #include "editor/themes/editor_scale.h"
+#include "scene/gui/button.h"
+#include "scene/gui/popup_menu.h"
 #include "scene/gui/view_panner.h"
 #include "scene/resources/text_line.h"
 

@@ -33,14 +33,17 @@
 
 #include "editor/plugins/animation_tree_editor_plugin.h"
 #include "scene/animation/animation_node_state_machine.h"
-#include "scene/gui/graph_edit.h"
-#include "scene/gui/popup.h"
-#include "scene/gui/tree.h"
 
 class ConfirmationDialog;
 class EditorFileDialog;
+class HScrollBar;
+class LineEdit;
 class OptionButton;
 class PanelContainer;
+class Popup;
+class PopupMenu;
+class Tree;
+class VScrollBar;
 
 class AnimationNodeStateMachineEditor : public AnimationTreeNodeEditorPlugin {
 	GDCLASS(AnimationNodeStateMachineEditor, AnimationTreeNodeEditorPlugin);

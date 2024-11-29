@@ -32,16 +32,15 @@
 #define CPU_PARTICLES_2D_EDITOR_PLUGIN_H
 
 #include "editor/plugins/editor_plugin.h"
-#include "scene/2d/cpu_particles_2d.h"
-#include "scene/2d/physics/collision_polygon_2d.h"
-#include "scene/gui/box_container.h"
 
 class CheckBox;
 class ConfirmationDialog;
-class SpinBox;
+class CPUParticles2D;
 class EditorFileDialog;
+class HBoxContainer;
 class MenuButton;
 class OptionButton;
+class SpinBox;
 
 class CPUParticles2DEditorPlugin : public EditorPlugin {
 	GDCLASS(CPUParticles2DEditorPlugin, EditorPlugin);

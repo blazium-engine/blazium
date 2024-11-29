@@ -32,7 +32,6 @@
 #define CAMERA_3D_EDITOR_PLUGIN_H
 
 #include "editor/plugins/editor_plugin.h"
-#include "scene/3d/camera_3d.h"
 
 class Camera3DEditor : public Control {
 	GDCLASS(Camera3DEditor, Control);

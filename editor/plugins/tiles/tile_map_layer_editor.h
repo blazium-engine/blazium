@@ -37,18 +37,20 @@
 #include "core/typedefs.h"
 #include "scene/2d/tile_map.h"
 #include "scene/gui/box_container.h"
-#include "scene/gui/check_box.h"
-#include "scene/gui/flow_container.h"
-#include "scene/gui/item_list.h"
-#include "scene/gui/menu_button.h"
-#include "scene/gui/option_button.h"
-#include "scene/gui/separator.h"
-#include "scene/gui/spin_box.h"
-#include "scene/gui/split_container.h"
-#include "scene/gui/tab_bar.h"
-#include "scene/gui/tree.h"
 
+class BaseButton;
+class ButtonGroup;
+class CheckBox;
+class HFlowContainer;
+class HSplitContainer;
+class ItemList;
+class MenuButton;
+class OptionButton;
+class SpinBox;
+class TabBar;
 class TileMapLayerEditor;
+class Tree;
+class VSeparator;
 
 class TileMapLayerSubEditorPlugin : public Object {
 protected:

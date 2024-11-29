@@ -32,15 +32,13 @@
 #define NAVIGATION_OBSTACLE_3D_EDITOR_PLUGIN_H
 
 #include "editor/plugins/editor_plugin.h"
-#include "scene/3d/mesh_instance_3d.h"
-#include "scene/3d/physics/collision_polygon_3d.h"
 #include "scene/gui/box_container.h"
-#include "scene/resources/immediate_mesh.h"
-
-#include "scene/3d/navigation_obstacle_3d.h"
 
 class CanvasItemEditor;
+class ImmediateMesh;
 class MenuButton;
+class MeshInstance3D;
+class NavigationObstacle3D;
 
 class NavigationObstacle3DEditor : public HBoxContainer {
 	GDCLASS(NavigationObstacle3DEditor, HBoxContainer);

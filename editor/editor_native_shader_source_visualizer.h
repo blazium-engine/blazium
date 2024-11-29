@@ -32,8 +32,9 @@
 #define EDITOR_NATIVE_SHADER_SOURCE_VISUALIZER_H
 
 #include "scene/gui/dialogs.h"
-#include "scene/gui/tab_container.h"
-#include "scene/resources/syntax_highlighter.h"
+
+class TabContainer;
+class CodeHighlighter;
 
 class EditorNativeShaderSourceVisualizer : public AcceptDialog {
 	GDCLASS(EditorNativeShaderSourceVisualizer, AcceptDialog)

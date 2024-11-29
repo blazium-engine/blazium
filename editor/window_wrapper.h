@@ -31,12 +31,12 @@
 #ifndef WINDOW_WRAPPER_H
 #define WINDOW_WRAPPER_H
 
-#include "core/math/rect2.h"
+#include "scene/gui/button.h"
 #include "scene/gui/margin_container.h"
-#include "scene/gui/menu_button.h"
 
-class Window;
 class HBoxContainer;
+class Popup;
+class Window;
 
 class WindowWrapper : public MarginContainer {
 	GDCLASS(WindowWrapper, MarginContainer);

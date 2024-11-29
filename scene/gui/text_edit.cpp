@@ -35,12 +35,15 @@
 #include "core/input/input.h"
 #include "core/input/input_map.h"
 #include "core/object/script_language.h"
-#include "core/os/keyboard.h"
 #include "core/os/os.h"
 #include "core/string/string_builder.h"
 #include "core/string/translation.h"
 #include "scene/gui/label.h"
+#include "scene/gui/popup_menu.h"
+#include "scene/gui/scroll_bar.h"
+#include "scene/main/timer.h"
 #include "scene/main/window.h"
+#include "scene/resources/text_line.h"
 #include "scene/theme/theme_db.h"
 
 ///////////////////////////////////////////////////////////////////////////////

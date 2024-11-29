@@ -40,6 +40,11 @@
 #include "editor/gui/editor_bottom_panel.h"
 #include "editor/gui/editor_file_dialog.h"
 #include "editor/themes/editor_scale.h"
+#include "scene/gui/box_container.h"
+#include "scene/gui/button.h"
+#include "scene/gui/dialogs.h"
+#include "scene/gui/tree.h"
+#include "scene/main/resource_preloader.h"
 
 void ResourcePreloaderEditor::_notification(int p_what) {
 	switch (p_what) {

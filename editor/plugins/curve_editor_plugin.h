@@ -34,8 +34,8 @@
 #include "editor/editor_inspector.h"
 #include "editor/editor_resource_preview.h"
 #include "editor/plugins/editor_plugin.h"
-#include "scene/resources/curve.h"
 
+class Curve;
 class EditorSpinSlider;
 class MenuButton;
 class PopupMenu;

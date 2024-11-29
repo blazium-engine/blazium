@@ -35,14 +35,16 @@
 #include "editor/editor_data.h"
 #include "editor/editor_inspector.h"
 #include "scene/gui/box_container.h"
-#include "scene/gui/button.h"
-#include "scene/gui/dialogs.h"
-#include "scene/gui/line_edit.h"
-#include "scene/gui/menu_button.h"
-#include "scene/gui/tree.h"
 
+class AcceptDialog;
+class Button;
+class ConfirmationDialog;
+class EditorData;
 class EditorFileDialog;
 class EditorObjectSelector;
+class LineEdit;
+class MenuButton;
+class Tree;
 
 class InspectorDock : public VBoxContainer {
 	GDCLASS(InspectorDock, VBoxContainer);

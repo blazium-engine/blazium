@@ -40,11 +40,16 @@
 #include "editor/editor_undo_redo_manager.h"
 #include "editor/gui/editor_file_dialog.h"
 #include "editor/themes/editor_scale.h"
-
 #include "scene/gui/box_container.h"
 #include "scene/gui/control.h"
 #include "scene/gui/dialogs.h"
-#include "scene/gui/tab_container.h"
+#include "scene/gui/item_list.h"
+#include "scene/gui/label.h"
+#include "scene/gui/menu_button.h"
+#include "scene/gui/panel_container.h"
+#include "scene/gui/popup_menu.h"
+#include "scene/gui/spin_box.h"
+#include "scene/gui/tab_bar.h"
 
 TileSetEditor *TileSetEditor::singleton = nullptr;
 

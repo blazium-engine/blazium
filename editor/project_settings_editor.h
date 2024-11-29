@@ -41,9 +41,9 @@
 #include "editor/localization_editor.h"
 #include "editor/plugins/editor_plugin_settings.h"
 #include "editor/shader_globals_editor.h"
-#include "scene/gui/tab_container.h"
 
 class FileSystemDock;
+class TabContainer;
 
 class ProjectSettingsEditor : public AcceptDialog {
 	GDCLASS(ProjectSettingsEditor, AcceptDialog);

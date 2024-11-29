@@ -35,6 +35,9 @@
 #include "editor/editor_node.h"
 #include "editor/themes/editor_scale.h"
 #include "main/main.h"
+#include "scene/gui/button.h"
+#include "scene/gui/label.h"
+#include "scene/gui/progress_bar.h"
 #include "servers/display_server.h"
 
 void BackgroundProgress::_add_task(const String &p_task, const String &p_label, int p_steps) {

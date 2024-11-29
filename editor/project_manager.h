@@ -31,14 +31,18 @@
 #ifndef PROJECT_MANAGER_H
 #define PROJECT_MANAGER_H
 
-#include "scene/gui/dialogs.h"
-#include "scene/gui/scroll_container.h"
+#include "scene/gui/control.h"
 
+class AcceptDialog;
+class Button;
+class ButtonGroup;
 class CheckBox;
+class ConfirmationDialog;
 class EditorAbout;
 class EditorAssetLibrary;
 class EditorFileDialog;
 class EditorTitleBar;
+class HBoxContainer;
 class HFlowContainer;
 class LineEdit;
 class LinkButton;

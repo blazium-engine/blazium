@@ -31,7 +31,6 @@
 #include "view_panner.h"
 
 #include "core/input/input.h"
-#include "core/input/shortcut.h"
 #include "core/os/keyboard.h"
 
 bool ViewPanner::gui_input(const Ref<InputEvent> &p_event, Rect2 p_canvas_rect) {

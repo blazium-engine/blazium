@@ -37,7 +37,17 @@
 #include "core/version.h"
 #include "editor/editor_string_names.h"
 #include "editor/themes/editor_scale.h"
+#include "scene/gui/box_container.h"
 #include "scene/gui/item_list.h"
+#include "scene/gui/label.h"
+#include "scene/gui/link_button.h"
+#include "scene/gui/rich_text_label.h"
+#include "scene/gui/scroll_container.h"
+#include "scene/gui/separator.h"
+#include "scene/gui/split_container.h"
+#include "scene/gui/tab_container.h"
+#include "scene/gui/texture_rect.h"
+#include "scene/gui/tree.h"
 #include "scene/resources/style_box.h"
 
 // The metadata key used to store and retrieve the version text to copy to the clipboard.

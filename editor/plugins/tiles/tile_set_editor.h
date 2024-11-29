@@ -32,18 +32,18 @@
 #define TILE_SET_EDITOR_H
 
 #include "atlas_merging_dialog.h"
-#include "scene/gui/tab_bar.h"
 #include "scene/resources/2d/tile_set.h"
 #include "tile_proxies_manager_dialog.h"
 #include "tile_set_atlas_source_editor.h"
 #include "tile_set_scenes_collection_source_editor.h"
 
 class AcceptDialog;
-class SpinBox;
-class HBoxContainer;
-class SplitContainer;
 class EditorFileDialog;
 class EditorInspectorPlugin;
+class HBoxContainer;
+class SpinBox;
+class SplitContainer;
+class TabBar;
 
 class TileSetEditor : public Control {
 	GDCLASS(TileSetEditor, Control);

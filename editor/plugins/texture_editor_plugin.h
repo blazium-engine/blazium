@@ -34,8 +34,8 @@
 #include "editor/editor_inspector.h"
 #include "editor/plugins/editor_plugin.h"
 #include "scene/gui/margin_container.h"
-#include "scene/resources/texture.h"
 
+class Texture2D;
 class TextureRect;
 
 class TexturePreview : public MarginContainer {

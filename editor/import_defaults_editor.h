@@ -32,11 +32,11 @@
 #define IMPORT_DEFAULTS_EDITOR_H
 
 #include "scene/gui/box_container.h"
-#include "scene/gui/button.h"
-#include "scene/gui/option_button.h"
 
-class ImportDefaultsEditorSettings;
+class Button;
 class EditorInspector;
+class ImportDefaultsEditorSettings;
+class OptionButton;
 
 class ImportDefaultsEditor : public VBoxContainer {
 	GDCLASS(ImportDefaultsEditor, VBoxContainer)

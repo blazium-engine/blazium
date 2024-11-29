@@ -35,6 +35,7 @@
 
 class LineEdit;
 class ItemList;
+class VBoxContainer;
 
 class EditorLayoutsDialog : public ConfirmationDialog {
 	GDCLASS(EditorLayoutsDialog, ConfirmationDialog);

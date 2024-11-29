@@ -32,6 +32,7 @@
 #define PROJECT_EXPORT_H
 
 #include "editor/export/editor_export_preset.h"
+#include "scene/gui/box_container.h"
 #include "scene/gui/dialogs.h"
 
 class CheckBox;

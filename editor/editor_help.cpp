@@ -46,7 +46,13 @@
 #include "editor/editor_string_names.h"
 #include "editor/plugins/script_editor_plugin.h"
 #include "editor/themes/editor_scale.h"
+#include "scene/gui/button.h"
+#include "scene/gui/label.h"
 #include "scene/gui/line_edit.h"
+#include "scene/gui/rich_text_label.h"
+#include "scene/gui/scroll_bar.h"
+#include "scene/gui/texture_button.h"
+#include "scene/main/timer.h"
 
 #include "modules/modules_enabled.gen.h" // For gdscript, mono.
 
@@ -3054,6 +3060,10 @@ void EditorHelp::popup_search() {
 
 String EditorHelp::get_class() {
 	return edited_class;
+}
+
+void EditorHelp::set_focused() {
+	class_desc->grab_focus();
 }
 
 void EditorHelp::search_again(bool p_search_previous) {

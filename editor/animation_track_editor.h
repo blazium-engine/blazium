@@ -34,11 +34,8 @@
 #include "editor/editor_data.h"
 #include "editor/editor_properties.h"
 #include "editor/property_selector.h"
-#include "scene/3d/node_3d.h"
-#include "scene/gui/control.h"
-#include "scene/gui/menu_button.h"
-#include "scene/gui/scroll_bar.h"
-#include "scene/gui/tree.h"
+#include "scene/gui/box_container.h"
+#include "scene/gui/range.h"
 #include "scene/resources/animation.h"
 
 class AnimationTrackEditor;
@@ -46,11 +43,17 @@ class AnimationTrackEdit;
 class CheckBox;
 class EditorSpinSlider;
 class HSlider;
+class HScrollBar;
+class MenuButton;
+class Node3D;
 class OptionButton;
 class PanelContainer;
+class Popup;
 class SceneTreeDialog;
 class SpinBox;
 class TextureRect;
+class Tree;
+class TreeItem;
 class ViewPanner;
 
 class AnimationTrackKeyEdit : public Object {

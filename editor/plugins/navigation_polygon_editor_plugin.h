@@ -32,13 +32,13 @@
 #define NAVIGATION_POLYGON_EDITOR_PLUGIN_H
 
 #include "editor/plugins/abstract_polygon_2d_editor.h"
-
 #include "editor/plugins/editor_plugin.h"
 
 class AcceptDialog;
 class HBoxContainer;
 class NavigationPolygon;
 class NavigationRegion2D;
+class Timer;
 
 class NavigationPolygonEditor : public AbstractPolygon2DEditor {
 	friend class NavigationPolygonEditorPlugin;

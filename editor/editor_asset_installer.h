@@ -32,12 +32,14 @@
 #define EDITOR_ASSET_INSTALLER_H
 
 #include "scene/gui/dialogs.h"
-#include "scene/gui/tree.h"
 
 class CheckBox;
 class EditorFileDialog;
 class Label;
 class LinkButton;
+class Tree;
+class TreeItem;
+class VBoxContainer;
 
 class EditorAssetInstaller : public ConfirmationDialog {
 	GDCLASS(EditorAssetInstaller, ConfirmationDialog);

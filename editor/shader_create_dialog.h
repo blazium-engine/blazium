@@ -32,15 +32,15 @@
 #define SHADER_CREATE_DIALOG_H
 
 #include "editor/editor_settings.h"
-#include "scene/gui/check_box.h"
 #include "scene/gui/dialogs.h"
-#include "scene/gui/grid_container.h"
-#include "scene/gui/line_edit.h"
-#include "scene/gui/option_button.h"
-#include "scene/gui/panel_container.h"
 
+class Button;
+class CheckBox;
 class EditorFileDialog;
 class EditorValidationPanel;
+class GridContainer;
+class LineEdit;
+class OptionButton;
 
 class ShaderCreateDialog : public ConfirmationDialog {
 	GDCLASS(ShaderCreateDialog, ConfirmationDialog);

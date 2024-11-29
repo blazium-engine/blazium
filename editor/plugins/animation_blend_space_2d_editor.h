@@ -33,15 +33,14 @@
 
 #include "editor/plugins/animation_tree_editor_plugin.h"
 #include "editor/plugins/editor_plugin.h"
-#include "scene/animation/animation_blend_space_2d.h"
-#include "scene/gui/graph_edit.h"
-#include "scene/gui/popup.h"
 
+class AnimationNodeBlendSpace2D;
 class Button;
 class CheckBox;
 class LineEdit;
 class OptionButton;
 class PanelContainer;
+class PopupMenu;
 class SpinBox;
 class VSeparator;
 

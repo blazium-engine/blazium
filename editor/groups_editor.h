@@ -31,6 +31,7 @@
 #ifndef GROUPS_EDITOR_H
 #define GROUPS_EDITOR_H
 
+#include "scene/gui/box_container.h"
 #include "scene/gui/dialogs.h"
 
 class Button;

@@ -42,12 +42,13 @@
 
 #include "scene/3d/skeleton_3d.h"
 #include "scene/gui/box_container.h"
-#include "scene/gui/color_rect.h"
 #include "scene/gui/dialogs.h"
-#include "scene/resources/bone_map.h"
-#include "scene/resources/texture.h"
+#include "scene/gui/texture_button.h"
 
 class AspectRatioContainer;
+class BoneMap;
+class ColorRect;
+class TextureRect;
 
 class BoneMapperButton : public TextureButton {
 	GDCLASS(BoneMapperButton, TextureButton);

@@ -35,6 +35,8 @@
 #include "editor/gui/editor_file_dialog.h"
 #include "editor/scene_tree_dock.h"
 #include "scene/debugger/scene_debugger.h"
+#include "scene/gui/label.h"
+#include "scene/gui/popup_menu.h"
 #include "scene/gui/texture_rect.h"
 #include "scene/resources/packed_scene.h"
 #include "servers/display_server.h"

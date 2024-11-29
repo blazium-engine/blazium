@@ -33,12 +33,12 @@
 
 #include "editor/plugins/editor_plugin.h"
 #include "editor/plugins/node_3d_editor_gizmos.h"
-#include "scene/3d/camera_3d.h"
-#include "scene/3d/path_3d.h"
 
+class Camera3D;
+class ConfirmationDialog;
 class HBoxContainer;
 class MenuButton;
-class ConfirmationDialog;
+class Path3D;
 
 class Path3DGizmo : public EditorNode3DGizmo {
 	GDCLASS(Path3DGizmo, EditorNode3DGizmo);

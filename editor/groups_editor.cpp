@@ -38,10 +38,13 @@
 #include "editor/project_settings_editor.h"
 #include "editor/scene_tree_dock.h"
 #include "editor/themes/editor_scale.h"
-#include "scene/gui/box_container.h"
+#include "scene/gui/check_box.h"
 #include "scene/gui/check_button.h"
 #include "scene/gui/grid_container.h"
 #include "scene/gui/label.h"
+#include "scene/gui/line_edit.h"
+#include "scene/gui/popup_menu.h"
+#include "scene/gui/tree.h"
 #include "scene/resources/packed_scene.h"
 
 static bool can_edit(Node *p_node, const String &p_group) {

@@ -31,6 +31,9 @@
 #include "texture_layered_editor_plugin.h"
 
 #include "scene/gui/label.h"
+#include "scene/gui/spin_box.h"
+#include "scene/resources/shader.h"
+#include "scene/resources/texture.h"
 
 void TextureLayeredEditor::gui_input(const Ref<InputEvent> &p_event) {
 	ERR_FAIL_COND(p_event.is_null());

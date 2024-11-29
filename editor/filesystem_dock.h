@@ -36,19 +36,22 @@
 #include "editor/plugins/script_editor_plugin.h"
 #include "editor/script_create_dialog.h"
 #include "scene/gui/box_container.h"
-#include "scene/gui/control.h"
-#include "scene/gui/dialogs.h"
-#include "scene/gui/menu_button.h"
-#include "scene/gui/split_container.h"
+#include "scene/gui/item_list.h"
 #include "scene/gui/tree.h"
 
+class ConfirmationDialog;
 class CreateDialog;
 class EditorDirDialog;
 class ItemList;
 class LineEdit;
+class MenuButton;
+class Popup;
+class PopupMenu;
 class ProgressBar;
 class SceneCreateDialog;
+class ScrollContainer;
 class ShaderCreateDialog;
+class SplitContainer;
 class DirectoryCreateDialog;
 class EditorResourceTooltipPlugin;
 

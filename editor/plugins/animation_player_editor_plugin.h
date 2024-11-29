@@ -34,15 +34,15 @@
 #include "editor/animation_track_editor.h"
 #include "editor/plugins/animation_library_editor.h"
 #include "editor/plugins/editor_plugin.h"
-#include "scene/animation/animation_player.h"
-#include "scene/gui/dialogs.h"
-#include "scene/gui/slider.h"
-#include "scene/gui/spin_box.h"
-#include "scene/gui/texture_button.h"
-#include "scene/gui/tree.h"
 
+class AcceptDialog;
+class AnimatedValuesBackup;
+class AnimationPlayer;
 class AnimationPlayerEditorPlugin;
+class ConfirmationDialog;
 class ImageTexture;
+class SpinBox;
+class Tree;
 
 class AnimationPlayerEditor : public VBoxContainer {
 	GDCLASS(AnimationPlayerEditor, VBoxContainer);
@@ -256,11 +256,9 @@ public:
 
 	static AnimationPlayerEditor *get_singleton() { return singleton; }
 
-	bool is_pinned() const { return pin->is_pressed(); }
-	void unpin() {
-		pin->set_pressed(false);
-		_pin_pressed();
-	}
+	bool is_pinned() const;
+	void unpin();
+
 	AnimationTrackEditor *get_track_editor() { return track_editor; }
 	Dictionary get_state() const;
 	void set_state(const Dictionary &p_state);

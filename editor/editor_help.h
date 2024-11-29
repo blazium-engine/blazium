@@ -35,16 +35,14 @@
 #include "editor/code_editor.h"
 #include "editor/doc_tools.h"
 #include "editor/plugins/editor_plugin.h"
-#include "scene/gui/menu_button.h"
-#include "scene/gui/panel_container.h"
 #include "scene/gui/popup.h"
-#include "scene/gui/rich_text_label.h"
-#include "scene/gui/split_container.h"
-#include "scene/gui/tab_container.h"
-#include "scene/gui/text_edit.h"
-#include "scene/main/timer.h"
 
 #include "modules/modules_enabled.gen.h" // For gdscript, mono.
+
+class HSplitContainer;
+class RichTextLabel;
+class TextEdit;
+class Timer;
 
 class FindBar : public HBoxContainer {
 	GDCLASS(FindBar, HBoxContainer);
@@ -238,7 +236,7 @@ public:
 
 	String get_class();
 
-	void set_focused() { class_desc->grab_focus(); }
+	void set_focused();
 
 	int get_scroll() const;
 	void set_scroll(int p_scroll);

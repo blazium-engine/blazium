@@ -31,12 +31,13 @@
 #ifndef CONNECTIONS_DIALOG_H
 #define CONNECTIONS_DIALOG_H
 
-#include "scene/gui/check_button.h"
+#include "scene/gui/box_container.h"
 #include "scene/gui/dialogs.h"
 #include "scene/gui/tree.h"
 
 class Button;
 class CheckBox;
+class CheckButton;
 class ConnectDialogBinds;
 class EditorInspector;
 class Label;

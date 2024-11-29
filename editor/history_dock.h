@@ -34,8 +34,8 @@
 #include "scene/gui/box_container.h"
 
 class CheckBox;
-class ItemList;
 class EditorUndoRedoManager;
+class ItemList;
 
 class HistoryDock : public VBoxContainer {
 	GDCLASS(HistoryDock, VBoxContainer);

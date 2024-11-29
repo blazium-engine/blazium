@@ -34,6 +34,8 @@
 #include "editor/plugins/editor_debugger_plugin.h"
 #include "editor/plugins/editor_plugin.h"
 
+class Button;
+
 class EditorNetworkProfiler;
 class MultiplayerEditorDebugger : public EditorDebuggerPlugin {
 	GDCLASS(MultiplayerEditorDebugger, EditorDebuggerPlugin);

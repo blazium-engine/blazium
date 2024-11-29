@@ -36,8 +36,8 @@
 #include "editor/editor_properties.h"
 #include "scene/2d/tile_map.h"
 #include "scene/gui/box_container.h"
-#include "scene/gui/panel_container.h"
 
+class ButtonGroup;
 class Label;
 class MenuButton;
 class SpinBox;

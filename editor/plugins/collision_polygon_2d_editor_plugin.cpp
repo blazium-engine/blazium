@@ -30,6 +30,8 @@
 
 #include "collision_polygon_2d_editor_plugin.h"
 
+#include "scene/2d/physics/collision_polygon_2d.h"
+
 Node2D *CollisionPolygon2DEditor::_get_node() const {
 	return node;
 }

@@ -31,10 +31,10 @@
 #ifndef VIEW_PANNER_H
 #define VIEW_PANNER_H
 
+#include "core/input/shortcut.h"
 #include "core/object/ref_counted.h"
 
 class InputEvent;
-class Shortcut;
 
 class ViewPanner : public RefCounted {
 	GDCLASS(ViewPanner, RefCounted);

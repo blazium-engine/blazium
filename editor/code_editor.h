@@ -31,16 +31,18 @@
 #ifndef CODE_EDITOR_H
 #define CODE_EDITOR_H
 
+#include "core/object/script_language.h"
 #include "scene/gui/box_container.h"
-#include "scene/gui/button.h"
-#include "scene/gui/check_box.h"
-#include "scene/gui/code_edit.h"
 #include "scene/gui/dialogs.h"
-#include "scene/gui/label.h"
-#include "scene/gui/line_edit.h"
-#include "scene/main/timer.h"
 
+class Button;
+class CheckBox;
+class CodeEdit;
+class Label;
+class LineEdit;
 class MenuButton;
+class TextureButton;
+class Timer;
 
 class GotoLineDialog : public ConfirmationDialog {
 	GDCLASS(GotoLineDialog, ConfirmationDialog);

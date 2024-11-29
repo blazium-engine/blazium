@@ -34,6 +34,7 @@
 #include "core/os/keyboard.h"
 #include "core/string/string_builder.h"
 #include "core/string/ustring.h"
+#include "scene/resources/text_line.h"
 #include "scene/theme/theme_db.h"
 
 void CodeEdit::_notification(int p_what) {

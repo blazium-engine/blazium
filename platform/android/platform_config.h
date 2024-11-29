@@ -28,5 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
+#ifdef HAVE_ALLOCA_H
 #include <alloca.h>
+#endif
 #include <malloc.h>

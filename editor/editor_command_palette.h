@@ -34,7 +34,8 @@
 #include "core/input/shortcut.h"
 #include "core/os/thread_safe.h"
 #include "scene/gui/dialogs.h"
-#include "scene/gui/tree.h"
+
+class Tree;
 
 class EditorCommandPalette : public ConfirmationDialog {
 	GDCLASS(EditorCommandPalette, ConfirmationDialog);

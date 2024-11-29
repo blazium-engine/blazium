@@ -58,7 +58,10 @@
 #include "scene/gui/item_list.h"
 #include "scene/gui/label.h"
 #include "scene/gui/line_edit.h"
+#include "scene/gui/menu_button.h"
+#include "scene/gui/popup_menu.h"
 #include "scene/gui/progress_bar.h"
+#include "scene/gui/scroll_bar.h"
 #include "scene/resources/packed_scene.h"
 #include "servers/display_server.h"
 

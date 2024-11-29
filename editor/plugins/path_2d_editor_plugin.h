@@ -32,12 +32,12 @@
 #define PATH_2D_EDITOR_PLUGIN_H
 
 #include "editor/plugins/editor_plugin.h"
-#include "scene/2d/path_2d.h"
 #include "scene/gui/box_container.h"
 
 class CanvasItemEditor;
 class ConfirmationDialog;
 class MenuButton;
+class Path2D;
 
 class Path2DEditor : public HBoxContainer {
 	GDCLASS(Path2DEditor, HBoxContainer);

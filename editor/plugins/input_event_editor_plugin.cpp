@@ -32,6 +32,8 @@
 
 #include "editor/event_listener_line_edit.h"
 #include "editor/input_event_configuration_dialog.h"
+#include "scene/gui/button.h"
+#include "scene/gui/label.h"
 
 void InputEventConfigContainer::_bind_methods() {
 }

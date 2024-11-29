@@ -32,7 +32,8 @@
 #define FOLDABLE_CONTAINER_H
 
 #include "scene/gui/container.h"
-#include "scene/resources/text_line.h"
+
+class TextLine;
 
 class FoldableContainer : public Container {
 	GDCLASS(FoldableContainer, Container);

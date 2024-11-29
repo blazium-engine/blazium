@@ -33,12 +33,12 @@
 
 #include "editor/editor_properties.h"
 #include "scene/gui/dialogs.h"
-#include "scene/gui/item_list.h"
-#include "scene/gui/texture_rect.h"
 #include "scene/resources/2d/tile_set.h"
 
 class EditorFileDialog;
 class EditorPropertyVector2i;
+class ItemList;
+class TextureRect;
 
 class AtlasMergingDialog : public ConfirmationDialog {
 	GDCLASS(AtlasMergingDialog, ConfirmationDialog);

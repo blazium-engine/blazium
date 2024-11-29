@@ -37,6 +37,7 @@
 #include "scene/gui/split_container.h"
 #include "scene/resources/2d/tile_set.h"
 
+class ButtonGroup;
 class Popup;
 class TileSet;
 class Tree;

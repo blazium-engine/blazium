@@ -32,9 +32,9 @@
 #define CAST_2D_EDITOR_PLUGIN_H
 
 #include "editor/plugins/editor_plugin.h"
-#include "scene/2d/node_2d.h"
 
 class CanvasItemEditor;
+class Node2D;
 
 class Cast2DEditor : public Control {
 	GDCLASS(Cast2DEditor, Control);

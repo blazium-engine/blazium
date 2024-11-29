@@ -32,9 +32,11 @@
 #define EDITOR_RUN_NATIVE_H
 
 #include "scene/gui/box_container.h"
-#include "scene/gui/dialogs.h"
-#include "scene/gui/menu_button.h"
-#include "scene/gui/rich_text_label.h"
+
+class AcceptDialog;
+class ConfirmationDialog;
+class MenuButton;
+class RichTextLabel;
 
 class EditorRunNative : public HBoxContainer {
 	GDCLASS(EditorRunNative, HBoxContainer);

@@ -36,10 +36,9 @@
 #include "editor/plugins/node_3d_editor_gizmos.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/box_container.h"
-#include "scene/gui/button.h"
-#include "scene/gui/spin_box.h"
 
 class AcceptDialog;
+class Button;
 class CheckBox;
 class ColorPickerButton;
 class ConfirmationDialog;
@@ -54,7 +53,9 @@ class Node3DEditor;
 class Node3DEditorViewport;
 class OptionButton;
 class PanelContainer;
+class Popup;
 class ProceduralSkyMaterial;
+class SpinBox;
 class SubViewport;
 class SubViewportContainer;
 class VSeparator;
@@ -851,16 +852,16 @@ public:
 
 	Vector3 snap_point(Vector3 p_target, Vector3 p_start = Vector3(0, 0, 0)) const;
 
-	float get_znear() const { return settings_znear->get_value(); }
-	float get_zfar() const { return settings_zfar->get_value(); }
-	float get_fov() const { return settings_fov->get_value(); }
+	float get_znear() const;
+	float get_zfar() const;
+	float get_fov() const;
 
 	Transform3D get_gizmo_transform() const { return gizmo.transform; }
 	bool is_gizmo_visible() const;
 
 	ToolMode get_tool_mode() const { return tool_mode; }
-	bool are_local_coords_enabled() const { return tool_option_button[Node3DEditor::TOOL_OPT_LOCAL_COORDS]->is_pressed(); }
-	void set_local_coords_enabled(bool on) const { tool_option_button[Node3DEditor::TOOL_OPT_LOCAL_COORDS]->set_pressed(on); }
+	bool are_local_coords_enabled() const;
+	void set_local_coords_enabled(bool p_toggled_on) const;
 	bool is_snap_enabled() const { return snap_enabled ^ snap_key_enabled; }
 	real_t get_translate_snap() const;
 	real_t get_rotate_snap() const;

@@ -35,8 +35,10 @@
 #include "editor/code_editor.h"
 #include "editor/editor_help.h"
 #include "editor/plugins/editor_plugin.h"
-#include "scene/gui/option_button.h"
-#include "scene/gui/tree.h"
+
+class OptionButton;
+class Tree;
+class TreeItem;
 
 class EditorHelpSearch : public ConfirmationDialog {
 	GDCLASS(EditorHelpSearch, ConfirmationDialog);

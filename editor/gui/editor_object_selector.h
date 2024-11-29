@@ -31,13 +31,12 @@
 #ifndef EDITOR_OBJECT_SELECTOR_H
 #define EDITOR_OBJECT_SELECTOR_H
 
-#include "scene/gui/box_container.h"
 #include "scene/gui/button.h"
-#include "scene/gui/label.h"
-#include "scene/gui/popup_menu.h"
-#include "scene/gui/texture_rect.h"
 
 class EditorSelectionHistory;
+class Label;
+class PopupMenu;
+class TextureRect;
 
 class EditorObjectSelector : public Button {
 	GDCLASS(EditorObjectSelector, Button);

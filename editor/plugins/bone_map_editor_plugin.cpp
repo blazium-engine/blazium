@@ -38,8 +38,12 @@
 #include "editor/themes/editor_scale.h"
 #include "editor/themes/editor_theme_manager.h"
 #include "scene/gui/aspect_ratio_container.h"
+#include "scene/gui/button.h"
+#include "scene/gui/color_rect.h"
 #include "scene/gui/separator.h"
 #include "scene/gui/texture_rect.h"
+#include "scene/gui/tree.h"
+#include "scene/resources/bone_map.h"
 
 void BoneMapperButton::fetch_textures() {
 	if (selected) {

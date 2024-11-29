@@ -33,15 +33,14 @@
 
 #include "editor/editor_inspector.h"
 #include "editor/plugins/editor_plugin.h"
-#include "scene/3d/camera_3d.h"
-#include "scene/3d/light_3d.h"
-#include "scene/3d/mesh_instance_3d.h"
 #include "scene/gui/subviewport_container.h"
-#include "scene/resources/camera_attributes.h"
-#include "scene/resources/material.h"
 
-class SubViewport;
 class Button;
+class Camera3D;
+class CameraAttributesPractical;
+class DirectionalLight3D;
+class SubViewport;
+class MeshInstance3D;
 
 class MeshEditor : public SubViewportContainer {
 	GDCLASS(MeshEditor, SubViewportContainer);

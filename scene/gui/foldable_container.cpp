@@ -30,6 +30,7 @@
 
 #include "foldable_container.h"
 
+#include "scene/resources/text_line.h"
 #include "scene/theme/theme_db.h"
 
 Size2 FoldableContainer::get_minimum_size() const {

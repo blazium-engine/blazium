@@ -44,9 +44,12 @@
 #include "editor/scene_tree_dock.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/button.h"
+#include "scene/gui/label.h"
+#include "scene/gui/popup_menu.h"
 #include "scene/gui/texture_rect.h"
 #include "scene/resources/gradient_texture.h"
 #include "scene/resources/image_texture.h"
+#include "servers/audio/audio_stream.h"
 
 void EditorResourcePicker::_update_resource() {
 	String resource_path;

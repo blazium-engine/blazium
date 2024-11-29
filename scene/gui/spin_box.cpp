@@ -32,6 +32,9 @@
 
 #include "core/input/input.h"
 #include "core/math/expression.h"
+#include "scene/gui/line_edit.h"
+#include "scene/main/timer.h"
+#include "scene/main/viewport.h"
 #include "scene/theme/theme_db.h"
 
 Size2 SpinBox::get_minimum_size() const {

@@ -33,6 +33,7 @@
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/label.h"
 #include "scene/gui/texture_rect.h"
+#include "scene/resources/bit_map.h"
 #include "scene/resources/image_texture.h"
 
 void BitMapEditor::setup(const Ref<BitMap> &p_bitmap) {

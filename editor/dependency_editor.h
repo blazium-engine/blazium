@@ -32,9 +32,11 @@
 #define DEPENDENCY_EDITOR_H
 
 #include "scene/gui/dialogs.h"
-#include "scene/gui/item_list.h"
-#include "scene/gui/tab_container.h"
-#include "scene/gui/tree.h"
+
+class ItemList;
+class PopupMenu;
+class Tree;
+class TreeItem;
 
 class EditorFileDialog;
 class EditorFileSystemDirectory;

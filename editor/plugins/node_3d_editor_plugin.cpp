@@ -76,7 +76,6 @@
 #include "editor/plugins/gizmos/vehicle_body_3d_gizmo_plugin.h"
 #include "editor/plugins/gizmos/visible_on_screen_notifier_3d_gizmo_plugin.h"
 #include "editor/plugins/gizmos/voxel_gi_gizmo_plugin.h"
-#include "editor/plugins/node_3d_editor_gizmos.h"
 #include "editor/scene_tree_dock.h"
 #include "scene/3d/audio_stream_player_3d.h"
 #include "scene/3d/camera_3d.h"
@@ -89,8 +88,17 @@
 #include "scene/3d/visual_instance_3d.h"
 #include "scene/3d/world_environment.h"
 #include "scene/gui/center_container.h"
+#include "scene/gui/check_box.h"
 #include "scene/gui/color_picker.h"
 #include "scene/gui/flow_container.h"
+#include "scene/gui/label.h"
+#include "scene/gui/line_edit.h"
+#include "scene/gui/menu_button.h"
+#include "scene/gui/option_button.h"
+#include "scene/gui/panel_container.h"
+#include "scene/gui/popup_menu.h"
+#include "scene/gui/separator.h"
+#include "scene/gui/spin_box.h"
 #include "scene/gui/split_container.h"
 #include "scene/gui/subviewport_container.h"
 #include "scene/resources/3d/sky_material.h"
@@ -6078,6 +6086,26 @@ void Node3DEditor::_generate_selection_boxes() {
 	mat_xray->set_transparency(StandardMaterial3D::TRANSPARENCY_ALPHA);
 	st_xray->set_material(mat_xray);
 	selection_box_xray = st_xray->commit();
+}
+
+float Node3DEditor::get_znear() const {
+	return settings_znear->get_value();
+}
+
+float Node3DEditor::get_zfar() const {
+	return settings_zfar->get_value();
+}
+
+float Node3DEditor::get_fov() const {
+	return settings_fov->get_value();
+}
+
+bool Node3DEditor::are_local_coords_enabled() const {
+	return tool_option_button[Node3DEditor::TOOL_OPT_LOCAL_COORDS]->is_pressed();
+}
+
+void Node3DEditor::set_local_coords_enabled(bool p_toggled_on) const {
+	tool_option_button[Node3DEditor::TOOL_OPT_LOCAL_COORDS]->set_pressed(p_toggled_on);
 }
 
 Dictionary Node3DEditor::get_state() const {

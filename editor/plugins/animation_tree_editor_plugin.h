@@ -32,9 +32,10 @@
 #define ANIMATION_TREE_EDITOR_PLUGIN_H
 
 #include "editor/plugins/editor_plugin.h"
-#include "scene/animation/animation_tree.h"
-#include "scene/gui/graph_edit.h"
+#include "scene/gui/box_container.h"
 
+class AnimationTree;
+class AnimationNode;
 class Button;
 class EditorFileDialog;
 class ScrollContainer;

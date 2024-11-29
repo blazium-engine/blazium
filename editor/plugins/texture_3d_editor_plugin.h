@@ -33,9 +33,10 @@
 
 #include "editor/editor_inspector.h"
 #include "editor/plugins/editor_plugin.h"
-#include "scene/gui/spin_box.h"
-#include "scene/resources/shader.h"
-#include "scene/resources/texture.h"
+
+class SpinBox;
+class Shader;
+class ShaderMaterial;
 
 class Texture3DEditor : public Control {
 	GDCLASS(Texture3DEditor, Control);

@@ -32,14 +32,14 @@
 #define GPU_PARTICLES_3D_EDITOR_PLUGIN_H
 
 #include "editor/plugins/editor_plugin.h"
-#include "scene/3d/gpu_particles_3d.h"
-#include "scene/gui/spin_box.h"
 
 class ConfirmationDialog;
+class GPUParticles3D;
 class HBoxContainer;
 class MenuButton;
 class OptionButton;
 class SceneTreeDialog;
+class SpinBox;
 
 class GPUParticles3DEditorBase : public Control {
 	GDCLASS(GPUParticles3DEditorBase, Control);

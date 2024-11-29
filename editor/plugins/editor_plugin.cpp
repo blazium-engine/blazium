@@ -54,6 +54,7 @@
 #include "editor/scene_tree_dock.h"
 #include "scene/3d/camera_3d.h"
 #include "scene/gui/popup_menu.h"
+#include "scene/gui/tab_container.h"
 #include "scene/resources/image_texture.h"
 #include "servers/rendering_server.h"
 

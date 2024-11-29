@@ -34,14 +34,10 @@
 #include "core/os/thread.h"
 #include "scene/gui/box_container.h"
 #include "scene/gui/button.h"
-#include "scene/gui/label.h"
-#include "scene/gui/line_edit.h"
-#include "scene/gui/panel_container.h"
-#include "scene/gui/rich_text_label.h"
-#include "scene/gui/texture_button.h"
-#include "scene/gui/texture_rect.h"
 
 class UndoRedo;
+class LineEdit;
+class RichTextLabel;
 
 class EditorLog : public HBoxContainer {
 	GDCLASS(EditorLog, HBoxContainer);

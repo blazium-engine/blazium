@@ -32,11 +32,10 @@
 #define LIGHTMAP_GI_EDITOR_PLUGIN_H
 
 #include "editor/plugins/editor_plugin.h"
-#include "scene/3d/lightmap_gi.h"
-#include "scene/resources/material.h"
 
 struct EditorProgress;
 class EditorFileDialog;
+class LightmapGI;
 
 class LightmapGIEditorPlugin : public EditorPlugin {
 	GDCLASS(LightmapGIEditorPlugin, EditorPlugin);

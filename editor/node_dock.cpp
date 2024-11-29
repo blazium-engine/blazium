@@ -33,6 +33,8 @@
 #include "editor/connections_dialog.h"
 #include "editor/editor_node.h"
 #include "editor/themes/editor_scale.h"
+#include "scene/gui/button.h"
+#include "scene/gui/label.h"
 
 void NodeDock::show_groups() {
 	groups_button->set_pressed(true);

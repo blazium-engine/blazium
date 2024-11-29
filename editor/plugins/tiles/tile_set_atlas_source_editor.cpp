@@ -32,6 +32,8 @@
 
 #include "tiles_editor_plugin.h"
 
+#include "core/math/geometry_2d.h"
+#include "core/os/keyboard.h"
 #include "editor/editor_inspector.h"
 #include "editor/editor_node.h"
 #include "editor/editor_settings.h"
@@ -41,18 +43,15 @@
 #include "editor/plugins/tiles/tile_set_editor.h"
 #include "editor/progress_dialog.h"
 #include "editor/themes/editor_scale.h"
-
 #include "scene/gui/box_container.h"
-#include "scene/gui/button.h"
-#include "scene/gui/control.h"
 #include "scene/gui/item_list.h"
+#include "scene/gui/label.h"
+#include "scene/gui/menu_button.h"
+#include "scene/gui/popup_menu.h"
 #include "scene/gui/separator.h"
-#include "scene/gui/split_container.h"
 #include "scene/gui/tab_container.h"
-
-#include "core/math/geometry_2d.h"
-#include "core/os/keyboard.h"
-
+#include "scene/gui/texture_rect.h"
+#include "scene/gui/tree.h"
 #include "servers/navigation_server_2d.h"
 
 void TileSetAtlasSourceEditor::TileSetAtlasSourceProxyObject::set_id(int p_id) {

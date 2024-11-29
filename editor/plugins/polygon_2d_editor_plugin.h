@@ -41,6 +41,7 @@ class HSlider;
 class Label;
 class MenuButton;
 class Panel;
+class Polygon2D;
 class ScrollContainer;
 class SpinBox;
 class TextureRect;

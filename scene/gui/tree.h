@@ -32,14 +32,17 @@
 #define TREE_H
 
 #include "scene/gui/control.h"
-#include "scene/gui/line_edit.h"
-#include "scene/gui/popup_menu.h"
-#include "scene/gui/scroll_bar.h"
-#include "scene/gui/slider.h"
 #include "scene/resources/text_paragraph.h"
 
+class HScrollBar;
+class HSlider;
+class LineEdit;
+class Popup;
+class PopupMenu;
 class TextEdit;
 class Tree;
+class Timer;
+class VScrollBar;
 
 class TreeItem : public Object {
 	GDCLASS(TreeItem, Object);

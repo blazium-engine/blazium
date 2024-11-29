@@ -32,9 +32,9 @@
 #define ABSTRACT_POLYGON_2D_EDITOR_H
 
 #include "editor/plugins/editor_plugin.h"
-#include "scene/2d/polygon_2d.h"
 #include "scene/gui/box_container.h"
 
+class Node2D;
 class Button;
 class CanvasItemEditor;
 class ConfirmationDialog;

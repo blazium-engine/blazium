@@ -31,9 +31,10 @@
 #ifndef SPIN_BOX_H
 #define SPIN_BOX_H
 
-#include "scene/gui/line_edit.h"
 #include "scene/gui/range.h"
-#include "scene/main/timer.h"
+
+class LineEdit;
+class Timer;
 
 class SpinBox : public Range {
 	GDCLASS(SpinBox, Range);

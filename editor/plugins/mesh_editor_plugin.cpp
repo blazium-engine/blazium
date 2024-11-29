@@ -32,8 +32,12 @@
 
 #include "core/config/project_settings.h"
 #include "editor/themes/editor_scale.h"
+#include "scene/3d/camera_3d.h"
+#include "scene/3d/light_3d.h"
+#include "scene/3d/mesh_instance_3d.h"
 #include "scene/gui/button.h"
 #include "scene/main/viewport.h"
+#include "scene/resources/camera_attributes.h"
 
 void MeshEditor::gui_input(const Ref<InputEvent> &p_event) {
 	ERR_FAIL_COND(p_event.is_null());

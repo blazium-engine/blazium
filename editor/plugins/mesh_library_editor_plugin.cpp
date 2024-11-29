@@ -43,6 +43,7 @@
 #include "scene/3d/physics/physics_body_3d.h"
 #include "scene/3d/physics/static_body_3d.h"
 #include "scene/gui/menu_button.h"
+#include "scene/gui/popup_menu.h"
 #include "scene/main/window.h"
 #include "scene/resources/packed_scene.h"
 

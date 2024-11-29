@@ -32,8 +32,9 @@
 #define TAB_CONTAINER_H
 
 #include "scene/gui/container.h"
-#include "scene/gui/popup.h"
 #include "scene/gui/tab_bar.h"
+
+class Popup;
 
 class TabContainer : public Container {
 	GDCLASS(TabContainer, Container);

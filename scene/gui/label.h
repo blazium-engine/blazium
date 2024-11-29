@@ -32,7 +32,8 @@
 #define LABEL_H
 
 #include "scene/gui/control.h"
-#include "scene/resources/label_settings.h"
+
+class LabelSettings;
 
 class Label : public Control {
 	GDCLASS(Label, Control);

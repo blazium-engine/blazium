@@ -31,7 +31,7 @@
 #ifndef MENU_BAR_H
 #define MENU_BAR_H
 
-#include "scene/gui/button.h"
+#include "scene/gui/control.h"
 #include "scene/gui/popup_menu.h"
 
 class MenuBar : public Control {

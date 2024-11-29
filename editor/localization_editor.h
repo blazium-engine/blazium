@@ -32,11 +32,12 @@
 #define LOCALIZATION_EDITOR_H
 
 #include "editor/editor_locale_dialog.h"
-#include "scene/gui/check_box.h"
-#include "scene/gui/tree.h"
+#include "scene/gui/box_container.h"
 
+class CheckBox;
 class EditorFileDialog;
 class FileSystemDock;
+class Tree;
 
 class LocalizationEditor : public VBoxContainer {
 	GDCLASS(LocalizationEditor, VBoxContainer);

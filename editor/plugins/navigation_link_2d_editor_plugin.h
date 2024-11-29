@@ -32,9 +32,9 @@
 #define NAVIGATION_LINK_2D_EDITOR_PLUGIN_H
 
 #include "editor/plugins/editor_plugin.h"
-#include "scene/2d/navigation_link_2d.h"
 
 class CanvasItemEditor;
+class NavigationLink2D;
 
 class NavigationLink2DEditor : public Control {
 	GDCLASS(NavigationLink2DEditor, Control);

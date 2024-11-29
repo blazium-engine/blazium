@@ -32,10 +32,10 @@
 #define SKELETON_2D_EDITOR_PLUGIN_H
 
 #include "editor/plugins/editor_plugin.h"
-#include "scene/2d/skeleton_2d.h"
 
 class AcceptDialog;
 class MenuButton;
+class Skeleton2D;
 
 class Skeleton2DEditor : public Control {
 	GDCLASS(Skeleton2DEditor, Control);

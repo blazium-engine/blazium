@@ -32,12 +32,12 @@
 #define MESH_INSTANCE_3D_EDITOR_PLUGIN_H
 
 #include "editor/plugins/editor_plugin.h"
-#include "scene/3d/mesh_instance_3d.h"
-#include "scene/gui/option_button.h"
 
 class AcceptDialog;
 class ConfirmationDialog;
 class MenuButton;
+class MeshInstance3D;
+class OptionButton;
 class SpinBox;
 
 class MeshInstance3DEditor : public Control {

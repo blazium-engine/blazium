@@ -32,10 +32,13 @@
 #define POPUP_MENU_H
 
 #include "core/input/shortcut.h"
+#include "scene/gui/control.h"
 #include "scene/gui/popup.h"
-#include "scene/gui/scroll_container.h"
 #include "scene/property_list_helper.h"
 #include "scene/resources/text_line.h"
+
+class ScrollContainer;
+class Timer;
 
 class PopupMenu : public Popup {
 	GDCLASS(PopupMenu, Popup);

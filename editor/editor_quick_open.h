@@ -34,7 +34,8 @@
 #include "core/templates/oa_hash_map.h"
 #include "editor/editor_file_system.h"
 #include "scene/gui/dialogs.h"
-#include "scene/gui/tree.h"
+
+class Tree;
 
 class EditorQuickOpen : public ConfirmationDialog {
 	GDCLASS(EditorQuickOpen, ConfirmationDialog);

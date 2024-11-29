@@ -35,6 +35,8 @@
 #include "core/os/keyboard.h"
 #include "editor/editor_settings.h"
 #include "editor/themes/editor_scale.h"
+#include "scene/gui/line_edit.h"
+#include "scene/gui/texture_rect.h"
 
 bool EditorSpinSlider::is_text_field() const {
 	return true;

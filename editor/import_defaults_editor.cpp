@@ -38,7 +38,10 @@
 #include "editor/localization_editor.h"
 #include "editor/plugins/editor_plugin_settings.h"
 #include "editor/shader_globals_editor.h"
+#include "scene/gui/button.h"
 #include "scene/gui/center_container.h"
+#include "scene/gui/label.h"
+#include "scene/gui/option_button.h"
 
 class ImportDefaultsEditorSettings : public Object {
 	GDCLASS(ImportDefaultsEditorSettings, Object)

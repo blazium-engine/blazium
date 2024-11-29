@@ -32,22 +32,22 @@
 #define SPRITE_FRAMES_EDITOR_PLUGIN_H
 
 #include "editor/plugins/editor_plugin.h"
-#include "scene/2d/animated_sprite_2d.h"
-#include "scene/3d/sprite_3d.h"
-#include "scene/gui/button.h"
-#include "scene/gui/check_button.h"
-#include "scene/gui/dialogs.h"
-#include "scene/gui/item_list.h"
-#include "scene/gui/line_edit.h"
-#include "scene/gui/scroll_container.h"
-#include "scene/gui/spin_box.h"
 #include "scene/gui/split_container.h"
-#include "scene/gui/texture_rect.h"
-#include "scene/gui/tree.h"
-#include "scene/resources/image_texture.h"
 
-class OptionButton;
+class AcceptDialog;
+class Button;
+class ConfirmationDialog;
 class EditorFileDialog;
+class HBoxContainer;
+class ItemList;
+class LineEdit;
+class OptionButton;
+class ScrollContainer;
+class SpinBox;
+class SpriteFrames;
+class TextureRect;
+class Tree;
+class VBoxContainer;
 
 class ClipboardSpriteFrames : public Resource {
 	GDCLASS(ClipboardSpriteFrames, Resource);
@@ -94,7 +94,7 @@ class SpriteFramesEditor : public HSplitContainer {
 	Ref<Texture2D> autoplay_icon;
 	Ref<Texture2D> stop_icon;
 	Ref<Texture2D> pause_icon;
-	Ref<Texture2D> empty_icon = memnew(ImageTexture);
+	Ref<Texture2D> empty_icon;
 
 	HBoxContainer *playback_container = nullptr;
 	Button *stop = nullptr;

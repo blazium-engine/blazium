@@ -41,6 +41,7 @@ class EditorData;
 class EditorSelection;
 class EditorQuickOpen;
 class MenuButton;
+class PopupMenu;
 class ReparentDialog;
 class ShaderCreateDialog;
 class TextureRect;

@@ -31,16 +31,14 @@
 #ifndef PLUGIN_CONFIG_DIALOG_H
 #define PLUGIN_CONFIG_DIALOG_H
 
-#include "scene/gui/check_box.h"
 #include "scene/gui/dialogs.h"
-#include "scene/gui/line_edit.h"
-#include "scene/gui/option_button.h"
-#include "scene/gui/panel_container.h"
-#include "scene/gui/text_edit.h"
-#include "scene/gui/texture_rect.h"
 
+class CheckBox;
 class ConfigFile;
 class EditorValidationPanel;
+class LineEdit;
+class OptionButton;
+class TextEdit;
 
 class PluginConfigDialog : public ConfirmationDialog {
 	GDCLASS(PluginConfigDialog, ConfirmationDialog);

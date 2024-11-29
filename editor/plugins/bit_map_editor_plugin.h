@@ -33,8 +33,8 @@
 
 #include "editor/editor_inspector.h"
 #include "editor/plugins/editor_plugin.h"
-#include "scene/resources/bit_map.h"
 
+class BitMap;
 class TextureRect;
 
 class BitMapEditor : public VBoxContainer {

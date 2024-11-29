@@ -33,6 +33,7 @@
 #include "canvas_item_editor_plugin.h"
 #include "editor/editor_node.h"
 #include "editor/editor_undo_redo_manager.h"
+#include "scene/2d/node_2d.h"
 #include "scene/2d/physics/ray_cast_2d.h"
 #include "scene/2d/physics/shape_cast_2d.h"
 

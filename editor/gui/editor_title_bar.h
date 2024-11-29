@@ -32,7 +32,6 @@
 #define EDITOR_TITLE_BAR_H
 
 #include "scene/gui/box_container.h"
-#include "scene/main/window.h"
 
 class EditorTitleBar : public HBoxContainer {
 	GDCLASS(EditorTitleBar, HBoxContainer);

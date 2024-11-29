@@ -34,7 +34,11 @@
 #include "core/os/keyboard.h"
 #include "core/string/print_string.h"
 #include "core/string/translation.h"
+#include "scene/gui/box_container.h"
+#include "scene/gui/button.h"
+#include "scene/gui/label.h"
 #include "scene/gui/line_edit.h"
+#include "scene/gui/panel.h"
 #include "scene/theme/theme_db.h"
 
 // AcceptDialog

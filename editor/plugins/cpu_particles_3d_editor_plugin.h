@@ -32,7 +32,8 @@
 #define CPU_PARTICLES_3D_EDITOR_PLUGIN_H
 
 #include "editor/plugins/gpu_particles_3d_editor_plugin.h"
-#include "scene/3d/cpu_particles_3d.h"
+
+class CPUParticles3D;
 
 class CPUParticles3DEditor : public GPUParticles3DEditorBase {
 	GDCLASS(CPUParticles3DEditor, GPUParticles3DEditorBase);

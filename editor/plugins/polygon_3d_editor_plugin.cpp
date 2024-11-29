@@ -41,7 +41,10 @@
 #include "editor/plugins/canvas_item_editor_plugin.h"
 #include "editor/plugins/node_3d_editor_plugin.h"
 #include "scene/3d/camera_3d.h"
+#include "scene/3d/mesh_instance_3d.h"
+#include "scene/gui/button.h"
 #include "scene/gui/separator.h"
+#include "scene/resources/immediate_mesh.h"
 
 void Polygon3DEditor::_notification(int p_what) {
 	switch (p_what) {

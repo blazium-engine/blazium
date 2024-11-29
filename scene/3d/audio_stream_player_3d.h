@@ -32,12 +32,11 @@
 #define AUDIO_STREAM_PLAYER_3D_H
 
 #include "scene/3d/node_3d.h"
+#include "servers/audio/audio_stream.h"
 #include "servers/audio_server.h"
 
 class Area3D;
 struct AudioFrame;
-class AudioStream;
-class AudioStreamPlayback;
 class AudioStreamPlayerInternal;
 class Camera3D;
 class VelocityTracker3D;

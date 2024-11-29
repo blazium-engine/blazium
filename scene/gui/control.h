@@ -31,11 +31,8 @@
 #ifndef CONTROL_H
 #define CONTROL_H
 
-#include "core/math/transform_2d.h"
 #include "core/object/gdvirtual.gen.inc"
-#include "core/templates/rid.h"
 #include "scene/main/canvas_item.h"
-#include "scene/main/timer.h"
 #include "scene/resources/theme.h"
 
 class Viewport;

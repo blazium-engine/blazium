@@ -36,11 +36,13 @@
 class EditorExportPreset;
 class ExportTemplateVersion;
 class FileDialog;
+class HBoxContainer;
 class HTTPRequest;
 class MenuButton;
 class OptionButton;
 class ProgressBar;
 class Tree;
+class VBoxContainer;
 
 class ExportTemplateManager : public AcceptDialog {
 	GDCLASS(ExportTemplateManager, AcceptDialog);

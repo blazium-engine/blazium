@@ -31,15 +31,14 @@
 #ifndef DIALOGS_H
 #define DIALOGS_H
 
-#include "box_container.h"
-#include "scene/gui/button.h"
-#include "scene/gui/label.h"
-#include "scene/gui/panel.h"
-#include "scene/gui/popup.h"
-#include "scene/gui/texture_button.h"
 #include "scene/main/window.h"
 
+class Control;
+class Button;
+class HBoxContainer;
+class Label;
 class LineEdit;
+class Panel;
 
 class AcceptDialog : public Window {
 	GDCLASS(AcceptDialog, Window);

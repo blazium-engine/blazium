@@ -31,10 +31,11 @@
 #ifndef BASE_BUTTON_H
 #define BASE_BUTTON_H
 
-#include "core/input/shortcut.h"
 #include "scene/gui/control.h"
 
 class ButtonGroup;
+class Shortcut;
+class Timer;
 
 class BaseButton : public Control {
 	GDCLASS(BaseButton, Control);

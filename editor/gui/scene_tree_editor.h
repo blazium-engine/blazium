@@ -31,13 +31,16 @@
 #ifndef SCENE_TREE_EDITOR_H
 #define SCENE_TREE_EDITOR_H
 
-#include "scene/gui/check_button.h"
+#include "scene/gui/control.h"
 #include "scene/gui/dialogs.h"
-#include "scene/gui/tree.h"
 
+class CheckButton;
 class EditorSelection;
 class TextureRect;
 class Timer;
+class Tree;
+class TreeItem;
+class VBoxContainer;
 
 class SceneTreeEditor : public Control {
 	GDCLASS(SceneTreeEditor, Control);

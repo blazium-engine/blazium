@@ -34,17 +34,18 @@
 #include "editor/editor_inspector.h"
 #include "editor/plugins/editor_plugin.h"
 #include "editor/plugins/editor_resource_conversion_plugin.h"
-#include "scene/resources/3d/primitive_meshes.h"
-#include "scene/resources/material.h"
 
+class BoxMesh;
+class Button;
 class Camera3D;
 class ColorRect;
 class DirectionalLight3D;
 class HBoxContainer;
+class Material;
 class MeshInstance3D;
+class SphereMesh;
 class SubViewport;
 class SubViewportContainer;
-class Button;
 
 class MaterialEditor : public Control {
 	GDCLASS(MaterialEditor, Control);

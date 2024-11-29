@@ -32,11 +32,10 @@
 #define GPU_PARTICLES_COLLISION_SDF_EDITOR_PLUGIN_H
 
 #include "editor/plugins/editor_plugin.h"
-#include "scene/3d/gpu_particles_collision_3d.h"
-#include "scene/resources/material.h"
 
 struct EditorProgress;
 class EditorFileDialog;
+class GPUParticlesCollisionSDF3D;
 class HBoxContainer;
 
 class GPUParticlesCollisionSDF3DEditorPlugin : public EditorPlugin {

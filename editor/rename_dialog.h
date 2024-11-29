@@ -36,12 +36,12 @@
 
 #include "editor/gui/scene_tree_editor.h"
 #include "scene/gui/dialogs.h"
-#include "scene/gui/line_edit.h"
 
 class Button;
 class CheckBox;
 class CheckButton;
 class Label;
+class LineEdit;
 class OptionButton;
 class SpinBox;
 class TabContainer;

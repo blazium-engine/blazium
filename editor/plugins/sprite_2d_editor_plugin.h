@@ -32,15 +32,17 @@
 #define SPRITE_2D_EDITOR_PLUGIN_H
 
 #include "editor/plugins/editor_plugin.h"
-#include "scene/2d/sprite_2d.h"
-#include "scene/gui/spin_box.h"
 
 class AcceptDialog;
 class ConfirmationDialog;
 class EditorZoomWidget;
+class HScrollBar;
 class MenuButton;
 class Panel;
+class SpinBox;
+class Sprite2D;
 class ViewPanner;
+class VScrollBar;
 
 class Sprite2DEditor : public Control {
 	GDCLASS(Sprite2DEditor, Control);

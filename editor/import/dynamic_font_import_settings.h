@@ -35,17 +35,13 @@
 
 #include "core/templates/rb_set.h"
 #include "scene/gui/dialogs.h"
-#include "scene/gui/item_list.h"
-#include "scene/gui/option_button.h"
-#include "scene/gui/split_container.h"
-#include "scene/gui/subviewport_container.h"
-#include "scene/gui/tab_container.h"
-#include "scene/gui/text_edit.h"
-#include "scene/gui/tree.h"
-#include "scene/resources/font.h"
-#include "servers/text_server.h"
 
 class DynamicFontImportSettingsDialog;
+class FontFile;
+class TabContainer;
+class TextEdit;
+class Tree;
+class TreeItem;
 
 class DynamicFontImportSettingsData : public RefCounted {
 	GDCLASS(DynamicFontImportSettingsData, RefCounted)

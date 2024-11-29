@@ -32,6 +32,7 @@
 
 #include "core/os/keyboard.h"
 #include "core/string/print_string.h"
+#include "scene/gui/popup_menu.h"
 #include "scene/theme/theme_db.h"
 
 static const int NONE_SELECTED = -1;

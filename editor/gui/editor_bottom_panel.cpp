@@ -43,7 +43,9 @@
 #include "scene/gui/box_container.h"
 #include "scene/gui/button.h"
 #include "scene/gui/link_button.h"
+#include "scene/gui/scroll_bar.h"
 #include "scene/gui/scroll_container.h"
+#include "scene/gui/split_container.h"
 
 // The metadata key used to store and retrieve the version text to copy to the clipboard.
 static const String META_TEXT_TO_COPY = "text_to_copy";

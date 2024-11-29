@@ -37,7 +37,6 @@
 #include "scene/audio/audio_stream_player_internal.h"
 #include "scene/main/viewport.h"
 #include "scene/resources/world_2d.h"
-#include "servers/audio/audio_stream.h"
 #include "servers/audio_server.h"
 
 void AudioStreamPlayer2D::_notification(int p_what) {

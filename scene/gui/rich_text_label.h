@@ -33,12 +33,14 @@
 
 #include "core/object/worker_thread_pool.h"
 #include "core/templates/rid_owner.h"
-#include "scene/gui/popup_menu.h"
-#include "scene/gui/scroll_bar.h"
+#include "scene/gui/control.h"
+#include "scene/resources/text_line.h"
 #include "scene/resources/text_paragraph.h"
 
 class CharFXTransform;
+class PopupMenu;
 class RichTextEffect;
+class VScrollBar;
 
 class RichTextLabel : public Control {
 	GDCLASS(RichTextLabel, Control);

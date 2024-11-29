@@ -33,6 +33,7 @@
 
 #include "core/object/script_language.h"
 #include "editor/plugins/editor_plugin.h"
+#include "scene/gui/box_container.h"
 #include "scene/gui/dialogs.h"
 #include "scene/gui/panel_container.h"
 #include "scene/resources/syntax_highlighter.h"
@@ -47,6 +48,7 @@ class ItemList;
 class MenuButton;
 class TabContainer;
 class TextureRect;
+class Timer;
 class Tree;
 class VSplitContainer;
 class WindowWrapper;

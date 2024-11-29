@@ -42,6 +42,7 @@ class ItemList;
 class OptionButton;
 class PopupMenu;
 class TextureRect;
+class VBoxContainer;
 
 class EditorFileDialog : public ConfirmationDialog {
 	GDCLASS(EditorFileDialog, ConfirmationDialog);

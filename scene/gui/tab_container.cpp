@@ -30,6 +30,7 @@
 
 #include "tab_container.h"
 
+#include "scene/gui/popup.h"
 #include "scene/theme/theme_db.h"
 
 int TabContainer::_get_tab_height() const {

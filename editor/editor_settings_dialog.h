@@ -38,6 +38,7 @@ class PanelContainer;
 class SectionedInspector;
 class TabContainer;
 class TextureRect;
+class Timer;
 class Tree;
 class TreeItem;
 

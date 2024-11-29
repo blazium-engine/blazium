@@ -32,8 +32,9 @@
 #define OPTION_BUTTON_H
 
 #include "scene/gui/button.h"
-#include "scene/gui/popup_menu.h"
 #include "scene/property_list_helper.h"
+
+class PopupMenu;
 
 class OptionButton : public Button {
 	GDCLASS(OptionButton, Button);

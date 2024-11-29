@@ -41,6 +41,7 @@
 #include "scene/gui/margin_container.h"
 #include "scene/gui/option_button.h"
 #include "scene/gui/panel_container.h"
+#include "scene/gui/popup_menu.h"
 
 void QuickSettingsDialog::_fetch_setting_values() {
 #ifndef ANDROID_ENABLED
