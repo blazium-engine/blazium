@@ -28,7 +28,7 @@
 		</method>
 		<method name="join_lobby">
 			<return type="ViewLobbyResponse" />
-			<param index="0" name="lobby_id" type="String" />
+			<param index="0" name="lobby_id" type="String" default="&quot;&quot;" >
 			<param index="1" name="password" type="String" default="&quot;&quot;" />
 			<description>
 				Joint a lobby. If you are already in a lobby, you cannot join another one. You need to leave first.
@@ -124,10 +124,10 @@
 		<member name="connected" type="bool" setter="" getter="get_connected" default="false">
 			True if the client is connected, else false.
 		</member>
-		<member name="lobby" type="LobbyInfo" setter="" getter="get_lobby" default="">
+		<member name="lobby" type="LobbyInfo" setter="" getter="get_lobby">
 			The current lobby.
 		</member>
-		<member name="peer" type="LobbyPeer" setter="" getter="get_peer" default="">
+		<member name="peer" type="LobbyPeer" setter="" getter="get_peer">
 			The current peer.
 		</member>
 		<member name="peers" type="LobbyPeer[]" setter="" getter="get_peers" default="[]">
@@ -152,13 +152,15 @@
 			</description>
 		</signal>
 		<signal name="lobby_created">
-			<param index="0" name="lobby" type="String" />
++			<param index="0" name="lobby" type="LobbyInfo" />
++			<param index="1" name="peers" type="LobbyPeer[]" />
 			<description>
 				Signal generated after a lobby is created.
 			</description>
 		</signal>
 		<signal name="lobby_joined">
-			<param index="0" name="lobby" type="String" />
++			<param index="0" name="lobby" type="LobbyInfo" />
++			<param index="1" name="peers" type="LobbyPeer[]" />
 			<description>
 				Signal generated after you joint a lobby.
 			</description>
@@ -179,33 +181,32 @@
 			</description>
 		</signal>
 		<signal name="peer_joined">
-			<param index="0" name="peer_id" type="String" />
+			<param index="0" name="peer" type="LobbyPeer" />
 			<description>
 				Signal generated after a peer joins the lobby.
 			</description>
 		</signal>
 		<signal name="peer_left">
-			<param index="0" name="peer_id" type="String" />
+			<param index="0" name="peer" type="LobbyPeer" />
 			<param index="1" name="kicked" type="bool" />
 			<description>
 				Signal generated after a peer leaves the lobby.
 			</description>
 		</signal>
 		<signal name="peer_named">
-			<param index="0" name="peer_id" type="String" />
-			<param index="1" name="name" type="String" />
+			<param index="0" name="peer" type="LobbyPeer" />
 			<description>
 				Signal generated after a peer names himself.
 			</description>
 		</signal>
 		<signal name="peer_ready">
-			<param index="0" name="peer_id" type="String" />
+			<param index="0" name="peer" type="LobbyPeer" />
 			<description>
 				Signal generated after a peer is ready.
 			</description>
 		</signal>
 		<signal name="peer_unready">
-			<param index="0" name="peer_id" type="String" />
+			<param index="0" name="peer" type="LobbyPeer" />
 			<description>
 				Signal generated after a peer is unready.
 			</description>
