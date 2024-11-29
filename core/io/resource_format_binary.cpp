@@ -165,7 +165,7 @@ StringName ResourceLoaderBinary::_get_string() {
 		}
 		f->get_buffer((uint8_t *)&str_buf[0], len);
 		String s;
-		s.parse_utf8(&str_buf[0]);
+		s.parse_utf8(&str_buf[0], len);
 		return s;
 	}
 
@@ -908,7 +908,7 @@ static String get_ustring(Ref<FileAccess> f) {
 	str_buf.resize(len);
 	f->get_buffer((uint8_t *)&str_buf[0], len);
 	String s;
-	s.parse_utf8(&str_buf[0]);
+	s.parse_utf8(&str_buf[0], len);
 	return s;
 }
 
@@ -922,7 +922,7 @@ String ResourceLoaderBinary::get_unicode_string() {
 	}
 	f->get_buffer((uint8_t *)&str_buf[0], len);
 	String s;
-	s.parse_utf8(&str_buf[0]);
+	s.parse_utf8(&str_buf[0], len);
 	return s;
 }
 
