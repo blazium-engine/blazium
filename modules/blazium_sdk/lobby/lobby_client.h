@@ -126,7 +126,7 @@ public:
 	void set_ready(bool p_ready) { this->ready = p_ready; }
 		void set_dict(const Dictionary &p_dict) {
 		this->set_id(p_dict.get("id", ""));
-		this->set_name(p_dict.get("name", ""));
+		this->set_peer_name(p_dict.get("name", ""));
 		this->set_ready(p_dict.get("ready", ""));
 	}
 	Dictionary get_dict() const {

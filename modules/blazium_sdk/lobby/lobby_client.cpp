@@ -77,7 +77,7 @@ void LobbyClient::_bind_methods() {
 
 	// Register signals
 	ADD_SIGNAL(MethodInfo("disconnected_from_lobby"));
-	ADD_SIGNAL(MethodInfo("peer_named", PropertyInfo(Variant::STRING, "peer_id"), PropertyInfo(Variant::STRING, "name")));
+	ADD_SIGNAL(MethodInfo("peer_named", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer")));
 	ADD_SIGNAL(MethodInfo("received_data", PropertyInfo(Variant::STRING, "data")));
 	ADD_SIGNAL(MethodInfo("received_data_to", PropertyInfo(Variant::STRING, "data")));
 	ADD_SIGNAL(MethodInfo("lobby_created", PropertyInfo(Variant::OBJECT, "lobby", PROPERTY_HINT_RESOURCE_TYPE, "LobbyInfo"), PropertyInfo(Variant::ARRAY, "peers", PROPERTY_HINT_ARRAY_TYPE, "LobbyPeer")));
@@ -85,10 +85,10 @@ void LobbyClient::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("lobby_left"));
 	ADD_SIGNAL(MethodInfo("lobby_sealed"));
 	ADD_SIGNAL(MethodInfo("lobby_unsealed"));
-	ADD_SIGNAL(MethodInfo("peer_joined", PropertyInfo(Variant::STRING, "peer_id"), PropertyInfo(Variant::STRING, "peer_name")));
-	ADD_SIGNAL(MethodInfo("peer_left", PropertyInfo(Variant::STRING, "peer_id"), PropertyInfo(Variant::BOOL, "kicked")));
-	ADD_SIGNAL(MethodInfo("peer_ready", PropertyInfo(Variant::STRING, "peer_id")));
-	ADD_SIGNAL(MethodInfo("peer_unready", PropertyInfo(Variant::STRING, "peer_id")));
+	ADD_SIGNAL(MethodInfo("peer_joined", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer")));
+	ADD_SIGNAL(MethodInfo("peer_left", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer"), PropertyInfo(Variant::BOOL, "kicked")));
+	ADD_SIGNAL(MethodInfo("peer_ready", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer")));
+	ADD_SIGNAL(MethodInfo("peer_unready", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer")));
 	ADD_SIGNAL(MethodInfo("append_log", PropertyInfo(Variant::STRING, "command"), PropertyInfo(Variant::STRING, "info"), PropertyInfo(Variant::STRING, "logs")));
 }
 
@@ -486,15 +486,48 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 	} else if (command == "lobby_view") {
 		// nothing for now
 	} else if (command == "peer_name") {
-		emit_signal("peer_named", data_dict.get("peer_id", ""), data_dict.get("name", ""));
+		for (int i = 0; i < peers.size(); ++i) {
+			Ref<LobbyPeer> updated_peer = peers[i];
+			if (updated_peer->get_id() == String(data_dict.get("peer_id", ""))) {
+				updated_peer->set_peer_name(data_dict.get("name", ""));
+				peers[i] = updated_peer;
+				emit_signal("peer_named", updated_peer);
+				break;
+			}
+		}
 	} else if (command == "peer_ready") {
-		emit_signal("peer_ready", data_dict.get("peer_id", ""));
+		for (int i = 0; i < peers.size(); ++i) {
+			Ref<LobbyPeer> updated_peer = peers[i];
+			if (updated_peer->get_id() == String(data_dict.get("peer_id", ""))) {
+				updated_peer->set_ready(true);
+				emit_signal("peer_ready", updated_peer);
+				break;
+			}
+		}
 	} else if (command == "peer_unready") {
-		emit_signal("peer_unready", data_dict.get("peer_id", ""));
+		for (int i = 0; i < peers.size(); ++i) {
+			Ref<LobbyPeer> updated_peer = peers[i];
+			if (updated_peer->get_id() == String(data_dict.get("peer_id", ""))) {
+				updated_peer->set_ready(false);
+				emit_signal("peer_unready", updated_peer);
+				break;
+			}
+		}
 	} else if (command == "peer_joined") {
-		emit_signal("peer_joined", data_dict.get("peer_id", ""), data_dict.get("peer_name", ""));
+		Ref<LobbyPeer> joining_peer = Ref<LobbyPeer>(memnew(LobbyPeer));
+		joining_peer->set_id(data_dict.get("peer_id", ""));
+		joining_peer->set_peer_name(data_dict.get("peer_name", ""));
+		peers.append(joining_peer);
+		emit_signal("peer_joined", joining_peer);
 	} else if (command == "peer_left") {
-		emit_signal("peer_left", data_dict.get("peer_id", ""), data_dict.get("kicked", false));
+		for (int i = 0; i < peers.size(); ++i) {
+			Ref<LobbyPeer> leaving_peer = peers[i];
+			if (leaving_peer->get_id() == String(data_dict.get("peer_id", ""))) {
+				peers.remove_at(i);
+				emit_signal("peer_left", leaving_peer, data_dict.get("kicked", false));
+				break;
+			}
+		}
 	} else if (command == "lobby_data") {
 		emit_signal("received_data", data_dict.get("peer_data", ""));
 	} else if (command == "data_to") {
