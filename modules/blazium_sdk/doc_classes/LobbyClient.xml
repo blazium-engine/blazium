@@ -23,7 +23,7 @@
 			<param index="2" name="password" type="String" default="&quot;&quot;" />
 			<description>
 				Create a lobby and become host. If you are already in a lobby, you cannot create one. You need to leave first.
-				Generates [member lobby_created] signal.
+				Generates [signal lobby_created] signal.
 			</description>
 		</method>
 		<method name="join_lobby">
@@ -32,7 +32,7 @@
 			<param index="1" name="password" type="String" default="&quot;&quot;" />
 			<description>
 				Joint a lobby. If you are already in a lobby, you cannot join another one. You need to leave first.
-				Generates [member lobby_joined].
+				Generates [signal lobby_joined].
 			</description>
 		</method>
 		<method name="kick_peer">
@@ -40,14 +40,14 @@
 			<param index="0" name="peer_id" type="String" />
 			<description>
 				Kick a peer. You need to be host to do so.
-				Generates [member peer_left] signal with kicked set to true.
+				Generates [signal peer_left] signal with kicked set to true.
 			</description>
 		</method>
 		<method name="leave_lobby">
 			<return type="LobbyResponse" />
 			<description>
 				Leave a lobby. You need to be in a lobby to leave one.
-				Generates [member lobby_left].
+				Generates [signal lobby_left].
 			</description>
 		</method>
 		<method name="list_lobby">
@@ -63,7 +63,7 @@
 			<param index="0" name="data" type="String" />
 			<description>
 				Send data either to the host, or if you are host send data to all peers.
-				Generates [member received_data] signal.
+				Generates [signal received_data] signal.
 			</description>
 		</method>
 		<method name="lobby_data_to">
@@ -72,28 +72,28 @@
 			<param index="1" name="target_peer" type="String" />
 			<description>
 				Send data either to a peer, works only if you are host.
-				Generates [member received_data_to] signal.
+				Generates [signal received_data_to] signal.
 			</description>
 		</method>
 		<method name="lobby_ready">
 			<return type="LobbyResponse" />
 			<description>
 				Ready up in the lobby. You need to be in a lobby and unready to run this.
-				Generates [member peer_ready].
+				Generates [signal peer_ready].
 			</description>
 		</method>
 		<method name="lobby_unready">
 			<return type="LobbyResponse" />
 			<description>
 				Ready up in the lobby. You need to be in a lobby and ready to run this.
-				Generates [member peer_unready].
+				Generates [signal peer_unready].
 			</description>
 		</method>
 		<method name="seal_lobby">
 			<return type="LobbyResponse" />
 			<description>
 				Seals the lobby. You need to be the host to do this and the lobby needs to be unsealed.
-				Generates [member lobby_sealed].
+				Generates [signal lobby_sealed].
 			</description>
 		</method>
 		<method name="set_peer_name">
@@ -101,14 +101,14 @@
 			<param index="0" name="peer_name" type="String" />
 			<description>
 				Set your peer name.
-				Generates [member peer_named] signal if you are in lobby.
+				Generates [signal peer_named] signal if you are in lobby.
 			</description>
 		</method>
 		<method name="unseal_lobby">
 			<return type="LobbyResponse" />
 			<description>
 				Unseals the lobby. You need to be the host to do this and the lobby needs to be sealed.
-				Generates [member lobby_unsealed].
+				Generates [signal lobby_unsealed].
 			</description>
 		</method>
 		<method name="view_lobby">
