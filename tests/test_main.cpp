@@ -371,6 +371,9 @@ struct GodotTestCaseListener : public doctest::IReporter {
 			// Instantiating the EditorSettings singleton sets the locale to the editor's language.
 			TranslationServer::get_singleton()->set_locale("en");
 		}
+		if (EditorPaths::get_singleton()) {
+			EditorPaths::free();
+		}
 #endif // TOOLS_ENABLED
 
 		Engine::get_singleton()->set_editor_hint(false);
