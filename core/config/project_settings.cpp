@@ -1028,7 +1028,9 @@ Error ProjectSettings::save_custom(const String &p_path, const CustomMap &p_cust
 		}
 	}
 	project_features = _trim_to_supported_features(project_features);
-	set_setting("application/config/features", project_features);
+	if (get_setting("application/config/features") != project_features) {
+		set_setting("application/config/features", project_features);
+	}
 #endif // TOOLS_ENABLED
 
 	RBSet<_VCSort> vclist;
