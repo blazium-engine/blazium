@@ -26,6 +26,12 @@
 				Generates [signal lobby_created] signal.
 			</description>
 		</method>
+		<method name="is_host">
+			<return type="bool" />
+			<description>
+				Returns true if you are the host.
+			</description>
+		</method>
 		<method name="join_lobby">
 			<return type="ViewLobbyResponse" />
 			<param index="0" name="lobby_id" type="String" />
@@ -60,7 +66,7 @@
 		</method>
 		<method name="lobby_data">
 			<return type="LobbyResponse" />
-			<param index="0" name="data" type="String" />
+			<param index="0" name="data" type="Variant" />
 			<description>
 				Send data either to the host, or if you are host send data to all peers.
 				Generates [signal received_data] signal.
@@ -68,7 +74,7 @@
 		</method>
 		<method name="lobby_data_to">
 			<return type="LobbyResponse" />
-			<param index="0" name="data" type="String" />
+			<param index="0" name="data" type="Variant" />
 			<param index="1" name="target_peer" type="String" />
 			<description>
 				Send data either to a peer, works only if you are host.
@@ -77,20 +83,15 @@
 		</method>
 		<method name="lobby_ready">
 			<return type="LobbyResponse" />
+			<param index="0" name="ready" type="bool" />
 			<description>
 				Ready up in the lobby. You need to be in a lobby and unready to run this.
 				Generates [signal peer_ready].
 			</description>
 		</method>
-		<method name="lobby_unready">
-			<return type="LobbyResponse" />
-			<description>
-				Ready up in the lobby. You need to be in a lobby and ready to run this.
-				Generates [signal peer_unready].
-			</description>
-		</method>
 		<method name="seal_lobby">
 			<return type="LobbyResponse" />
+			<param index="0" name="seal" type="bool" />
 			<description>
 				Seals the lobby. You need to be the host to do this and the lobby needs to be unsealed.
 				Generates [signal lobby_sealed].
@@ -102,13 +103,6 @@
 			<description>
 				Set your peer name.
 				Generates [signal peer_named] signal if you are in lobby.
-			</description>
-		</method>
-		<method name="unseal_lobby">
-			<return type="LobbyResponse" />
-			<description>
-				Unseals the lobby. You need to be the host to do this and the lobby needs to be sealed.
-				Generates [signal lobby_unsealed].
 			</description>
 		</method>
 		<method name="view_lobby">
@@ -125,13 +119,13 @@
 			True if the client is connected, else false.
 		</member>
 		<member name="lobby" type="LobbyInfo" setter="" getter="get_lobby">
-			The current lobby.
+			The current lobby. Reflects changes to the lobby.
 		</member>
 		<member name="peer" type="LobbyPeer" setter="" getter="get_peer">
-			The current peer.
+			The current peer. Reflects changes to the self peer.
 		</member>
 		<member name="peers" type="LobbyPeer[]" setter="" getter="get_peers" default="[]">
-			The lobby peers.
+			The lobby peers. Reflects changes to all peers.
 		</member>
 		<member name="server_url" type="String" setter="set_server_url" getter="get_server_url" default="&quot;wss://lobby.blazium.app/connect&quot;">
 			Set to what url this lobby should connect to.
@@ -171,13 +165,9 @@
 			</description>
 		</signal>
 		<signal name="lobby_sealed">
+			<param index="0" name="sealed" type="bool" />
 			<description>
 				Signal generated after the host seals the lobby.
-			</description>
-		</signal>
-		<signal name="lobby_unsealed">
-			<description>
-				Signal generated after the host unseals the lobby.
 			</description>
 		</signal>
 		<signal name="peer_joined">
@@ -201,24 +191,21 @@
 		</signal>
 		<signal name="peer_ready">
 			<param index="0" name="peer" type="LobbyPeer" />
+			<param index="1" name="ready" type="bool" />
 			<description>
 				Signal generated after a peer is ready.
 			</description>
 		</signal>
-		<signal name="peer_unready">
-			<param index="0" name="peer" type="LobbyPeer" />
-			<description>
-				Signal generated after a peer is unready.
-			</description>
-		</signal>
 		<signal name="received_data">
-			<param index="0" name="data" type="String" />
+			<param index="0" name="data" type="Object" />
+			<param index="1" name="from_peer" type="String" />
 			<description>
 				Signal generated after a lobby_data call.
 			</description>
 		</signal>
 		<signal name="received_data_to">
-			<param index="0" name="data" type="String" />
+			<param index="0" name="data" type="Object" />
+			<param index="1" name="from_peer" type="String" />
 			<description>
 				Signal generated after a data_to call.
 			</description>

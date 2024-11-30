@@ -294,6 +294,7 @@ protected:
 public:
 	void set_server_url(const String &p_server_url) { this->server_url = p_server_url; }
 	String get_server_url() { return server_url; }
+	bool is_host() { return lobby->get_host() == peer->get_id(); }
 	bool get_connected() { return connected; }
 	void set_lobby(const Ref<LobbyInfo> &p_lobby) { this->lobby = p_lobby; }
 	Ref<LobbyInfo> get_lobby() { return lobby; }
@@ -308,13 +309,11 @@ public:
 	Ref<ListLobbyResponse> list_lobby(int p_start, int p_count);
 	Ref<ViewLobbyResponse> view_lobby(const String &p_lobby_id, const String &p_password);
 	Ref<LobbyResponse> kick_peer(const String &p_peer_id);
-	Ref<LobbyResponse> lobby_ready();
-	Ref<LobbyResponse> lobby_unready();
+	Ref<LobbyResponse> lobby_ready(bool p_ready);
 	Ref<LobbyResponse> set_peer_name(const String &p_peer_name);
-	Ref<LobbyResponse> seal_lobby();
-	Ref<LobbyResponse> unseal_lobby();
-	Ref<LobbyResponse> lobby_data(const String &p_peer_data);
-	Ref<LobbyResponse> lobby_data_to(const String &p_peer_data, const String &p_target_peer);
+	Ref<LobbyResponse> seal_lobby(bool seal);
+	Ref<LobbyResponse> lobby_data(const Variant &p_peer_data);
+	Ref<LobbyResponse> lobby_data_to(const Variant &p_peer_data, const String &p_target_peer);
 
 	LobbyClient();
 	~LobbyClient();

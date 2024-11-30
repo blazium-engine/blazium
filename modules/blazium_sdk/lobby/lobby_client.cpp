@@ -45,6 +45,7 @@ LobbyClient::~LobbyClient() {
 void LobbyClient::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_server_url", "server_url"), &LobbyClient::set_server_url);
 	ClassDB::bind_method(D_METHOD("get_server_url"), &LobbyClient::get_server_url);
+	ClassDB::bind_method(D_METHOD("is_host"), &LobbyClient::is_host);
 	ClassDB::bind_method(D_METHOD("get_connected"), &LobbyClient::get_connected);
 	ClassDB::bind_method(D_METHOD("get_lobby"), &LobbyClient::get_lobby);
 	ClassDB::bind_method(D_METHOD("get_peer"), &LobbyClient::get_peer);
@@ -67,27 +68,23 @@ void LobbyClient::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("list_lobby", "start", "count"), &LobbyClient::list_lobby, DEFVAL(0), DEFVAL(10));
 	ClassDB::bind_method(D_METHOD("view_lobby", "lobby_id", "password"), &LobbyClient::view_lobby, DEFVAL(""), DEFVAL(""));
 	ClassDB::bind_method(D_METHOD("kick_peer", "peer_id"), &LobbyClient::kick_peer);
-	ClassDB::bind_method(D_METHOD("lobby_ready"), &LobbyClient::lobby_ready);
-	ClassDB::bind_method(D_METHOD("lobby_unready"), &LobbyClient::lobby_unready);
-	ClassDB::bind_method(D_METHOD("seal_lobby"), &LobbyClient::seal_lobby);
-	ClassDB::bind_method(D_METHOD("unseal_lobby"), &LobbyClient::unseal_lobby);
+	ClassDB::bind_method(D_METHOD("lobby_ready", "ready"), &LobbyClient::lobby_ready);
+	ClassDB::bind_method(D_METHOD("seal_lobby", "seal"), &LobbyClient::seal_lobby);
 	ClassDB::bind_method(D_METHOD("lobby_data", "data"), &LobbyClient::lobby_data);
 	ClassDB::bind_method(D_METHOD("lobby_data_to", "data", "target_peer"), &LobbyClient::lobby_data_to);
 
 	// Register signals
 	ADD_SIGNAL(MethodInfo("disconnected_from_lobby"));
 	ADD_SIGNAL(MethodInfo("peer_named", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer")));
-	ADD_SIGNAL(MethodInfo("received_data", PropertyInfo(Variant::STRING, "data")));
-	ADD_SIGNAL(MethodInfo("received_data_to", PropertyInfo(Variant::STRING, "data")));
+	ADD_SIGNAL(MethodInfo("received_data", PropertyInfo(Variant::OBJECT, "data"), PropertyInfo(Variant::STRING, "from_peer")));
+	ADD_SIGNAL(MethodInfo("received_data_to", PropertyInfo(Variant::OBJECT, "data"), PropertyInfo(Variant::STRING, "from_peer")));
 	ADD_SIGNAL(MethodInfo("lobby_created", PropertyInfo(Variant::OBJECT, "lobby", PROPERTY_HINT_RESOURCE_TYPE, "LobbyInfo"), PropertyInfo(Variant::ARRAY, "peers", PROPERTY_HINT_ARRAY_TYPE, "LobbyPeer")));
 	ADD_SIGNAL(MethodInfo("lobby_joined", PropertyInfo(Variant::OBJECT, "lobby", PROPERTY_HINT_RESOURCE_TYPE, "LobbyInfo"), PropertyInfo(Variant::ARRAY, "peers", PROPERTY_HINT_ARRAY_TYPE, "LobbyPeer")));
 	ADD_SIGNAL(MethodInfo("lobby_left"));
-	ADD_SIGNAL(MethodInfo("lobby_sealed"));
-	ADD_SIGNAL(MethodInfo("lobby_unsealed"));
+	ADD_SIGNAL(MethodInfo("lobby_sealed", PropertyInfo(Variant::BOOL, "sealed")));
 	ADD_SIGNAL(MethodInfo("peer_joined", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer")));
 	ADD_SIGNAL(MethodInfo("peer_left", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer"), PropertyInfo(Variant::BOOL, "kicked")));
-	ADD_SIGNAL(MethodInfo("peer_ready", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer")));
-	ADD_SIGNAL(MethodInfo("peer_unready", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer")));
+	ADD_SIGNAL(MethodInfo("peer_ready", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer"), PropertyInfo(Variant::BOOL, "ready")));
 	ADD_SIGNAL(MethodInfo("append_log", PropertyInfo(Variant::STRING, "command"), PropertyInfo(Variant::STRING, "info"), PropertyInfo(Variant::STRING, "logs")));
 }
 
@@ -230,27 +227,14 @@ Ref<LobbyClient::LobbyResponse> LobbyClient::kick_peer(const String &p_peer_id) 
 	return response;
 }
 
-Ref<LobbyClient::LobbyResponse> LobbyClient::lobby_ready() {
+Ref<LobbyClient::LobbyResponse> LobbyClient::lobby_ready(bool p_ready) {
 	String id = _increment_counter();
 	Dictionary command;
-	command["command"] = "lobby_ready";
-	Dictionary data_dict;
-	command["data"] = data_dict;
-	data_dict["id"] = id;
-	Array command_array;
-	Ref<LobbyResponse> response;
-	response.instantiate();
-	command_array.push_back(LOBBY_REQUEST);
-	command_array.push_back(response);
-	_commands[id] = command_array;
-	_send_data(command);
-	return response;
-}
-
-Ref<LobbyClient::LobbyResponse> LobbyClient::lobby_unready() {
-	String id = _increment_counter();
-	Dictionary command;
-	command["command"] = "lobby_unready";
+	if (p_ready) {
+		command["command"] = "lobby_ready";
+	} else {
+		command["command"] = "lobby_unready";
+	}
 	Dictionary data_dict;
 	command["data"] = data_dict;
 	data_dict["id"] = id;
@@ -282,10 +266,14 @@ Ref<LobbyClient::LobbyResponse> LobbyClient::set_peer_name(const String &p_peer_
 	return response;
 }
 
-Ref<LobbyClient::LobbyResponse> LobbyClient::seal_lobby() {
+Ref<LobbyClient::LobbyResponse> LobbyClient::seal_lobby(bool seal) {
 	String id = _increment_counter();
 	Dictionary command;
-	command["command"] = "seal_lobby";
+	if (seal) {
+		command["command"] = "seal_lobby";
+	} else {
+		command["command"] = "unseal_lobby";
+	}
 	Dictionary data_dict;
 	command["data"] = data_dict;
 	data_dict["id"] = id;
@@ -299,24 +287,7 @@ Ref<LobbyClient::LobbyResponse> LobbyClient::seal_lobby() {
 	return response;
 }
 
-Ref<LobbyClient::LobbyResponse> LobbyClient::unseal_lobby() {
-	String id = _increment_counter();
-	Dictionary command;
-	command["command"] = "unseal_lobby";
-	Dictionary data_dict;
-	command["data"] = data_dict;
-	data_dict["id"] = id;
-	Array command_array;
-	Ref<LobbyResponse> response;
-	response.instantiate();
-	command_array.push_back(LOBBY_REQUEST);
-	command_array.push_back(response);
-	_commands[id] = command_array;
-	_send_data(command);
-	return response;
-}
-
-Ref<LobbyClient::LobbyResponse> LobbyClient::lobby_data(const String &p_peer_data) {
+Ref<LobbyClient::LobbyResponse> LobbyClient::lobby_data(const Variant &p_peer_data) {
 	String id = _increment_counter();
 	Dictionary command;
 	command["command"] = "lobby_data";
@@ -334,7 +305,7 @@ Ref<LobbyClient::LobbyResponse> LobbyClient::lobby_data(const String &p_peer_dat
 	return response;
 }
 
-Ref<LobbyClient::LobbyResponse> LobbyClient::lobby_data_to(const String &p_peer_data, const String &p_target_peer) {
+Ref<LobbyClient::LobbyResponse> LobbyClient::lobby_data_to(const Variant &p_peer_data, const String &p_target_peer) {
 	String id = _increment_counter();
 	Dictionary command;
 	command["command"] = "data_to";
@@ -460,7 +431,8 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 		}
 	}
 	if (command == "peer_state") {
-		peer->set_id(data_dict.get("peer_id", ""));
+		Dictionary peer_dict = data_dict.get("peer", Dictionary());
+		peer->set_id(peer_dict.get("id", ""));
 	} else if (command == "lobby_created") {
 		lobby->set_dict(data_dict.get("lobby", Dictionary()));
 		update_peers(data_dict, peers);
@@ -478,10 +450,10 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 	} else if (command == "lobby_sealed") {
 		Dictionary lobby_dict = data_dict.get("lobby", Dictionary());
 		lobby->set_sealed(true);
-		emit_signal("lobby_sealed");
+		emit_signal("lobby_sealed", true);
 	} else if (command == "lobby_unsealed") {
 		lobby->set_sealed(false);
-		emit_signal("lobby_unsealed");
+		emit_signal("lobby_sealed", false);
 	} else if (command == "lobby_list") {
 		Array arr = data_dict.get("lobbies", Array());
 		TypedArray<Dictionary> lobbies_input = arr;
@@ -532,7 +504,7 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 			Ref<LobbyPeer> updated_peer = peers[i];
 			if (updated_peer->get_id() == String(peer_id)) {
 				updated_peer->set_ready(true);
-				emit_signal("peer_ready", updated_peer);
+				emit_signal("peer_ready", updated_peer, true);
 				break;
 			}
 		}
@@ -545,7 +517,7 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 			Ref<LobbyPeer> updated_peer = peers[i];
 			if (updated_peer->get_id() == String(data_dict.get("peer_id", ""))) {
 				updated_peer->set_ready(false);
-				emit_signal("peer_unready", updated_peer);
+				emit_signal("peer_ready", updated_peer, false);
 				break;
 			}
 		}
@@ -570,9 +542,9 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 		}
 		sort_peers_by_id(peers);
 	} else if (command == "lobby_data") {
-		emit_signal("received_data", data_dict.get("peer_data", ""));
+		emit_signal("received_data", data_dict.get("peer_data", Variant()), data_dict.get("from_peer", ""));
 	} else if (command == "data_to") {
-		emit_signal("received_data_to", data_dict.get("peer_data", ""));
+		emit_signal("received_data_to", data_dict.get("peer_data", Variant()), data_dict.get("from_peer", ""));
 	} else if (command == "lobby_data_sent") {
 		// nothing for now
 	} else if (command == "data_to_sent") {
