@@ -51,7 +51,6 @@ class RasterizerCanvasGLES3 : public RendererCanvasRender {
 	_FORCE_INLINE_ void _update_transform_2d_to_mat2x3(const Transform2D &p_transform, float *p_mat2x3);
 
 	_FORCE_INLINE_ void _update_transform_2d_to_mat4(const Transform2D &p_transform, float *p_mat4);
-	_FORCE_INLINE_ void _update_transform_to_mat4(const Transform3D &p_transform, float *p_mat4);
 
 	enum {
 
@@ -157,6 +156,13 @@ class RasterizerCanvasGLES3 : public RendererCanvasRender {
 	};
 
 	static_assert(sizeof(LightUniform) % 16 == 0, "2D light UBO size must be a multiple of 16 bytes");
+
+	const Projection projections[4] = {
+		Projection(Vector4(0, 0, -1, 0), Vector4(1, 0, 0, 0), Vector4(0, -1, 0, 0), Vector4(0, 0, 0, 1)),
+		Projection(Vector4(-1, 0, 0, 0), Vector4(0, 0, -1, 0), Vector4(0, -1, 0, 0), Vector4(0, 0, 0, 1)),
+		Projection(Vector4(0, 0, 1, 0), Vector4(-1, 0, 0, 0), Vector4(0, -1, 0, 0), Vector4(0, 0, 0, 1)),
+		Projection(Vector4(1, 0, 0, 0), Vector4(0, 0, 1, 0), Vector4(0, -1, 0, 0), Vector4(0, 0, 0, 1))
+	};
 
 public:
 	enum {

@@ -86,25 +86,6 @@ void RasterizerCanvasGLES3::_update_transform_2d_to_mat2x3(const Transform2D &p_
 	p_mat2x3[5] = p_transform.columns[2][1];
 }
 
-void RasterizerCanvasGLES3::_update_transform_to_mat4(const Transform3D &p_transform, float *p_mat4) {
-	p_mat4[0] = p_transform.basis.rows[0][0];
-	p_mat4[1] = p_transform.basis.rows[1][0];
-	p_mat4[2] = p_transform.basis.rows[2][0];
-	p_mat4[3] = 0;
-	p_mat4[4] = p_transform.basis.rows[0][1];
-	p_mat4[5] = p_transform.basis.rows[1][1];
-	p_mat4[6] = p_transform.basis.rows[2][1];
-	p_mat4[7] = 0;
-	p_mat4[8] = p_transform.basis.rows[0][2];
-	p_mat4[9] = p_transform.basis.rows[1][2];
-	p_mat4[10] = p_transform.basis.rows[2][2];
-	p_mat4[11] = 0;
-	p_mat4[12] = p_transform.origin.x;
-	p_mat4[13] = p_transform.origin.y;
-	p_mat4[14] = p_transform.origin.z;
-	p_mat4[15] = 1;
-}
-
 void RasterizerCanvasGLES3::canvas_render_items(RID p_to_render_target, Item *p_item_list, const Color &p_modulate, Light *p_light_list, Light *p_directional_light_list, const Transform2D &p_canvas_transform, RS::CanvasItemTextureFilter p_default_filter, RS::CanvasItemTextureRepeat p_default_repeat, bool p_snap_2d_vertices_to_pixel, bool &r_sdf_used, RenderingMethod::RenderInfo *r_render_info) {
 	GLES3::TextureStorage *texture_storage = GLES3::TextureStorage::get_singleton();
 	GLES3::MaterialStorage *material_storage = GLES3::MaterialStorage::get_singleton();
@@ -329,10 +310,10 @@ void RasterizerCanvasGLES3::canvas_render_items(RID p_to_render_target, Item *p_
 		// We're probably rendering directly to an XR device.
 		float y_scale = texture_storage->render_target_get_override_color(p_to_render_target).is_valid() ? -2.0f : 2.0f;
 
-		Transform3D screen_transform;
-		screen_transform.translate_local(-(ssize.width / 2.0f), -(ssize.height / 2.0f), 0.0f);
-		screen_transform.scale(Vector3(2.0f / ssize.width, y_scale / ssize.height, 1.0f));
-		_update_transform_to_mat4(screen_transform, state_buffer.screen_transform);
+		Transform2D screen_transform;
+		screen_transform.translate_local(-(ssize.width / 2.0f), -(ssize.height / 2.0f));
+		screen_transform.scale(Vector2(2.0f / ssize.width, y_scale / ssize.height));
+		_update_transform_2d_to_mat4(screen_transform, state_buffer.screen_transform);
 		_update_transform_2d_to_mat4(p_canvas_transform, state_buffer.canvas_transform);
 
 		Transform2D normal_transform = p_canvas_transform;
@@ -1654,28 +1635,25 @@ void RasterizerCanvasGLES3::light_update_shadow(RID p_rid, int p_shadow_index, c
 		return;
 	}
 
+	Projection projection;
+	{
+		real_t fov = 90;
+		real_t nearp = p_near;
+		real_t farp = p_far;
+		real_t aspect = 1.0;
+
+		real_t ymax = nearp * Math::tan(Math::deg_to_rad(fov * 0.5));
+		real_t ymin = -ymax;
+		real_t xmin = ymin * aspect;
+		real_t xmax = ymax * aspect;
+
+		projection.set_frustum(xmin, xmax, ymin, ymax, nearp, farp);
+	}
+
 	for (int i = 0; i < 4; i++) {
 		glViewport((state.shadow_texture_size / 4) * i, p_shadow_index * 2, (state.shadow_texture_size / 4), 2);
 
-		Projection projection;
-		{
-			real_t fov = 90;
-			real_t nearp = p_near;
-			real_t farp = p_far;
-			real_t aspect = 1.0;
-
-			real_t ymax = nearp * Math::tan(Math::deg_to_rad(fov * 0.5));
-			real_t ymin = -ymax;
-			real_t xmin = ymin * aspect;
-			real_t xmax = ymax * aspect;
-
-			projection.set_frustum(xmin, xmax, ymin, ymax, nearp, farp);
-		}
-
-		Vector3 cam_target = Basis::from_euler(Vector3(0, 0, Math_TAU * ((i + 3) / 4.0))).xform(Vector3(0, 1, 0));
-
-		projection = projection * Projection(Transform3D().looking_at(cam_target, Vector3(0, 0, -1)).affine_inverse());
-		shadow_render.shader.version_set_uniform(CanvasOcclusionShaderGLES3::PROJECTION, projection, shadow_render.shader_version, variant);
+		shadow_render.shader.version_set_uniform(CanvasOcclusionShaderGLES3::PROJECTION, projection * projections[i], shadow_render.shader_version, variant);
 
 		static const Vector2 directions[4] = { Vector2(1, 0), Vector2(0, 1), Vector2(-1, 0), Vector2(0, -1) };
 		shadow_render.shader.version_set_uniform(CanvasOcclusionShaderGLES3::DIRECTION, directions[i].x, directions[i].y, shadow_render.shader_version, variant);
@@ -1734,7 +1712,7 @@ void RasterizerCanvasGLES3::light_update_directional_shadow(RID p_rid, int p_sha
 
 	Vector2 center = p_clip_rect.get_center();
 
-	float to_edge_distance = ABS(light_dir.dot(p_clip_rect.get_support(light_dir)) - light_dir.dot(center));
+	float to_edge_distance = ABS(light_dir.dot(p_clip_rect.get_support(-light_dir)) - light_dir.dot(center));
 
 	Vector2 from_pos = center - light_dir * (to_edge_distance + p_cull_distance);
 	float distance = to_edge_distance * 2.0 + p_cull_distance;
@@ -1778,9 +1756,8 @@ void RasterizerCanvasGLES3::light_update_directional_shadow(RID p_rid, int p_sha
 
 	Projection projection;
 	projection.set_orthogonal(-half_size, half_size, -0.5, 0.5, 0.0, distance);
-	projection = projection * Projection(Transform3D().looking_at(Vector3(0, 1, 0), Vector3(0, 0, -1)).affine_inverse());
 
-	shadow_render.shader.version_set_uniform(CanvasOcclusionShaderGLES3::PROJECTION, projection, shadow_render.shader_version, variant);
+	shadow_render.shader.version_set_uniform(CanvasOcclusionShaderGLES3::PROJECTION, projection * projections[1], shadow_render.shader_version, variant);
 	shadow_render.shader.version_set_uniform(CanvasOcclusionShaderGLES3::DIRECTION, 0.0, 1.0, shadow_render.shader_version, variant);
 	shadow_render.shader.version_set_uniform(CanvasOcclusionShaderGLES3::Z_FAR, distance, shadow_render.shader_version, variant);
 
