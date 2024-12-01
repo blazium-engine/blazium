@@ -38,7 +38,7 @@ LobbyClient::LobbyClient() {
 }
 
 LobbyClient::~LobbyClient() {
-	_socket->close(1000, "Disconnected");
+	_socket->close();
 	set_process_internal(false);
 }
 
@@ -76,8 +76,8 @@ void LobbyClient::_bind_methods() {
 	// Register signals
 	ADD_SIGNAL(MethodInfo("disconnected_from_lobby"));
 	ADD_SIGNAL(MethodInfo("peer_named", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer")));
-	ADD_SIGNAL(MethodInfo("received_data", PropertyInfo(Variant::OBJECT, "data"), PropertyInfo(Variant::STRING, "from_peer")));
-	ADD_SIGNAL(MethodInfo("received_data_to", PropertyInfo(Variant::OBJECT, "data"), PropertyInfo(Variant::STRING, "from_peer")));
+	ADD_SIGNAL(MethodInfo("received_data", PropertyInfo(Variant::OBJECT, "data"), PropertyInfo(Variant::OBJECT, "from_peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer")));
+	ADD_SIGNAL(MethodInfo("received_data_to", PropertyInfo(Variant::OBJECT, "data"), PropertyInfo(Variant::OBJECT, "from_peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer")));
 	ADD_SIGNAL(MethodInfo("lobby_created", PropertyInfo(Variant::OBJECT, "lobby", PROPERTY_HINT_RESOURCE_TYPE, "LobbyInfo"), PropertyInfo(Variant::ARRAY, "peers", PROPERTY_HINT_ARRAY_TYPE, "LobbyPeer")));
 	ADD_SIGNAL(MethodInfo("lobby_joined", PropertyInfo(Variant::OBJECT, "lobby", PROPERTY_HINT_RESOURCE_TYPE, "LobbyInfo"), PropertyInfo(Variant::ARRAY, "peers", PROPERTY_HINT_ARRAY_TYPE, "LobbyPeer")));
 	ADD_SIGNAL(MethodInfo("lobby_left"));
@@ -356,7 +356,11 @@ void LobbyClient::_send_data(const Dictionary &p_data_dict) {
 		emit_signal("append_log", "error", "Socket is not ready.");
 		return;
 	}
-	_socket->send_text(JSON::stringify(p_data_dict));
+	Error err = _socket->send_text(JSON::stringify(p_data_dict));
+	if (err != OK) {
+		emit_signal("append_log", "error", "No longer connected.");
+		_socket->close(1000, "Disconnected");
+	}
 }
 
 void update_peers(Dictionary p_data_dict, TypedArray<LobbyPeer> &peers) {
@@ -542,9 +546,23 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 		}
 		sort_peers_by_id(peers);
 	} else if (command == "lobby_data") {
-		emit_signal("received_data", data_dict.get("peer_data", Variant()), data_dict.get("from_peer", ""));
+		String from_peer_id = data_dict.get("from_peer", "");
+		for (int i = 0; i < peers.size(); ++i) {
+			Ref<LobbyPeer> from_peer = peers[i];
+			if (from_peer->get_id() == from_peer_id) {
+				emit_signal("received_data", data_dict.get("peer_data", Variant()), from_peer);
+				break;
+			}
+		}
 	} else if (command == "data_to") {
-		emit_signal("received_data_to", data_dict.get("peer_data", Variant()), data_dict.get("from_peer", ""));
+		String from_peer_id = data_dict.get("from_peer", "");
+		for (int i = 0; i < peers.size(); ++i) {
+			Ref<LobbyPeer> from_peer = peers[i];
+			if (from_peer->get_id() == from_peer_id) {
+				emit_signal("received_data_to", data_dict.get("peer_data", Variant()), from_peer);
+				break;
+			}
+		}
 	} else if (command == "lobby_data_sent") {
 		// nothing for now
 	} else if (command == "data_to_sent") {
