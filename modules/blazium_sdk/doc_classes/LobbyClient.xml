@@ -198,14 +198,14 @@
 		</signal>
 		<signal name="received_data">
 			<param index="0" name="data" type="Object" />
-			<param index="1" name="from_peer" type="String" />
+			<param index="1" name="from_peer" type="LobbyPeer" />
 			<description>
 				Signal generated after a lobby_data call.
 			</description>
 		</signal>
 		<signal name="received_data_to">
 			<param index="0" name="data" type="Object" />
-			<param index="1" name="from_peer" type="String" />
+			<param index="1" name="from_peer" type="LobbyPeer" />
 			<description>
 				Signal generated after a data_to call.
 			</description>

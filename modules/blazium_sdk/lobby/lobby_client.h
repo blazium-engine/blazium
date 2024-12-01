@@ -44,12 +44,14 @@ class LobbyInfo : public Resource {
 	int max_players = 0;
 	int players = 0;
 	bool sealed = false;
+	bool password_protected;
 
 protected:
 	static void _bind_methods() {
 		ClassDB::bind_method(D_METHOD("get_host"), &LobbyInfo::get_host);
 		ClassDB::bind_method(D_METHOD("get_max_players"), &LobbyInfo::get_max_players);
 		ClassDB::bind_method(D_METHOD("is_sealed"), &LobbyInfo::is_sealed);
+		ClassDB::bind_method(D_METHOD("is_password_protected"), &LobbyInfo::is_password_protected);
 		ClassDB::bind_method(D_METHOD("get_id"), &LobbyInfo::get_id);
 		ClassDB::bind_method(D_METHOD("get_lobby_name"), &LobbyInfo::get_lobby_name);
 		ClassDB::bind_method(D_METHOD("get_host_name"), &LobbyInfo::get_host_name);
@@ -62,6 +64,7 @@ protected:
 		ADD_PROPERTY(PropertyInfo(Variant::STRING, "host"), "", "get_host");
 		ADD_PROPERTY(PropertyInfo(Variant::INT, "max_players"), "", "get_max_players");
 		ADD_PROPERTY(PropertyInfo(Variant::BOOL, "sealed"), "", "is_sealed");
+		ADD_PROPERTY(PropertyInfo(Variant::BOOL, "password_protected"), "", "is_password_protected");
 	}
 
 public:
@@ -72,6 +75,7 @@ public:
 	void set_max_players(int p_max_players) { this->max_players = p_max_players; }
 	void set_players(int p_players) { this->players = p_players; }
 	void set_sealed(bool p_sealed) { this->sealed = p_sealed; }
+	void set_password_protected(bool p_password_protected) { this->password_protected = p_password_protected; }
 
 	void set_dict(const Dictionary &p_dict) {
 		this->set_host(p_dict.get("host", ""));
@@ -81,6 +85,7 @@ public:
 		this->set_id(p_dict.get("id", ""));
 		this->set_lobby_name(p_dict.get("name", ""));
 		this->set_host_name(p_dict.get("host_name", ""));
+		this->set_password_protected(p_dict.get("has_password", false));
 	}
 	Dictionary get_dict() const {
 		Dictionary dict;
@@ -91,6 +96,7 @@ public:
 		dict["id"] = this->get_id();
 		dict["name"] = this->get_lobby_name();
 		dict["host_name"] = this->get_host_name();
+		dict["has_password"] = this->is_password_protected();
 		return dict;
 	}
 
@@ -101,6 +107,7 @@ public:
 	int get_max_players() const { return max_players; }
 	int get_players() const { return players; }
 	bool is_sealed() const { return sealed; }
+	bool is_password_protected() const { return password_protected; }
 	LobbyInfo() {}
 };
 
