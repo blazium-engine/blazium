@@ -24,6 +24,8 @@
 		<member name="max_players" type="int" setter="" getter="get_max_players" default="0">
 			The maximum number of players allowed in the lobby.
 		</member>
+		<member name="password_protected" type="bool" setter="" getter="is_password_protected" default="true">
+		</member>
 		<member name="players" type="int" setter="" getter="get_players" default="0">
 			The number of players currently in the lobby.
 		</member>
