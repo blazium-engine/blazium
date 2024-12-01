@@ -303,6 +303,7 @@ class TextServerAdvanced : public TextServerExtension {
 		Mutex mutex;
 
 		TextServer::FontAntialiasing antialiasing = TextServer::FONT_ANTIALIASING_GRAY;
+		TextServer::FontLCDSubpixelLayout lcd_subpixel_layout = TextServer::FontLCDSubpixelLayout::FONT_LCD_SUBPIXEL_LAYOUT_NONE;
 		bool disable_embedded_bitmaps = true;
 		bool mipmaps = false;
 		bool msdf = false;
@@ -754,6 +755,9 @@ public:
 
 	MODBIND2(font_set_antialiasing, const RID &, TextServer::FontAntialiasing);
 	MODBIND1RC(TextServer::FontAntialiasing, font_get_antialiasing, const RID &);
+
+	MODBIND2(font_set_lcd_subpixel_layout, const RID &, TextServer::FontLCDSubpixelLayout);
+	MODBIND1RC(TextServer::FontLCDSubpixelLayout, font_get_lcd_subpixel_layout, const RID &);
 
 	MODBIND2(font_set_disable_embedded_bitmaps, const RID &, bool);
 	MODBIND1RC(bool, font_get_disable_embedded_bitmaps, const RID &);
