@@ -154,6 +154,9 @@ public:
 
 	StringName text_changed;
 	StringName value_changed;
+
+	const StringName Start = StaticCString::create("Start");
+	const StringName End = StaticCString::create("End");
 };
 
 #define SceneStringName(m_name) SceneStringNames::get_singleton()->m_name
