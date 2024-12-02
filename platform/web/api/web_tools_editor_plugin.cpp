@@ -71,7 +71,7 @@ void WebToolsEditorPlugin::_download_zip() {
 	// Name the downloaded ZIP file to contain the project name and download date for easier organization.
 	// Replace characters not allowed (or risky) in Windows file names with safe characters.
 	// In the project name, all invalid characters become an empty string so that a name
-	// like "Platformer 2: Godette's Revenge" becomes "platformer_2-_godette-s_revenge".
+	// like "Platformer 2: Blazia's Revenge" becomes "platformer_2-_blazia-s_revenge".
 	const String project_name = GLOBAL_GET("application/config/name");
 	const String project_name_safe = project_name.to_lower().replace(" ", "_");
 	const String datetime_safe =
