@@ -52,10 +52,18 @@
 #define S_ISREG(m) ((m) & _S_IFREG)
 #endif
 
-void FileAccessWindows::check_errors() const {
+void FileAccessWindows::check_errors(bool p_write) const {
 	ERR_FAIL_NULL(f);
 
-	if (feof(f)) {
+	last_error = OK;
+	if (ferror(f)) {
+		if (p_write) {
+			last_error = ERR_FILE_CANT_WRITE;
+		} else {
+			last_error = ERR_FILE_CANT_READ;
+		}
+	}
+	if (!p_write && feof(f)) {
 		last_error = ERR_FILE_EOF;
 	}
 }
@@ -284,7 +292,6 @@ bool FileAccessWindows::is_open() const {
 void FileAccessWindows::seek(uint64_t p_position) {
 	ERR_FAIL_NULL(f);
 
-	last_error = OK;
 	if (_fseeki64(f, p_position, SEEK_SET)) {
 		check_errors();
 	}
@@ -320,8 +327,7 @@ uint64_t FileAccessWindows::get_length() const {
 }
 
 bool FileAccessWindows::eof_reached() const {
-	check_errors();
-	return last_error == ERR_FILE_EOF;
+	return feof(f);
 }
 
 uint64_t FileAccessWindows::get_buffer(uint8_t *p_dst, uint64_t p_length) const {
@@ -385,7 +391,9 @@ void FileAccessWindows::store_buffer(const uint8_t *p_src, uint64_t p_length) {
 		prev_op = WRITE;
 	}
 
-	ERR_FAIL_COND(fwrite(p_src, 1, p_length, f) != (size_t)p_length);
+	size_t res = fwrite(p_src, 1, p_length, f);
+	check_errors(true);
+	ERR_FAIL_COND(res != (size_t)p_length);
 }
 
 bool FileAccessWindows::file_exists(const String &p_name) {
