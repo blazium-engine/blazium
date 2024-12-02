@@ -261,6 +261,11 @@ bool AbstractPolygon2DEditor::forward_gui_input(const Ref<InputEvent> &p_event) 
 		return false;
 	}
 
+	Viewport *vp = _get_node()->get_viewport();
+	if (vp && !vp->is_visible_subviewport()) {
+		return false;
+	}
+
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
 	Ref<InputEventMouseButton> mb = p_event;
 
@@ -499,6 +504,11 @@ void AbstractPolygon2DEditor::forward_canvas_draw_over_viewport(Control *p_overl
 	}
 
 	if (!_get_node()->is_visible_in_tree()) {
+		return;
+	}
+
+	Viewport *vp = _get_node()->get_viewport();
+	if (vp && !vp->is_visible_subviewport()) {
 		return;
 	}
 

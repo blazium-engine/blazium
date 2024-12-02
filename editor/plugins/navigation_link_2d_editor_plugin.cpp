@@ -35,6 +35,7 @@
 #include "editor/editor_settings.h"
 #include "editor/editor_undo_redo_manager.h"
 #include "scene/2d/navigation_link_2d.h"
+#include "scene/main/viewport.h"
 #include "servers/navigation_server_3d.h"
 
 void NavigationLink2DEditor::_notification(int p_what) {
@@ -57,6 +58,11 @@ void NavigationLink2DEditor::_node_removed(Node *p_node) {
 
 bool NavigationLink2DEditor::forward_canvas_gui_input(const Ref<InputEvent> &p_event) {
 	if (!node || !node->is_visible_in_tree()) {
+		return false;
+	}
+
+	Viewport *vp = node->get_viewport();
+	if (vp && !vp->is_visible_subviewport()) {
 		return false;
 	}
 
@@ -140,6 +146,11 @@ bool NavigationLink2DEditor::forward_canvas_gui_input(const Ref<InputEvent> &p_e
 
 void NavigationLink2DEditor::forward_canvas_draw_over_viewport(Control *p_overlay) {
 	if (!node || !node->is_visible_in_tree()) {
+		return;
+	}
+
+	Viewport *vp = node->get_viewport();
+	if (vp && !vp->is_visible_subviewport()) {
 		return;
 	}
 
