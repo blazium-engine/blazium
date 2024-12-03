@@ -45,6 +45,7 @@ class OptionButton;
 class PopupMenu;
 class TextureRect;
 class VBoxContainer;
+class VSeparator;
 
 class EditorFileDialog : public ConfirmationDialog {
 	GDCLASS(EditorFileDialog, ConfirmationDialog);
@@ -90,6 +91,7 @@ private:
 	ConfirmationDialog *makedialog = nullptr;
 	LineEdit *makedirname = nullptr;
 
+	VSeparator *makedir_sep = nullptr;
 	Button *makedir = nullptr;
 	Access access = ACCESS_RESOURCES;
 
