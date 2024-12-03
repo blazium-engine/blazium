@@ -316,6 +316,7 @@ public:
 	Ref<ListLobbyResponse> list_lobby(int p_start, int p_count);
 	Ref<ViewLobbyResponse> view_lobby(const String &p_lobby_id, const String &p_password);
 	Ref<LobbyResponse> kick_peer(const String &p_peer_id);
+	Ref<LobbyResponse> lobby_chat(const String &chat_message);
 	Ref<LobbyResponse> lobby_ready(bool p_ready);
 	Ref<LobbyResponse> set_peer_name(const String &p_peer_name);
 	Ref<LobbyResponse> seal_lobby(bool seal);
