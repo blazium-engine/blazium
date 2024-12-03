@@ -56,7 +56,7 @@
 				Generates [signal lobby_left].
 			</description>
 		</method>
-		<method name="list_lobby">
+		<method name="list_lobbies">
 			<return type="ListLobbyResponse" />
 			<param index="0" name="start" type="int" default="0" />
 			<param index="1" name="count" type="int" default="10" />
@@ -64,7 +64,15 @@
 				Lists all lobbies.
 			</description>
 		</method>
-		<method name="lobby_data">
+		<method name="send_chat_message">
+			<return type="LobbyResponse" />
+			<param index="0" name="chat_message" type="String" />
+			<description>
+				Send a chat message.
+				Generates [signal peer_messaged].
+			</description>
+		</method>
+		<method name="send_lobby_data">
 			<return type="LobbyResponse" />
 			<param index="0" name="data" type="Variant" />
 			<description>
@@ -72,7 +80,7 @@
 				Generates [signal received_data] signal.
 			</description>
 		</method>
-		<method name="lobby_data_to">
+		<method name="send_lobby_data_to">
 			<return type="LobbyResponse" />
 			<param index="0" name="data" type="Variant" />
 			<param index="1" name="target_peer" type="String" />
@@ -81,7 +89,7 @@
 				Generates [signal received_data_to] signal.
 			</description>
 		</method>
-		<method name="lobby_ready">
+		<method name="set_lobby_ready">
 			<return type="LobbyResponse" />
 			<param index="0" name="ready" type="bool" />
 			<description>
@@ -89,7 +97,7 @@
 				Generates [signal peer_ready].
 			</description>
 		</method>
-		<method name="seal_lobby">
+		<method name="set_lobby_sealed">
 			<return type="LobbyResponse" />
 			<param index="0" name="seal" type="bool" />
 			<description>
@@ -132,14 +140,6 @@
 		</member>
 	</members>
 	<signals>
-		<signal name="append_log">
-			<param index="0" name="command" type="String" />
-			<param index="1" name="info" type="String" />
-			<param index="2" name="logs" type="String" />
-			<description>
-				Signals a log from a command.
-			</description>
-		</signal>
 		<signal name="disconnected_from_lobby">
 			<description>
 				Disconnects from the lobby.
@@ -170,6 +170,13 @@
 				Signal generated after the host seals the lobby.
 			</description>
 		</signal>
+		<signal name="log_updated">
+			<param index="0" name="command" type="String" />
+			<param index="1" name="logs" type="String" />
+			<description>
+				Signals a log from a command.
+			</description>
+		</signal>
 		<signal name="peer_joined">
 			<param index="0" name="peer" type="LobbyPeer" />
 			<description>
@@ -181,6 +188,13 @@
 			<param index="1" name="kicked" type="bool" />
 			<description>
 				Signal generated after a peer leaves the lobby.
+			</description>
+		</signal>
+		<signal name="peer_messaged">
+			<param index="0" name="peer" type="LobbyPeer" />
+			<param index="1" name="chat_message" type="String" />
+			<description>
+				Signal generated after a peer sends a chat message.
 			</description>
 		</signal>
 		<signal name="peer_named">
