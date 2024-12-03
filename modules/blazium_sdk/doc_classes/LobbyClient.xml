@@ -11,7 +11,6 @@
 	<methods>
 		<method name="connect_to_lobby">
 			<return type="bool" />
-			<param index="0" name="game_id" type="String" />
 			<description>
 				Connect to a Blazium Lobby Server using the game_id and [member server_url].
 			</description>
@@ -19,8 +18,9 @@
 		<method name="create_lobby">
 			<return type="ViewLobbyResponse" />
 			<param index="0" name="title" type="String" />
-			<param index="1" name="max_players" type="int" default="4" />
-			<param index="2" name="password" type="String" default="&quot;&quot;" />
+			<param index="1" name="tags" type="String[]" default="[]" />
+			<param index="2" name="max_players" type="int" default="4" />
+			<param index="3" name="password" type="String" default="&quot;&quot;" />
 			<description>
 				Create a lobby and become host. If you are already in a lobby, you cannot create one. You need to leave first.
 				Generates [signal lobby_created] signal.
@@ -58,8 +58,11 @@
 		</method>
 		<method name="list_lobbies">
 			<return type="ListLobbyResponse" />
-			<param index="0" name="start" type="int" default="0" />
-			<param index="1" name="count" type="int" default="10" />
+			<param index="0" name="title" type="String" default="&quot;&quot;" />
+			<param index="1" name="max_players" type="int" default="-1" />
+			<param index="2" name="tags" type="String[]" default="[]" />
+			<param index="3" name="start" type="int" default="0" />
+			<param index="4" name="count" type="int" default="10" />
 			<description>
 				Lists all lobbies.
 			</description>
@@ -126,6 +129,8 @@
 		<member name="connected" type="bool" setter="" getter="get_connected" default="false">
 			True if the client is connected, else false.
 		</member>
+		<member name="game_id" type="String" setter="set_game_id" getter="get_game_id" default="&quot;&quot;">
+		</member>
 		<member name="lobby" type="LobbyInfo" setter="" getter="get_lobby">
 			The current lobby. Reflects changes to the lobby.
 		</member>
@@ -135,14 +140,25 @@
 		<member name="peers" type="LobbyPeer[]" setter="" getter="get_peers" default="[]">
 			The lobby peers. Reflects changes to all peers.
 		</member>
+		<member name="reconnection_token" type="String" setter="set_reconnection_token" getter="get_reconnection_token" default="&quot;&quot;">
+			Reconnection token.
+		</member>
 		<member name="server_url" type="String" setter="set_server_url" getter="get_server_url" default="&quot;wss://lobby.blazium.app/connect&quot;">
 			Set to what url this lobby should connect to.
 		</member>
 	</members>
 	<signals>
-		<signal name="disconnected_from_lobby">
+		<signal name="connected_to_lobby">
+			<param index="0" name="peer" type="LobbyPeer" />
+			<param index="1" name="reconnection_token" type="String" />
 			<description>
-				Disconnects from the lobby.
+				Signal generated after you connect to the lobby.
+			</description>
+		</signal>
+		<signal name="disconnected_from_lobby">
+			<param index="0" name="reason" type="String" />
+			<description>
+				Signal generated after you disconnect from the lobby.
 			</description>
 		</signal>
 		<signal name="lobby_created">
@@ -160,6 +176,7 @@
 			</description>
 		</signal>
 		<signal name="lobby_left">
+			<param index="0" name="kicked" type="bool" />
 			<description>
 				Signal generated after you leave a lobby.
 			</description>
@@ -175,6 +192,12 @@
 			<param index="1" name="logs" type="String" />
 			<description>
 				Signals a log from a command.
+			</description>
+		</signal>
+		<signal name="peer_disconnected">
+			<param index="0" name="peer" type="LobbyPeer" />
+			<description>
+				Signal generated after a peer disconnects. If they don't reconnect they will be removed.
 			</description>
 		</signal>
 		<signal name="peer_joined">
@@ -208,6 +231,12 @@
 			<param index="1" name="ready" type="bool" />
 			<description>
 				Signal generated after a peer is ready.
+			</description>
+		</signal>
+		<signal name="peer_reconnected">
+			<param index="0" name="peer" type="LobbyPeer" />
+			<description>
+				Signal generated after a peer reconnects.
 			</description>
 		</signal>
 		<signal name="received_data">

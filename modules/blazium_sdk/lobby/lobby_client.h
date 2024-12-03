@@ -41,10 +41,11 @@ class LobbyInfo : public Resource {
 	String lobby_name;
 	String host;
 	String host_name;
+	TypedArray<String> tags;
 	int max_players = 0;
 	int players = 0;
 	bool sealed = false;
-	bool password_protected;
+	bool password_protected = false;
 
 protected:
 	static void _bind_methods() {
@@ -56,8 +57,10 @@ protected:
 		ClassDB::bind_method(D_METHOD("get_lobby_name"), &LobbyInfo::get_lobby_name);
 		ClassDB::bind_method(D_METHOD("get_host_name"), &LobbyInfo::get_host_name);
 		ClassDB::bind_method(D_METHOD("get_players"), &LobbyInfo::get_players);
+		ClassDB::bind_method(D_METHOD("get_tags"), &LobbyInfo::get_tags);
 
 		ADD_PROPERTY(PropertyInfo(Variant::STRING, "id"), "", "get_id");
+		ADD_PROPERTY(PropertyInfo(Variant::STRING, "tags"), "", "get_tags");
 		ADD_PROPERTY(PropertyInfo(Variant::STRING, "lobby_name"), "", "get_lobby_name");
 		ADD_PROPERTY(PropertyInfo(Variant::STRING, "host_name"), "", "get_host_name");
 		ADD_PROPERTY(PropertyInfo(Variant::INT, "players"), "", "get_players");
@@ -76,6 +79,7 @@ public:
 	void set_players(int p_players) { this->players = p_players; }
 	void set_sealed(bool p_sealed) { this->sealed = p_sealed; }
 	void set_password_protected(bool p_password_protected) { this->password_protected = p_password_protected; }
+	void set_tags(const TypedArray<String> &p_tags) { this->tags = p_tags; }
 
 	void set_dict(const Dictionary &p_dict) {
 		this->set_host(p_dict.get("host", ""));
@@ -86,6 +90,7 @@ public:
 		this->set_lobby_name(p_dict.get("name", ""));
 		this->set_host_name(p_dict.get("host_name", ""));
 		this->set_password_protected(p_dict.get("has_password", false));
+		this->set_tags(p_dict.get("tags", TypedArray<String>()));
 	}
 	Dictionary get_dict() const {
 		Dictionary dict;
@@ -97,9 +102,11 @@ public:
 		dict["name"] = this->get_lobby_name();
 		dict["host_name"] = this->get_host_name();
 		dict["has_password"] = this->is_password_protected();
+		dict["tags"] = this->get_tags();
 		return dict;
 	}
 
+	TypedArray<String> get_tags() const { return tags; }
 	String get_id() const { return id; }
 	String get_lobby_name() const { return lobby_name; }
 	String get_host() const { return host; }
@@ -158,6 +165,8 @@ class LobbyClient : public BlaziumClient {
 		LOBBY_LIST
 	};
 	String server_url = "wss://lobby.blazium.app/connect";
+	String reconnection_token;
+	String game_id = "";
 	Ref<LobbyInfo> lobby;
 	Ref<LobbyPeer> peer;
 	TypedArray<LobbyPeer> peers;
@@ -193,8 +202,6 @@ public:
 					error(p_other.error) {}
 			LobbyResult() {}
 		};
-		LobbyResponse(const LobbyResponse &p_other) {}
-		LobbyResponse() {}
 	};
 
 	class ListLobbyResponse : public RefCounted {
@@ -233,8 +240,6 @@ public:
 					error(p_other.error), lobbies(p_other.lobbies) {}
 			ListLobbyResult() {}
 		};
-		ListLobbyResponse(const ListLobbyResponse &p_other) {}
-		ListLobbyResponse() {}
 	};
 
 	class ViewLobbyResponse : public RefCounted {
@@ -280,8 +285,6 @@ public:
 			~ViewLobbyResult() {
 			}
 		};
-		ViewLobbyResponse(const ViewLobbyResponse &p_other) {}
-		ViewLobbyResponse() {}
 	};
 
 private:
@@ -301,6 +304,10 @@ protected:
 public:
 	void set_server_url(const String &p_server_url) { this->server_url = p_server_url; }
 	String get_server_url() { return server_url; }
+	void set_reconnection_token(const String &p_reconnection_token) { this->reconnection_token = p_reconnection_token; }
+	String get_reconnection_token() { return reconnection_token; }
+	void set_game_id(const String &p_game_id) { this->game_id = p_game_id; }
+	String get_game_id() { return game_id; }
 	bool is_host() { return lobby->get_host() == peer->get_id(); }
 	bool get_connected() { return connected; }
 	void set_lobby(const Ref<LobbyInfo> &p_lobby) { this->lobby = p_lobby; }
@@ -309,11 +316,12 @@ public:
 	Ref<LobbyPeer> get_peer() { return peer; }
 	TypedArray<LobbyPeer> get_peers() { return peers; }
 
-	bool connect_to_lobby(const String &p_game_id);
-	Ref<ViewLobbyResponse> create_lobby(const String &p_lobby_name, int p_max_players, const String &p_password);
+	bool connect_to_lobby();
+	void disconnect_from_lobby();
+	Ref<ViewLobbyResponse> create_lobby(const String &p_lobby_name, const TypedArray<String> &p_tags, int p_max_players, const String &p_password);
 	Ref<ViewLobbyResponse> join_lobby(const String &p_lobby_id, const String &p_password);
 	Ref<LobbyResponse> leave_lobby();
-	Ref<ListLobbyResponse> list_lobby(int p_start, int p_count);
+	Ref<ListLobbyResponse> list_lobby(const String &p_title, const int p_max_players, const TypedArray<String> &p_tags, int p_start, int p_count);
 	Ref<ViewLobbyResponse> view_lobby(const String &p_lobby_id, const String &p_password);
 	Ref<LobbyResponse> kick_peer(const String &p_peer_id);
 	Ref<LobbyResponse> lobby_chat(const String &chat_message);

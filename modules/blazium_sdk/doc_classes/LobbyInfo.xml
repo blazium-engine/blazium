@@ -24,13 +24,16 @@
 		<member name="max_players" type="int" setter="" getter="get_max_players" default="0">
 			The maximum number of players allowed in the lobby.
 		</member>
-		<member name="password_protected" type="bool" setter="" getter="is_password_protected" default="true">
+		<member name="password_protected" type="bool" setter="" getter="is_password_protected" default="false">
 		</member>
 		<member name="players" type="int" setter="" getter="get_players" default="0">
 			The number of players currently in the lobby.
 		</member>
 		<member name="sealed" type="bool" setter="" getter="is_sealed" default="false">
 			Whether the lobby is sealed.
+		</member>
+		<member name="tags" type="String[]" setter="" getter="get_tags" default="[]">
+			The tags of the lobby. Used for listing lobbies to filter based on them.
 		</member>
 	</members>
 </class>

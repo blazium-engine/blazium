@@ -45,6 +45,11 @@ LobbyClient::~LobbyClient() {
 void LobbyClient::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_server_url", "server_url"), &LobbyClient::set_server_url);
 	ClassDB::bind_method(D_METHOD("get_server_url"), &LobbyClient::get_server_url);
+	ClassDB::bind_method(D_METHOD("set_reconnection_token", "reconnection_token"), &LobbyClient::set_reconnection_token);
+	ClassDB::bind_method(D_METHOD("get_reconnection_token"), &LobbyClient::get_reconnection_token);
+	ClassDB::bind_method(D_METHOD("set_game_id", "game_id"), &LobbyClient::set_game_id);
+	ClassDB::bind_method(D_METHOD("get_game_id"), &LobbyClient::get_game_id);
+
 	ClassDB::bind_method(D_METHOD("is_host"), &LobbyClient::is_host);
 	ClassDB::bind_method(D_METHOD("get_connected"), &LobbyClient::get_connected);
 	ClassDB::bind_method(D_METHOD("get_lobby"), &LobbyClient::get_lobby);
@@ -52,6 +57,8 @@ void LobbyClient::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_peers"), &LobbyClient::get_peers);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "server_url", PROPERTY_HINT_NONE, ""), "set_server_url", "get_server_url");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "reconnection_token", PROPERTY_HINT_NONE, ""), "set_reconnection_token", "get_reconnection_token");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "game_id", PROPERTY_HINT_NONE, ""), "set_game_id", "get_game_id");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "connected"), "", "get_connected");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "lobby", PROPERTY_HINT_RESOURCE_TYPE, "LobbyInfo"), "", "get_lobby");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer"), "", "get_peer");
@@ -60,12 +67,12 @@ void LobbyClient::_bind_methods() {
 	ADD_PROPERTY_DEFAULT("peer", Ref<LobbyPeer>());
 	ADD_PROPERTY_DEFAULT("lobby", Ref<LobbyInfo>());
 	// Register methods
-	ClassDB::bind_method(D_METHOD("connect_to_lobby", "game_id"), &LobbyClient::connect_to_lobby);
+	ClassDB::bind_method(D_METHOD("connect_to_lobby"), &LobbyClient::connect_to_lobby);
 	ClassDB::bind_method(D_METHOD("set_peer_name", "peer_name"), &LobbyClient::set_peer_name);
-	ClassDB::bind_method(D_METHOD("create_lobby", "title", "max_players", "password"), &LobbyClient::create_lobby, DEFVAL(4), DEFVAL(""));
+	ClassDB::bind_method(D_METHOD("create_lobby", "title", "tags", "max_players", "password"), &LobbyClient::create_lobby, DEFVAL(Array()), DEFVAL(4), DEFVAL(""));
 	ClassDB::bind_method(D_METHOD("join_lobby", "lobby_id", "password"), &LobbyClient::join_lobby, DEFVAL(""));
 	ClassDB::bind_method(D_METHOD("leave_lobby"), &LobbyClient::leave_lobby);
-	ClassDB::bind_method(D_METHOD("list_lobbies", "start", "count"), &LobbyClient::list_lobby, DEFVAL(0), DEFVAL(10));
+	ClassDB::bind_method(D_METHOD("list_lobbies", "title", "max_players", "tags", "start", "count"), &LobbyClient::list_lobby, DEFVAL(""), DEFVAL(-1), DEFVAL(Array()), DEFVAL(0), DEFVAL(10));
 	ClassDB::bind_method(D_METHOD("view_lobby", "lobby_id", "password"), &LobbyClient::view_lobby, DEFVAL(""), DEFVAL(""));
 	ClassDB::bind_method(D_METHOD("kick_peer", "peer_id"), &LobbyClient::kick_peer);
 	ClassDB::bind_method(D_METHOD("send_chat_message", "chat_message"), &LobbyClient::lobby_chat);
@@ -75,27 +82,34 @@ void LobbyClient::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("send_lobby_data_to", "data", "target_peer"), &LobbyClient::lobby_data_to);
 
 	// Register signals
-	ADD_SIGNAL(MethodInfo("disconnected_from_lobby"));
+	ADD_SIGNAL(MethodInfo("connected_to_lobby", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer"), PropertyInfo(Variant::STRING, "reconnection_token")));
+	ADD_SIGNAL(MethodInfo("disconnected_from_lobby", PropertyInfo(Variant::STRING, "reason")));
 	ADD_SIGNAL(MethodInfo("peer_named", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer")));
 	ADD_SIGNAL(MethodInfo("received_data", PropertyInfo(Variant::OBJECT, "data"), PropertyInfo(Variant::OBJECT, "from_peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer")));
 	ADD_SIGNAL(MethodInfo("received_data_to", PropertyInfo(Variant::OBJECT, "data"), PropertyInfo(Variant::OBJECT, "from_peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer")));
 	ADD_SIGNAL(MethodInfo("lobby_created", PropertyInfo(Variant::OBJECT, "lobby", PROPERTY_HINT_RESOURCE_TYPE, "LobbyInfo"), PropertyInfo(Variant::ARRAY, "peers", PROPERTY_HINT_ARRAY_TYPE, "LobbyPeer")));
 	ADD_SIGNAL(MethodInfo("lobby_joined", PropertyInfo(Variant::OBJECT, "lobby", PROPERTY_HINT_RESOURCE_TYPE, "LobbyInfo"), PropertyInfo(Variant::ARRAY, "peers", PROPERTY_HINT_ARRAY_TYPE, "LobbyPeer")));
-	ADD_SIGNAL(MethodInfo("lobby_left"));
+	ADD_SIGNAL(MethodInfo("lobby_left", PropertyInfo(Variant::BOOL, "kicked")));
 	ADD_SIGNAL(MethodInfo("lobby_sealed", PropertyInfo(Variant::BOOL, "sealed")));
 	ADD_SIGNAL(MethodInfo("peer_joined", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer")));
+	ADD_SIGNAL(MethodInfo("peer_reconnected", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer")));
 	ADD_SIGNAL(MethodInfo("peer_left", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer"), PropertyInfo(Variant::BOOL, "kicked")));
+	ADD_SIGNAL(MethodInfo("peer_disconnected", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer")));
 	ADD_SIGNAL(MethodInfo("peer_messaged", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer"), PropertyInfo(Variant::STRING, "chat_message")));
 	ADD_SIGNAL(MethodInfo("peer_ready", PropertyInfo(Variant::OBJECT, "peer", PROPERTY_HINT_RESOURCE_TYPE, "LobbyPeer"), PropertyInfo(Variant::BOOL, "ready")));
 	ADD_SIGNAL(MethodInfo("log_updated", PropertyInfo(Variant::STRING, "command"), PropertyInfo(Variant::STRING, "logs")));
 }
 
-bool LobbyClient::connect_to_lobby(const String &p_game_id) {
+bool LobbyClient::connect_to_lobby() {
 	if (connected) {
 		return true;
 	}
 	String lobby_url = get_server_url();
-	String url = lobby_url + "?gameID=" + p_game_id;
+	String url = lobby_url;
+	Vector<String> headers;
+	headers.push_back("GAME_ID: " + game_id);
+	headers.push_back("RECONNECTION_TOKEN: " + reconnection_token);
+	_socket->set_handshake_headers(headers);
 	Error err = _socket->connect_to_url(url);
 	if (err != OK) {
 		set_process_internal(false);
@@ -109,11 +123,21 @@ bool LobbyClient::connect_to_lobby(const String &p_game_id) {
 	return true;
 }
 
+void LobbyClient::disconnect_from_lobby() {
+	if (connected) {
+		_socket->close();
+		connected = false;
+		set_process_internal(false);
+		emit_signal("disconnected_from_lobby", _socket->get_close_reason());
+		emit_signal("log_updated", "disconnect_from_lobby", "Disconnected from: " + get_server_url());
+	}
+}
+
 String LobbyClient::_increment_counter() {
 	return String::num(_counter++);
 }
 
-Ref<LobbyClient::ViewLobbyResponse> LobbyClient::create_lobby(const String &p_lobby_name, int p_max_players, const String &p_password) {
+Ref<LobbyClient::ViewLobbyResponse> LobbyClient::create_lobby(const String &p_lobby_name, const TypedArray<String> &p_tags, int p_max_players, const String &p_password) {
 	String id = _increment_counter();
 	Dictionary command;
 	command["command"] = "create_lobby";
@@ -122,6 +146,7 @@ Ref<LobbyClient::ViewLobbyResponse> LobbyClient::create_lobby(const String &p_lo
 	data_dict["name"] = p_lobby_name;
 	data_dict["max_players"] = p_max_players;
 	data_dict["password"] = p_password;
+	data_dict["tags"] = p_tags;
 	data_dict["id"] = id;
 	Array command_array;
 	Ref<ViewLobbyResponse> response;
@@ -169,7 +194,7 @@ Ref<LobbyClient::LobbyResponse> LobbyClient::leave_lobby() {
 	return response;
 }
 
-Ref<LobbyClient::ListLobbyResponse> LobbyClient::list_lobby(int p_start, int p_count) {
+Ref<LobbyClient::ListLobbyResponse> LobbyClient::list_lobby(const String &p_title, const int p_max_players, const TypedArray<String> &p_tags, int p_start, int p_count) {
 	String id = _increment_counter();
 	Dictionary command;
 	command["command"] = "list_lobby";
@@ -177,6 +202,17 @@ Ref<LobbyClient::ListLobbyResponse> LobbyClient::list_lobby(int p_start, int p_c
 	data_dict["id"] = id;
 	data_dict["start"] = p_start;
 	data_dict["count"] = p_count;
+	Dictionary filter_dict;
+	data_dict["filter"] = filter_dict;
+	if (p_tags.size() != 0) {
+		filter_dict["tags"] = p_tags;
+	}
+	if (!p_title.is_empty()) {
+		filter_dict["name"] = p_title;
+	}
+	if (p_max_players != -1) {
+		filter_dict["max_players"] = int(p_max_players);
+	}
 	command["data"] = data_dict;
 	Array command_array;
 	Ref<ListLobbyResponse> response;
@@ -362,8 +398,8 @@ void LobbyClient::_notification(int p_what) {
 					_receive_data(JSON::parse_string(packet_string));
 				}
 			} else if (state == WebSocketPeer::STATE_CLOSED) {
-				emit_signal("log_updated", "error", "WebSocket closed unexpectedly.");
-				emit_signal("disconnected_from_lobby");
+				emit_signal("log_updated", "error", _socket->get_close_reason());
+				emit_signal("disconnected_from_lobby", _socket->get_close_reason());
 				set_process_internal(false);
 				connected = false;
 			}
@@ -456,7 +492,9 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 	}
 	if (command == "peer_state") {
 		Dictionary peer_dict = data_dict.get("peer", Dictionary());
-		peer->set_id(peer_dict.get("id", ""));
+		peer->set_dict(peer_dict);
+		reconnection_token = peer_dict.get("reconnection_token", "");
+		emit_signal("connected_to_lobby", peer, reconnection_token);
 	} else if (command == "lobby_created") {
 		lobby->set_dict(data_dict.get("lobby", Dictionary()));
 		update_peers(data_dict, peers);
@@ -470,7 +508,11 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 	} else if (command == "lobby_left") {
 		lobby->set_dict(Dictionary());
 		peers.clear();
-		emit_signal("lobby_left");
+		emit_signal("lobby_left", false);
+	} else if (command == "lobby_kicked") {
+		lobby->set_dict(Dictionary());
+		peers.clear();
+		emit_signal("lobby_left", true);
 	} else if (command == "lobby_sealed") {
 		Dictionary lobby_dict = data_dict.get("lobby", Dictionary());
 		lobby->set_sealed(true);
@@ -564,6 +606,14 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 		sort_peers_by_id(peers);
 		lobby->set_players(peers.size());
 		emit_signal("peer_joined", joining_peer);
+	} else if (command == "peer_reconnected") {
+		for (int i = 0; i < peers.size(); ++i) {
+			Ref<LobbyPeer> updated_peer = peers[i];
+			if (updated_peer->get_id() == String(data_dict.get("peer_id", ""))) {
+				emit_signal("peer_reconnected", updated_peer);
+				break;
+			}
+		}
 	} else if (command == "peer_left") {
 		for (int i = 0; i < peers.size(); ++i) {
 			Ref<LobbyPeer> leaving_peer = peers[i];
@@ -571,6 +621,17 @@ void LobbyClient::_receive_data(const Dictionary &p_dict) {
 				peers.remove_at(i);
 				lobby->set_players(peers.size());
 				emit_signal("peer_left", leaving_peer, data_dict.get("kicked", false));
+				break;
+			}
+		}
+		sort_peers_by_id(peers);
+	} else if (command == "peer_disconnected") {
+		for (int i = 0; i < peers.size(); ++i) {
+			Ref<LobbyPeer> leaving_peer = peers[i];
+			if (leaving_peer->get_id() == String(data_dict.get("peer_id", ""))) {
+				peers.remove_at(i);
+				lobby->set_players(peers.size());
+				emit_signal("peer_disconnected", leaving_peer);
 				break;
 			}
 		}
