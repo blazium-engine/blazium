@@ -57,29 +57,39 @@
 #define VERSION_NUMBER VERSION_BRANCH
 #endif // VERSION_PATCH
 
-#define EXTERNAL_VERSION_NUMBER _MKSTR(EXTERNAL_VERSION_MAJOR) "." _MKSTR(EXTERNAL_VERSION_MINOR) "." _MKSTR(EXTERNAL_VERSION_PATCH) "." EXTERNAL_VERSION_STATUS
+#define EXTERNAL_VERSION_NUMBER _MKSTR(EXTERNAL_VERSION_MAJOR) "." _MKSTR(EXTERNAL_VERSION_MINOR) "." _MKSTR(EXTERNAL_VERSION_PATCH)
 
 // Version number encoded as hexadecimal int with one byte for each number,
 // for easy comparison from code.
 // Example: 3.1.4 will be 0x030104, making comparison easy from script.
 #define VERSION_HEX 0x10000 * VERSION_MAJOR + 0x100 * VERSION_MINOR + VERSION_PATCH
 
+// External Version number encoded as hexadecimal int with one byte for each number,
+// for easy comparison from code.
+#define EXTERNAL_VERSION_HEX 0x10000 * EXTERNAL_VERSION_MAJOR + 0x100 * EXTERNAL_VERSION_MINOR + EXTERNAL_VERSION_PATCH
+
 // Describes the full configuration of that Godot version, including the version number,
 // the status (beta, stable, etc.) and potential module-specific features (e.g. mono).
 // Example: "3.1.4.stable.mono"
 #define VERSION_FULL_CONFIG VERSION_NUMBER "." VERSION_STATUS VERSION_MODULE_CONFIG
 
-#define EXTERNAL_VERSION_FULL_CONFIG EXTERNAL_VERSION_NUMBER VERSION_MODULE_CONFIG
+// Describes the full configuration of that Blazium version, including the version number,
+// the status (nightly, stable, etc.) and potential module-specific features (e.g. mono).
+// Example: "0.1.0.nightly.mono"
+#define EXTERNAL_VERSION_FULL_CONFIG EXTERNAL_VERSION_NUMBER "." EXTERNAL_VERSION_STATUS VERSION_MODULE_CONFIG
 
 // Similar to VERSION_FULL_CONFIG, but also includes the (potentially custom) VERSION_BUILD
 // description (e.g. official, custom_build, etc.).
 // Example: "3.1.4.stable.mono.official"
 #define VERSION_FULL_BUILD VERSION_FULL_CONFIG "." VERSION_BUILD
 
+// Similar to EXTERNAL_VERSION_FULL_CONFIG, but also includes the VERSION_FULL_BUILD
+// description.
+// Example: "0.1.0.stable.mono (3.1.4.stable.mono.official)"
 #define EXTERNAL_VERSION_FULL_BUILD EXTERNAL_VERSION_NUMBER "(" VERSION_FULL_BUILD ")"
 
 // Same as above, but prepended with Godot's name and a cosmetic "v" for "version".
-// Example: "Godot v3.1.4.stable.official.mono"
+// Example: "Blazium v0.1.0.nightly.mono (base v3.1.4.stable.mono.official)"
 #define VERSION_FULL_NAME VERSION_NAME " v" EXTERNAL_VERSION_NUMBER " (base v" VERSION_FULL_BUILD ")"
 
 // Git commit hash, generated at build time in `core/version_hash.gen.cpp`.
