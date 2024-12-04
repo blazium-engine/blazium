@@ -930,7 +930,7 @@ Patches in the `patches/` directory should be re-applied after updating.
 ## ufbx
 
 - Upstream: https://github.com/ufbx/ufbx
-- Version: 0.14.3 (19bdb7e7ef02eb914d5e7211a3685f50ee6d27e3, 2024)
+- Version: 0.15.0 (24eea6f40929fe0f679b7950def378edb003afdb, 2024)
 - License: MIT
 
 Files extracted from upstream source:
