@@ -261,10 +261,6 @@ Files extracted from upstream source:
   * Upstream: https://github.com/rsms/inter
   * Version: 4.0 (2ce9119398be143fa289c3e180824db1b7ed803e, 2023)
   * License: OFL-1.1
-- `NotoNaskhArabicUI*.woff2`:
-  * Upstream: https://github.com/notofonts/arabic
-  * Version: 2.014 (133ccaebf922ca080a7eef22998611ac3c242df9, 2022)
-  * License: OFL-1.1
 - `NotoSansBengali*.woff2`:
   * Upstream: https://github.com/notofonts/bengali
   * Version: 2.003 (020a5701f6fc6a363d5eccbae45e37714c0ad686, 2022)
@@ -309,6 +305,10 @@ Files extracted from upstream source:
   * Upstream: https://fonts.google.com/specimen/Open+Sans
   * Version: 1.10 (downloaded from Google Fonts in February 2021)
   * License: Apache 2.0
+- `Vazirmatn*.woff2`:
+  * Upstream: https://github.com/rastikerdar/vazirmatn
+  * Version: 33.003 (83629f877e8f084cc07b47030b5d3a0ff06c76ec, 2022)
+  * License: OFL-1.1
 
 All fonts are converted from the unhinted `.ttf` sources using the
 `https://github.com/google/woff2` tool.
