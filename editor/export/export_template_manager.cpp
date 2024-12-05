@@ -41,6 +41,7 @@
 #include "editor/export/editor_export.h"
 #include "editor/progress_dialog.h"
 #include "editor/themes/editor_scale.h"
+#include "scene/gui/check_button.h"
 #include "scene/gui/file_dialog.h"
 #include "scene/gui/label.h"
 #include "scene/gui/line_edit.h"
@@ -123,6 +124,21 @@ void ExportTemplateManager::_update_template_status() {
 	}
 }
 
+void ExportTemplateManager::_download_override_changed(bool p_toggled_on) {
+	download_override_edit->set_visible(p_toggled_on);
+	if (!p_toggled_on) {
+		_refresh_mirrors();
+	}
+}
+
+void ExportTemplateManager::_download_edit_changed(String p_new_text) {
+	String url = download_override_edit->get_text();
+	HTTPRequest *client = memnew(HTTPRequest);
+	add_child(client);
+	client->connect("request_completed", callable_mp(this, &ExportTemplateManager::_refresh_mirrors_completed));
+	client->request(url);
+}
+
 void ExportTemplateManager::_download_current() {
 	if (is_downloading_templates) {
 		return;
@@ -133,7 +149,7 @@ void ExportTemplateManager::_download_current() {
 	download_progress_hb->show();
 
 	if (mirrors_available) {
-		String mirror_url = _get_selected_mirror();
+		String mirror_url = _get_selected_mirror()["url"];
 		if (mirror_url.is_empty()) {
 			_set_current_progress_status(TTR("There are no mirrors available."), true);
 			return;
@@ -289,7 +305,10 @@ void ExportTemplateManager::_refresh_mirrors_completed(int p_status, int p_code,
 			ERR_CONTINUE(!m.has("url") || !m.has("name"));
 
 			mirrors_list->add_item(m["name"]);
-			mirrors_list->set_item_metadata(i + 1, m["url"]);
+			Dictionary metadata_dict;
+			metadata_dict["url"] = m["url"];
+			metadata_dict["filesize"] = m.get("filesize", -1);
+			mirrors_list->set_item_metadata(i + 1, metadata_dict);
 
 			mirrors_available = true;
 		}
@@ -304,7 +323,7 @@ void ExportTemplateManager::_refresh_mirrors_completed(int p_status, int p_code,
 	is_refreshing_mirrors = false;
 
 	if (is_downloading_templates) {
-		String mirror_url = _get_selected_mirror();
+		String mirror_url = _get_selected_mirror()["url"];
 		if (mirror_url.is_empty()) {
 			_set_current_progress_status(TTR("There are no mirrors available."), true);
 			return;
@@ -319,6 +338,7 @@ bool ExportTemplateManager::_humanize_http_status(HTTPRequest *p_request, String
 	*r_downloaded_bytes = -1;
 	*r_total_bytes = -1;
 	bool success = true;
+	int total_size = _get_selected_mirror()["filesize"];
 
 	switch (p_request->get_http_client_status()) {
 		case HTTPClient::STATUS_DISCONNECTED:
@@ -348,10 +368,13 @@ bool ExportTemplateManager::_humanize_http_status(HTTPRequest *p_request, String
 		case HTTPClient::STATUS_BODY:
 			*r_status = TTR("Downloading");
 			*r_downloaded_bytes = p_request->get_downloaded_bytes();
-			*r_total_bytes = p_request->get_body_size();
+			if (total_size < 0) {
+				total_size = p_request->get_body_size();
+			}
+			*r_total_bytes = total_size;
 
-			if (p_request->get_body_size() > 0) {
-				*r_status += " " + String::humanize_size(p_request->get_downloaded_bytes()) + "/" + String::humanize_size(p_request->get_body_size());
+			if (total_size > 0) {
+				*r_status += " " + String::humanize_size(p_request->get_downloaded_bytes()) + "/" + String::humanize_size(total_size);
 			} else {
 				*r_status += " " + String::humanize_size(p_request->get_downloaded_bytes());
 			}
@@ -580,9 +603,9 @@ void ExportTemplateManager::_uninstall_template_confirmed() {
 	_update_template_status();
 }
 
-String ExportTemplateManager::_get_selected_mirror() const {
+Dictionary ExportTemplateManager::_get_selected_mirror() const {
 	if (mirrors_list->get_item_count() == 1) {
-		return "";
+		return Dictionary();
 	}
 
 	int selected = mirrors_list->get_selected_id();
@@ -597,7 +620,7 @@ String ExportTemplateManager::_get_selected_mirror() const {
 void ExportTemplateManager::_mirror_options_button_cbk(int p_id) {
 	switch (p_id) {
 		case VISIT_WEB_MIRROR: {
-			String mirror_url = _get_selected_mirror();
+			String mirror_url = _get_selected_mirror()["url"];
 			if (mirror_url.is_empty()) {
 				EditorNode::get_singleton()->show_warning(TTR("There are no mirrors available."));
 				return;
@@ -607,7 +630,7 @@ void ExportTemplateManager::_mirror_options_button_cbk(int p_id) {
 		} break;
 
 		case COPY_MIRROR_URL: {
-			String mirror_url = _get_selected_mirror();
+			String mirror_url = _get_selected_mirror()["url"];
 			if (mirror_url.is_empty()) {
 				EditorNode::get_singleton()->show_warning(TTR("There are no mirrors available."));
 				return;
@@ -1002,6 +1025,20 @@ ExportTemplateManager::ExportTemplateManager() {
 	HBoxContainer *install_file_hb = memnew(HBoxContainer);
 	install_file_hb->set_alignment(BoxContainer::ALIGNMENT_END);
 	install_options_vb->add_child(install_file_hb);
+
+	CheckButton *download_override_checkbox = memnew(CheckButton);
+	download_override_checkbox->set_text(TTR("Download from URL:"));
+	download_override_checkbox->connect("toggled", callable_mp(this, &ExportTemplateManager::_download_override_changed));
+	install_file_hb->add_child(download_override_checkbox);
+
+	download_override_edit = memnew(LineEdit);
+	download_override_edit->set_placeholder("http://");
+	download_override_edit->set_h_size_flags(Control::SIZE_EXPAND_FILL);
+	download_override_edit->connect("text_changed", callable_mp(this, &ExportTemplateManager::_download_edit_changed));
+	install_file_hb->add_child(download_override_edit);
+	download_override_edit->set_visible(false);
+
+	install_file_hb->add_spacer();
 
 	install_file_button = memnew(Button);
 	install_file_button->set_text(TTR("Install from File"));

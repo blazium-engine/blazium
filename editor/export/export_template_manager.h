@@ -62,6 +62,8 @@ class ExportTemplateManager : public AcceptDialog {
 	LineEdit *current_installed_path = nullptr;
 	Button *current_uninstall_button = nullptr;
 
+	LineEdit *download_override_edit = nullptr;
+
 	VBoxContainer *install_options_vb = nullptr;
 	OptionButton *mirrors_list = nullptr;
 
@@ -92,6 +94,8 @@ class ExportTemplateManager : public AcceptDialog {
 
 	void _update_template_status();
 
+	void _download_edit_changed(String p_new_text);
+	void _download_override_changed(bool p_toggled_on);
 	void _download_current();
 	void _download_template(const String &p_url, bool p_skip_check = false);
 	void _download_template_completed(int p_status, int p_code, const PackedStringArray &headers, const PackedByteArray &p_data);
@@ -109,7 +113,7 @@ class ExportTemplateManager : public AcceptDialog {
 	void _uninstall_template(const String &p_version);
 	void _uninstall_template_confirmed();
 
-	String _get_selected_mirror() const;
+	Dictionary _get_selected_mirror() const;
 	void _mirror_options_button_cbk(int p_id);
 	void _installed_table_button_cbk(Object *p_item, int p_column, int p_id, MouseButton p_button);
 
