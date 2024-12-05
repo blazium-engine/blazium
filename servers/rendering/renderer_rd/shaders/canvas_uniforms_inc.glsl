@@ -49,7 +49,7 @@ layout(push_constant, std430) uniform DrawData {
 
 #endif
 	vec2 color_texture_pixel_size;
-	uint lights[4];
+	uvec4 lights;
 }
 draw_data;
 
