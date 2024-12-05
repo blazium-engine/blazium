@@ -2036,27 +2036,27 @@ AnimationPlayerEditor::AnimationPlayerEditor(AnimationPlayerEditorPlugin *p_plug
 	play_hb->add_child(playback_container);
 
 	play_bw_from = memnew(Button);
-	play_bw_from->set_theme_type_variation("FlatButton");
+	play_bw_from->set_theme_type_variation(SceneStringName(FlatButton));
 	play_bw_from->set_tooltip_text(TTR("Play selected animation backwards from current pos. (A)"));
 	playback_container->add_child(play_bw_from);
 
 	play_bw = memnew(Button);
-	play_bw->set_theme_type_variation("FlatButton");
+	play_bw->set_theme_type_variation(SceneStringName(FlatButton));
 	play_bw->set_tooltip_text(TTR("Play selected animation backwards from end. (Shift+A)"));
 	playback_container->add_child(play_bw);
 
 	stop = memnew(Button);
-	stop->set_theme_type_variation("FlatButton");
+	stop->set_theme_type_variation(SceneStringName(FlatButton));
 	stop->set_tooltip_text(TTR("Pause/stop animation playback. (S)"));
 	playback_container->add_child(stop);
 
 	play = memnew(Button);
-	play->set_theme_type_variation("FlatButton");
+	play->set_theme_type_variation(SceneStringName(FlatButton));
 	play->set_tooltip_text(TTR("Play selected animation from start. (Shift+D)"));
 	playback_container->add_child(play);
 
 	play_from = memnew(Button);
-	play_from->set_theme_type_variation("FlatButton");
+	play_from->set_theme_type_variation(SceneStringName(FlatButton));
 	play_from->set_tooltip_text(TTR("Play selected animation from current pos. (D)"));
 	playback_container->add_child(play_from);
 
@@ -2110,7 +2110,7 @@ AnimationPlayerEditor::AnimationPlayerEditor(AnimationPlayerEditorPlugin *p_plug
 	animation->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 
 	autoplay = memnew(Button);
-	autoplay->set_theme_type_variation("FlatButton");
+	autoplay->set_theme_type_variation(SceneStringName(FlatButton));
 	hb->add_child(autoplay);
 	autoplay->set_tooltip_text(TTR("Autoplay on Load"));
 
@@ -2122,7 +2122,7 @@ AnimationPlayerEditor::AnimationPlayerEditor(AnimationPlayerEditorPlugin *p_plug
 	hb->add_child(memnew(VSeparator));
 
 	onion_toggle = memnew(Button);
-	onion_toggle->set_theme_type_variation("FlatButton");
+	onion_toggle->set_theme_type_variation(SceneStringName(FlatButton));
 	onion_toggle->set_toggle_mode(true);
 	onion_toggle->set_tooltip_text(TTR("Enable Onion Skinning"));
 	onion_toggle->connect(SceneStringName(pressed), callable_mp(this, &AnimationPlayerEditor::_onion_skinning_menu).bind(ONION_SKINNING_ENABLE));
@@ -2152,7 +2152,7 @@ AnimationPlayerEditor::AnimationPlayerEditor(AnimationPlayerEditorPlugin *p_plug
 	hb->add_child(memnew(VSeparator));
 
 	pin = memnew(Button);
-	pin->set_theme_type_variation("FlatButton");
+	pin->set_theme_type_variation(SceneStringName(FlatButton));
 	pin->set_toggle_mode(true);
 	pin->set_tooltip_text(TTR("Pin AnimationPlayer"));
 	hb->add_child(pin);

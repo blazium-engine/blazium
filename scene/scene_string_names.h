@@ -153,6 +153,8 @@ public:
 
 	const StringName Start = StaticCString::create("Start");
 	const StringName End = StaticCString::create("End");
+
+	const StringName FlatButton = StaticCString::create("FlatButton");
 };
 
 #define SceneStringName(m_name) SceneStringNames::get_singleton()->m_name
