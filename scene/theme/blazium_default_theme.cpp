@@ -1632,6 +1632,7 @@ void make_default_theme(Ref<Font> p_font, float p_scale, TextServer::SubpixelPos
 	t->set_constant("draw_grabber_icon", "FlatSplitContainer", 0);
 	t->set_constant("draw_grabber_icon", "FlatHSplitContainer", 0);
 	t->set_constant("draw_grabber_icon", "FlatVSplitContainer", 0);
+	t->set_constant("connection_hover_thickness", "GraphEdit", 0);
 
 	t->set_constant("draw_split_bar", "FlatSplitContainer", 1);
 	t->set_constant("draw_split_bar", "FlatHSplitContainer", 1);
