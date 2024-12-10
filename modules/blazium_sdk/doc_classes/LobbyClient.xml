@@ -9,6 +9,42 @@
 	<tutorials>
 	</tutorials>
 	<methods>
+		<method name="add_lobby_data">
+			<return type="LobbyResponse" />
+			<param index="0" name="data" type="Dictionary" />
+			<param index="1" name="is_private" type="bool" default="false" />
+			<description>
+				Add data to the lobby. Only works if you are host.
+				Generates [signal received_lobby_data].
+			</description>
+		</method>
+		<method name="add_lobby_tags">
+			<return type="LobbyResponse" />
+			<param index="0" name="tags" type="Dictionary" />
+			<description>
+				Add tags to the lobby. Only works if you are host.
+				Generates [signal lobby_tagged].
+			</description>
+		</method>
+		<method name="add_peer_data">
+			<return type="LobbyResponse" />
+			<param index="0" name="data" type="Dictionary" />
+			<param index="1" name="target_peer" type="String" />
+			<param index="2" name="is_private" type="bool" default="false" />
+			<description>
+				Add data to a peer. Only works if you are host.
+				Generates [signal received_peer_data].
+			</description>
+		</method>
+		<method name="add_peers_data">
+			<return type="LobbyResponse" />
+			<param index="0" name="data" type="Dictionary" />
+			<param index="1" name="is_private" type="bool" default="false" />
+			<description>
+				Add data to all peers. Only works if you are host.
+				Generates [signal received_peer_data].
+			</description>
+		</method>
 		<method name="connect_to_lobby">
 			<return type="bool" />
 			<description>
@@ -25,6 +61,42 @@
 				Create a lobby and become host. If you are already in a lobby, you cannot create one. You need to leave first.
 				The new lobby can have a title, tags, max players and password. 0 max players means unlimited.
 				Generates [signal lobby_created] signal.
+			</description>
+		</method>
+		<method name="del_lobby_data">
+			<return type="LobbyResponse" />
+			<param index="0" name="keys" type="String[]" />
+			<param index="1" name="is_private" type="bool" default="false" />
+			<description>
+				Delete one or more keys from the lobby data. Only works if you are host.
+				Generates [signal received_lobby_data].
+			</description>
+		</method>
+		<method name="del_lobby_tags">
+			<return type="LobbyResponse" />
+			<param index="0" name="keys" type="String[]" />
+			<description>
+				Delete one or more keys from the lobby tags. Only works if you are host.
+				Generates [signal lobby_tagged].
+			</description>
+		</method>
+		<method name="del_peer_data">
+			<return type="LobbyResponse" />
+			<param index="0" name="keys" type="String[]" />
+			<param index="1" name="target_peer" type="String" />
+			<param index="2" name="is_private" type="bool" default="false" />
+			<description>
+				one or more keys from the peer data. Only works if you are host.
+				Generates [signal received_peer_data].
+			</description>
+		</method>
+		<method name="del_peers_data">
+			<return type="LobbyResponse" />
+			<param index="0" name="keys" type="String[]" />
+			<param index="1" name="is_private" type="bool" default="false" />
+			<description>
+				one or more keys from the peers data. Only works if you are host.
+				Generates [signal received_peer_data].
 			</description>
 		</method>
 		<method name="disconnect_from_lobby">
@@ -98,15 +170,6 @@
 				Generates [signal peer_messaged].
 			</description>
 		</method>
-		<method name="set_lobby_data">
-			<return type="LobbyResponse" />
-			<param index="0" name="data" type="Dictionary" />
-			<param index="1" name="is_private" type="bool" default="false" />
-			<description>
-				Set data on the lobby. Only works if you are host.
-				Generates [signal received_lobby_data].
-			</description>
-		</method>
 		<method name="set_lobby_ready">
 			<return type="LobbyResponse" />
 			<param index="0" name="ready" type="bool" />
@@ -123,39 +186,12 @@
 				Generates [signal lobby_sealed].
 			</description>
 		</method>
-		<method name="set_lobby_tags">
-			<return type="LobbyResponse" />
-			<param index="0" name="tags" type="Dictionary" />
-			<description>
-				Set tags on the lobby. Only works if you are host.
-				Generates [signal lobby_tagged].
-			</description>
-		</method>
-		<method name="set_peer_data">
-			<return type="LobbyResponse" />
-			<param index="0" name="data" type="Dictionary" />
-			<param index="1" name="target_peer" type="String" />
-			<param index="2" name="is_private" type="bool" />
-			<description>
-				Set data on the peer. Only works if you are host.
-				Generates [signal received_peer_data] signal if you are in lobby.
-			</description>
-		</method>
 		<method name="set_peer_name">
 			<return type="LobbyResponse" />
 			<param index="0" name="peer_name" type="String" />
 			<description>
 				Set your peer name.
 				Generates [signal peer_named] signal if you are in lobby.
-			</description>
-		</method>
-		<method name="set_peers_data">
-			<return type="LobbyResponse" />
-			<param index="0" name="data" type="Dictionary" />
-			<param index="1" name="is_private" type="bool" />
-			<description>
-				Set data on the peers. Only works if you are host.
-				Generates [signal received_peer_data] signal if you are in lobby.
 			</description>
 		</method>
 		<method name="view_lobby">

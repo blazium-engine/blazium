@@ -261,7 +261,7 @@ public:
 		class ViewLobbyResult : public RefCounted {
 			GDCLASS(ViewLobbyResult, RefCounted);
 			String error;
-			TypedArray<LobbyPeer> peers;
+			TypedArray<LobbyPeer> peers_info;
 			Ref<LobbyInfo> lobby_info;
 
 		protected:
@@ -279,12 +279,12 @@ public:
 
 		public:
 			void set_error(const String &p_error) { this->error = p_error; }
-			void set_peers(const TypedArray<LobbyPeer> &p_peers) { this->peers = p_peers; }
+			void set_peers(const TypedArray<LobbyPeer> &p_peers) { this->peers_info = p_peers; }
 			void set_lobby(const Ref<LobbyInfo> &p_lobby_info) { this->lobby_info = p_lobby_info; }
 
 			bool has_error() const { return !error.is_empty(); }
 			String get_error() const { return error; }
-			TypedArray<LobbyPeer> get_peers() const { return peers; }
+			TypedArray<LobbyPeer> get_peers() const { return peers_info; }
 			Ref<LobbyInfo> get_lobby() const { return lobby_info; }
 			ViewLobbyResult() {
 				lobby_info.instantiate();
@@ -300,8 +300,10 @@ protected:
 	bool connected = false;
 	Dictionary _commands;
 
+	void _clear_lobby();
 	void _receive_data(const Dictionary &p_data);
 	void _send_data(const Dictionary &p_data);
+	void _update_peers(Dictionary p_data_dict, TypedArray<LobbyPeer> &peers);
 	String _increment_counter();
 
 	enum CommandType {
@@ -340,6 +342,7 @@ public:
 	Ref<ViewLobbyResponse> view_lobby(const String &p_lobby_id, const String &p_password);
 	Ref<LobbyResponse> kick_peer(const String &p_peer_id);
 	Ref<LobbyResponse> set_lobby_tags(const Dictionary &p_tags);
+	Ref<LobbyResponse> del_lobby_tags(const TypedArray<String> &p_keys);
 	Ref<LobbyResponse> lobby_chat(const String &chat_message);
 	Ref<LobbyResponse> lobby_ready(bool p_ready);
 	Ref<LobbyResponse> set_peer_name(const String &p_peer_name);
@@ -347,9 +350,15 @@ public:
 	Ref<LobbyResponse> lobby_call(const String &p_method, const Array &p_args);
 	Ref<LobbyResponse> lobby_notify(const Variant &p_peer_data);
 	Ref<LobbyResponse> peer_notify(const Variant &p_peer_data, const String &p_target_peer);
+
 	Ref<LobbyResponse> lobby_data(const Dictionary &p_lobby_data, bool p_is_private);
+	Ref<LobbyResponse> del_lobby_data(const TypedArray<String> &p_keys, bool p_is_private);
+
 	Ref<LobbyResponse> set_peer_data(const Dictionary &p_peer_data, const String &p_target_peer, bool p_is_private);
+	Ref<LobbyResponse> del_peer_data(const TypedArray<String> &p_keys, const String &p_target_peer, bool p_is_private);
+
 	Ref<LobbyResponse> set_peers_data(const Dictionary &p_peer_data, bool p_is_private);
+	Ref<LobbyResponse> del_peers_data(const TypedArray<String> &p_keys, bool p_is_private);
 
 	LobbyClient();
 	~LobbyClient();
