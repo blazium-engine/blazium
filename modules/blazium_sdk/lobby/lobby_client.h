@@ -35,54 +35,127 @@
 #include "core/io/json.h"
 #include "modules/websocket/websocket_peer.h"
 
+class LobbyInfo : public Resource {
+	GDCLASS(LobbyInfo, Resource);
+	String id;
+	String lobby_name;
+	String host;
+	String host_name;
+	int max_players = 0;
+	int players = 0;
+	bool sealed = false;
+
+protected:
+	static void _bind_methods() {
+		ClassDB::bind_method(D_METHOD("get_host"), &LobbyInfo::get_host);
+		ClassDB::bind_method(D_METHOD("get_max_players"), &LobbyInfo::get_max_players);
+		ClassDB::bind_method(D_METHOD("is_sealed"), &LobbyInfo::is_sealed);
+		ClassDB::bind_method(D_METHOD("get_id"), &LobbyInfo::get_id);
+		ClassDB::bind_method(D_METHOD("get_lobby_name"), &LobbyInfo::get_lobby_name);
+		ClassDB::bind_method(D_METHOD("get_host_name"), &LobbyInfo::get_host_name);
+		ClassDB::bind_method(D_METHOD("get_players"), &LobbyInfo::get_players);
+
+		ADD_PROPERTY(PropertyInfo(Variant::STRING, "id"), "", "get_id");
+		ADD_PROPERTY(PropertyInfo(Variant::STRING, "lobby_name"), "", "get_lobby_name");
+		ADD_PROPERTY(PropertyInfo(Variant::STRING, "host_name"), "", "get_host_name");
+		ADD_PROPERTY(PropertyInfo(Variant::INT, "players"), "", "get_players");
+		ADD_PROPERTY(PropertyInfo(Variant::STRING, "host"), "", "get_host");
+		ADD_PROPERTY(PropertyInfo(Variant::INT, "max_players"), "", "get_max_players");
+		ADD_PROPERTY(PropertyInfo(Variant::BOOL, "sealed"), "", "is_sealed");
+	}
+
+public:
+	void set_id(const String &p_id) { this->id = p_id; }
+	void set_lobby_name(const String &p_lobby_name) { this->lobby_name = p_lobby_name; }
+	void set_host(const String &p_host) { this->host = p_host; }
+	void set_host_name(const String &p_host_name) { this->host_name = p_host_name; }
+	void set_max_players(int p_max_players) { this->max_players = p_max_players; }
+	void set_players(int p_players) { this->players = p_players; }
+	void set_sealed(bool p_sealed) { this->sealed = p_sealed; }
+
+	void set_dict(const Dictionary &p_dict) {
+		this->set_host(p_dict.get("host", ""));
+		this->set_max_players(p_dict.get("max_players", 0));
+		this->set_sealed(p_dict.get("sealed", false));
+		this->set_players(p_dict.get("players", 0));
+		this->set_id(p_dict.get("id", ""));
+		this->set_lobby_name(p_dict.get("name", ""));
+		this->set_host_name(p_dict.get("host_name", ""));
+	}
+	Dictionary get_dict() const {
+		Dictionary dict;
+		dict["host"] = this->get_host();
+		dict["max_players"] = this->get_max_players();
+		dict["sealed"] = this->is_sealed();
+		dict["players"] = this->get_players();
+		dict["id"] = this->get_id();
+		dict["name"] = this->get_lobby_name();
+		dict["host_name"] = this->get_host_name();
+		return dict;
+	}
+
+	String get_id() const { return id; }
+	String get_lobby_name() const { return lobby_name; }
+	String get_host() const { return host; }
+	String get_host_name() const { return host_name; }
+	int get_max_players() const { return max_players; }
+	int get_players() const { return players; }
+	bool is_sealed() const { return sealed; }
+	LobbyInfo() {}
+};
+
+class LobbyPeer : public Resource {
+	GDCLASS(LobbyPeer, Resource);
+	String id;
+	String peer_name;
+	bool ready = false;
+
+protected:
+	static void _bind_methods() {
+		ClassDB::bind_method(D_METHOD("get_id"), &LobbyPeer::get_id);
+		ClassDB::bind_method(D_METHOD("get_peer_name"), &LobbyPeer::get_peer_name);
+		ClassDB::bind_method(D_METHOD("is_ready"), &LobbyPeer::is_ready);
+		ADD_PROPERTY(PropertyInfo(Variant::STRING, "id"), "", "get_id");
+		ADD_PROPERTY(PropertyInfo(Variant::STRING, "peer_name"), "", "get_peer_name");
+		ADD_PROPERTY(PropertyInfo(Variant::BOOL, "ready"), "", "is_ready");
+	}
+
+public:
+	void set_id(const String &p_id) { this->id = p_id; }
+	void set_peer_name(const String &p_peer_name) { this->peer_name = p_peer_name; }
+	void set_ready(bool p_ready) { this->ready = p_ready; }
+	void set_dict(const Dictionary &p_dict) {
+		this->set_id(p_dict.get("id", ""));
+		this->set_peer_name(p_dict.get("name", ""));
+		this->set_ready(p_dict.get("ready", ""));
+	}
+	Dictionary get_dict() const {
+		Dictionary dict;
+		dict["id"] = this->get_id();
+		dict["name"] = this->get_peer_name();
+		dict["ready"] = this->is_ready();
+		return dict;
+	}
+
+	String get_id() const { return id; }
+	String get_peer_name() const { return peer_name; }
+	bool is_ready() const { return ready; }
+	LobbyPeer() {}
+};
+
 class LobbyClient : public BlaziumClient {
 	GDCLASS(LobbyClient, BlaziumClient);
 	enum CommandType {
-		CREATE_LOBBY = 0,
-		SIMPLE_REQUEST,
+		LOBBY_REQUEST = 0,
 		LOBBY_VIEW,
 		LOBBY_LIST
 	};
 	String server_url = "wss://lobby.blazium.app/connect";
+	Ref<LobbyInfo> lobby;
+	Ref<LobbyPeer> peer;
+	TypedArray<LobbyPeer> peers;
 
 public:
-	class CreateLobbyResponse : public RefCounted {
-		GDCLASS(CreateLobbyResponse, RefCounted);
-
-	protected:
-		static void _bind_methods() {
-			ADD_SIGNAL(MethodInfo("finished", PropertyInfo(Variant::OBJECT, "result", PROPERTY_HINT_RESOURCE_TYPE, "CreateLobbyResult")));
-		}
-
-	public:
-		class CreateLobbyResult : public RefCounted {
-			GDCLASS(CreateLobbyResult, RefCounted);
-			String error;
-			String lobby_name;
-
-		protected:
-			static void _bind_methods() {
-				ClassDB::bind_method(D_METHOD("has_error"), &CreateLobbyResult::has_error);
-				ClassDB::bind_method(D_METHOD("get_error"), &CreateLobbyResult::get_error);
-				ClassDB::bind_method(D_METHOD("get_lobby_name"), &CreateLobbyResult::get_lobby_name);
-				ADD_PROPERTY(PropertyInfo(Variant::STRING, "error"), "", "get_error");
-				ADD_PROPERTY(PropertyInfo(Variant::STRING, "lobby_name"), "", "get_lobby_name");
-			}
-
-		public:
-			void set_error(String p_error) { this->error = p_error; }
-			void set_lobby_name(String p_lobby_name) { this->lobby_name = p_lobby_name; }
-
-			bool has_error() const { return !error.is_empty(); }
-			String get_error() const { return error; }
-			String get_lobby_name() const { return lobby_name; }
-			CreateLobbyResult(const CreateLobbyResult &other) :
-					error(other.error), lobby_name(other.lobby_name) {}
-			CreateLobbyResult() {}
-		};
-		CreateLobbyResponse(const CreateLobbyResponse &other) {}
-		CreateLobbyResponse() {}
-	};
 	class LobbyResponse : public RefCounted {
 		GDCLASS(LobbyResponse, RefCounted);
 
@@ -109,13 +182,14 @@ public:
 
 			bool has_error() const { return !error.is_empty(); }
 			String get_error() const { return error; }
-			LobbyResult(const LobbyResult &other) :
-					error(other.error) {}
+			LobbyResult(const LobbyResult &p_other) :
+					error(p_other.error) {}
 			LobbyResult() {}
 		};
-		LobbyResponse(const LobbyResponse &other) {}
+		LobbyResponse(const LobbyResponse &p_other) {}
 		LobbyResponse() {}
 	};
+
 	class ListLobbyResponse : public RefCounted {
 		GDCLASS(ListLobbyResponse, RefCounted);
 
@@ -129,7 +203,7 @@ public:
 			GDCLASS(ListLobbyResult, RefCounted);
 
 			String error;
-			TypedArray<String> lobbies;
+			TypedArray<LobbyInfo> lobbies;
 
 		protected:
 			static void _bind_methods() {
@@ -137,79 +211,25 @@ public:
 				ClassDB::bind_method(D_METHOD("get_error"), &ListLobbyResult::get_error);
 				ClassDB::bind_method(D_METHOD("get_lobbies"), &ListLobbyResult::get_lobbies);
 				ADD_PROPERTY(PropertyInfo(Variant::STRING, "error"), "", "get_error");
-				ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "lobbies"), "", "get_lobbies");
+				ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "lobbies", PROPERTY_HINT_ARRAY_TYPE, "LobbyInfo"), "", "get_lobbies");
+				ADD_PROPERTY_DEFAULT("lobbies", TypedArray<LobbyInfo>());
 			}
 
 		public:
-			void set_error(String p_error) { this->error = p_error; }
-			void set_lobbies(TypedArray<String> p_lobbies) { this->lobbies = p_lobbies; }
+			void set_error(const String &p_error) { this->error = p_error; }
+			void set_lobbies(const TypedArray<LobbyInfo> &p_lobbies) { this->lobbies = p_lobbies; }
 
 			bool has_error() const { return !error.is_empty(); }
 			String get_error() const { return error; }
-			TypedArray<String> get_lobbies() const { return lobbies; }
-			ListLobbyResult(const ListLobbyResult &other) :
-					error(other.error), lobbies(other.lobbies) {}
+			TypedArray<LobbyInfo> get_lobbies() const { return lobbies; }
+			ListLobbyResult(const ListLobbyResult &p_other) :
+					error(p_other.error), lobbies(p_other.lobbies) {}
 			ListLobbyResult() {}
 		};
-		ListLobbyResponse(const ListLobbyResponse &other) {}
+		ListLobbyResponse(const ListLobbyResponse &p_other) {}
 		ListLobbyResponse() {}
 	};
-	class LobbyInfo : public RefCounted {
-		GDCLASS(LobbyInfo, RefCounted);
-		String host;
-		int max_players = 0;
-		bool sealed = false;
 
-	protected:
-		static void _bind_methods() {
-			ClassDB::bind_method(D_METHOD("get_host"), &LobbyInfo::get_host);
-			ClassDB::bind_method(D_METHOD("get_max_players"), &LobbyInfo::get_max_players);
-			ClassDB::bind_method(D_METHOD("is_sealed"), &LobbyInfo::is_sealed);
-			ADD_PROPERTY(PropertyInfo(Variant::STRING, "host"), "", "get_host");
-			ADD_PROPERTY(PropertyInfo(Variant::INT, "max_players"), "", "get_max_players");
-			ADD_PROPERTY(PropertyInfo(Variant::BOOL, "sealed"), "", "is_sealed");
-		}
-
-	public:
-		void set_host(String p_host) { this->host = p_host; }
-		void set_max_players(int p_max_players) { this->max_players = p_max_players; }
-		void set_sealed(bool p_sealed) { this->sealed = p_sealed; }
-
-		String get_host() const { return host; }
-		int get_max_players() const { return max_players; }
-		bool is_sealed() const { return sealed; }
-		LobbyInfo(const LobbyInfo &other) :
-				host(other.host), max_players(other.max_players), sealed(other.sealed) {}
-		LobbyInfo() {}
-	};
-	class LobbyPeer : public RefCounted {
-		GDCLASS(LobbyPeer, RefCounted);
-		String id;
-		String name;
-		bool ready = false;
-
-	protected:
-		static void _bind_methods() {
-			ClassDB::bind_method(D_METHOD("get_id"), &LobbyPeer::get_id);
-			ClassDB::bind_method(D_METHOD("get_name"), &LobbyPeer::get_name);
-			ClassDB::bind_method(D_METHOD("is_ready"), &LobbyPeer::is_ready);
-			ADD_PROPERTY(PropertyInfo(Variant::STRING, "id"), "", "get_id");
-			ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "", "get_name");
-			ADD_PROPERTY(PropertyInfo(Variant::BOOL, "ready"), "", "is_ready");
-		}
-
-	public:
-		void set_id(String p_id) { this->id = p_id; }
-		void set_name(String p_name) { this->name = p_name; }
-		void set_ready(bool p_ready) { this->ready = p_ready; }
-
-		String get_id() const { return id; }
-		String get_name() const { return name; }
-		bool is_ready() const { return ready; }
-		LobbyPeer(const LobbyPeer &other) :
-				id(other.id), name(other.name), ready(other.ready) {}
-		LobbyPeer() {}
-	};
 	class ViewLobbyResponse : public RefCounted {
 		GDCLASS(ViewLobbyResponse, RefCounted);
 
@@ -230,39 +250,41 @@ public:
 				ClassDB::bind_method(D_METHOD("has_error"), &ViewLobbyResult::has_error);
 				ClassDB::bind_method(D_METHOD("get_error"), &ViewLobbyResult::get_error);
 				ClassDB::bind_method(D_METHOD("get_peers"), &ViewLobbyResult::get_peers);
-				ClassDB::bind_method(D_METHOD("get_lobby_info"), &ViewLobbyResult::get_lobby_info);
-				ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "peers"), "", "get_peers");
+				ClassDB::bind_method(D_METHOD("get_lobby"), &ViewLobbyResult::get_lobby);
+				ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "peers", PROPERTY_HINT_ARRAY_TYPE, "LobbyPeer"), "", "get_peers");
+				ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "lobby", PROPERTY_HINT_RESOURCE_TYPE, "LobbyInfo"), "", "get_lobby");
+				ADD_PROPERTY_DEFAULT("lobby", Ref<LobbyInfo>());
+				ADD_PROPERTY_DEFAULT("peers", TypedArray<LobbyPeer>());
 				ADD_PROPERTY(PropertyInfo(Variant::STRING, "error"), "", "get_error");
 			}
 
 		public:
-			void set_error(String p_error) { this->error = p_error; }
-			void set_peers(TypedArray<LobbyPeer> p_peers) { this->peers = p_peers; }
-			void set_lobby_info(Ref<LobbyInfo> p_lobby_info) { this->lobby_info = p_lobby_info; }
+			void set_error(const String &p_error) { this->error = p_error; }
+			void set_peers(const TypedArray<LobbyPeer> &p_peers) { this->peers = p_peers; }
+			void set_lobby(const Ref<LobbyInfo> &p_lobby_info) { this->lobby_info = p_lobby_info; }
 
 			bool has_error() const { return !error.is_empty(); }
 			String get_error() const { return error; }
 			TypedArray<LobbyPeer> get_peers() const { return peers; }
-			Ref<LobbyInfo> get_lobby_info() const { return lobby_info; }
+			Ref<LobbyInfo> get_lobby() const { return lobby_info; }
 			ViewLobbyResult() {
 				lobby_info.instantiate();
 			}
 			~ViewLobbyResult() {
 			}
 		};
-		ViewLobbyResponse(const ViewLobbyResponse &other) {}
+		ViewLobbyResponse(const ViewLobbyResponse &p_other) {}
 		ViewLobbyResponse() {}
 	};
 
 private:
 	Ref<WebSocketPeer> _socket;
 	int _counter = 0;
+	bool connected = false;
 	Dictionary _commands;
 
-	String _get_data_from_dict(const Dictionary &dict, const String &key);
-	void _receive_data(const Dictionary &data);
-	void _send_data(const Dictionary &data);
-	void _wait_ready();
+	void _receive_data(const Dictionary &p_data);
+	void _send_data(const Dictionary &p_data);
 	String _increment_counter();
 
 protected:
@@ -270,22 +292,29 @@ protected:
 	static void _bind_methods();
 
 public:
-	bool connect_to_lobby(const String &game_id);
-	void set_server_url(String p_server_url) { this->server_url = p_server_url; }
+	void set_server_url(const String &p_server_url) { this->server_url = p_server_url; }
 	String get_server_url() { return server_url; }
-	Ref<CreateLobbyResponse> create_lobby(int max_players, const String &password);
-	Ref<LobbyResponse> join_lobby(const String &lobby_name, const String &password);
+	bool get_connected() { return connected; }
+	void set_lobby(const Ref<LobbyInfo> &p_lobby) { this->lobby = p_lobby; }
+	Ref<LobbyInfo> get_lobby() { return lobby; }
+	void set_peer(const Ref<LobbyPeer> &p_peer) { this->peer = p_peer; }
+	Ref<LobbyPeer> get_peer() { return peer; }
+	TypedArray<LobbyPeer> get_peers() { return peers; }
+
+	bool connect_to_lobby(const String &p_game_id);
+	Ref<ViewLobbyResponse> create_lobby(const String &p_lobby_name, int p_max_players, const String &p_password);
+	Ref<ViewLobbyResponse> join_lobby(const String &p_lobby_id, const String &p_password);
 	Ref<LobbyResponse> leave_lobby();
-	Ref<ListLobbyResponse> list_lobby(int start, int count);
-	Ref<ViewLobbyResponse> view_lobby(const String &lobby_name, const String &password);
-	Ref<LobbyResponse> kick_peer(const String &peer_id);
+	Ref<ListLobbyResponse> list_lobby(int p_start, int p_count);
+	Ref<ViewLobbyResponse> view_lobby(const String &p_lobby_id, const String &p_password);
+	Ref<LobbyResponse> kick_peer(const String &p_peer_id);
 	Ref<LobbyResponse> lobby_ready();
 	Ref<LobbyResponse> lobby_unready();
-	Ref<LobbyResponse> set_peer_name(const String &peer_name);
+	Ref<LobbyResponse> set_peer_name(const String &p_peer_name);
 	Ref<LobbyResponse> seal_lobby();
 	Ref<LobbyResponse> unseal_lobby();
-	Ref<LobbyResponse> lobby_data(const String &peer_data);
-	Ref<LobbyResponse> lobby_data_to(const String &peer_data, const String &target_peer);
+	Ref<LobbyResponse> lobby_data(const String &p_peer_data);
+	Ref<LobbyResponse> lobby_data_to(const String &p_peer_data, const String &p_target_peer);
 
 	LobbyClient();
 	~LobbyClient();

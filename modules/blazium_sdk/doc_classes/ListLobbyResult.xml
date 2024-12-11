@@ -20,7 +20,7 @@
 		<member name="error" type="String" setter="" getter="get_error" default="&quot;&quot;">
 			Gets the error message.
 		</member>
-		<member name="lobbies" type="String[]" setter="" getter="get_lobbies" default="[]">
+		<member name="lobbies" type="LobbyInfo[]" setter="" getter="get_lobbies" default="[]">
 			Gets the lobbies.
 		</member>
 	</members>

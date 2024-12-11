@@ -35,11 +35,9 @@
 void initialize_blazium_sdk_module(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE) {
 		GDREGISTER_ABSTRACT_CLASS(BlaziumClient);
+		GDREGISTER_CLASS(LobbyInfo);
+		GDREGISTER_CLASS(LobbyPeer);
 		GDREGISTER_CLASS(LobbyClient);
-		GDREGISTER_CLASS(LobbyClient::LobbyInfo);
-		GDREGISTER_CLASS(LobbyClient::LobbyPeer);
-		GDREGISTER_CLASS(LobbyClient::CreateLobbyResponse::CreateLobbyResult);
-		GDREGISTER_CLASS(LobbyClient::CreateLobbyResponse);
 		GDREGISTER_CLASS(LobbyClient::LobbyResponse::LobbyResult);
 		GDREGISTER_CLASS(LobbyClient::LobbyResponse);
 		GDREGISTER_CLASS(LobbyClient::ListLobbyResponse::ListLobbyResult);
