@@ -1409,7 +1409,6 @@ void DisplayServerWindows::screen_set_keep_on(bool p_enable) {
 	if (p_enable) {
 		const String reason = "Blazium Engine running with display/window/energy_saving/keep_screen_on = true";
 		Char16String reason_utf16 = reason.utf16();
-
 		REASON_CONTEXT context;
 		context.Version = POWER_REQUEST_CONTEXT_VERSION;
 		context.Flags = POWER_REQUEST_CONTEXT_SIMPLE_STRING;
@@ -6007,7 +6006,6 @@ DisplayServerWindows::DisplayServerWindows(const String &p_rendering_driver, Win
 	screen_set_keep_on(GLOBAL_GET("display/window/energy_saving/keep_screen_on"));
 
 	// Load Windows version info.
-	OSVERSIONINFOW os_ver;
 	ZeroMemory(&os_ver, sizeof(OSVERSIONINFOW));
 	os_ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 
