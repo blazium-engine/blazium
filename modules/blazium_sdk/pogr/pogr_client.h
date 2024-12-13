@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  lobby_client.h                                                        */
+/*  pogr_client.h                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                            BLAZIUM ENGINE                              */
@@ -112,7 +112,7 @@ public:
 			Ref<POGRResult> result;
 			result.instantiate();
 			String result_str = String::utf8((const char *)p_data.ptr(), p_data.size());
-			if (p_status != 200 || result_str == "") {
+			if (p_code != 200 || result_str == "") {
 				result->set_error("Request failed with code: " + String::num(p_code) + " " + result_str);
 			} else {
 				if (result_str != "") {

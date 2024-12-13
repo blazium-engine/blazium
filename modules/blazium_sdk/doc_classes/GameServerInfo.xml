@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="GameServerInfo" inherits="Resource" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Game server info used by the [MasterServerClient].
+	</brief_description>
+	<description>
+		Game server info used by the [MasterServerClient]. Used to create or update a game server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="description" type="String" setter="set_description" getter="get_description" default="&quot;&quot;">
+			Description of the game server.
+		</member>
+		<member name="game_name" type="String" setter="set_game_name" getter="get_game_name" default="&quot;&quot;">
+			Name of the game server.
+		</member>
+		<member name="id" type="String" setter="set_id" getter="get_id" default="&quot;&quot;">
+			Id of the game server. Generated after call to create game server.
+		</member>
+		<member name="ip_address" type="String" setter="set_ip_address" getter="get_ip_address" default="&quot;&quot;">
+			Ip address of the game server.
+		</member>
+		<member name="max_players" type="int" setter="set_max_players" getter="get_max_players" default="0">
+			Max players of the game server.
+		</member>
+		<member name="players" type="int" setter="set_players" getter="get_players" default="0">
+			Players of the game server.
+		</member>
+		<member name="port" type="int" setter="set_port" getter="get_port" default="0">
+			Port of the game server.
+		</member>
+		<member name="version" type="String" setter="set_version" getter="get_version" default="&quot;&quot;">
+			Version of the game server.
+		</member>
+	</members>
+</class>

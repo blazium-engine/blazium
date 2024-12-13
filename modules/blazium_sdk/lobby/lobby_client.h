@@ -37,12 +37,12 @@
 
 class LobbyInfo : public Resource {
 	GDCLASS(LobbyInfo, Resource);
-	String id;
-	String lobby_name;
-	String host;
-	String host_name;
-	Dictionary tags;
-	Dictionary data;
+	String id = "";
+	String lobby_name = "";
+	String host = "";
+	String host_name = "";
+	Dictionary tags = Dictionary();
+	Dictionary data = Dictionary();
 	int max_players = 0;
 	int players = 0;
 	bool sealed = false;
@@ -127,10 +127,10 @@ public:
 
 class LobbyPeer : public Resource {
 	GDCLASS(LobbyPeer, Resource);
-	String id;
-	String peer_name;
+	String id = "";
+	String peer_name = "";
 	bool ready = false;
-	Dictionary data;
+	Dictionary data = Dictionary();
 
 protected:
 	static void _bind_methods() {
@@ -175,14 +175,14 @@ class LobbyClient : public BlaziumClient {
 	GDCLASS(LobbyClient, BlaziumClient);
 
 protected:
-	String server_url;
-	String reconnection_token;
+	String server_url = "wss://lobby.blazium.app/connect";
+	String reconnection_token = "";
 	String game_id = "";
-	Dictionary host_data;
-	Dictionary peer_data;
+	Dictionary host_data = Dictionary();
+	Dictionary peer_data = Dictionary();
 	Ref<LobbyInfo> lobby;
 	Ref<LobbyPeer> peer;
-	TypedArray<LobbyPeer> peers;
+	TypedArray<LobbyPeer> peers = TypedArray<LobbyPeer>();
 
 public:
 	class LobbyResponse : public RefCounted {
@@ -197,7 +197,7 @@ public:
 		class LobbyResult : public RefCounted {
 			GDCLASS(LobbyResult, RefCounted);
 
-			String error;
+			String error = "";
 
 		protected:
 			static void _bind_methods() {
@@ -226,8 +226,8 @@ public:
 		class ListLobbyResult : public RefCounted {
 			GDCLASS(ListLobbyResult, RefCounted);
 
-			String error;
-			TypedArray<LobbyInfo> lobbies;
+			String error = "";
+			TypedArray<LobbyInfo> lobbies = TypedArray<LobbyInfo>();
 
 		protected:
 			static void _bind_methods() {
@@ -236,7 +236,6 @@ public:
 				ClassDB::bind_method(D_METHOD("get_lobbies"), &ListLobbyResult::get_lobbies);
 				ADD_PROPERTY(PropertyInfo(Variant::STRING, "error"), "", "get_error");
 				ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "lobbies", PROPERTY_HINT_ARRAY_TYPE, "LobbyInfo"), "", "get_lobbies");
-				ADD_PROPERTY_DEFAULT("lobbies", TypedArray<LobbyInfo>());
 			}
 
 		public:
@@ -260,8 +259,8 @@ public:
 	public:
 		class ViewLobbyResult : public RefCounted {
 			GDCLASS(ViewLobbyResult, RefCounted);
-			String error;
-			TypedArray<LobbyPeer> peers_info;
+			String error = "";
+			TypedArray<LobbyPeer> peers_info = TypedArray<LobbyPeer>();
 			Ref<LobbyInfo> lobby_info;
 
 		protected:
@@ -272,9 +271,8 @@ public:
 				ClassDB::bind_method(D_METHOD("get_lobby"), &ViewLobbyResult::get_lobby);
 				ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "peers", PROPERTY_HINT_ARRAY_TYPE, "LobbyPeer"), "", "get_peers");
 				ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "lobby", PROPERTY_HINT_RESOURCE_TYPE, "LobbyInfo"), "", "get_lobby");
-				ADD_PROPERTY_DEFAULT("lobby", Ref<LobbyInfo>());
-				ADD_PROPERTY_DEFAULT("peers", TypedArray<LobbyPeer>());
 				ADD_PROPERTY(PropertyInfo(Variant::STRING, "error"), "", "get_error");
+				ADD_PROPERTY_DEFAULT("lobby", Ref<LobbyInfo>());
 			}
 
 		public:

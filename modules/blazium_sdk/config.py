@@ -24,6 +24,15 @@ def get_doc_classes():
         "POGRClient",
         "POGRResult",
         "POGRResponse",
+        "MasterServerClient",
+        "MasterServerResult",
+        "MasterServerResponse",
+        "MasterServerListResult",
+        "MasterServerListResponse",
+        "GameServerInfo",
+        "LoginClient",
+        "LoginResponse",
+        "LoginResult",
     ]
 
 

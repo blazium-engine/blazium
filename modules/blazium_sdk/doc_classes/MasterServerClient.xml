@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="MasterServerClient" inherits="BlaziumClient" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A node used to connect to a master server.
+	</brief_description>
+	<description>
+		A node used to connect to a master server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="create_game">
+			<return type="MasterServerResponse" />
+			<param index="0" name="game_server_info" type="GameServerInfo" />
+			<description>
+				Create a game server.
+			</description>
+		</method>
+		<method name="recent_games">
+			<return type="MasterServerListResponse" />
+			<description>
+				Get a list of recent games.
+			</description>
+		</method>
+		<method name="update_game">
+			<return type="MasterServerResponse" />
+			<param index="0" name="game_server_info" type="GameServerInfo" />
+			<description>
+				Update a game server.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="game_id" type="String" setter="set_game_id" getter="get_game_id" default="&quot;&quot;">
+			Game id of the game server.
+		</member>
+		<member name="server_url" type="String" setter="set_server_url" getter="get_server_url" default="&quot;https://masterserver.blazium.app/api/v1&quot;">
+			Set to what url this master server should connect to.
+		</member>
+	</members>
+</class>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="LoginClient" inherits="BlaziumClient" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A node used to connect to a login server.
+	</brief_description>
+	<description>
+		A node used to connect to a login server.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="connect_to_server">
+			<return type="bool" />
+			<description>
+				Connect to the server.
+			</description>
+		</method>
+		<method name="disconnect_from_server">
+			<return type="void" />
+			<description>
+				Disconnect from the server.
+				Generates [signal disconnected_from_server] when disconnected.
+			</description>
+		</method>
+		<method name="request_login_info">
+			<return type="LoginResponse" />
+			<param index="0" name="login_type" type="String" />
+			<description>
+				Request login info.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="connected" type="bool" setter="" getter="get_connected" default="false">
+			True if the client is connected, else false.
+		</member>
+		<member name="game_id" type="String" setter="set_game_id" getter="get_game_id" default="&quot;&quot;">
+			The game id.
+		</member>
+		<member name="server_url" type="String" setter="set_server_url" getter="get_server_url" default="&quot;wss://login.blazium.app/connect&quot;">
+			Set to what url this login should connect to.
+		</member>
+	</members>
+	<signals>
+		<signal name="connected_to_server">
+			<description>
+				Signal emitted when the client connects to the server.
+			</description>
+		</signal>
+		<signal name="disconnected_from_server">
+			<param index="0" name="reason" type="String" />
+			<description>
+				Signal emitted when the client disconnects from the server.
+			</description>
+		</signal>
+		<signal name="log_updated">
+			<param index="0" name="command" type="String" />
+			<param index="1" name="logs" type="String" />
+			<description>
+				Signals a log from a command.
+			</description>
+		</signal>
+		<signal name="received_jwt">
+			<param index="0" name="jwt" type="String" />
+			<param index="1" name="type" type="String" />
+			<description>
+				Signal emitted when a JWT is received.
+			</description>
+		</signal>
+	</signals>
+</class>

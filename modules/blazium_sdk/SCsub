@@ -5,4 +5,7 @@ Import("env_modules")
 
 env_blazium_sdk = env_modules.Clone()
 env_blazium_sdk.add_source_files(env.modules_sources, "lobby/*.cpp")
+env_blazium_sdk.add_source_files(env.modules_sources, "login/*.cpp")
+env_blazium_sdk.add_source_files(env.modules_sources, "master_server/*.cpp")
+env_blazium_sdk.add_source_files(env.modules_sources, "pogr/*.cpp")
 env_blazium_sdk.add_source_files(env.modules_sources, "*.cpp")

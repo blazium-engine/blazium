@@ -32,6 +32,8 @@
 #include "blazium_client.h"
 #include "lobby/authoritative_client.h"
 #include "lobby/lobby_client.h"
+#include "login/login_client.h"
+#include "master_server/master_server_client.h"
 #include "pogr/pogr_client.h"
 
 void initialize_blazium_sdk_module(ModuleInitializationLevel p_level) {
@@ -52,6 +54,15 @@ void initialize_blazium_sdk_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(POGRClient);
 		GDREGISTER_CLASS(POGRClient::POGRResponse);
 		GDREGISTER_CLASS(POGRClient::POGRResult);
+		GDREGISTER_CLASS(GameServerInfo);
+		GDREGISTER_CLASS(MasterServerClient);
+		GDREGISTER_CLASS(MasterServerClient::MasterServerResponse);
+		GDREGISTER_CLASS(MasterServerClient::MasterServerResult);
+		GDREGISTER_CLASS(MasterServerClient::MasterServerListResponse);
+		GDREGISTER_CLASS(MasterServerClient::MasterServerListResult);
+		GDREGISTER_CLASS(LoginClient);
+		GDREGISTER_CLASS(LoginClient::LoginResponse);
+		GDREGISTER_CLASS(LoginClient::LoginResponse::LoginResult);
 	}
 }
 

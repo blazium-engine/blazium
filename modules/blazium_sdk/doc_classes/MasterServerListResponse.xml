@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="MasterServerListResponse" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Response from a list games request.
+	</brief_description>
+	<description>
+		Response from a list games request.
+	</description>
+	<tutorials>
+	</tutorials>
+	<signals>
+		<signal name="finished">
+			<param index="0" name="result" type="MasterServerResult" />
+			<description>
+				Signal emitted when the request is finished.
+			</description>
+		</signal>
+	</signals>
+</class>

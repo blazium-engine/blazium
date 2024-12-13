@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="LoginResult" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A result from a [LoginResponse].
+	</brief_description>
+	<description>
+		A result from a [LoginResponse].
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="has_error" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns true if there is an error.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="error" type="String" setter="" getter="get_error" default="&quot;&quot;">
+			The error message.
+		</member>
+		<member name="login_type" type="String" setter="" getter="get_login_type" default="&quot;&quot;">
+			The login type.
+		</member>
+		<member name="login_url" type="String" setter="" getter="get_login_url" default="&quot;&quot;">
+			The login url.
+		</member>
+	</members>
+</class>

@@ -32,7 +32,6 @@
 #include "./authoritative_client.h"
 #include "scene/main/node.h"
 LobbyClient::LobbyClient() {
-	server_url = "wss://lobby.blazium.app/connect";
 	lobby.instantiate();
 	peer.instantiate();
 	_socket = Ref<WebSocketPeer>(WebSocketPeer::create());
@@ -140,7 +139,6 @@ bool LobbyClient::connect_to_lobby() {
 		connected = false;
 		return false;
 	}
-	connected = true;
 	set_process_internal(true);
 	emit_signal("log_updated", "connect_to_lobby", "Connected to: " + url);
 	return true;
@@ -581,6 +579,7 @@ void LobbyClient::_notification(int p_what) {
 
 			WebSocketPeer::State state = _socket->get_ready_state();
 			if (state == WebSocketPeer::STATE_OPEN) {
+				connected = true;
 				while (_socket->get_available_packet_count() > 0) {
 					Vector<uint8_t> packet_buffer;
 					Error err = _socket->get_packet_buffer(packet_buffer);
