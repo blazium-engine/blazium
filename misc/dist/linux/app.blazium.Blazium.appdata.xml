@@ -4,33 +4,33 @@
   <id>app.blazium.Godot</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
-  <name>Godot Engine</name>
+  <name>Blazium Engine</name>
   <summary>Multi-platform 2D and 3D game engine with a feature-rich editor</summary>
   ​<launchable type="desktop-id">app.blazium.Godot.desktop</launchable>
   <description>
     <p>
-      Godot is an advanced, feature-packed, multi-platform 2D and 3D game
+      Blazium is an advanced, feature-packed, multi-platform 2D and 3D game
       engine. It provides a huge set of common tools, so you can just focus on
       making your game without reinventing the wheel.
     </p>
     <p>
-      Godot is completely free and open source under the very permissive MIT
+      Blazium is completely free and open source under the very permissive MIT
       license. No strings attached, no royalties, nothing. Your game is yours,
       down to the last line of engine code.
     </p>
   </description>
   <screenshots>
-    <screenshot type="default" width="1330" height="720">
-      <caption>3D project loaded in the Godot Engine editor</caption>
-      <image>https://download.tuxfamily.org/godotengine/media/screenshots/editor_3d_fracteed-720p.jpg</image>
+    <screenshot type="default" width="1920" height="1018">
+      <caption>3D project loaded in the Blazium Engine editor</caption>
+      <image>https://cdn.blazium.app/BlaziumEditor.jpg</image>
     </screenshot>
   </screenshots>
-  <url type="homepage">https://godotengine.org</url>
+  <url type="homepage">https://blazium.app</url>
   <url type="bugtracker">https://github.com/blazium-engine/blazium/issues</url>
   <url type="faq">https://docs.blazium.app/about/faq.html</url>
   <url type="help">https://docs.blazium.app</url>
-  <url type="donation">https://chat.blazium.app</url>
-  <url type="translate">https://hosted.weblate.org/projects/godot-engine/godot</url>
-  <developer_name>The Godot Engine Community</developer_name>
-  <update_contact>akien_at_godotengine_dot_org</update_contact>
+  <!-- <url type="donation">https://chat.blazium.app</url> -->
+  <!-- <url type="translate">https://hosted.weblate.org/projects/godot-engine/godot</url> -->
+  <developer_name>The Blazium Engine Community</developer_name>
+  <update_contact>randolph_at_divine_dot_games</update_contact>
 </component>
