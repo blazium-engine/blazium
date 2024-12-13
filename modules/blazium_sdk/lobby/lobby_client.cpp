@@ -649,6 +649,7 @@ void LobbyClient::_clear_lobby() {
 	host_data = Dictionary();
 	peer_data = Dictionary();
 	peer->set_data(Dictionary());
+	peer->set_ready(false);
 }
 
 void LobbyClient::_receive_data(const Dictionary &p_dict) {
