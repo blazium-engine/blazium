@@ -37,6 +37,7 @@
 #include "core/version.h"
 #include "main/performance.h"
 #include "scene/main/http_request.h"
+#include "core/object/callable_method_pointer.h"
 
 class POGRClient : public BlaziumClient {
 	GDCLASS(POGRClient, BlaziumClient);
@@ -64,7 +65,6 @@ protected:
 	static void _bind_methods() {
 		ClassDB::bind_method(D_METHOD("init"), &POGRClient::init);
 		ClassDB::bind_method(D_METHOD("end"), &POGRClient::end);
-		ClassDB::bind_method(D_METHOD("init_finished", "result"), &POGRClient::init_finished);
 		ClassDB::bind_method(D_METHOD("data", "data"), &POGRClient::data);
 		ClassDB::bind_method(D_METHOD("event", "event_name", "event_data", "event_flag", "event_key", "event_type", "event_sub_type"), &POGRClient::event);
 		ClassDB::bind_method(D_METHOD("logs", "tags", "data", "environment", "log", "service", "severity", "type"), &POGRClient::logs);
@@ -112,13 +112,11 @@ public:
 
 	protected:
 		static void _bind_methods() {
-			ClassDB::bind_method(D_METHOD("_on_request_completed", "status", "code", "headers", "data"), &POGRResponse::_on_request_completed);
 			ADD_SIGNAL(MethodInfo("finished", PropertyInfo(Variant::OBJECT, "result", PROPERTY_HINT_RESOURCE_TYPE, "POGRResult")));
 		}
 
 	public:
 		void _on_request_completed(int p_status, int p_code, const PackedStringArray &p_headers, const PackedByteArray &p_data) {
-			request->disconnect("request_completed", Callable(this, "_on_request_completed"));
 			Ref<POGRResult> result;
 			result.instantiate();
 			String result_str = String::utf8((const char *)p_data.ptr(), p_data.size());
@@ -139,7 +137,7 @@ public:
 		void post_request(String p_url, Vector<String> p_headers, Dictionary p_data, POGRClient *p_client) {
 			request = memnew(HTTPRequest);
 			p_client->add_child(request);
-			request->connect("request_completed", Callable(this, "_on_request_completed"));
+			request->connect("request_completed", callable_mp(this, &POGRResponse::_on_request_completed));
 			request->request(p_url, p_headers, HTTPClient::METHOD_POST, JSON::stringify(p_data));
 		}
 		POGRResponse() {
@@ -150,7 +148,7 @@ public:
 	Ref<POGRResponse> init() {
 		Ref<POGRResponse> response;
 		response.instantiate();
-		response->connect("finished", Callable(this, "init_finished"));
+		response->connect("finished", callable_mp(this, &POGRClient::init_finished));
 		Dictionary dict_data;
 		dict_data["association_id"] = OS::get_singleton()->get_unique_id();
 		response->post_request(POGR_URL + "/init", get_init_headers(), dict_data, this);
