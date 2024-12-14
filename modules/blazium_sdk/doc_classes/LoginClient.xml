@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <class name="LoginClient" inherits="BlaziumClient" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
 	<brief_description>
-		A node used to connect to a login server.
+		Node for connecting to the Blazium Login service. Offers authentication mechanism.
 	</brief_description>
 	<description>
-		A node used to connect to a login server.
+		The [LoginClient] node provides an interface for connecting to the Blazium Login service. There is a free instance hosted on the [url=https://blazium.app]blazium.app[/url] domain that is used by default.
+		The authentication flow is as follows:
+		1. Listen to all the signals you are interested in.
+		2. Connect to the server using the [method connect_to_server] method.
+		3. Then you can request login info using the [method request_login_info] method.
+		4. Open the resulting login url received after awaiting on the [signal LoginResponse.finished] signal.
+		5. Obtain the jwt from the [signal received_jwt] signal.
+		[b]Note:[/b] Some methods are non blocking and can be awaited in order to get the result.
 	</description>
 	<tutorials>
 	</tutorials>
@@ -12,7 +19,8 @@
 		<method name="connect_to_server">
 			<return type="bool" />
 			<description>
-				Connect to the server.
+				Connects to the server specified in [member server_url] using the game id specified in [member game_id]. Must be done before requesting login info.
+				Generates [signal connected_to_server] when connected.
 			</description>
 		</method>
 		<method name="disconnect_from_server">
@@ -26,19 +34,21 @@
 			<return type="LoginResponse" />
 			<param index="0" name="login_type" type="String" />
 			<description>
-				Request login info.
+				Request login info using the login type specified.
+				Returns a [LoginResponse] object that has a [signal LoginResponse.finished] signal that is emitted when finished.
 			</description>
 		</method>
 	</methods>
 	<members>
 		<member name="connected" type="bool" setter="" getter="get_connected" default="false">
-			True if the client is connected, else false.
+			Client connected state.
 		</member>
 		<member name="game_id" type="String" setter="set_game_id" getter="get_game_id" default="&quot;&quot;">
-			The game id.
+			Set what game id this client should use when connecting to the server. If this is missing connection will error.
+			Can only contain alphanumeric characters.
 		</member>
 		<member name="server_url" type="String" setter="set_server_url" getter="get_server_url" default="&quot;wss://login.blazium.app/connect&quot;">
-			Set to what url this login should connect to.
+			Set to what url this client should connect to.
 		</member>
 	</members>
 	<signals>

@@ -1,10 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <class name="BlaziumClient" inherits="Node" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
 	<brief_description>
-		An abstract base node used to connect to Blazium services.
+		Base node for connecting to the Blazium services.
 	</brief_description>
 	<description>
-		An abstract base node used to connect to Blazium services.
+		The [BlaziumClient] node provides an interface for connecting to the Blazium services. These services are designed to simplify game development with aspects such as multiplayer, authentication, etc.
+		Developers have the flexibility to either:
+		- Connect to the free Blazium services hosted on the [url=https://blazium.app]blazium.app[/url] domain.
+		- Self-deploy the Blazium services on their own infrastructure for full control and customization.
+		[codeblock lang=text]
+
+		+---------------------+               +---------------------+
+		| Blazium Engine      |   HTTP and    | Blazium Service     |
+		|---------------------|   WebSocket   |---------------------|
+		| - Send requests     |  &lt;---------&gt;  | - Handle requests   |
+		| - Receive responses |               | - Send responses    |
+		+---------------------+               +---------------------+
+
+		[/codeblock]
 	</description>
 	<tutorials>
 	</tutorials>

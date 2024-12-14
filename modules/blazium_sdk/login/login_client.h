@@ -49,7 +49,7 @@ public:
 
 	protected:
 		static void _bind_methods() {
-			ADD_SIGNAL(MethodInfo("finished", PropertyInfo(Variant::OBJECT, "result", PROPERTY_HINT_RESOURCE_TYPE, "LobbyResult")));
+			ADD_SIGNAL(MethodInfo("finished", PropertyInfo(Variant::OBJECT, "result", PROPERTY_HINT_RESOURCE_TYPE, "LoginResult")));
 		}
 
 	public:
@@ -120,6 +120,7 @@ protected:
 				WebSocketPeer::State state = _socket->get_ready_state();
 				if (state == WebSocketPeer::STATE_OPEN) {
 					if (!connected) {
+						emit_signal("log_updated", "connect_to_lobby", "Connectied to: " + server_url);
 						emit_signal("connected_to_server");
 					}
 					connected = true;

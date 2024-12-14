@@ -4,7 +4,7 @@
 		A result from a [LobbyCallResponse].
 	</brief_description>
 	<description>
-		A result from a [LobbyCallResponse].
+		A result from a [LobbyCallResponse]. Contains either result or error.
 	</description>
 	<tutorials>
 	</tutorials>

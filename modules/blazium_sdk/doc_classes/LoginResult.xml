@@ -4,7 +4,7 @@
 		A result from a [LoginResponse].
 	</brief_description>
 	<description>
-		A result from a [LoginResponse].
+		A result from a [LoginResponse]. Contains either result or error.
 	</description>
 	<tutorials>
 	</tutorials>

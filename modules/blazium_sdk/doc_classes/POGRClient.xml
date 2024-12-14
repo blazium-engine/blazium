@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <class name="POGRClient" inherits="BlaziumClient" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
 	<brief_description>
-		Client for the pogr.io analytics website.
+		Node for connecting to the POGR analytics service.
 	</brief_description>
 	<description>
-		Client for the pogr.io analytics website.
+		The [POGRClient] node provides an interface for connecting to the POGR analytics service. Find out more on the [url=https://pogr.gg]pogr.gg[/url] website.
+		The normal flow is as follows:
+		1. Initiate a session using [method init] method.
+		2. Send data using [method data], [method event], [method logs], [method metrics] and [method monitor] methods, depending on use case.
+		3. Close the session using [method end] method at the end of the game.
+		[b]Note:[/b] All methods are non blocking and can be awaited in order to get the result.
 	</description>
 	<tutorials>
 	</tutorials>
@@ -14,6 +19,14 @@
 			<param index="0" name="data" type="Dictionary" />
 			<description>
 				Send unstructured data.
+				Returns a [POGRResponse] object that has a [signal POGRResponse.finished] signal that is emitted when finished.
+			</description>
+		</method>
+		<method name="end">
+			<return type="POGRResponse" />
+			<description>
+				Send end request.
+				Returns a [POGRResponse] object that has a [signal POGRResponse.finished] signal that is emitted when finished.
 			</description>
 		</method>
 		<method name="event">
@@ -26,6 +39,7 @@
 			<param index="5" name="event_sub_type" type="String" />
 			<description>
 				Send event with unstructured data.
+				Returns a [POGRResponse] object that has a [signal POGRResponse.finished] signal that is emitted when finished.
 			</description>
 		</method>
 		<method name="get_build_id" qualifiers="const">
@@ -49,13 +63,14 @@
 		<method name="get_session_id">
 			<return type="String" />
 			<description>
-				Get the session id.
+				Get the session id. This is a unique identifier for the current session generated after [method init] is called.
 			</description>
 		</method>
 		<method name="init">
 			<return type="POGRResponse" />
 			<description>
 				Send init request. Needs to be called first.
+				Returns a [POGRResponse] object that has a [signal POGRResponse.finished] signal that is emitted when finished.
 			</description>
 		</method>
 		<method name="logs">
@@ -69,6 +84,7 @@
 			<param index="6" name="type" type="String" />
 			<description>
 				Add logs to the analytics.
+				Returns a [POGRResponse] object that has a [signal POGRResponse.finished] signal that is emitted when finished.
 			</description>
 		</method>
 		<method name="metrics">
@@ -79,6 +95,7 @@
 			<param index="3" name="service" type="String" />
 			<description>
 				Add metrics to the analytics.
+				Returns a [POGRResponse] object that has a [signal POGRResponse.finished] signal that is emitted when finished.
 			</description>
 		</method>
 		<method name="monitor">
@@ -86,6 +103,7 @@
 			<param index="0" name="settings" type="Dictionary" />
 			<description>
 				Send monitor request.
+				Returns a [POGRResponse] object that has a [signal POGRResponse.finished] signal that is emitted when finished.
 			</description>
 		</method>
 	</methods>

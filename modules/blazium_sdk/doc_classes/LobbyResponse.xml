@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <class name="LobbyResponse" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
 	<brief_description>
-		Generic response from a lobby request.
+		Generic response from a [LobbyClient] call.
 	</brief_description>
 	<description>
-		Generic response from a lobby request. Await on finished to get the result.
+		Generic response from a [LobbyClient] call. Await on [signal finished] signal to get the [LobbyResult].
 	</description>
 	<tutorials>
 	</tutorials>

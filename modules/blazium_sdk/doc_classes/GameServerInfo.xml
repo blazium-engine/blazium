@@ -4,7 +4,7 @@
 		Game server info used by the [MasterServerClient].
 	</brief_description>
 	<description>
-		Game server info used by the [MasterServerClient]. Used to create or update a game server.
+		Game server info used by the [MasterServerClient]. Used to [method MasterServerClient.create_game] or [method MasterServerClient.update_game].
 	</description>
 	<tutorials>
 	</tutorials>
@@ -16,7 +16,7 @@
 			Name of the game server.
 		</member>
 		<member name="id" type="String" setter="set_id" getter="get_id" default="&quot;&quot;">
-			Id of the game server. Generated after call to create game server.
+			Id of the game server. Generated after call to [method MasterServerClient.create_game].
 		</member>
 		<member name="ip_address" type="String" setter="set_ip_address" getter="get_ip_address" default="&quot;&quot;">
 			Ip address of the game server.

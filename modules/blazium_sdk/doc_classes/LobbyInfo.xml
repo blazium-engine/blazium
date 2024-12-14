@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <class name="LobbyInfo" inherits="Resource" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
 	<brief_description>
-		Lobby information returned after a view lobby request.
+		Lobby information returned after a [LobbyClient] request that returns a lobby.
 	</brief_description>
 	<description>
-		Lobby information returned after a view lobby request.
+		Lobby information returned after a [LobbyClient] request that returns a lobby.
 	</description>
 	<tutorials>
 	</tutorials>
@@ -28,6 +28,7 @@
 			The maximum number of players allowed in the lobby. 0 = unlimited
 		</member>
 		<member name="password_protected" type="bool" setter="" getter="is_password_protected" default="false">
+			Whether the lobby is password protected.
 		</member>
 		<member name="players" type="int" setter="" getter="get_players" default="0">
 			The number of players currently in the lobby.

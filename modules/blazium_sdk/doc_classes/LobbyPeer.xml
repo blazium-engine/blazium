@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <class name="LobbyPeer" inherits="Resource" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
 	<brief_description>
-		Lobby peers information returned after a view lobby request.
+		Lobby information returned after a [LobbyClient] request that returns peers.
 	</brief_description>
 	<description>
-		Lobby peers information returned after a view lobby request.
+		Lobby information returned after a [LobbyClient] request that returns peers.
 	</description>
 	<tutorials>
 	</tutorials>
 	<members>
 		<member name="data" type="Dictionary" setter="" getter="get_data" default="{}">
+			Public data of the peer.
 		</member>
 		<member name="id" type="String" setter="" getter="get_id" default="&quot;&quot;">
 			Identifier of the peer.

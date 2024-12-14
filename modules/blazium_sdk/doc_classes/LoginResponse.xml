@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <class name="LoginResponse" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
 	<brief_description>
-		Response from a connect request.
+		Response from a [method LoginClient.request_login_info] call.
 	</brief_description>
 	<description>
-		Response from a connect request.
+		Response from a [method LoginClient.request_login_info] call. Await on [signal finished] signal to get the [LoginResult].
 	</description>
 	<tutorials>
 	</tutorials>
 	<signals>
 		<signal name="finished">
-			<param index="0" name="result" type="LobbyResult" />
+			<param index="0" name="result" type="LoginResult" />
 			<description>
 				Signal emitted when the request is finished.
 			</description>

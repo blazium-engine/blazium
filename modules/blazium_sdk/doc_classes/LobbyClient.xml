@@ -1,10 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <class name="LobbyClient" inherits="BlaziumClient" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
 	<brief_description>
-		A node used to connect to a lobby server.
+		Node for connecting to the Blazium Lobby service. Offers non-authoritative lobby making features.
 	</brief_description>
 	<description>
-		A node used to connect to a lobby server. It can be used to do matchmaking. You can do operations such as create lobby, join lobby, etc. The server is configurable and can either be self deployed or you can use the blazium free matchmaking server.
+		The [LobbyClient] node provides an interface for connecting to the Blazium Lobby service. There is a free instance hosted on the [url=https://blazium.app]blazium.app[/url] domain that is used by default.
+		The normal flow is as follows:
+		1. Listen to all the signals you are interested in.
+		2. Connect to the server using [method connect_to_lobby] method.
+		3. Call any other methods to create, view or join lobbies, as well as add data to them.
+		4. Close the session using [method disconnect_from_lobby] method at the end of the game.
+		[b]Note:[/b] Some methods are non blocking and can be awaited in order to get the result.
+		There are also members on this class that are automatically updated as the lobby gets updated, such as:
+		- [member peer]: The current peer. Reflects changes to the self peer.
+		- [member peers]: The lobby peers. Reflects changes to all peers.
+		- [member lobby]: The lobby. Reflects changes to the lobby.
+		- [member host_data]: The current lobby private data. Only works if you are host.
+		- [member peer_data]: The current peer private data.
 	</description>
 	<tutorials>
 	</tutorials>
@@ -15,6 +27,7 @@
 			<param index="1" name="is_private" type="bool" default="false" />
 			<description>
 				Add data to the lobby. Only works if you are host.
+				Returns a [LobbyResponse] object that has a [signal LobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal received_lobby_data].
 			</description>
 		</method>
@@ -23,6 +36,7 @@
 			<param index="0" name="tags" type="Dictionary" />
 			<description>
 				Add tags to the lobby. Only works if you are host.
+				Returns a [LobbyResponse] object that has a [signal LobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal lobby_tagged].
 			</description>
 		</method>
@@ -33,6 +47,7 @@
 			<param index="2" name="is_private" type="bool" default="false" />
 			<description>
 				Add data to a peer. Only works if you are host.
+				Returns a [LobbyResponse] object that has a [signal LobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal received_peer_data].
 			</description>
 		</method>
@@ -42,6 +57,7 @@
 			<param index="1" name="is_private" type="bool" default="false" />
 			<description>
 				Add data to all peers. Only works if you are host.
+				Returns a [LobbyResponse] object that has a [signal LobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal received_peer_data].
 			</description>
 		</method>
@@ -49,6 +65,7 @@
 			<return type="bool" />
 			<description>
 				Connect to a Blazium Lobby Server using the [member game_id] and [member server_url].
+				Generates [signal connected_to_lobby] signal if successful.
 			</description>
 		</method>
 		<method name="create_lobby">
@@ -60,6 +77,7 @@
 			<description>
 				Create a lobby and become host. If you are already in a lobby, you cannot create one. You need to leave first.
 				The new lobby can have a title, tags, max players and password. 0 max players means unlimited.
+				Returns a [ViewLobbyResponse] object that has a [signal ViewLobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal lobby_created] signal.
 			</description>
 		</method>
@@ -69,6 +87,7 @@
 			<param index="1" name="is_private" type="bool" default="false" />
 			<description>
 				Delete one or more keys from the lobby data. Only works if you are host.
+				Returns a [LobbyResponse] object that has a [signal LobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal received_lobby_data].
 			</description>
 		</method>
@@ -77,6 +96,7 @@
 			<param index="0" name="keys" type="String[]" />
 			<description>
 				Delete one or more keys from the lobby tags. Only works if you are host.
+				Returns a [LobbyResponse] object that has a [signal LobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal lobby_tagged].
 			</description>
 		</method>
@@ -86,7 +106,8 @@
 			<param index="1" name="target_peer" type="String" />
 			<param index="2" name="is_private" type="bool" default="false" />
 			<description>
-				one or more keys from the peer data. Only works if you are host.
+				Delete one or more keys from the peer data. Only works if you are host.
+				Returns a [LobbyResponse] object that has a [signal LobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal received_peer_data].
 			</description>
 		</method>
@@ -95,7 +116,8 @@
 			<param index="0" name="keys" type="String[]" />
 			<param index="1" name="is_private" type="bool" default="false" />
 			<description>
-				one or more keys from the peers data. Only works if you are host.
+				Delete one or more keys from the peers data. Only works if you are host.
+				Returns a [LobbyResponse] object that has a [signal LobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal received_peer_data].
 			</description>
 		</method>
@@ -103,6 +125,7 @@
 			<return type="void" />
 			<description>
 				Disconnect from the lobby server.
+				Generates [signal disconnected_from_lobby] signal.
 			</description>
 		</method>
 		<method name="is_host">
@@ -118,6 +141,7 @@
 			<description>
 				Join a lobby. If you are already in a lobby, you cannot join another one. You need to leave first.
 				If the lobby you want to join is password protected, you need to provide the password.
+				Returns a [ViewLobbyResponse] object that has a [signal ViewLobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal lobby_joined].
 			</description>
 		</method>
@@ -126,6 +150,7 @@
 			<param index="0" name="peer_id" type="String" />
 			<description>
 				Kick a peer. You need to be host to do so.
+				Returns a [LobbyResponse] object that has a [signal LobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal peer_left] signal with kicked set to true.
 			</description>
 		</method>
@@ -133,6 +158,7 @@
 			<return type="LobbyResponse" />
 			<description>
 				Leave a lobby. You need to be in a lobby to leave one.
+				Returns a [LobbyResponse] object that has a [signal LobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal lobby_left].
 			</description>
 		</method>
@@ -150,6 +176,7 @@
 			<param index="0" name="data" type="Variant" />
 			<description>
 				Send a notification either to the host, or if you are host send data to all peers.
+				Returns a [LobbyResponse] object that has a [signal LobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal lobby_notified] signal.
 			</description>
 		</method>
@@ -159,6 +186,7 @@
 			<param index="1" name="target_peer" type="String" />
 			<description>
 				Send a notification to a peer, works only if you are host.
+				Returns a [LobbyResponse] object that has a [signal LobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal lobby_notified] signal.
 			</description>
 		</method>
@@ -167,6 +195,7 @@
 			<param index="0" name="chat_message" type="String" />
 			<description>
 				Send a chat message. Only works if you are in a lobby.
+				Returns a [LobbyResponse] object that has a [signal LobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal peer_messaged].
 			</description>
 		</method>
@@ -175,6 +204,7 @@
 			<param index="0" name="ready" type="bool" />
 			<description>
 				Ready up in the lobby. You need to be in a lobby and unready to run this.
+				Returns a [LobbyResponse] object that has a [signal LobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal peer_ready].
 			</description>
 		</method>
@@ -183,6 +213,7 @@
 			<param index="0" name="seal" type="bool" />
 			<description>
 				Seals the lobby. You need to be the host to do this and the lobby needs to be unsealed.
+				Returns a [LobbyResponse] object that has a [signal LobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal lobby_sealed].
 			</description>
 		</method>
@@ -191,6 +222,7 @@
 			<param index="0" name="peer_name" type="String" />
 			<description>
 				Set your peer name.
+				Returns a [LobbyResponse] object that has a [signal LobbyResponse.finished] signal that is emitted when finished.
 				Generates [signal peer_named] signal if you are in lobby.
 			</description>
 		</method>
@@ -200,6 +232,7 @@
 			<param index="1" name="password" type="String" default="&quot;&quot;" />
 			<description>
 				View data from a lobby. Returns lobby settings and peers.
+				Returns a [ViewLobbyResponse] object that has a [signal ViewLobbyResponse.finished] signal that is emitted when finished.
 			</description>
 		</method>
 	</methods>

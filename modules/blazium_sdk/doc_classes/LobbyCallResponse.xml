@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <class name="LobbyCallResponse" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
 	<brief_description>
-		Response from a lobby call function.
+		Response from a [method AuthoritativeClient.lobby_call] call.
 	</brief_description>
 	<description>
-		Response from a lobby call function. Await on finished to get the [LobbyCallResult].
+		Response from a [method AuthoritativeClient.lobby_call] call. Await on [signal finished] signal to get the [LobbyCallResult].
 	</description>
 	<tutorials>
 	</tutorials>

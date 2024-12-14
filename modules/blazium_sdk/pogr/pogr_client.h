@@ -63,6 +63,7 @@ private:
 protected:
 	static void _bind_methods() {
 		ClassDB::bind_method(D_METHOD("init"), &POGRClient::init);
+		ClassDB::bind_method(D_METHOD("end"), &POGRClient::end);
 		ClassDB::bind_method(D_METHOD("data", "data"), &POGRClient::data);
 		ClassDB::bind_method(D_METHOD("event", "event_name", "event_data", "event_flag", "event_key", "event_type", "event_sub_type"), &POGRClient::event);
 		ClassDB::bind_method(D_METHOD("logs", "tags", "data", "environment", "log", "service", "severity", "type"), &POGRClient::logs);

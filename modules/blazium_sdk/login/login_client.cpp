@@ -39,7 +39,7 @@ bool LoginClient::connect_to_server() {
 		return false;
 	}
 	set_process_internal(true);
-	emit_signal("log_updated", "connect_to_lobby", "Connected to: " + url);
+	emit_signal("log_updated", "connect_to_lobby", "Connecting to: " + url);
 	return true;
 }
 
