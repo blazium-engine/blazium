@@ -382,7 +382,7 @@ double FileAccess::get_double() const {
 String FileAccess::get_token() const {
 	CharString token;
 
-	char32_t c = get_8();
+	uint8_t c = get_8();
 
 	while (!eof_reached()) {
 		if (c <= ' ') {
@@ -390,7 +390,7 @@ String FileAccess::get_token() const {
 				break;
 			}
 		} else {
-			token += c;
+			token += char(c);
 		}
 		c = get_8();
 	}
@@ -447,14 +447,14 @@ public:
 String FileAccess::get_line() const {
 	CharBuffer line;
 
-	char32_t c = get_8();
+	uint8_t c = get_8();
 
 	while (!eof_reached()) {
 		if (c == '\n' || c == '\0') {
 			line.push_back(0);
 			return String::utf8(line.get_data());
 		} else if (c != '\r') {
-			line.push_back(c);
+			line.push_back(char(c));
 		}
 
 		c = get_8();
@@ -773,7 +773,7 @@ void FileAccess::store_var(const Variant &p_var, bool p_full_objects) {
 	err = encode_variant(p_var, &w[0], len, p_full_objects);
 	ERR_FAIL_COND_MSG(err != OK, "Error when trying to encode Variant.");
 
-	store_32(len);
+	store_32(uint32_t(len));
 	store_buffer(buff);
 }
 

@@ -123,7 +123,11 @@ bool FileAccessMemory::eof_reached() const {
 }
 
 uint64_t FileAccessMemory::get_buffer(uint8_t *p_dst, uint64_t p_length) const {
-	ERR_FAIL_COND_V(!p_dst && p_length > 0, -1);
+	if (!p_length) {
+		return 0;
+	}
+
+	ERR_FAIL_NULL_V(p_dst, -1);
 	ERR_FAIL_NULL_V(data, -1);
 
 	uint64_t left = length - pos;
@@ -148,7 +152,11 @@ void FileAccessMemory::flush() {
 }
 
 void FileAccessMemory::store_buffer(const uint8_t *p_src, uint64_t p_length) {
-	ERR_FAIL_COND(!p_src && p_length > 0);
+	if (!p_length) {
+		return;
+	}
+
+	ERR_FAIL_NULL(p_src);
 
 	uint64_t left = length - pos;
 	uint64_t write = MIN(p_length, left);
