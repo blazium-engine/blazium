@@ -762,4 +762,42 @@ void NavMeshQueries3D::clip_path(const LocalVector<gd::NavigationPoly> &p_naviga
 	}
 }
 
+LocalVector<uint32_t> NavMeshQueries3D::get_simplified_path_indices(const LocalVector<Vector3> &p_path, real_t p_epsilon) {
+	p_epsilon = MAX(0.0, p_epsilon);
+	real_t squared_epsilon = p_epsilon * p_epsilon;
+
+	LocalVector<uint32_t> simplified_path_indices;
+	simplified_path_indices.reserve(p_path.size());
+	simplified_path_indices.push_back(0);
+	simplify_path_segment(0, p_path.size() - 1, p_path, squared_epsilon, simplified_path_indices);
+	simplified_path_indices.push_back(p_path.size() - 1);
+
+	return simplified_path_indices;
+}
+
+void NavMeshQueries3D::simplify_path_segment(int p_start_inx, int p_end_inx, const LocalVector<Vector3> &p_points, real_t p_epsilon, LocalVector<uint32_t> &r_simplified_path_indices) {
+	Vector3 path_segment[2] = { p_points[p_start_inx], p_points[p_end_inx] };
+
+	real_t point_max_distance = 0.0;
+	int point_max_index = 0;
+
+	for (int i = p_start_inx; i < p_end_inx; i++) {
+		const Vector3 &checked_point = p_points[i];
+
+		const Vector3 closest_point = Geometry3D::get_closest_point_to_segment(checked_point, path_segment);
+		real_t distance_squared = closest_point.distance_squared_to(checked_point);
+
+		if (distance_squared > point_max_distance) {
+			point_max_index = i;
+			point_max_distance = distance_squared;
+		}
+	}
+
+	if (point_max_distance > p_epsilon) {
+		simplify_path_segment(p_start_inx, point_max_index, p_points, p_epsilon, r_simplified_path_indices);
+		r_simplified_path_indices.push_back(point_max_index);
+		simplify_path_segment(point_max_index, p_end_inx, p_points, p_epsilon, r_simplified_path_indices);
+	}
+}
+
 #endif // _3D_DISABLED
