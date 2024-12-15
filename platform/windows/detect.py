@@ -705,7 +705,7 @@ def configure_mingw(env: "SConsEnvironment"):
 
     # TODO: Re-evaluate the need for this / streamline with common config.
     if env["target"] == "template_release":
-        if env["arch"] != "arm64":
+        if env["arch"] not in ["arm64", "arm32"]:
             env.Append(CCFLAGS=["-msse2"])
     elif env.dev_build:
         # Allow big objects. It's supposed not to have drawbacks but seems to break

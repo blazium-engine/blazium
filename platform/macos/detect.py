@@ -73,7 +73,7 @@ def configure(env: "SConsEnvironment"):
     ## Build type
 
     if env["target"] == "template_release":
-        if env["arch"] != "arm64":
+        if env["arch"] not in ["arm64", "arm32"]:
             env.Prepend(CCFLAGS=["-msse2"])
     elif env.dev_build:
         env.Prepend(LINKFLAGS=["-Xlinker", "-no_deduplicate"])
