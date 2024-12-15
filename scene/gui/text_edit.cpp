@@ -2955,6 +2955,7 @@ void TextEdit::_update_caches() {
 	if (syntax_highlighter.is_valid()) {
 		syntax_highlighter->set_text_edit(this);
 	}
+	_clear_syntax_highlighting_cache();
 }
 
 void TextEdit::_close_ime_window() {
@@ -6403,6 +6404,7 @@ void TextEdit::set_syntax_highlighter(Ref<SyntaxHighlighter> p_syntax_highlighte
 	if (syntax_highlighter.is_valid()) {
 		syntax_highlighter->set_text_edit(this);
 	}
+	_clear_syntax_highlighting_cache();
 	queue_redraw();
 }
 
