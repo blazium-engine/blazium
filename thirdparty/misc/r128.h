@@ -302,8 +302,10 @@ struct numeric_limits<R128>
    static const bool has_infinity = false;
    static const bool has_quiet_NaN = false;
    static const bool has_signaling_NaN = false;
+#if !(__cplusplus > 202002L || (defined(_MSVC_LANG) && _MSVC_LANG > 202002L))
    static const float_denorm_style has_denorm = denorm_absent;
    static const bool has_denorm_loss = false;
+#endif
 
    static R128 infinity() throw() { return R128_zero; }
    static R128 quiet_NaN() throw() { return R128_zero; }
@@ -670,7 +672,7 @@ static R128_U64 r128__umul64(R128_U32 a, R128_U32 b)
 {
 #  if defined(_M_IX86) && !defined(R128_STDC_ONLY) && !defined(__MINGW32__)
    return __emulu(a, b);
-#  elif defined(_M_ARM) && !defined(R128_STDC_ONLY)
+#  elif defined(_M_ARM) && !defined(R128_STDC_ONLY) && !defined(__MINGW32__)
    return _arm_umull(a, b);
 #  else
    return a * (R128_U64)b;
