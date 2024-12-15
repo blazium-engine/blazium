@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  nav_link.h                                                            */
+/*  nav_map_iteration_3d.h                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,66 +28,87 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef NAV_LINK_H
-#define NAV_LINK_H
+#ifndef NAV_MAP_ITERATION_3D_H
+#define NAV_MAP_ITERATION_3D_H
 
-#include "3d/nav_base_iteration_3d.h"
-#include "nav_base.h"
-#include "nav_utils.h"
+#include "../nav_rid.h"
+#include "../nav_utils.h"
+#include "nav_mesh_queries_3d.h"
 
-struct NavLinkIteration : NavBaseIteration {
-	bool bidirectional = true;
-	Vector3 start_position;
-	Vector3 end_position;
-	LocalVector<gd::Polygon> navmesh_polygons;
+#include "core/math/math_defs.h"
+#include "core/os/semaphore.h"
+
+struct NavLinkIteration;
+class NavRegion;
+struct NavRegionIteration;
+struct NavMapIteration;
+
+struct NavMapIterationBuild {
+	Vector3 merge_rasterizer_cell_size;
+	bool use_edge_connections = true;
+	real_t edge_connection_margin;
+	real_t link_connection_radius;
+	gd::PerformanceData performance_data;
+	int polygon_count = 0;
+	int free_edge_count = 0;
+
+	HashMap<gd::EdgeKey, gd::EdgeConnectionPair, gd::EdgeKey> iter_connection_pairs_map;
+	LocalVector<gd::Edge::Connection> iter_free_edges;
+
+	NavMapIteration *map_iteration = nullptr;
+
+	int navmesh_polygon_count = 0;
+	int link_polygon_count = 0;
+
+	void reset() {
+		performance_data.reset();
+
+		iter_connection_pairs_map.clear();
+		iter_free_edges.clear();
+		polygon_count = 0;
+		free_edge_count = 0;
+
+		navmesh_polygon_count = 0;
+		link_polygon_count = 0;
+	}
 };
 
-#include "core/templates/self_list.h"
+struct NavMapIteration {
+	mutable SafeNumeric<uint32_t> users;
+	RWLock rwlock;
 
-class NavLink : public NavBase {
-	NavMap *map = nullptr;
-	bool bidirectional = true;
-	Vector3 start_position;
-	Vector3 end_position;
-	bool enabled = true;
+	Vector3 map_up;
+	LocalVector<gd::Polygon> navmesh_polygons;
 
-	bool link_dirty = true;
+	LocalVector<NavRegionIteration> region_iterations;
+	LocalVector<NavLinkIteration> link_iterations;
 
-	SelfList<NavLink> sync_dirty_request_list_element;
+	int navmesh_polygon_count = 0;
+	int link_polygon_count = 0;
+
+	// The edge connections that the map builds on top with the edge connection margin.
+	HashMap<uint32_t, LocalVector<gd::Edge::Connection>> external_region_connections;
+
+	HashMap<NavRegion *, uint32_t> region_ptr_to_region_id;
+
+	LocalVector<NavMeshQueries3D::PathQuerySlot> path_query_slots;
+	Mutex path_query_slots_mutex;
+	Semaphore path_query_slots_semaphore;
+};
+
+class NavMapIterationRead {
+	const NavMapIteration &map_iteration;
 
 public:
-	NavLink();
-	~NavLink();
-
-	void set_map(NavMap *p_map);
-	NavMap *get_map() const {
-		return map;
+	_ALWAYS_INLINE_ NavMapIterationRead(const NavMapIteration &p_iteration) :
+			map_iteration(p_iteration) {
+		map_iteration.rwlock.read_lock();
+		map_iteration.users.increment();
 	}
-
-	void set_enabled(bool p_enabled);
-	bool get_enabled() const { return enabled; }
-
-	void set_bidirectional(bool p_bidirectional);
-	bool is_bidirectional() const {
-		return bidirectional;
+	_ALWAYS_INLINE_ ~NavMapIterationRead() {
+		map_iteration.users.decrement();
+		map_iteration.rwlock.read_unlock();
 	}
-
-	void set_start_position(Vector3 p_position);
-	Vector3 get_start_position() const {
-		return start_position;
-	}
-
-	void set_end_position(Vector3 p_position);
-	Vector3 get_end_position() const {
-		return end_position;
-	}
-
-	bool is_dirty() const;
-	void sync();
-	void request_sync();
-	void cancel_sync_request();
-
-	void get_iteration_update(NavLinkIteration &r_iteration);
 };
 
-#endif // NAV_LINK_H
+#endif // NAV_MAP_ITERATION_3D_H
