@@ -122,6 +122,7 @@ public:
 		int from_port = 0;
 		int to_port = 0;
 		float activity = 0.0;
+		bool keep_alive = true;
 
 	private:
 		struct Cache {
@@ -240,7 +241,7 @@ private:
 	bool updating = false;
 	bool awaiting_scroll_offset_update = false;
 
-	List<Ref<Connection>> connections;
+	Vector<Ref<Connection>> connections;
 	HashMap<StringName, List<Ref<Connection>>> connection_map;
 	Ref<Connection> hovered_connection;
 
@@ -341,6 +342,7 @@ private:
 
 	bool is_in_port_hotzone(const Vector2 &p_pos, const Vector2 &p_mouse_pos, const Vector2i &p_port_size, bool p_left);
 
+	void set_connections(const TypedArray<Dictionary> &p_connections);
 	TypedArray<Dictionary> _get_connection_list() const;
 	Dictionary _get_closest_connection_at_point(const Vector2 &p_point, float p_max_distance = 4.0) const;
 	TypedArray<Dictionary> _get_connections_intersecting_with_rect(const Rect2 &p_rect) const;
@@ -400,14 +402,17 @@ public:
 	void _update_graph_frame(GraphFrame *p_frame);
 
 	// Connection related methods.
+	Error _connect_node(const StringName &p_from, int p_from_port, const StringName &p_to, int p_to_port, bool keep_alive = false);
 	Error connect_node(const StringName &p_from, int p_from_port, const StringName &p_to, int p_to_port);
 	bool is_node_connected(const StringName &p_from, int p_from_port, const StringName &p_to, int p_to_port);
 	int get_connection_count(const StringName &p_node, int p_port);
 	void disconnect_node(const StringName &p_from, int p_from_port, const StringName &p_to, int p_to_port);
-	void clear_connections();
 
 	void force_connection_drag_end();
-	const List<Ref<Connection>> &get_connection_list() const;
+	// Kept for compatibility with some 4.3 modules if they use this public method.
+	const Vector<Ref<Connection>> &get_connection_list() const;
+	const Vector<Ref<Connection>> &get_connections() const;
+	void clear_connections();
 	virtual PackedVector2Array get_connection_line(const Vector2 &p_from, const Vector2 &p_to) const;
 	Ref<Connection> get_closest_connection_at_point(const Vector2 &p_point, float p_max_distance = 4.0) const;
 	List<Ref<Connection>> get_connections_intersecting_with_rect(const Rect2 &p_rect) const;
