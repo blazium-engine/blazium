@@ -32,6 +32,7 @@
 
 #include "core/os/os.h"
 #include "scene/resources/video_stream.h"
+#include "servers/audio_server.cpp"
 
 int VideoStreamPlayer::sp_get_channel_count() const {
 	if (playback.is_null()) {

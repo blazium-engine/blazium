@@ -30,15 +30,12 @@
 
 #include "shader_rd.h"
 
-#include "core/io/compression.h"
 #include "core/io/dir_access.h"
 #include "core/io/file_access.h"
 #include "core/object/worker_thread_pool.h"
 #include "core/version.h"
-#include "renderer_compositor_rd.h"
 #include "servers/rendering/rendering_device.h"
 #include "servers/rendering/shader_include_db.h"
-#include "thirdparty/misc/smolv.h"
 
 void ShaderRD::_add_stage(const char *p_code, StageType p_stage_type) {
 	Vector<String> lines = String(p_code).split("\n");
