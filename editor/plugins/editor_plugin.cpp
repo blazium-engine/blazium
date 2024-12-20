@@ -42,7 +42,6 @@
 #include "editor/export/editor_export.h"
 #include "editor/export/editor_export_platform.h"
 #include "editor/gui/editor_bottom_panel.h"
-#include "editor/gui/editor_title_bar.h"
 #include "editor/import/3d/resource_importer_scene.h"
 #include "editor/import/editor_import_plugin.h"
 #include "editor/inspector_dock.h"
@@ -56,8 +55,6 @@
 #include "scene/3d/camera_3d.h"
 #include "scene/gui/popup_menu.h"
 #include "scene/gui/tab_container.h"
-#include "scene/resources/image_texture.h"
-#include "servers/rendering_server.h"
 
 void EditorPlugin::add_custom_type(const String &p_type, const String &p_base, const Ref<Script> &p_script, const Ref<Texture2D> &p_icon) {
 	EditorNode::get_editor_data().add_custom_type(p_type, p_base, p_script, p_icon);

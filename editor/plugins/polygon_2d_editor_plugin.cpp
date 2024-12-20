@@ -52,7 +52,6 @@
 #include "scene/gui/slider.h"
 #include "scene/gui/spin_box.h"
 #include "scene/gui/split_container.h"
-#include "scene/gui/texture_rect.h"
 #include "scene/gui/view_panner.h"
 
 class UVEditDialog : public AcceptDialog {

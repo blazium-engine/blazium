@@ -47,7 +47,6 @@
 #include "scene/gui/item_list.h"
 #include "scene/gui/menu_button.h"
 #include "scene/gui/popup_menu.h"
-#include "scene/gui/separator.h"
 #include "scene/resources/2d/tile_set.h"
 #include "scene/resources/image_texture.h"
 

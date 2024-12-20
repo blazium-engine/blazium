@@ -36,7 +36,6 @@
 #include "tile_set_editor.h"
 
 #include "editor/plugins/editor_plugin.h"
-#include "scene/gui/box_container.h"
 
 class TilesEditorUtils : public Object {
 	GDCLASS(TilesEditorUtils, Object);

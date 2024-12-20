@@ -33,13 +33,13 @@
 
 #include "core/io/config_file.h"
 #include "core/templates/vector.h"
-#include "editor/animation_track_editor.h"
 #include "editor/plugins/editor_plugin.h"
 #include "scene/gui/dialogs.h"
 
 class AnimationMixer;
 class EditorFileDialog;
 class Tree;
+class TreeItem;
 
 class AnimationLibraryEditor : public AcceptDialog {
 	GDCLASS(AnimationLibraryEditor, AcceptDialog)

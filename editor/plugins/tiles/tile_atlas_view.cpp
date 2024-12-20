@@ -30,8 +30,6 @@
 
 #include "tile_atlas_view.h"
 
-#include "core/input/input.h"
-#include "core/os/keyboard.h"
 #include "editor/editor_settings.h"
 #include "editor/gui/editor_zoom_widget.h"
 #include "editor/themes/editor_scale.h"

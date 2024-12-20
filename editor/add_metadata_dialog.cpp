@@ -30,6 +30,8 @@
 
 #include "add_metadata_dialog.h"
 
+#include "editor/themes/editor_scale.h"
+#include "scene/gui/box_container.h"
 #include "scene/gui/label.h"
 
 AddMetadataDialog::AddMetadataDialog() {

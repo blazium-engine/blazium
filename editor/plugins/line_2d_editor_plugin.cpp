@@ -30,7 +30,6 @@
 
 #include "line_2d_editor_plugin.h"
 
-#include "editor/editor_node.h"
 #include "editor/editor_undo_redo_manager.h"
 #include "scene/2d/line_2d.h"
 

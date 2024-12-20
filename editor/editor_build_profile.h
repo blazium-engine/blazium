@@ -31,7 +31,6 @@
 #ifndef EDITOR_BUILD_PROFILE_H
 #define EDITOR_BUILD_PROFILE_H
 
-#include "core/io/file_access.h"
 #include "core/object/ref_counted.h"
 #include "editor/editor_help.h"
 #include "scene/gui/dialogs.h"
