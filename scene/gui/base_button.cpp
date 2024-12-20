@@ -32,7 +32,6 @@
 
 #include "core/config/project_settings.h"
 #include "core/input/shortcut.h"
-#include "core/os/keyboard.h"
 #include "scene/gui/label.h"
 #include "scene/main/timer.h"
 #include "scene/main/window.h"

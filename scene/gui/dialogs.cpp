@@ -29,11 +29,8 @@
 /**************************************************************************/
 
 #include "dialogs.h"
-#include "dialogs.compat.inc"
+#include "dialogs.compat.inc" // IWYU pragma: keep
 
-#include "core/os/keyboard.h"
-#include "core/string/print_string.h"
-#include "core/string/translation.h"
 #include "scene/gui/box_container.h"
 #include "scene/gui/button.h"
 #include "scene/gui/label.h"

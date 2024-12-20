@@ -29,7 +29,6 @@
 /**************************************************************************/
 
 #include "visual_shader_nodes.h"
-
 #include "scene/resources/image_texture.h"
 
 ////////////// Vector Base

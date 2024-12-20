@@ -44,7 +44,7 @@
 #include "editor/plugins/script_editor_plugin.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/2d/node_2d.h"
-#include "scene/animation/animation_mixer.h"
+#include "scene/animation/animation_mixer.h" // IWYU pragma: keep
 #include "scene/gui/check_button.h"
 #include "scene/gui/flow_container.h"
 #include "scene/gui/label.h"
