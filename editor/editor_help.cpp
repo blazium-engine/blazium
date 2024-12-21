@@ -55,6 +55,7 @@
 #include "scene/gui/line_edit.h"
 #include "scene/gui/rich_text_label.h"
 #include "scene/gui/scroll_bar.h"
+#include "scene/gui/text_edit.h"
 #include "scene/gui/texture_button.h"
 #include "scene/main/timer.h"
 
