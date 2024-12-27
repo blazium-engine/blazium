@@ -62,6 +62,7 @@
 #import <Metal/Metal.h>
 #import <os/log.h>
 #import <os/signpost.h>
+#import <spirv.hpp>
 #import <spirv_msl.hpp>
 #import <spirv_parser.hpp>
 
@@ -291,8 +292,10 @@ RDD::TextureID RenderingDeviceDriverMetal::texture_create(const TextureFormat &p
 		desc.usage |= MTLTextureUsageShaderWrite;
 	}
 
-	if (p_format.usage_bits & TEXTURE_USAGE_STORAGE_ATOMIC_BIT) {
-		desc.usage |= MTLTextureUsageShaderWrite;
+	if (@available(macOS 14.0, iOS 17.0, tvOS 17.0, *)) {
+		if (format_caps & kMTLFmtCapsAtomic) {
+			desc.usage |= MTLTextureUsageShaderAtomic;
+		}
 	}
 
 	bool can_be_attachment = flags::any(format_caps, (kMTLFmtCapsColorAtt | kMTLFmtCapsDSAtt));
@@ -697,7 +700,7 @@ static const MTLBlendOperation BLEND_OPERATIONS[RD::BLEND_OP_MAX] = {
 	MTLBlendOperationMax,
 };
 
-static const API_AVAILABLE(macos(11.0), ios(14.0)) MTLSamplerAddressMode ADDRESS_MODES[RD::SAMPLER_REPEAT_MODE_MAX] = {
+static const API_AVAILABLE(macos(11.0), ios(14.0), tvos(14.0)) MTLSamplerAddressMode ADDRESS_MODES[RD::SAMPLER_REPEAT_MODE_MAX] = {
 	MTLSamplerAddressModeRepeat,
 	MTLSamplerAddressModeMirrorRepeat,
 	MTLSamplerAddressModeClampToEdge,
@@ -705,7 +708,7 @@ static const API_AVAILABLE(macos(11.0), ios(14.0)) MTLSamplerAddressMode ADDRESS
 	MTLSamplerAddressModeMirrorClampToEdge,
 };
 
-static const API_AVAILABLE(macos(11.0), ios(14.0)) MTLSamplerBorderColor SAMPLER_BORDER_COLORS[RD::SAMPLER_BORDER_COLOR_MAX] = {
+static const API_AVAILABLE(macos(11.0), ios(14.0), tvos(14.0)) MTLSamplerBorderColor SAMPLER_BORDER_COLORS[RD::SAMPLER_BORDER_COLOR_MAX] = {
 	MTLSamplerBorderColorTransparentBlack,
 	MTLSamplerBorderColorTransparentBlack,
 	MTLSamplerBorderColorOpaqueBlack,
@@ -740,7 +743,7 @@ RDD::SamplerID RenderingDeviceDriverMetal::sampler_create(const SamplerState &p_
 	desc.normalizedCoordinates = !p_state.unnormalized_uvw;
 
 	if (p_state.lod_bias != 0.0) {
-		WARN_VERBOSE("Metal does not support LOD bias for samplers.");
+		WARN_PRINT_ONCE("Metal does not support LOD bias for samplers.");
 	}
 
 	id<MTLSamplerState> obj = [device newSamplerStateWithDescriptor:desc];
@@ -1429,7 +1432,7 @@ struct SpecializationConstantData {
 	}
 };
 
-struct API_AVAILABLE(macos(11.0), ios(14.0)) UniformData {
+struct API_AVAILABLE(macos(11.0), ios(14.0), tvos(14.0)) UniformData {
 	RD::UniformType type = RD::UniformType::UNIFORM_TYPE_MAX;
 	uint32_t binding = UINT32_MAX;
 	bool writable = false;
@@ -1485,7 +1488,7 @@ struct API_AVAILABLE(macos(11.0), ios(14.0)) UniformData {
 	}
 };
 
-struct API_AVAILABLE(macos(11.0), ios(14.0)) UniformSetData {
+struct API_AVAILABLE(macos(11.0), ios(14.0), tvos(14.0)) UniformSetData {
 	uint32_t index = UINT32_MAX;
 	LocalVector<UniformData> uniforms;
 
@@ -1543,7 +1546,7 @@ struct PushConstantData {
 	}
 };
 
-struct API_AVAILABLE(macos(11.0), ios(14.0)) ShaderBinaryData {
+struct API_AVAILABLE(macos(11.0), ios(14.0), tvos(14.0)) ShaderBinaryData {
 	enum Flags : uint32_t {
 		NONE = 0,
 		NEEDS_VIEW_MASK_BUFFER = 1 << 0,
@@ -2906,7 +2909,7 @@ void RenderingDeviceDriverMetal::command_clear_color_texture(CommandBufferID p_c
 	}
 }
 
-API_AVAILABLE(macos(11.0), ios(14.0))
+API_AVAILABLE(macos(11.0), ios(14.0), tvos(14.0))
 bool isArrayTexture(MTLTextureType p_type) {
 	return (p_type == MTLTextureType3D ||
 			p_type == MTLTextureType2DArray ||
@@ -4101,7 +4104,7 @@ Error RenderingDeviceDriverMetal::initialize(uint32_t p_device_index, uint32_t p
 	pipeline_cache_id = "metal-driver-" + get_api_version();
 
 	device_properties = memnew(MetalDeviceProperties(device));
-	pixel_formats = memnew(PixelFormats(device));
+	pixel_formats = memnew(PixelFormats(device, device_properties->features));
 	if (device_properties->features.layeredRendering) {
 		multiview_capabilities.is_supported = true;
 		multiview_capabilities.max_view_count = device_properties->limits.maxViewports;
