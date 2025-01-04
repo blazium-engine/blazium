@@ -43,6 +43,7 @@
 #include "scene/gui/slider.h"
 #include "scene/gui/spin_box.h"
 #include "scene/gui/texture_rect.h"
+#include "scene/resources/gradient_texture.h"
 #include "scene/resources/image_texture.h"
 #include "scene/resources/style_box_flat.h"
 #include "scene/resources/style_box_texture.h"
@@ -1811,7 +1812,6 @@ void ColorPicker::_bind_methods() {
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, ColorPicker, overbright_indicator);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, ColorPicker, picker_cursor);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, ColorPicker, color_hue);
-	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, ColorPicker, color_okhsl_hue);
 
 	BIND_THEME_ITEM_EXT(Theme::DATA_TYPE_STYLEBOX, ColorPicker, mode_button_normal, "tab_unselected", "TabContainer");
 	BIND_THEME_ITEM_EXT(Theme::DATA_TYPE_STYLEBOX, ColorPicker, mode_button_pressed, "tab_selected", "TabContainer");
