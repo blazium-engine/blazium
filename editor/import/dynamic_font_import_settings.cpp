@@ -1268,7 +1268,7 @@ DynamicFontImportSettingsDialog::DynamicFontImportSettingsDialog() {
 	options_general.push_back(ResourceImporter::ImportOption(PropertyInfo(Variant::BOOL, "force_autohinter"), false));
 	options_general.push_back(ResourceImporter::ImportOption(PropertyInfo(Variant::INT, "hinting", PROPERTY_HINT_ENUM, "None,Light,Normal"), 1));
 	options_general.push_back(ResourceImporter::ImportOption(PropertyInfo(Variant::INT, "subpixel_positioning", PROPERTY_HINT_ENUM, "Disabled,Auto,One Half of a Pixel,One Quarter of a Pixel"), 1));
-	options_general.push_back(ResourceImporter::ImportOption(PropertyInfo(Variant::INT, "lcd_subpixel_layout", PROPERTY_HINT_ENUM, "Disabled,Horizontal RGB,Horizontal BGR,Vertical RGB,Vertical BGR"), 1));
+	options_general.push_back(ResourceImporter::ImportOption(PropertyInfo(Variant::INT, "lcd_subpixel_layout", PROPERTY_HINT_ENUM, "Disabled,Horizontal RGB,Horizontal BGR,Vertical RGB,Vertical BGR"), 0));
 	options_general.push_back(ResourceImporter::ImportOption(PropertyInfo(Variant::FLOAT, "oversampling", PROPERTY_HINT_RANGE, "0,10,0.1"), 0.0));
 
 	options_general.push_back(ResourceImporter::ImportOption(PropertyInfo(Variant::NIL, "Metadata Overrides", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_GROUP), Variant()));
