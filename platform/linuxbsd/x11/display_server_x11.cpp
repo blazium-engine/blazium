@@ -5494,6 +5494,10 @@ void DisplayServerX11::window_start_drag(WindowID p_window) {
 	ERR_FAIL_COND(!windows.has(p_window));
 	WindowData &wd = windows[p_window];
 
+	if (wd.embed_parent) {
+		return; // Embedded window.
+	}
+
 	XClientMessageEvent m;
 	memset(&m, 0, sizeof(m));
 
@@ -5529,6 +5533,10 @@ void DisplayServerX11::window_start_resize(WindowResizeEdge p_edge, WindowID p_w
 
 	ERR_FAIL_COND(!windows.has(p_window));
 	WindowData &wd = windows[p_window];
+
+	if (wd.embed_parent) {
+		return; // Embedded window.
+	}
 
 	XClientMessageEvent m;
 	memset(&m, 0, sizeof(m));
