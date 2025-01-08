@@ -42,7 +42,7 @@ import app.blazium.godot.R
 /**
  * Utility class for managing dialogs.
  */
-internal class DialogUtils {
+class DialogUtils {
 	companion object {
 		private val TAG = DialogUtils::class.java.simpleName
 
@@ -69,7 +69,7 @@ internal class DialogUtils {
 		 * @param message The message displayed in the dialog.
 		 * @param buttons An array of button labels to display.
 		 */
-		fun showDialog(activity: Activity, title: String, message: String, buttons: Array<String>) {
+		internal fun showDialog(activity: Activity, title: String, message: String, buttons: Array<String>) {
 			var dismissDialog: () -> Unit = {} // Helper to dismiss the Dialog when a button is clicked.
 			activity.runOnUiThread {
 				val builder = AlertDialog.Builder(activity)
@@ -163,7 +163,7 @@ internal class DialogUtils {
 		 * @param message The message displayed in the input dialog.
 		 * @param existingText The existing text that will be pre-filled in the input field.
 		 */
-		fun showInputDialog(activity: Activity, title: String, message: String, existingText: String) {
+		internal fun showInputDialog(activity: Activity, title: String, message: String, existingText: String) {
 			val inputField = EditText(activity)
 			val paddingHorizontal = activity.resources.getDimensionPixelSize(R.dimen.dialog_padding_horizontal)
 			val paddingVertical = activity.resources.getDimensionPixelSize(R.dimen.dialog_padding_vertical)
