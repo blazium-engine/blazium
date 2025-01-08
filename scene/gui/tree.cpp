@@ -3250,7 +3250,7 @@ int Tree::propagate_mouse_event(const Point2i &p_pos, int x_ofs, int y_ofs, int 
 }
 
 void Tree::_text_editor_popup_modal_close() {
-	if (popup_edit_commited) {
+	if (popup_edit_committed) {
 		return; // Already processed by LineEdit/TextEdit commit.
 	}
 
@@ -3274,7 +3274,7 @@ void Tree::_text_editor_popup_modal_close() {
 }
 
 void Tree::_text_editor_gui_input(const Ref<InputEvent> &p_event) {
-	if (popup_edit_commited) {
+	if (popup_edit_committed) {
 		return; // Already processed by _text_editor_popup_modal_close
 	}
 
@@ -3285,7 +3285,7 @@ void Tree::_text_editor_gui_input(const Ref<InputEvent> &p_event) {
 	if (p_event->is_action_pressed("ui_text_newline_blank", true)) {
 		accept_event();
 	} else if (p_event->is_action_pressed("ui_text_newline")) {
-		popup_edit_commited = true; // End edit popup processing.
+		popup_edit_committed = true; // End edit popup processing.
 		popup_editor->hide();
 		_apply_multiline_edit();
 		accept_event();
@@ -3316,7 +3316,7 @@ void Tree::_apply_multiline_edit() {
 }
 
 void Tree::_line_editor_submit(String p_text) {
-	if (popup_edit_commited) {
+	if (popup_edit_committed) {
 		return; // Already processed by _text_editor_popup_modal_close
 	}
 
@@ -3324,7 +3324,7 @@ void Tree::_line_editor_submit(String p_text) {
 		return; // ESC pressed, app focus lost, or forced close from code.
 	}
 
-	popup_edit_commited = true; // End edit popup processing.
+	popup_edit_committed = true; // End edit popup processing.
 	popup_editor->hide();
 
 	if (!popup_edited_item) {
@@ -4281,7 +4281,7 @@ bool Tree::edit_selected(bool p_force_edit) {
 		if (!popup_editor->is_embedded()) {
 			popup_editor->set_content_scale_factor(popup_scale);
 		}
-		popup_edit_commited = false; // Start edit popup processing.
+		popup_edit_committed = false; // Start edit popup processing.
 		popup_editor->popup();
 		popup_editor->child_controls_changed();
 
@@ -4301,7 +4301,7 @@ bool Tree::edit_selected(bool p_force_edit) {
 		if (!popup_editor->is_embedded()) {
 			popup_editor->set_content_scale_factor(popup_scale);
 		}
-		popup_edit_commited = false; // Start edit popup processing.
+		popup_edit_committed = false; // Start edit popup processing.
 		popup_editor->popup();
 		popup_editor->child_controls_changed();
 
