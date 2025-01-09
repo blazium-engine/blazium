@@ -253,12 +253,12 @@ void _compress_etcpak(EtcpakType p_compresstype, Image *r_img) {
 				break;
 
 			case EtcpakType::ETCPAK_TYPE_DXT1:
-				CompressDxt1Dither(src_mip_read, dest_mip_write, blocks, mip_w);
+				CompressBc1Dither(src_mip_read, dest_mip_write, blocks, mip_w);
 				break;
 
 			case EtcpakType::ETCPAK_TYPE_DXT5:
 			case EtcpakType::ETCPAK_TYPE_DXT5_RA_AS_RG:
-				CompressDxt5(src_mip_read, dest_mip_write, blocks, mip_w);
+				CompressBc3(src_mip_read, dest_mip_write, blocks, mip_w);
 				break;
 
 			case EtcpakType::ETCPAK_TYPE_RGTC_R:
