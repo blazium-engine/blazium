@@ -106,7 +106,7 @@ public:
 		SHAPE_MAX
 	};
 
-	static const int SLIDER_COUNT = 4;
+	static const int SLIDER_COUNT = 3;
 
 private:
 	static Ref<Shader> wheel_shader;

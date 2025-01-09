@@ -1090,16 +1090,15 @@ void ColorPicker::_update_text_value() {
 }
 
 void ColorPicker::_sample_input(const Ref<InputEvent> &p_event) {
-	if (!display_old_color) {
-		return;
-	}
-	const Ref<InputEventMouseButton> mb = p_event;
-	if (mb.is_valid() && mb->is_pressed() && mb->get_button_index() == MouseButton::LEFT) {
-		const Rect2 rect_old = Rect2(Point2(), Size2(sample->get_size().width * 0.5, sample->get_size().height * 0.95));
-		if (rect_old.has_point(mb->get_position())) {
-			// Revert to the old color when left-clicking the old color sample.
-			set_pick_color(old_color);
-			emit_signal(SNAME("color_changed"), color);
+	if (display_old_color) {
+		const Ref<InputEventMouseButton> mb = p_event;
+		if (mb.is_valid() && mb->is_pressed() && mb->get_button_index() == MouseButton::LEFT) {
+			const Rect2 rect_old = Rect2(Point2(), Size2(sample->get_size().width * 0.5, sample->get_size().height * 0.95));
+			if (rect_old.has_point(mb->get_position())) {
+				// Revert to the old color when left-clicking the old color sample.
+				set_pick_color(old_color);
+				emit_signal(SNAME("color_changed"), color);
+			}
 		}
 	}
 }
