@@ -2743,8 +2743,9 @@ void fragment_shader(in SceneData scene_data) {
 void main() {
 #ifdef MODE_DUAL_PARABOLOID
 
-	if (dp_clip > 0.0)
+	if (dp_clip > 0.0) {
 		discard;
+	}
 #endif
 
 	fragment_shader(scene_data_block.data);

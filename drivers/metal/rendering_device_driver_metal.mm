@@ -1186,8 +1186,9 @@ class BufReader {
 	uint64_t pos = 0;
 
 	bool check_length(size_t p_size) {
-		if (status != Status::OK)
+		if (status != Status::OK) {
 			return false;
+		}
 
 		if (pos + p_size > length) {
 			status = Status::SHORT_BUFFER;
@@ -2448,8 +2449,9 @@ RDD::ShaderID RenderingDeviceDriverMetal::shader_create_from_bytecode(const Vect
 
 			for (UniformInfo const &uniform : set.uniforms) {
 				BindingInfo const *binding_info = uniform.bindings.getptr(stage);
-				if (binding_info == nullptr)
+				if (binding_info == nullptr) {
 					continue;
+				}
 
 				[descriptors addObject:binding_info->new_argument_descriptor()];
 				BindingInfo const *secondary_binding_info = uniform.bindings_secondary.getptr(stage);
