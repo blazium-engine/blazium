@@ -140,7 +140,6 @@ private:
 	TreeItem *prev = nullptr; // previous in list
 	TreeItem *next = nullptr; // next in list
 	TreeItem *first_child = nullptr;
-	TreeItem *last_child = nullptr;
 
 	Vector<TreeItem *> children_cache;
 	bool is_root = false; // for tree root

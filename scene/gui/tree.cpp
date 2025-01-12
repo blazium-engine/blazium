@@ -802,21 +802,17 @@ TreeItem *TreeItem::create_child(int p_index) {
 	TreeItem *item_prev = nullptr;
 	TreeItem *item_next = first_child;
 
-	if (p_index < 0 && last_child) {
-		item_prev = last_child;
-	} else {
-		int idx = 0;
-		while (item_next) {
-			if (idx == p_index) {
-				item_next->prev = ti;
-				ti->next = item_next;
-				break;
-			}
-
-			item_prev = item_next;
-			item_next = item_next->next;
-			idx++;
+	int idx = 0;
+	while (item_next) {
+		if (idx == p_index) {
+			item_next->prev = ti;
+			ti->next = item_next;
+			break;
 		}
+
+		item_prev = item_next;
+		item_next = item_next->next;
+		idx++;
 	}
 
 	if (item_prev) {
@@ -837,10 +833,6 @@ TreeItem *TreeItem::create_child(int p_index) {
 		}
 	}
 
-	if (item_prev == last_child) {
-		last_child = ti;
-	}
-
 	ti->parent = this;
 	ti->parent_visible_in_tree = is_visible_in_tree();
 
@@ -857,13 +849,17 @@ void TreeItem::add_child(TreeItem *p_item) {
 	p_item->parent_visible_in_tree = is_visible_in_tree();
 	p_item->_handle_visibility_changed(p_item->parent_visible_in_tree);
 
-	if (last_child) {
-		last_child->next = p_item;
-		p_item->prev = last_child;
+	TreeItem *item_prev = first_child;
+	while (item_prev && item_prev->next) {
+		item_prev = item_prev->next;
+	}
+
+	if (item_prev) {
+		item_prev->next = p_item;
+		p_item->prev = item_prev;
 	} else {
 		first_child = p_item;
 	}
-	last_child = p_item;
 
 	if (!children_cache.is_empty()) {
 		children_cache.append(p_item);
@@ -943,8 +939,13 @@ TreeItem *TreeItem::_get_prev_in_tree(bool p_wrap, bool p_include_invisible) {
 		}
 	} else {
 		current = prev_item;
-		while ((!current->collapsed || p_include_invisible) && current->last_child) {
-			current = current->last_child;
+		while ((!current->collapsed || p_include_invisible) && current->first_child) {
+			//go to the very end
+
+			current = current->first_child;
+			while (current->next) {
+				current = current->next;
+			}
 		}
 	}
 
@@ -1065,8 +1066,6 @@ void TreeItem::clear_children() {
 	}
 
 	first_child = nullptr;
-	last_child = nullptr;
-	children_cache.clear();
 };
 
 int TreeItem::get_index() {
@@ -1171,7 +1170,6 @@ void TreeItem::move_after(TreeItem *p_item) {
 	if (next) {
 		parent->children_cache.clear();
 	} else {
-		parent->last_child = this;
 		// If the cache is empty, it has not been built but there
 		// are items in the tree (note p_item != nullptr,) so we cannot update it.
 		if (!parent->children_cache.is_empty()) {
@@ -4500,8 +4498,15 @@ TreeItem *Tree::get_root() const {
 
 TreeItem *Tree::get_last_item() const {
 	TreeItem *last = root;
-	while (last && last->last_child && !last->collapsed) {
-		last = last->last_child;
+
+	while (last) {
+		if (last->next) {
+			last = last->next;
+		} else if (last->first_child && !last->collapsed) {
+			last = last->first_child;
+		} else {
+			break;
+		}
 	}
 
 	return last;
