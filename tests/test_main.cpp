@@ -135,7 +135,6 @@
 #include "tests/scene/test_color_picker.h"
 #include "tests/scene/test_graph_node.h"
 #include "tests/scene/test_text_edit.h"
-#include "tests/scene/test_tree.h"
 #endif // ADVANCED_GUI_DISABLED
 
 #ifndef _3D_DISABLED
