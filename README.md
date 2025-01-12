@@ -33,6 +33,8 @@ Blazium was forked from Godot in [October 2024](https://github.com/blazium-engin
 intending to improve upon Godot in order to fulfill its potential and contribute to the shared
 codebase of both through a more genuinely community-driven model than Godot.
 
+Blazium is a soft-fork, meaning we stay close to Godot, and regularly merge all the good stuff they are developing back in Blazium.
+
 ## Getting the engine
 
 ### Binary downloads
