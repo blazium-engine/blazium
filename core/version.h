@@ -86,11 +86,11 @@
 // Similar to EXTERNAL_VERSION_FULL_CONFIG, but also includes the VERSION_FULL_BUILD
 // description.
 // Example: "0.1.0.stable.mono (3.1.4.stable.mono.official)"
-#define EXTERNAL_VERSION_FULL_BUILD EXTERNAL_VERSION_NUMBER "(" VERSION_FULL_BUILD ")"
+#define EXTERNAL_VERSION_FULL_BUILD EXTERNAL_VERSION_FULL_CONFIG " (" VERSION_FULL_BUILD ")"
 
 // Same as above, but prepended with Godot's name and a cosmetic "v" for "version".
-// Example: "Blazium v0.1.0.nightly.mono (base v3.1.4.stable.mono.official)"
-#define VERSION_FULL_NAME VERSION_NAME " v" EXTERNAL_VERSION_NUMBER " (base v" VERSION_FULL_BUILD ")"
+// Example: "Blazium Engine v0.1.0.nightly.mono (3.1.4.stable.mono.official)"
+#define VERSION_FULL_NAME VERSION_NAME " v" EXTERNAL_VERSION_FULL_BUILD
 
 // Git commit hash, generated at build time in `core/version_hash.gen.cpp`.
 extern const char *const VERSION_HASH;
