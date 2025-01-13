@@ -10,6 +10,8 @@ from pathlib import Path
 
 import platform_windows_builders
 
+from methods import redirect_emitter
+
 sources = []
 
 common_win = [
@@ -64,6 +66,7 @@ def rc_defs_builder(target, source, env):
 
 
 env.CommandNoCache("godot_rc_defs.gen.h", env.Value(env.version_info), env.Run(rc_defs_builder))
+env["BUILDERS"]["RES"].emitter = redirect_emitter
 res_file = "godot_res.rc"
 res_target = "godot_res" + env["OBJSUFFIX"]
 res_obj = env.RES(res_target, res_file)
