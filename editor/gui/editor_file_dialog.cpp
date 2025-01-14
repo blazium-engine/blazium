@@ -2520,6 +2520,7 @@ EditorFileDialog::EditorFileDialog() {
 	// Item (files and folders) list with context menu.
 
 	item_list = memnew(ItemList);
+	item_list->set_name("FileDialogItemList");
 	item_list->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 	item_list->set_v_size_flags(Control::SIZE_EXPAND_FILL);
 	item_list->connect("item_clicked", callable_mp(this, &EditorFileDialog::_item_list_item_rmb_clicked));
