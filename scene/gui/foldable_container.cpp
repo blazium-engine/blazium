@@ -56,21 +56,11 @@ Size2 FoldableContainer::get_minimum_size() const {
 }
 
 Vector<int> FoldableContainer::get_allowed_size_flags_horizontal() const {
-	Vector<int> flags;
-	flags.append(SIZE_FILL);
-	flags.append(SIZE_SHRINK_BEGIN);
-	flags.append(SIZE_SHRINK_CENTER);
-	flags.append(SIZE_SHRINK_END);
-	return flags;
+	return Vector<int>();
 }
 
 Vector<int> FoldableContainer::get_allowed_size_flags_vertical() const {
-	Vector<int> flags;
-	flags.append(SIZE_FILL);
-	flags.append(SIZE_SHRINK_BEGIN);
-	flags.append(SIZE_SHRINK_CENTER);
-	flags.append(SIZE_SHRINK_END);
-	return flags;
+	return Vector<int>();
 }
 
 void FoldableContainer::set_expanded(bool p_expanded) {
@@ -79,16 +69,9 @@ void FoldableContainer::set_expanded(bool p_expanded) {
 	}
 	expanded = p_expanded;
 
-	for (int i = 0; i < get_child_count(); i++) {
-		Control *c = Object::cast_to<Control>(get_child(i));
-		if (!c || c->is_set_as_top_level()) {
-			continue;
-		}
-		c->set_visible(expanded);
-	}
 	update_minimum_size();
+	queue_sort();
 	queue_redraw();
-	emit_signal(SNAME("folding_changed"), !expanded);
 }
 
 bool FoldableContainer::is_expanded() const {
@@ -184,12 +167,13 @@ FoldableContainer::TitlePosition FoldableContainer::get_title_position() const {
 void FoldableContainer::add_button(const Ref<Texture2D> &p_icon, int p_position, int p_id) {
 	Button button = Button();
 	button.icon = p_icon;
-	button.id = p_id == -1 ? buttons.size() : p_id;
+	button.id = p_id == -1 ? buttons.size() - 1 : p_id;
 	p_position = p_position < 0 ? MAX(buttons.size(), 0) : CLAMP(p_position, 0, buttons.size());
 
 	buttons.insert(p_position, button);
 	update_minimum_size();
 	queue_redraw();
+	notify_property_list_changed();
 }
 
 void FoldableContainer::remove_button(int p_index) {
@@ -202,6 +186,20 @@ void FoldableContainer::remove_button(int p_index) {
 		update_minimum_size();
 		queue_redraw();
 	}
+	notify_property_list_changed();
+}
+
+void FoldableContainer::set_button_count(int p_count) {
+	ERR_FAIL_COND(p_count < 0);
+
+	if (buttons.size() == p_count) {
+		return;
+	}
+	buttons.resize(p_count);
+
+	update_minimum_size();
+	queue_redraw();
+	notify_property_list_changed();
 }
 
 int FoldableContainer::get_button_count() const {
@@ -212,6 +210,14 @@ Rect2 FoldableContainer::get_button_rect(int p_index) const {
 	ERR_FAIL_INDEX_V(p_index, buttons.size(), Rect2());
 
 	return buttons[p_index].rect;
+}
+
+void FoldableContainer::clear() {
+	buttons.clear();
+	_hovered = -1;
+	update_minimum_size();
+	queue_redraw();
+	notify_property_list_changed();
 }
 
 void FoldableContainer::set_button_id(int p_index, int p_id) {
@@ -226,19 +232,21 @@ int FoldableContainer::get_button_id(int p_index) const {
 	return buttons[p_index].id;
 }
 
-int FoldableContainer::move_button(int p_from, int p_to) {
+int FoldableContainer::move_button(int p_from_index, int p_to_index) {
 	int arr_size = buttons.size();
-	ERR_FAIL_INDEX_V(p_from, arr_size, -1);
+	ERR_FAIL_INDEX_V(p_from_index, arr_size, -1);
 	ERR_FAIL_COND_V(arr_size < 2, -1);
-	p_to = p_to == -1 ? arr_size - 1 : CLAMP(p_to, 0, arr_size - 1);
-	ERR_FAIL_COND_V(p_from == p_to, -1);
+	p_to_index = p_to_index == -1 ? arr_size - 1 : CLAMP(p_to_index, 0, arr_size - 1);
+	ERR_FAIL_COND_V(p_from_index == p_to_index, -1);
 
-	Button button = buttons[p_from];
-	buttons.remove_at(p_from);
+	Button button = buttons[p_from_index];
+	buttons.remove_at(p_from_index);
 	arr_size--;
-	p_to = CLAMP(p_to, 0, arr_size);
+	p_to_index = CLAMP(p_to_index, 0, arr_size);
 
-	return buttons.insert(p_to, button) == OK ? p_to : -1;
+	int idx = buttons.insert(p_to_index, button) == OK ? p_to_index : -1;
+	notify_property_list_changed();
+	return idx;
 }
 
 int FoldableContainer::get_button_index(int p_id) const {
@@ -260,7 +268,7 @@ void FoldableContainer::set_button_toggle_mode(int p_index, bool p_mode) {
 	}
 }
 
-int FoldableContainer::get_button_toggle_mode(int p_index) const {
+bool FoldableContainer::get_button_toggle_mode(int p_index) const {
 	ERR_FAIL_INDEX_V(p_index, buttons.size(), false);
 
 	return buttons[p_index].toggle_mode;
@@ -268,7 +276,9 @@ int FoldableContainer::get_button_toggle_mode(int p_index) const {
 
 void FoldableContainer::set_button_toggled(int p_index, bool p_toggled_on) {
 	ERR_FAIL_INDEX(p_index, buttons.size());
-	ERR_FAIL_COND(!buttons[p_index].toggle_mode);
+	if (!buttons[p_index].toggle_mode) {
+		return;
+	}
 
 	if (buttons[p_index].toggled_on != p_toggled_on) {
 		buttons.write[p_index].toggled_on = p_toggled_on;
@@ -401,6 +411,7 @@ void FoldableContainer::gui_input(const Ref<InputEvent> &p_event) {
 
 	if (has_focus() && p_event->is_action_pressed("ui_accept", false, true)) {
 		set_expanded(!expanded);
+		emit_signal(SNAME("folding_changed"), !expanded);
 		accept_event();
 		return;
 	}
@@ -416,6 +427,7 @@ void FoldableContainer::gui_input(const Ref<InputEvent> &p_event) {
 				_pressed = button_pos;
 				if (_pressed == -1) {
 					set_expanded(!expanded);
+					emit_signal(SNAME("folding_changed"), !expanded);
 				}
 				accept_event();
 			} else {
@@ -423,9 +435,9 @@ void FoldableContainer::gui_input(const Ref<InputEvent> &p_event) {
 					if (buttons[_last_pressed].toggle_mode) {
 						bool toggled_on = buttons[_last_pressed].toggled_on;
 						buttons.write[_last_pressed].toggled_on = !toggled_on;
-						emit_signal(SNAME("button_toggled"), !toggled_on, get_button_id(_last_pressed), _last_pressed);
+						emit_signal(SNAME("button_toggled"), !toggled_on, _last_pressed);
 					} else {
-						emit_signal(SNAME("button_pressed"), get_button_id(_last_pressed), _last_pressed);
+						emit_signal(SNAME("button_pressed"), _last_pressed);
 					}
 				}
 				accept_event();
@@ -438,10 +450,9 @@ void FoldableContainer::gui_input(const Ref<InputEvent> &p_event) {
 }
 
 String FoldableContainer::get_tooltip(const Point2 &p_pos) const {
-	if (p_pos.y <= title_panel_height) {
-		if (_hovered != -1) {
-			return buttons[_hovered].tooltip;
-		}
+	if (_hovered != -1) {
+		return buttons[_hovered].tooltip;
+	} else if (Rect2(0, (title_position == POSITION_TOP) ? 0 : get_size().height - title_panel_height, get_size().width, title_panel_height).has_point(p_pos)) {
 		return Control::get_tooltip(p_pos);
 	}
 	return "";
@@ -578,13 +589,13 @@ void FoldableContainer::_notification(int p_what) {
 
 			for (int i = 0; i < get_child_count(); i++) {
 				Control *c = Object::cast_to<Control>(get_child(i));
-				if (!c || !c->is_visible_in_tree()) {
-					continue;
-				}
-				if (c->is_set_as_top_level()) {
+				if (!c || c->is_set_as_top_level()) {
 					continue;
 				}
 				c->set_visible(expanded);
+				if (!expanded || !c->is_visible_in_tree()) {
+					continue;
+				}
 				fit_child_in_rect(c, Rect2(ofs, size));
 			}
 		} break;
@@ -630,9 +641,12 @@ Size2 FoldableContainer::_get_title_panel_min_size() const {
 			continue;
 		}
 		s.width += theme_cache.h_separation + button_ms.width;
-		Size2 icon_size = button.icon->get_size();
-		s.width += icon_size.width;
-		icon_height = MAX(icon_height, icon_size.height);
+
+		if (button.icon.is_valid()) {
+			Size2 icon_size = button.icon->get_size();
+			s.width += icon_size.width;
+			icon_height = MAX(icon_height, icon_size.height);
+		}
 	}
 
 	if (icon_height > 0) {
@@ -660,6 +674,12 @@ Ref<Texture2D> FoldableContainer::_get_title_icon() const {
 }
 
 void FoldableContainer::_shape() {
+	Ref<Font> font = theme_cache.title_font;
+	int font_size = theme_cache.title_font_size;
+	if (font.is_null() || font_size == 0) {
+		return;
+	}
+
 	text_buf->clear();
 	text_buf->set_width(-1);
 
@@ -673,7 +693,7 @@ void FoldableContainer::_shape() {
 
 	text_buf->set_text_overrun_behavior(overrun_behavior);
 
-	text_buf->add_string(atr(title), theme_cache.title_font, theme_cache.title_font_size, language);
+	text_buf->add_string(atr(title), font, font_size, language);
 }
 
 HorizontalAlignment FoldableContainer::_get_actual_alignment() const {
@@ -685,6 +705,10 @@ HorizontalAlignment FoldableContainer::_get_actual_alignment() const {
 		}
 	}
 	return title_alignment;
+}
+
+bool FoldableContainer::_set(const StringName &p_name, const Variant &p_value) {
+	return property_helper.property_set_value(p_name, p_value);
 }
 
 void FoldableContainer::_bind_methods() {
@@ -704,8 +728,10 @@ void FoldableContainer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_title_position"), &FoldableContainer::get_title_position);
 	ClassDB::bind_method(D_METHOD("add_button", "icon", "position", "id"), &FoldableContainer::add_button, DEFVAL(-1), DEFVAL(-1));
 	ClassDB::bind_method(D_METHOD("remove_button", "index"), &FoldableContainer::remove_button);
+	ClassDB::bind_method(D_METHOD("set_button_count", "count"), &FoldableContainer::set_button_count);
 	ClassDB::bind_method(D_METHOD("get_button_count"), &FoldableContainer::get_button_count);
 	ClassDB::bind_method(D_METHOD("get_button_rect", "index"), &FoldableContainer::get_button_rect);
+	ClassDB::bind_method(D_METHOD("clear"), &FoldableContainer::clear);
 	ClassDB::bind_method(D_METHOD("set_button_id", "index", "id"), &FoldableContainer::set_button_id);
 	ClassDB::bind_method(D_METHOD("get_button_id", "index"), &FoldableContainer::get_button_id);
 	ClassDB::bind_method(D_METHOD("move_button", "from", "to"), &FoldableContainer::move_button);
@@ -727,14 +753,16 @@ void FoldableContainer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_button_at_position", "position"), &FoldableContainer::get_button_at_position);
 
 	ADD_SIGNAL(MethodInfo("folding_changed", PropertyInfo(Variant::BOOL, "is_folded")));
-	ADD_SIGNAL(MethodInfo("button_pressed", PropertyInfo(Variant::INT, "id"), PropertyInfo(Variant::INT, "index")));
-	ADD_SIGNAL(MethodInfo("button_toggled", PropertyInfo(Variant::BOOL, "toggled_on"), PropertyInfo(Variant::INT, "id"), PropertyInfo(Variant::INT, "index")));
+	ADD_SIGNAL(MethodInfo("button_pressed", PropertyInfo(Variant::INT, "index")));
+	ADD_SIGNAL(MethodInfo("button_toggled", PropertyInfo(Variant::BOOL, "toggled_on"), PropertyInfo(Variant::INT, "index")));
 
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "expanded"), "set_expanded", "is_expanded");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "title"), "set_title", "get_title");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "title_alignment", PROPERTY_HINT_ENUM, "Left,Center,Right"), "set_title_alignment", "get_title_alignment");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "title_position", PROPERTY_HINT_ENUM, "Top,Bottom"), "set_title_position", "get_title_position");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "text_overrun_behavior", PROPERTY_HINT_ENUM, "Trim Nothing,Trim Characters,Trim Words,Ellipsis,Word Ellipsis"), "set_text_overrun_behavior", "get_text_overrun_behavior");
+
+	ADD_ARRAY_COUNT("Buttons", "button_count", "set_button_count", "get_button_count", "button_");
 
 	ADD_GROUP("BiDi", "");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "text_direction", PROPERTY_HINT_ENUM, "Auto,Left-to-Right,Right-to-Left,Inherited"), "set_text_direction", "get_text_direction");
@@ -775,6 +803,18 @@ void FoldableContainer::_bind_methods() {
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, FoldableContainer, arrow_collapsed_mirrored);
 
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, FoldableContainer, h_separation);
+
+	Button defaults;
+	base_property_helper.set_prefix("button_");
+	base_property_helper.set_array_length_getter(&FoldableContainer::get_button_count);
+	base_property_helper.register_property(PropertyInfo(Variant::OBJECT, "icon", PROPERTY_HINT_RESOURCE_TYPE, "Texture2D"), defaults.icon, &FoldableContainer::set_button_icon, &FoldableContainer::get_button_icon);
+	base_property_helper.register_property(PropertyInfo(Variant::INT, "id", PROPERTY_HINT_RANGE, "-1,8,1,or_greater"), defaults.id, &FoldableContainer::set_button_id, &FoldableContainer::get_button_id);
+	base_property_helper.register_property(PropertyInfo(Variant::BOOL, "toggle_mode"), defaults.toggle_mode, &FoldableContainer::set_button_toggle_mode, &FoldableContainer::get_button_toggle_mode);
+	base_property_helper.register_property(PropertyInfo(Variant::BOOL, "toggled_on"), defaults.toggled_on, &FoldableContainer::set_button_toggled, &FoldableContainer::is_button_toggled);
+	base_property_helper.register_property(PropertyInfo(Variant::BOOL, "disabled"), defaults.disabled, &FoldableContainer::set_button_disabled, &FoldableContainer::is_button_disabled);
+	base_property_helper.register_property(PropertyInfo(Variant::BOOL, "hidden"), defaults.hidden, &FoldableContainer::set_button_hidden, &FoldableContainer::is_button_hidden);
+	base_property_helper.register_property(PropertyInfo(Variant::STRING, "tooltip"), defaults.tooltip, &FoldableContainer::set_button_tooltip, &FoldableContainer::get_button_tooltip);
+	PropertyListHelper::register_base_helper(&base_property_helper);
 }
 
 FoldableContainer::FoldableContainer(const String &p_title) {
@@ -782,4 +822,5 @@ FoldableContainer::FoldableContainer(const String &p_title) {
 	set_title(p_title);
 	set_focus_mode(FOCUS_ALL);
 	set_mouse_filter(MOUSE_FILTER_STOP);
+	property_helper.setup_for_instance(base_property_helper, this);
 }

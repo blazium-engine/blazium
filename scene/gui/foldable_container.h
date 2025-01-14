@@ -32,6 +32,7 @@
 #define FOLDABLE_CONTAINER_H
 
 #include "scene/gui/container.h"
+#include "scene/property_list_helper.h"
 #include "scene/resources/text_line.h"
 
 class FoldableContainer : public Container {
@@ -46,19 +47,20 @@ public:
 
 private:
 	struct Button {
-		int id = -1;
 		Ref<Texture2D> icon = nullptr;
 		String tooltip;
+		Variant metadata;
+		Rect2 rect;
 
+		int id = -1;
 		bool disabled = false;
 		bool hidden = false;
 		bool toggle_mode = false;
 		bool toggled_on = false;
-
-		Rect2 rect;
-
-		Variant metadata;
 	};
+
+	static inline PropertyListHelper base_property_helper;
+	PropertyListHelper property_helper;
 
 	Vector<FoldableContainer::Button> buttons;
 	int _hovered = -1;
@@ -120,6 +122,11 @@ protected:
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
 	virtual String get_tooltip(const Point2 &p_pos) const override;
 	void _notification(int p_what);
+	bool _set(const StringName &p_name, const Variant &p_value);
+	bool _get(const StringName &p_name, Variant &r_ret) const { return property_helper.property_get_value(p_name, r_ret); }
+	void _get_property_list(List<PropertyInfo> *p_list) const { property_helper.get_property_list(p_list); }
+	bool _property_can_revert(const StringName &p_name) const { return property_helper.property_can_revert(p_name); }
+	bool _property_get_revert(const StringName &p_name, Variant &r_property) const { return property_helper.property_get_revert(p_name, r_property); }
 	static void _bind_methods();
 
 public:
@@ -135,8 +142,8 @@ public:
 	void set_language(const String &p_language);
 	String get_language() const;
 
-	void set_text_direction(TextDirection p_text_direction);
-	TextDirection get_text_direction() const;
+	void set_text_direction(Control::TextDirection p_text_direction);
+	Control::TextDirection get_text_direction() const;
 
 	void set_text_overrun_behavior(TextServer::OverrunBehavior p_overrun_behavior);
 	TextServer::OverrunBehavior get_text_overrun_behavior() const;
@@ -147,8 +154,11 @@ public:
 	void add_button(const Ref<Texture2D> &p_icon, int p_position = -1, int p_id = -1);
 	void remove_button(int p_index);
 
+	void set_button_count(int p_count);
 	int get_button_count() const;
+
 	Rect2 get_button_rect(int p_index) const;
+	void clear();
 
 	void set_button_id(int p_index, int p_id);
 	int get_button_id(int p_index) const;
@@ -157,7 +167,7 @@ public:
 	int get_button_index(int p_id) const;
 
 	void set_button_toggle_mode(int p_index, bool p_mode);
-	int get_button_toggle_mode(int p_index) const;
+	bool get_button_toggle_mode(int p_index) const;
 
 	void set_button_toggled(int p_index, bool p_toggled_on);
 	bool is_button_toggled(int p_index) const;
