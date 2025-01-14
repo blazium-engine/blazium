@@ -37,6 +37,16 @@ def get_build_version():
     return v
 
 
+# Same output of EXTERNAL_VERSION_FULL_BUILD found in core/version.h
+def get_external_build_version():
+    import version
+    from platform_methods import get_build_version
+
+    external = (version.external_major, version.external_minor, version.external_patch, version.external_status)
+
+    return f"{'%d.%d.%d.%s' % external} ({get_build_version(short=False)})"
+
+
 def create_engine_file(env, target, source, externs, threads_enabled):
     if env["use_closure_compiler"]:
         return env.BuildJS(target, source, JSEXTERNS=externs)
@@ -84,7 +94,7 @@ def create_template_zip(env, js, wasm, worker, side):
             cache.append("blazium.editor.worker.js")
         opt_cache = ["blazium.editor.wasm"]
         subst_dict = {
-            "___GODOT_VERSION___": get_build_version(),
+            "___GODOT_VERSION___": get_external_build_version(),
             "___GODOT_NAME___": "BlaziumEngine",
             "___GODOT_CACHE___": json.dumps(cache),
             "___GODOT_OPT_CACHE___": json.dumps(opt_cache),
