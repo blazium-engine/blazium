@@ -1269,7 +1269,7 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 		p_theme->set_stylebox("title_hover_panel", "FoldableContainer", foldable_container_hover);
 		p_theme->set_stylebox("title_collapsed_panel", "FoldableContainer", make_flat_stylebox(p_config.dark_color_1.darkened(0.125), p_config.base_margin, p_config.base_margin, p_config.base_margin, p_config.base_margin));
 		p_theme->set_stylebox("title_collapsed_hover_panel", "FoldableContainer", make_flat_stylebox(p_config.dark_color_1.lerp(p_config.base_color, 0.4), p_config.base_margin, p_config.base_margin, p_config.base_margin, p_config.base_margin));
-		Ref<StyleBoxFlat> foldable_container_panel = make_flat_stylebox(p_config.dark_color_1, p_config.forced_even_separation, p_config.base_margin, p_config.base_margin, p_config.base_margin);
+		Ref<StyleBoxFlat> foldable_container_panel = make_flat_stylebox(p_config.dark_color_1, p_config.base_margin, p_config.base_margin, p_config.base_margin, p_config.base_margin);
 		foldable_container_panel->set_corner_radius(CORNER_TOP_LEFT, 0);
 		foldable_container_panel->set_corner_radius(CORNER_TOP_RIGHT, 0);
 		p_theme->set_stylebox(SceneStringName(panel), "FoldableContainer", foldable_container_panel);

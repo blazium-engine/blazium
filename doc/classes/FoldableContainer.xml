@@ -1,19 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<class name="FoldableContainer" inherits="Container" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+<class name="FoldableContainer" inherits="Container" keywords="expandable, collapsible, collapse" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
 	<brief_description>
 		A container that can be expanded/collapsed.
 	</brief_description>
 	<description>
 		A container that can be expanded/collapsed, with a title that can contain buttons.
 		The title can be positioned at the top or bottom of the container.
-		The container can be expanded or collapsed by clicking the title.
-		Buttons can be added with [method add_button].
-		Buttons can be toggled by setting the [code]toggle_mode[/code] property to [code]true[/code].
-		Buttons can be hidden or disabled with [method set_button_hidden] and [method set_button_disabled].
-		Buttons can have metadata associated with them, which can be retrieved with [method get_button_metadata] and set with [method set_button_metadata].
-		Buttons can have tooltips associated with them, which can be retrieved with [method get_button_tooltip] and set with [method set_button_tooltip].
-		Buttons can have an ID associated with them, which can be retrieved with [method get_button_id] and set with [method set_button_id].
-		Buttons only support icons not text, and it can be retrieved with [method get_button_icon] and changed with [method set_button_icon].
+		The container can be expanded or collapsed by clicking the title or by pressing [code]ui_accept[/code] when focused.
+		Child control nodes are hidden when the container is collapsed. Ignores non-control children.
 	</description>
 	<tutorials>
 	</tutorials>
@@ -27,17 +21,16 @@
 				Adds a button to the title.
 			</description>
 		</method>
+		<method name="clear">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
 		<method name="get_button_at_position" qualifiers="const">
 			<return type="int" />
 			<param index="0" name="position" type="Vector2" />
 			<description>
-				Returns the button's ID at the given position.
-			</description>
-		</method>
-		<method name="get_button_count" qualifiers="const">
-			<return type="int" />
-			<description>
-				Returns the total number of buttons.
+				Returns the button's ID at the given position. Returns -1 if no button was found at this position, or if the button is disabled or hidden.
 			</description>
 		</method>
 		<method name="get_button_icon" qualifiers="const">
@@ -72,11 +65,11 @@
 			<return type="Rect2" />
 			<param index="0" name="index" type="int" />
 			<description>
-				Returns the Rect2 which represents the position and size of the button.
+				Returns the [Rect2] which represents the position and size of the button.
 			</description>
 		</method>
 		<method name="get_button_toggle_mode" qualifiers="const">
-			<return type="int" />
+			<return type="bool" />
 			<param index="0" name="index" type="int" />
 			<description>
 				Returns whether the button at the given index is a toggle button.
@@ -115,7 +108,7 @@
 			<param index="0" name="from" type="int" />
 			<param index="1" name="to" type="int" />
 			<description>
-				Changes the button's position ie. index.
+				Changes the button's index.
 			</description>
 		</method>
 		<method name="remove_button">
@@ -191,6 +184,8 @@
 		</method>
 	</methods>
 	<members>
+		<member name="button_count" type="int" setter="set_button_count" getter="get_button_count" default="0">
+		</member>
 		<member name="expanded" type="bool" setter="set_expanded" getter="is_expanded" default="true">
 			If [code]false[/code], the container will becomes folded and will hide all it's children.
 		</member>
@@ -209,7 +204,7 @@
 			The Container's title text.
 		</member>
 		<member name="title_alignment" type="int" setter="set_title_alignment" getter="get_title_alignment" enum="HorizontalAlignment" default="0">
-			Title's text horizontal alignment as defined in the [enum HorizontalAlignment] enum.
+			Title's horizontal text alignment as defined in the [enum HorizontalAlignment] enum.
 		</member>
 		<member name="title_position" type="int" setter="set_title_position" getter="get_title_position" enum="FoldableContainer.TitlePosition" default="0">
 			Title's position as defined in the [enum TitlePosition] enum.
@@ -217,16 +212,14 @@
 	</members>
 	<signals>
 		<signal name="button_pressed">
-			<param index="0" name="id" type="int" />
-			<param index="1" name="index" type="int" />
+			<param index="0" name="index" type="int" />
 			<description>
 				Emitted when a button is pressed.
 			</description>
 		</signal>
 		<signal name="button_toggled">
 			<param index="0" name="toggled_on" type="bool" />
-			<param index="1" name="id" type="int" />
-			<param index="2" name="index" type="int" />
+			<param index="1" name="index" type="int" />
 			<description>
 				Emitted when a button is toggled.
 			</description>
