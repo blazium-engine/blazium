@@ -43,6 +43,7 @@
 #include "scene/gui/slider.h"
 #include "scene/gui/spin_box.h"
 #include "scene/gui/texture_rect.h"
+#include "scene/resources/gradient_texture.h"
 #include "scene/resources/image_texture.h"
 #include "scene/resources/style_box_flat.h"
 #include "scene/resources/style_box_texture.h"
@@ -179,19 +180,21 @@ void ColorPicker::init_shaders() {
 
 shader_type canvas_item;
 
+uniform float wheel_radius = 0.42;
+
 void fragment() {
 	float x = UV.x - 0.5;
 	float y = UV.y - 0.5;
 	float a = atan(y, x);
 	x += 0.001;
 	y += 0.001;
-	float b = float(sqrt(x * x + y * y) < 0.5) * float(sqrt(x * x + y * y) > 0.42);
+	float b = float(sqrt(x * x + y * y) < 0.5) * float(sqrt(x * x + y * y) > wheel_radius);
 	x -= 0.002;
-	float b2 = float(sqrt(x * x + y * y) < 0.5) * float(sqrt(x * x + y * y) > 0.42);
+	float b2 = float(sqrt(x * x + y * y) < 0.5) * float(sqrt(x * x + y * y) > wheel_radius);
 	y -= 0.002;
-	float b3 = float(sqrt(x * x + y * y) < 0.5) * float(sqrt(x * x + y * y) > 0.42);
+	float b3 = float(sqrt(x * x + y * y) < 0.5) * float(sqrt(x * x + y * y) > wheel_radius);
 	x += 0.002;
-	float b4 = float(sqrt(x * x + y * y) < 0.5) * float(sqrt(x * x + y * y) > 0.42);
+	float b4 = float(sqrt(x * x + y * y) < 0.5) * float(sqrt(x * x + y * y) > wheel_radius);
 
 	COLOR = vec4(clamp((abs(fract(((a - TAU) / TAU) + vec3(3.0, 2.0, 1.0) / 3.0) * 6.0 - 3.0) - 1.0), 0.0, 1.0), (b + b2 + b3 + b4) / 4.00);
 }
@@ -226,14 +229,14 @@ void fragment() {
 	circle_ok_color_shader->set_code(OK_COLOR_SHADER + R"(
 // ColorPicker ok color hsv circle shader.
 
-uniform float v = 1.0;
+uniform float ok_hsl_l = 1.0;
 
 void fragment() {
 	float x = UV.x - 0.5;
 	float y = UV.y - 0.5;
 	float h = atan(y, x) / (2.0 * M_PI);
 	float s = sqrt(x * x + y * y) * 2.0;
-	vec3 col = okhsl_to_srgb(vec3(h, s, v));
+	vec3 col = okhsl_to_srgb(vec3(h, s, ok_hsl_l));
 	x += 0.001;
 	y += 0.001;
 	float b = float(sqrt(x * x + y * y) < 0.5);
@@ -289,7 +292,7 @@ void ColorPicker::_update_controls() {
 		alpha_label->hide();
 	}
 
-	switch (_get_actual_shape()) {
+	switch (current_shape) {
 		case SHAPE_HSV_RECTANGLE:
 			wheel_edit->hide();
 			w_edit->show();
@@ -396,10 +399,21 @@ void ColorPicker::_slider_value_changed() {
 	color = modes[current_mode]->get_color();
 	modes[current_mode]->_value_changed();
 
-	if (current_mode == MODE_HSV || current_mode == MODE_OKHSL) {
+	if (current_mode == MODE_HSV) {
 		h = sliders[0]->get_value() / 360.0;
 		s = sliders[1]->get_value() / 100.0;
 		v = sliders[2]->get_value() / 100.0;
+		ok_hsl_h = color.get_ok_hsl_h();
+		ok_hsl_s = color.get_ok_hsl_s();
+		ok_hsl_l = color.get_ok_hsl_l();
+		last_color = color;
+	} else if (current_mode == MODE_OKHSL) {
+		ok_hsl_h = sliders[0]->get_value() / 360.0;
+		ok_hsl_s = sliders[1]->get_value() / 100.0;
+		ok_hsl_l = sliders[2]->get_value() / 100.0;
+		h = color.get_h();
+		s = color.get_s();
+		v = color.get_v();
 		last_color = color;
 	}
 
@@ -513,20 +527,17 @@ Vector<float> ColorPicker::get_active_slider_values() {
 }
 
 void ColorPicker::_copy_color_to_hsv() {
-	if (_get_actual_shape() == SHAPE_OKHSL_CIRCLE) {
-		h = color.get_ok_hsl_h();
-		s = color.get_ok_hsl_s();
-		v = color.get_ok_hsl_l();
-	} else {
-		h = color.get_h();
-		s = color.get_s();
-		v = color.get_v();
-	}
+	ok_hsl_h = color.get_ok_hsl_h();
+	ok_hsl_s = color.get_ok_hsl_s();
+	ok_hsl_l = color.get_ok_hsl_l();
+	h = color.get_h();
+	s = color.get_s();
+	v = color.get_v();
 }
 
 void ColorPicker::_copy_hsv_to_color() {
-	if (_get_actual_shape() == SHAPE_OKHSL_CIRCLE) {
-		color.set_ok_hsl(h, s, v, color.a);
+	if (current_shape == SHAPE_OKHSL_CIRCLE) {
+		color.set_ok_hsl(ok_hsl_h, ok_hsl_s, ok_hsl_l, color.a);
 	} else {
 		color.set_hsv(h, s, v, color.a);
 	}
@@ -555,10 +566,6 @@ bool ColorPicker::_select_from_recent_preset_hbc(const Color &p_color) {
 		}
 	}
 	return false;
-}
-
-ColorPicker::PickerShapeType ColorPicker::_get_actual_shape() const {
-	return modes[current_mode]->get_shape_override() != SHAPE_MAX ? modes[current_mode]->get_shape_override() : current_shape;
 }
 
 void ColorPicker::_reset_sliders_theme() {
@@ -1079,16 +1086,15 @@ void ColorPicker::_update_text_value() {
 }
 
 void ColorPicker::_sample_input(const Ref<InputEvent> &p_event) {
-	if (!display_old_color) {
-		return;
-	}
-	const Ref<InputEventMouseButton> mb = p_event;
-	if (mb.is_valid() && mb->is_pressed() && mb->get_button_index() == MouseButton::LEFT) {
-		const Rect2 rect_old = Rect2(Point2(), Size2(sample->get_size().width * 0.5, sample->get_size().height * 0.95));
-		if (rect_old.has_point(mb->get_position())) {
-			// Revert to the old color when left-clicking the old color sample.
-			set_pick_color(old_color);
-			emit_signal(SNAME("color_changed"), color);
+	if (display_old_color) {
+		const Ref<InputEventMouseButton> mb = p_event;
+		if (mb.is_valid() && mb->is_pressed() && mb->get_button_index() == MouseButton::LEFT) {
+			const Rect2 rect_old = Rect2(Point2(), Size2(sample->get_size().width * 0.5, sample->get_size().height * 0.95));
+			if (rect_old.has_point(mb->get_position())) {
+				// Revert to the old color when left-clicking the old color sample.
+				set_pick_color(old_color);
+				emit_signal(SNAME("color_changed"), color);
+			}
 		}
 	}
 }
@@ -1143,7 +1149,6 @@ void ColorPicker::_hsv_draw(int p_which, Control *c) {
 		return;
 	}
 
-	PickerShapeType actual_shape = _get_actual_shape();
 	if (p_which == 0) {
 		Color col = color;
 		Vector2 center = c->get_size() / 2.0;
@@ -1152,62 +1157,74 @@ void ColorPicker::_hsv_draw(int p_which, Control *c) {
 			Vector<Point2> points;
 			Vector<Color> colors;
 			Vector<Color> colors2;
+			points.resize(4);
+			colors.resize(4);
+			colors2.resize(4);
 			if (current_shape == SHAPE_HSV_RECTANGLE) {
-				points.append(Vector2());
-				points.append(Vector2(c->get_size().x, 0));
-				points.append(c->get_size());
-				points.append(Vector2(0, c->get_size().y));
+				points.set(0, Vector2());
+				points.set(1, Vector2(c->get_size().x, 0));
+				points.set(2, c->get_size());
+				points.set(3, Vector2(0, c->get_size().y));
 			} else {
-				real_t ring_radius_x = Math_SQRT12 * c->get_size().width * 0.42;
-				real_t ring_radius_y = Math_SQRT12 * c->get_size().height * 0.42;
+				real_t ring_radius_x = Math_SQRT12 * c->get_size().width * WHEEL_RADIUS;
+				real_t ring_radius_y = Math_SQRT12 * c->get_size().height * WHEEL_RADIUS;
 
-				points.append(center - Vector2(ring_radius_x, ring_radius_y));
-				points.append(center + Vector2(ring_radius_x, -ring_radius_y));
-				points.append(center + Vector2(ring_radius_x, ring_radius_y));
-				points.append(center + Vector2(-ring_radius_x, ring_radius_y));
+				points.set(0, center - Vector2(ring_radius_x, ring_radius_y));
+				points.set(1, center + Vector2(ring_radius_x, -ring_radius_y));
+				points.set(2, center + Vector2(ring_radius_x, ring_radius_y));
+				points.set(3, center + Vector2(-ring_radius_x, ring_radius_y));
 			}
-			colors.append(Color(1, 1, 1, 1));
-			colors.append(Color(1, 1, 1, 1));
-			colors.append(Color(0, 0, 0, 1));
-			colors.append(Color(0, 0, 0, 1));
+			colors.set(0, Color(1, 1, 1, 1));
+			colors.set(1, Color(1, 1, 1, 1));
+			colors.set(2, Color(0, 0, 0, 1));
+			colors.set(3, Color(0, 0, 0, 1));
 			c->draw_polygon(points, colors);
 
 			col.set_hsv(h, 1, 1);
 			col.a = 0;
-			colors2.append(col);
+			colors2.set(0, col);
 			col.a = 1;
-			colors2.append(col);
+			colors2.set(1, col);
 			col.set_hsv(h, 1, 0);
-			colors2.append(col);
+			colors2.set(2, col);
 			col.a = 0;
-			colors2.append(col);
+			colors2.set(3, col);
 			c->draw_polygon(points, colors2);
 		}
 
 		int x;
 		int y;
-		if (actual_shape == SHAPE_VHS_CIRCLE || actual_shape == SHAPE_OKHSL_CIRCLE) {
-			x = center.x + (center.x * Math::cos(h * Math_TAU) * s) - (theme_cache.picker_cursor->get_width() / 2);
-			y = center.y + (center.y * Math::sin(h * Math_TAU) * s) - (theme_cache.picker_cursor->get_height() / 2);
+		if (current_shape == SHAPE_VHS_CIRCLE || current_shape == SHAPE_OKHSL_CIRCLE) {
+			Vector2 hue_offset;
+			if (current_shape == SHAPE_OKHSL_CIRCLE) {
+				hue_offset = center * Vector2(Math::cos(ok_hsl_h * Math_TAU), Math::sin(ok_hsl_h * Math_TAU)) * ok_hsl_s;
+			} else {
+				hue_offset = center * Vector2(Math::cos(h * Math_TAU), Math::sin(h * Math_TAU)) * s;
+			}
+			x = center.x + hue_offset.x - (theme_cache.picker_cursor->get_width() / 2);
+			y = center.y + hue_offset.y - (theme_cache.picker_cursor->get_height() / 2);
 		} else {
-			real_t corner_x = (c == wheel_uv) ? center.x - Math_SQRT12 * c->get_size().width * 0.42 : 0;
-			real_t corner_y = (c == wheel_uv) ? center.y - Math_SQRT12 * c->get_size().height * 0.42 : 0;
+			real_t corner_x = (c == wheel_uv) ? center.x - Math_SQRT12 * c->get_size().width * WHEEL_RADIUS : 0;
+			real_t corner_y = (c == wheel_uv) ? center.y - Math_SQRT12 * c->get_size().height * WHEEL_RADIUS : 0;
 
 			Size2 real_size(c->get_size().x - corner_x * 2, c->get_size().y - corner_y * 2);
 			x = CLAMP(real_size.x * s, 0, real_size.x) + corner_x - (theme_cache.picker_cursor->get_width() / 2);
 			y = CLAMP(real_size.y - real_size.y * v, 0, real_size.y) + corner_y - (theme_cache.picker_cursor->get_height() / 2);
 		}
+		Color _col = color;
+		_col.a = 1.0;
+		c->draw_texture(theme_cache.picker_cursor_bg, Point2(x, y), _col);
 		c->draw_texture(theme_cache.picker_cursor, Point2(x, y));
 
-		col.set_hsv(h, 1, 1);
-		if (actual_shape == SHAPE_HSV_WHEEL) {
-			Point2 from = Point2(center.x + (center.x * Math::cos(h * Math_TAU)), center.y + (center.y * Math::sin(h * Math_TAU)));
-			Point2 to = Point2(center.x + (center.x * Math::cos(h * Math_TAU) * 0.84), center.y + (center.y * Math::sin(h * Math_TAU) * 0.84));
-			c->draw_line(from, to, col.inverted());
+		if (current_shape == SHAPE_HSV_WHEEL) {
+			float _radius = WHEEL_RADIUS * 2.0;
+			_radius += (1.0 - _radius) * 0.5;
+			Point2 pos = center - (theme_cache.picker_cursor->get_size() * 0.5) + Point2(center.x * Math::cos(h * Math_TAU) * _radius, center.y * Math::sin(h * Math_TAU) * _radius);
+			c->draw_texture(theme_cache.picker_cursor, pos);
 		}
 
 	} else if (p_which == 1) {
-		if (actual_shape == SHAPE_HSV_RECTANGLE) {
+		if (current_shape == SHAPE_HSV_RECTANGLE) {
 			c->draw_set_transform(Point2(), -Math_PI / 2, Size2(c->get_size().x, -c->get_size().y));
 			c->draw_texture_rect(theme_cache.color_hue, Rect2(Point2(), Size2(1, 1)));
 			c->draw_set_transform(Point2(), 0, Size2(1, 1));
@@ -1215,15 +1232,15 @@ void ColorPicker::_hsv_draw(int p_which, Control *c) {
 			Color col;
 			col.set_hsv(h, 1, 1);
 			c->draw_line(Point2(0, y), Point2(c->get_size().x, y), col.inverted());
-		} else if (actual_shape == SHAPE_OKHSL_CIRCLE) {
+		} else if (current_shape == SHAPE_OKHSL_CIRCLE) {
 			Vector<Point2> points;
 			Vector<Color> colors;
 			Color col;
-			col.set_ok_hsl(h, s, 1);
+			col.set_ok_hsl(ok_hsl_h, ok_hsl_s, 1);
 			Color col2;
-			col2.set_ok_hsl(h, s, 0.5);
+			col2.set_ok_hsl(ok_hsl_h, ok_hsl_s, 0.5);
 			Color col3;
-			col3.set_ok_hsl(h, s, 0);
+			col3.set_ok_hsl(ok_hsl_h, ok_hsl_s, 0);
 			points.resize(6);
 			colors.resize(6);
 			points.set(0, Vector2(c->get_size().x, 0));
@@ -1239,10 +1256,10 @@ void ColorPicker::_hsv_draw(int p_which, Control *c) {
 			colors.set(4, col2);
 			colors.set(5, col);
 			c->draw_polygon(points, colors);
-			int y = c->get_size().y - c->get_size().y * CLAMP(v, 0, 1);
-			col.set_ok_hsl(h, 1, v);
+			int y = c->get_size().y - c->get_size().y * CLAMP(ok_hsl_l, 0, 1);
+			col.set_ok_hsl(ok_hsl_h, 1, ok_hsl_l);
 			c->draw_line(Point2(0, y), Point2(c->get_size().x, y), col.inverted());
-		} else if (actual_shape == SHAPE_VHS_CIRCLE) {
+		} else if (current_shape == SHAPE_VHS_CIRCLE) {
 			Vector<Point2> points;
 			Vector<Color> colors;
 			Color col;
@@ -1264,8 +1281,10 @@ void ColorPicker::_hsv_draw(int p_which, Control *c) {
 		}
 	} else if (p_which == 2) {
 		c->draw_rect(Rect2(Point2(), c->get_size()), Color(1, 1, 1));
-		if (actual_shape == SHAPE_VHS_CIRCLE || actual_shape == SHAPE_OKHSL_CIRCLE) {
+		if (current_shape == SHAPE_VHS_CIRCLE) {
 			circle_mat->set_shader_parameter("v", v);
+		} else if (current_shape == SHAPE_OKHSL_CIRCLE) {
+			circle_mat->set_shader_parameter("ok_hsl_l", ok_hsl_l);
 		}
 	}
 }
@@ -1278,17 +1297,18 @@ void ColorPicker::_slider_draw(int p_which) {
 
 void ColorPicker::_uv_input(const Ref<InputEvent> &p_event, Control *c) {
 	Ref<InputEventMouseButton> bev = p_event;
-	PickerShapeType actual_shape = _get_actual_shape();
 
 	if (bev.is_valid()) {
 		if (bev->is_pressed() && bev->get_button_index() == MouseButton::LEFT) {
 			Vector2 center = c->get_size() / 2.0;
-			if (actual_shape == SHAPE_VHS_CIRCLE || actual_shape == SHAPE_OKHSL_CIRCLE) {
+			if (current_shape == SHAPE_VHS_CIRCLE || current_shape == SHAPE_OKHSL_CIRCLE) {
 				real_t dist = center.distance_to(bev->get_position());
 				if (dist <= center.x) {
 					real_t rad = center.angle_to_point(bev->get_position());
 					h = ((rad >= 0) ? rad : (Math_TAU + rad)) / Math_TAU;
 					s = CLAMP(dist / center.x, 0, 1);
+					ok_hsl_h = h;
+					ok_hsl_s = s;
 				} else {
 					return;
 				}
@@ -1351,11 +1371,13 @@ void ColorPicker::_uv_input(const Ref<InputEvent> &p_event, Control *c) {
 		}
 
 		Vector2 center = c->get_size() / 2.0;
-		if (actual_shape == SHAPE_VHS_CIRCLE || actual_shape == SHAPE_OKHSL_CIRCLE) {
+		if (current_shape == SHAPE_VHS_CIRCLE || current_shape == SHAPE_OKHSL_CIRCLE) {
 			real_t dist = center.distance_to(mev->get_position());
 			real_t rad = center.angle_to_point(mev->get_position());
 			h = ((rad >= 0) ? rad : (Math_TAU + rad)) / Math_TAU;
 			s = CLAMP(dist / center.x, 0, 1);
+			ok_hsl_h = h;
+			ok_hsl_s = s;
 		} else {
 			if (spinning) {
 				real_t rad = center.angle_to_point(mev->get_position());
@@ -1385,14 +1407,14 @@ void ColorPicker::_uv_input(const Ref<InputEvent> &p_event, Control *c) {
 
 void ColorPicker::_w_input(const Ref<InputEvent> &p_event) {
 	Ref<InputEventMouseButton> bev = p_event;
-	PickerShapeType actual_shape = _get_actual_shape();
 
 	if (bev.is_valid()) {
 		if (bev->is_pressed() && bev->get_button_index() == MouseButton::LEFT) {
 			changing_color = true;
 			float y = CLAMP((float)bev->get_position().y, 0, w_edit->get_size().height);
-			if (actual_shape == SHAPE_VHS_CIRCLE || actual_shape == SHAPE_OKHSL_CIRCLE) {
+			if (current_shape == SHAPE_VHS_CIRCLE || current_shape == SHAPE_OKHSL_CIRCLE) {
 				v = 1.0 - (y / w_edit->get_size().height);
+				ok_hsl_l = v;
 			} else {
 				h = y / w_edit->get_size().height;
 			}
@@ -1419,8 +1441,9 @@ void ColorPicker::_w_input(const Ref<InputEvent> &p_event) {
 			return;
 		}
 		float y = CLAMP((float)mev->get_position().y, 0, w_edit->get_size().height);
-		if (actual_shape == SHAPE_VHS_CIRCLE || actual_shape == SHAPE_OKHSL_CIRCLE) {
+		if (current_shape == SHAPE_VHS_CIRCLE || current_shape == SHAPE_OKHSL_CIRCLE) {
 			v = 1.0 - (y / w_edit->get_size().height);
+			ok_hsl_l = v;
 		} else {
 			h = y / w_edit->get_size().height;
 		}
@@ -1794,8 +1817,8 @@ void ColorPicker::_bind_methods() {
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, ColorPicker, sample_revert);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, ColorPicker, overbright_indicator);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, ColorPicker, picker_cursor);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, ColorPicker, picker_cursor_bg);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, ColorPicker, color_hue);
-	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, ColorPicker, color_okhsl_hue);
 
 	BIND_THEME_ITEM_EXT(Theme::DATA_TYPE_STYLEBOX, ColorPicker, mode_button_normal, "tab_unselected", "TabContainer");
 	BIND_THEME_ITEM_EXT(Theme::DATA_TYPE_STYLEBOX, ColorPicker, mode_button_pressed, "tab_selected", "TabContainer");
@@ -1936,6 +1959,7 @@ ColorPicker::ColorPicker() {
 
 	wheel_mat.instantiate();
 	wheel_mat->set_shader(wheel_shader);
+	wheel_mat->set_shader_parameter("wheel_radius", WHEEL_RADIUS);
 	circle_mat.instantiate();
 	circle_mat->set_shader(circle_shader);
 
