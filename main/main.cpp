@@ -228,6 +228,8 @@ static bool init_use_custom_pos = false;
 static bool init_use_custom_screen = false;
 static Vector2 init_custom_pos;
 static int64_t init_embed_parent_window_id = 0;
+static bool use_custom_res = true;
+static bool force_res = false;
 
 // Debug
 
@@ -977,8 +979,6 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 	String remotefs_pass;
 
 	Vector<String> breakpoints;
-	bool use_custom_res = true;
-	bool force_res = false;
 	bool delta_smoothing_override = false;
 
 	String default_renderer = "";
@@ -4260,7 +4260,7 @@ int Main::start() {
 				translation_server->get_editor_domain()->set_pseudolocalization_enabled(true);
 			}
 
-			ProjectManager *pmanager = memnew(ProjectManager);
+			ProjectManager *pmanager = memnew(ProjectManager(force_res || use_custom_res));
 			ProgressDialog *progress_dialog = memnew(ProgressDialog);
 			pmanager->add_child(progress_dialog);
 
