@@ -30,10 +30,6 @@ def generate_bundle(target, source, env):
             "#bin/" + (prefix + env.extra_suffix + env.module_version_string).replace(".", "_") + ".app"
         ).abspath
         templ = Dir("#misc/dist/macos_tools.app").abspath
-        shutil.copy(
-            File("#platform/macos/icons/Blazium_" + env.version_info["external_status"] + ".icns").abspath,
-            templ + "/Contents/Resources/Blazium.icns",
-        )
         if os.path.exists(app_dir):
             shutil.rmtree(app_dir)
         shutil.copytree(templ, app_dir, ignore=shutil.ignore_patterns("Contents/Info.plist"))
@@ -131,6 +127,12 @@ files = [
     "gl_manager_macos_angle.mm",
     "gl_manager_macos_legacy.mm",
 ]
+
+# Copy the icon before build, always
+shutil.copy(
+    File("#platform/macos/icons/Blazium_" + env.version_info["external_status"] + ".icns").abspath,
+    File("#misc/dist/macos_tools.app/Contents/Resources/Blazium.icns").abspath,
+)
 
 prog = env.add_program("#bin/blazium", files)
 
