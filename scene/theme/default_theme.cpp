@@ -1181,6 +1181,28 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_constant("h_separation", "VFlowContainer", Math::round(4 * scale));
 	theme->set_constant("v_separation", "VFlowContainer", Math::round(4 * scale));
 
+	theme->set_icon("zoom_out", "GraphEdit", icons["zoom_less"]);
+	theme->set_icon("zoom_in", "GraphEdit", icons["zoom_more"]);
+	theme->set_icon("zoom_reset", "GraphEdit", icons["zoom_reset"]);
+	theme->set_icon("grid_toggle", "GraphEdit", icons["grid_toggle"]);
+	theme->set_icon("minimap_toggle", "GraphEdit", icons["grid_minimap"]);
+	theme->set_icon("snapping_toggle", "GraphEdit", icons["grid_snap"]);
+	theme->set_icon("layout", "GraphEdit", icons["grid_layout"]);
+
+	theme->set_stylebox(SceneStringName(panel), "GraphEdit", make_flat_stylebox(style_normal_color, 4, 4, 4, 5));
+
+	Ref<StyleBoxFlat> graph_toolbar_style = make_flat_stylebox(Color(0.24, 0.24, 0.24, 0.6), 4, 2, 4, 2);
+	theme->set_stylebox("menu_panel", "GraphEdit", graph_toolbar_style);
+
+	theme->set_color("grid_minor", "GraphEdit", Color(1, 1, 1, 0.05));
+	theme->set_color("grid_major", "GraphEdit", Color(1, 1, 1, 0.2));
+	theme->set_color("selection_fill", "GraphEdit", Color(1, 1, 1, 0.3));
+	theme->set_color("selection_stroke", "GraphEdit", Color(1, 1, 1, 0.8));
+	theme->set_color("activity", "GraphEdit", Color(1, 1, 1));
+	theme->set_color("connection_hover_tint_color", "GraphEdit", Color(0, 0, 0, 0.3));
+	theme->set_color("connection_valid_target_tint_color", "GraphEdit", Color(1, 1, 1, 0.4));
+	theme->set_color("connection_rim_color", "GraphEdit", style_normal_color);
+
 	Ref<StyleBoxFlat> foldable_container_title = make_flat_stylebox(style_pressed_color);
 	foldable_container_title->set_corner_radius(CORNER_BOTTOM_LEFT, 0);
 	foldable_container_title->set_corner_radius(CORNER_BOTTOM_RIGHT, 0);
@@ -1196,7 +1218,8 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	foldable_container_panel->set_corner_radius(CORNER_TOP_LEFT, 0);
 	foldable_container_panel->set_corner_radius(CORNER_TOP_RIGHT, 0);
 	theme->set_stylebox(SceneStringName(panel), "FoldableContainer", foldable_container_panel);
-	theme->set_stylebox("focus", "FoldableContainer", focus);
+	Ref<StyleBoxFlat> foldable_focus_style = make_flat_stylebox(style_focus_color, default_margin, default_margin, default_margin, default_margin, default_corner_radius, false, 2);
+	theme->set_stylebox("focus", "FoldableContainer", foldable_focus_style);
 
 	theme->set_stylebox("button_normal_style", "FoldableContainer", make_flat_stylebox(style_hover_color));
 	theme->set_stylebox("button_hovered_style", "FoldableContainer", make_flat_stylebox(style_normal_color));
@@ -1222,30 +1245,6 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 
 	theme->set_constant("outline_size", "FoldableContainer", 0);
 	theme->set_constant("h_separation", "FoldableContainer", Math::round(2 * scale));
-
-	theme->set_stylebox(SceneStringName(panel), "PanelContainer", make_flat_stylebox(style_normal_color, 0, 0, 0, 0));
-
-	theme->set_icon("zoom_out", "GraphEdit", icons["zoom_less"]);
-	theme->set_icon("zoom_in", "GraphEdit", icons["zoom_more"]);
-	theme->set_icon("zoom_reset", "GraphEdit", icons["zoom_reset"]);
-	theme->set_icon("grid_toggle", "GraphEdit", icons["grid_toggle"]);
-	theme->set_icon("minimap_toggle", "GraphEdit", icons["grid_minimap"]);
-	theme->set_icon("snapping_toggle", "GraphEdit", icons["grid_snap"]);
-	theme->set_icon("layout", "GraphEdit", icons["grid_layout"]);
-
-	theme->set_stylebox(SceneStringName(panel), "GraphEdit", make_flat_stylebox(style_normal_color, 4, 4, 4, 5));
-
-	Ref<StyleBoxFlat> graph_toolbar_style = make_flat_stylebox(Color(0.24, 0.24, 0.24, 0.6), 4, 2, 4, 2);
-	theme->set_stylebox("menu_panel", "GraphEdit", graph_toolbar_style);
-
-	theme->set_color("grid_minor", "GraphEdit", Color(1, 1, 1, 0.05));
-	theme->set_color("grid_major", "GraphEdit", Color(1, 1, 1, 0.2));
-	theme->set_color("selection_fill", "GraphEdit", Color(1, 1, 1, 0.3));
-	theme->set_color("selection_stroke", "GraphEdit", Color(1, 1, 1, 0.8));
-	theme->set_color("activity", "GraphEdit", Color(1, 1, 1));
-	theme->set_color("connection_hover_tint_color", "GraphEdit", Color(0, 0, 0, 0.3));
-	theme->set_color("connection_valid_target_tint_color", "GraphEdit", Color(1, 1, 1, 0.4));
-	theme->set_color("connection_rim_color", "GraphEdit", style_normal_color);
 
 	// Visual Node Ports
 

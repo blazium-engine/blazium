@@ -35,6 +35,8 @@
 #include "scene/property_list_helper.h"
 #include "scene/resources/text_line.h"
 
+class FoldableGroup;
+
 class FoldableContainer : public Container {
 	GDCLASS(FoldableContainer, Container)
 
@@ -53,8 +55,9 @@ private:
 		Rect2 rect;
 
 		int id = -1;
+		bool visible = true;
 		bool disabled = false;
-		bool hidden = false;
+		bool auto_hide = false;
 		bool toggle_mode = false;
 		bool toggled_on = false;
 	};
@@ -63,15 +66,17 @@ private:
 	PropertyListHelper property_helper;
 
 	Vector<FoldableContainer::Button> buttons;
+	Ref<FoldableGroup> foldable_group;
+	bool changing_group = false;
 	int _hovered = -1;
 	int _pressed = -1;
-	bool expanded = true;
-	String title;
+	bool folded = false;
+	String text;
 	Ref<TextLine> text_buf;
 	String language;
-	Control::TextDirection text_direction = Control::TEXT_DIRECTION_INHERITED;
-	HorizontalAlignment title_alignment = HORIZONTAL_ALIGNMENT_LEFT;
-	TextServer::OverrunBehavior overrun_behavior = TextServer::OVERRUN_TRIM_ELLIPSIS;
+	TextDirection text_direction = TEXT_DIRECTION_AUTO;
+	HorizontalAlignment text_alignment = HORIZONTAL_ALIGNMENT_LEFT;
+	TextServer::OverrunBehavior overrun_behavior = TextServer::OVERRUN_NO_TRIMMING;
 	TitlePosition title_position = POSITION_TOP;
 
 	bool is_hovering = false;
@@ -117,6 +122,7 @@ private:
 	Size2 _get_title_panel_min_size() const;
 	void _shape();
 	HorizontalAlignment _get_actual_alignment() const;
+	void _update_group();
 
 protected:
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
@@ -130,23 +136,32 @@ protected:
 	static void _bind_methods();
 
 public:
+	void fold();
+	void expand();
+
+	void set_folded(bool p_folded);
+	bool is_folded() const;
+
 	void set_expanded(bool p_expanded);
 	bool is_expanded() const;
 
-	void set_title(const String &p_title);
-	String get_title() const;
+	void set_foldable_group(const Ref<FoldableGroup> &p_group);
+	Ref<FoldableGroup> get_foldable_group() const;
 
-	void set_title_alignment(HorizontalAlignment p_alignment);
-	HorizontalAlignment get_title_alignment() const;
+	void set_text(const String &p_text);
+	String get_text() const;
 
-	void set_language(const String &p_language);
-	String get_language() const;
+	void set_text_alignment(HorizontalAlignment p_alignment);
+	HorizontalAlignment get_text_alignment() const;
 
-	void set_text_direction(Control::TextDirection p_text_direction);
-	Control::TextDirection get_text_direction() const;
+	void set_text_direction(TextDirection p_text_direction);
+	TextDirection get_text_direction() const;
 
 	void set_text_overrun_behavior(TextServer::OverrunBehavior p_overrun_behavior);
 	TextServer::OverrunBehavior get_text_overrun_behavior() const;
+
+	void set_language(const String &p_language);
+	String get_language() const;
 
 	void set_title_position(TitlePosition p_title_position);
 	TitlePosition get_title_position() const;
@@ -181,8 +196,11 @@ public:
 	void set_button_disabled(int p_index, bool p_disabled);
 	bool is_button_disabled(int p_index) const;
 
-	void set_button_hidden(int p_index, bool p_hidden);
-	bool is_button_hidden(int p_index) const;
+	void set_button_auto_hide(int p_index, bool p_auto_hide);
+	bool is_button_auto_hide(int p_index) const;
+
+	void set_button_visible(int p_index, bool p_visible);
+	bool is_button_visible(int p_index) const;
 
 	void set_button_metadata(int p_index, Variant p_metadata);
 	Variant get_button_metadata(int p_index) const;
@@ -194,9 +212,29 @@ public:
 	virtual Vector<int> get_allowed_size_flags_horizontal() const override;
 	virtual Vector<int> get_allowed_size_flags_vertical() const override;
 
-	FoldableContainer(const String &p_title = String());
+	FoldableContainer(const String &p_text = String());
+	~FoldableContainer();
 };
 
 VARIANT_ENUM_CAST(FoldableContainer::TitlePosition);
+
+class FoldableGroup : public Resource {
+	GDCLASS(FoldableGroup, Resource);
+	friend class FoldableContainer;
+	HashSet<FoldableContainer *> containers;
+	bool allow_folding_all = false;
+	bool updating_group = false;
+
+protected:
+	static void _bind_methods();
+
+public:
+	FoldableContainer *get_expanded_container();
+	void get_containers(List<FoldableContainer *> *r_containers);
+	TypedArray<FoldableContainer> _get_containers();
+	void set_allow_folding_all(bool p_enabled);
+	bool is_allow_folding_all();
+	FoldableGroup();
+};
 
 #endif // FOLDABLE_CONTAINER_H

@@ -8,6 +8,7 @@
 		The title can be positioned at the top or bottom of the container.
 		The container can be expanded or collapsed by clicking the title or by pressing [code]ui_accept[/code] when focused.
 		Child control nodes are hidden when the container is collapsed. Ignores non-control children.
+		Can allow grouping with other [FoldableContainer]s, check [member foldable_group] and [FoldableGroup].
 	</description>
 	<tutorials>
 	</tutorials>
@@ -24,13 +25,26 @@
 		<method name="clear">
 			<return type="void" />
 			<description>
+				Remove all the container buttons.
+			</description>
+		</method>
+		<method name="expand">
+			<return type="void" />
+			<description>
+				Expands the container and emits [signal folding_changed].
+			</description>
+		</method>
+		<method name="fold">
+			<return type="void" />
+			<description>
+				Folds the container and emits [signal folding_changed].
 			</description>
 		</method>
 		<method name="get_button_at_position" qualifiers="const">
 			<return type="int" />
 			<param index="0" name="position" type="Vector2" />
 			<description>
-				Returns the button's ID at the given position. Returns -1 if no button was found at this position, or if the button is disabled or hidden.
+				Returns the button's index if the given position is inisde the button's rect. Returns -1 if no button was found at this position.
 			</description>
 		</method>
 		<method name="get_button_icon" qualifiers="const">
@@ -51,7 +65,7 @@
 			<return type="int" />
 			<param index="0" name="id" type="int" />
 			<description>
-				Returns the position of the button with the given ID.
+				Returns the index of the button with the given ID.
 			</description>
 		</method>
 		<method name="get_button_metadata" qualifiers="const">
@@ -82,6 +96,13 @@
 				Returns the tooltip for the button at the given index.
 			</description>
 		</method>
+		<method name="is_button_auto_hide" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns [code]true[/code] if the button at the given index hides when the container is folded otherwise returns [code]false[/code].
+			</description>
+		</method>
 		<method name="is_button_disabled" qualifiers="const">
 			<return type="bool" />
 			<param index="0" name="index" type="int" />
@@ -89,18 +110,24 @@
 				Returns whether the button at the given index is disabled.
 			</description>
 		</method>
-		<method name="is_button_hidden" qualifiers="const">
-			<return type="bool" />
-			<param index="0" name="index" type="int" />
-			<description>
-				Returns whether the button at the given index is hidden.
-			</description>
-		</method>
 		<method name="is_button_toggled" qualifiers="const">
 			<return type="bool" />
 			<param index="0" name="index" type="int" />
 			<description>
 				Returns whether the button at the given index is toggled on/off.
+			</description>
+		</method>
+		<method name="is_button_visible" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="index" type="int" />
+			<description>
+				Returns whether the button is visible/hidden.
+			</description>
+		</method>
+		<method name="is_expanded" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns whether the container is expanded/folded.
 			</description>
 		</method>
 		<method name="move_button">
@@ -118,20 +145,20 @@
 				Removes the button at the given index.
 			</description>
 		</method>
+		<method name="set_button_auto_hide">
+			<return type="void" />
+			<param index="0" name="index" type="int" />
+			<param index="1" name="auto_hide" type="bool" />
+			<description>
+				If [code]true[/code], the button at the given index hides when the container is folded.
+			</description>
+		</method>
 		<method name="set_button_disabled">
 			<return type="void" />
 			<param index="0" name="index" type="int" />
 			<param index="1" name="disabled" type="bool" />
 			<description>
 				Disables the button at the given index.
-			</description>
-		</method>
-		<method name="set_button_hidden">
-			<return type="void" />
-			<param index="0" name="index" type="int" />
-			<param index="1" name="hidden" type="bool" />
-			<description>
-				Toggles the visibility of the button at the given index.
 			</description>
 		</method>
 		<method name="set_button_icon">
@@ -182,26 +209,45 @@
 				Sets the tooltip for the button at the given index.
 			</description>
 		</method>
+		<method name="set_button_visible">
+			<return type="void" />
+			<param index="0" name="index" type="int" />
+			<param index="1" name="hidden" type="bool" />
+			<description>
+				Toggles the visibility of the button at the given index.
+			</description>
+		</method>
+		<method name="set_expanded">
+			<return type="void" />
+			<param index="0" name="expanded" type="bool" />
+			<description>
+				If [code]true[/code], the container will becomes expanded and will show all it's children.
+				See also [member folded].
+			</description>
+		</method>
 	</methods>
 	<members>
 		<member name="button_count" type="int" setter="set_button_count" getter="get_button_count" default="0">
 		</member>
-		<member name="expanded" type="bool" setter="set_expanded" getter="is_expanded" default="true">
-			If [code]false[/code], the container will becomes folded and will hide all it's children.
-		</member>
 		<member name="focus_mode" type="int" setter="set_focus_mode" getter="get_focus_mode" overrides="Control" enum="Control.FocusMode" default="2" />
+		<member name="foldable_group" type="FoldableGroup" setter="set_foldable_group" getter="get_foldable_group">
+			The [FoldableGroup] associated with the container.
+		</member>
+		<member name="folded" type="bool" setter="set_folded" getter="is_folded" default="false">
+			If [code]true[/code], the container will becomes folded and will hide all it's children.
+		</member>
 		<member name="language" type="String" setter="set_language" getter="get_language" default="&quot;&quot;">
 			Language code used for text shaping algorithms. If left empty, current locale is used instead.
 		</member>
 		<member name="mouse_filter" type="int" setter="set_mouse_filter" getter="get_mouse_filter" overrides="Control" enum="Control.MouseFilter" default="0" />
-		<member name="text_direction" type="int" setter="set_text_direction" getter="get_text_direction" enum="Control.TextDirection" default="3">
+		<member name="text" type="String" setter="set_text" getter="get_text" default="&quot;&quot;">
+			The Container's title text.
+		</member>
+		<member name="text_direction" type="int" setter="set_text_direction" getter="get_text_direction" enum="Control.TextDirection" default="0">
 			Base text writing direction.
 		</member>
-		<member name="text_overrun_behavior" type="int" setter="set_text_overrun_behavior" getter="get_text_overrun_behavior" enum="TextServer.OverrunBehavior" default="3">
+		<member name="text_overrun_behavior" type="int" setter="set_text_overrun_behavior" getter="get_text_overrun_behavior" enum="TextServer.OverrunBehavior" default="0">
 			Defines the behavior of the [FoldableContainer] when the text is longer than the available space.
-		</member>
-		<member name="title" type="String" setter="set_title" getter="get_title" default="&quot;&quot;">
-			The Container's title text.
 		</member>
 		<member name="title_alignment" type="int" setter="set_title_alignment" getter="get_title_alignment" enum="HorizontalAlignment" default="0">
 			Title's horizontal text alignment as defined in the [enum HorizontalAlignment] enum.

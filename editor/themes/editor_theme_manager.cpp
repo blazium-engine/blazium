@@ -1257,6 +1257,24 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 		p_theme->set_constant("h_separation", "VFlowContainer", p_config.separation_margin);
 		p_theme->set_constant("v_separation", "VFlowContainer", p_config.separation_margin);
 
+		// SplitContainer.
+
+		p_theme->set_icon("h_grabber", "SplitContainer", p_theme->get_icon(SNAME("GuiHsplitter"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("v_grabber", "SplitContainer", p_theme->get_icon(SNAME("GuiVsplitter"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("grabber", "VSplitContainer", p_theme->get_icon(SNAME("GuiVsplitter"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("grabber", "HSplitContainer", p_theme->get_icon(SNAME("GuiHsplitter"), EditorStringName(EditorIcons)));
+
+		p_theme->set_constant("separation", "SplitContainer", p_config.separation_margin);
+		p_theme->set_constant("separation", "HSplitContainer", p_config.separation_margin);
+		p_theme->set_constant("separation", "VSplitContainer", p_config.separation_margin);
+
+		p_theme->set_constant("minimum_grab_thickness", "SplitContainer", p_config.increased_margin * EDSCALE);
+		p_theme->set_constant("minimum_grab_thickness", "HSplitContainer", p_config.increased_margin * EDSCALE);
+		p_theme->set_constant("minimum_grab_thickness", "VSplitContainer", p_config.increased_margin * EDSCALE);
+
+		// GridContainer.
+		p_theme->set_constant("v_separation", "GridContainer", Math::round(p_config.widget_margin.y - 2 * EDSCALE));
+
 		// FoldableContainer
 
 		Ref<StyleBoxFlat> foldable_container_title = make_flat_stylebox(p_config.dark_color_1.darkened(0.125), p_config.base_margin, p_config.base_margin, p_config.base_margin, p_config.base_margin);
@@ -1285,11 +1303,11 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 		p_theme->set_color(SceneStringName(font_color), "FoldableContainer", p_config.font_color);
 		p_theme->set_color("hover_font_color", "FoldableContainer", p_config.font_hover_color);
 		p_theme->set_color("collapsed_font_color", "FoldableContainer", p_config.font_pressed_color);
-		p_theme->set_color("font_outline_color", "FoldableContainer", Color(1, 1, 1));
-		p_theme->set_color("button_icon_normal", "FoldableContainer", p_config.font_color);
-		p_theme->set_color("button_icon_hovered", "FoldableContainer", p_config.font_hover_color);
-		p_theme->set_color("button_icon_pressed", "FoldableContainer", p_config.font_pressed_color);
-		p_theme->set_color("button_icon_disabled", "FoldableContainer", p_config.font_disabled_color);
+		p_theme->set_color("font_outline_color", "FoldableContainer", p_config.font_outline_color);
+		p_theme->set_color("button_icon_normal", "FoldableContainer", p_config.icon_normal_color);
+		p_theme->set_color("button_icon_hovered", "FoldableContainer", p_config.icon_hover_color);
+		p_theme->set_color("button_icon_pressed", "FoldableContainer", p_config.icon_pressed_color);
+		p_theme->set_color("button_icon_disabled", "FoldableContainer", p_config.icon_disabled_color);
 
 		p_theme->set_icon("arrow", "FoldableContainer", p_theme->get_icon(SNAME("GuiTreeArrowDown"), EditorStringName(EditorIcons)));
 		p_theme->set_icon("arrow_mirrored", "FoldableContainer", p_theme->get_icon(SNAME("GuiArrowUp"), EditorStringName(EditorIcons)));
@@ -1298,24 +1316,6 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 
 		p_theme->set_constant("outline_size", "FoldableContainer", 0);
 		p_theme->set_constant("h_separation", "FoldableContainer", p_config.separation_margin);
-
-		// SplitContainer.
-
-		p_theme->set_icon("h_grabber", "SplitContainer", p_theme->get_icon(SNAME("GuiHsplitter"), EditorStringName(EditorIcons)));
-		p_theme->set_icon("v_grabber", "SplitContainer", p_theme->get_icon(SNAME("GuiVsplitter"), EditorStringName(EditorIcons)));
-		p_theme->set_icon("grabber", "VSplitContainer", p_theme->get_icon(SNAME("GuiVsplitter"), EditorStringName(EditorIcons)));
-		p_theme->set_icon("grabber", "HSplitContainer", p_theme->get_icon(SNAME("GuiHsplitter"), EditorStringName(EditorIcons)));
-
-		p_theme->set_constant("separation", "SplitContainer", p_config.separation_margin);
-		p_theme->set_constant("separation", "HSplitContainer", p_config.separation_margin);
-		p_theme->set_constant("separation", "VSplitContainer", p_config.separation_margin);
-
-		p_theme->set_constant("minimum_grab_thickness", "SplitContainer", p_config.increased_margin * EDSCALE);
-		p_theme->set_constant("minimum_grab_thickness", "HSplitContainer", p_config.increased_margin * EDSCALE);
-		p_theme->set_constant("minimum_grab_thickness", "VSplitContainer", p_config.increased_margin * EDSCALE);
-
-		// GridContainer.
-		p_theme->set_constant("v_separation", "GridContainer", Math::round(p_config.widget_margin.y - 2 * EDSCALE));
 	}
 
 	// Window and dialogs.

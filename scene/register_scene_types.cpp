@@ -433,7 +433,6 @@ void register_scene_types() {
 	GDREGISTER_CLASS(ScrollContainer);
 	GDREGISTER_CLASS(PanelContainer);
 	GDREGISTER_CLASS(FlowContainer);
-	GDREGISTER_CLASS(FoldableContainer);
 	GDREGISTER_CLASS(HFlowContainer);
 	GDREGISTER_CLASS(VFlowContainer);
 	GDREGISTER_CLASS(MarginContainer);
@@ -480,6 +479,9 @@ void register_scene_types() {
 	GDREGISTER_CLASS(GraphNode);
 	GDREGISTER_CLASS(GraphFrame);
 	GDREGISTER_CLASS(GraphEdit);
+
+	GDREGISTER_CLASS(FoldableGroup);
+	GDREGISTER_CLASS(FoldableContainer);
 
 	OS::get_singleton()->yield(); // may take time to init
 

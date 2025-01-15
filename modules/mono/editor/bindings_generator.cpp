@@ -137,6 +137,7 @@ const Vector<String> prop_allowed_inherited_member_hiding = {
 	"MenuBar.TextDirection",
 	"RichTextLabel.TextDirection",
 	"TextEdit.TextDirection",
+	"FoldableContainer.TextDirection",
 };
 
 void BindingsGenerator::TypeInterface::postsetup_enum_type(BindingsGenerator::TypeInterface &r_enum_itype) {
