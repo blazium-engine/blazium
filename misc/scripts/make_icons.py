@@ -14,7 +14,7 @@
 import io
 from dataclasses import dataclass, replace
 from os import makedirs
-from shutil import copytree
+from shutil import copytree, rmtree
 from typing import Dict, List
 
 from cairosvg.parser import Tree
@@ -163,7 +163,6 @@ def compose_windows_icon(build_status: str, out_path: str, not_stable_list: list
 
 
 def compose_android_icons(build_status: str, out_base_path: str, not_stable_list: list[str], bg_color: str):
-    makedirs(out_base_path, exist_ok=True)
     base_icon_svg_bytes = load_file_bytes(icon_path)
 
     icon_descriptors: Dict[str, android_icon_descriptor] = {
@@ -257,7 +256,6 @@ def compose_macos_icons(build_status: str, out_base_path: str, not_stable_list: 
     # Needs macos-compliant background which can't be plainly bundled in the repo,
     # so use the already provided godot icon and add some badges to it
 
-    makedirs(out_base_path, exist_ok=True)
     if build_status in not_stable_list:
         build_status_badge_svg_bytes = load_file_bytes(f"{icon_components_path}/icon_badges/status_{build_status}.svg")
         build_status_badge_mini_svg_bytes = load_file_bytes(
@@ -307,7 +305,6 @@ def compose_macos_icons(build_status: str, out_base_path: str, not_stable_list: 
 
 
 def compose_linux_icons(build_status: str, out_base_path: str, not_stable_list: list[str]):
-    makedirs(out_base_path, exist_ok=True)
     base_icon_svg_bytes = load_file_bytes(icon_path)
 
     # generate SVG variant
@@ -350,36 +347,45 @@ def compose_main_icons(build_status: str, out_path: str):
     image.save(out_path)
 
 
-# Make necessary directories
-makedirs(f"{platform_path}/linuxbsd/icons", exist_ok=True)
-makedirs(f"{platform_path}/windows/icons", exist_ok=True)
-makedirs(f"{platform_path}/android/icons", exist_ok=True)
-makedirs(f"{platform_path}/macos/icons", exist_ok=True)
-makedirs(f"{main_path}/icons", exist_ok=True)
+def prepareDirectory(path):
+    rmtree(path, ignore_errors=True)
+    makedirs(path, exist_ok=True)
+
+
+# Prepare directories
+linuxPath = f"{platform_path}/linuxbsd/icons"
+windowsPath = f"{platform_path}/windows/icons"
+androidPath = f"{platform_path}/android/icons"
+macosPath = f"{platform_path}/macos/icons"
+mainPath = f"{main_path}/icons"
+
+prepareDirectory(linuxPath)
+prepareDirectory(windowsPath)
+prepareDirectory(androidPath)
+prepareDirectory(macosPath)
+prepareDirectory(mainPath)
 
 # Compose the images
 # NOTE: the last entry can be anything as long it is different from the first three
-status_list = ["dev", "nightly", "pr", "release"]
+status_list = ["dev", "nightly", "pre-release", "release"]
 not_stable_list = status_list[:-1]
 for build_status in status_list:
     print("\nComposing " + build_status + " status images...")
     print("windows images")
-    compose_windows_icon(build_status, f"{platform_path}/windows/icons/blazium_{build_status}.ico", not_stable_list)
+    compose_windows_icon(build_status, f"{windowsPath}/blazium_{build_status}.ico", not_stable_list)
     print("windows console images")
     compose_windows_icon(
         build_status,
-        f"{platform_path}/windows/icons/blazium_console_{build_status}.ico",
+        f"{windowsPath}/blazium_console_{build_status}.ico",
         not_stable_list,
         is_console=True,
     )
     print("android images")
-    compose_android_icons(
-        build_status, f"{platform_path}/android/icons/{build_status}", not_stable_list, bg_color="#220f25"
-    )
+    compose_android_icons(build_status, f"{androidPath}/{build_status}", not_stable_list, bg_color="#220f25")
     print("macos images")
-    compose_macos_icons(build_status, f"{platform_path}/macos/icons", not_stable_list)
+    compose_macos_icons(build_status, macosPath, not_stable_list)
     print("linux images")
-    compose_linux_icons(build_status, f"{platform_path}/linuxbsd/icons", not_stable_list)
+    compose_linux_icons(build_status, linuxPath, not_stable_list)
     print("main images")
-    compose_main_icons(build_status, f"{main_path}/icons/app_icon_{build_status}.png")
+    compose_main_icons(build_status, f"{mainPath}/app_icon_{build_status}.png")
 print("\nDone.")

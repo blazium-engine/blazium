@@ -89,8 +89,8 @@ project.properties
 platform/android/java/*/.cxx/
 platform/android/java/*/build/
 platform/android/java/*/libs/
-platform/android/java/lib/res/mipmap/
-platform/android/java/lib/res/mipmap-*dpi/
+platform/android/java/lib/res/mipmap*
+!platform/android/java/lib/res/mipmap-anydpi-v26
 
 # Macos
 misc/dist/macos_tools.app/Contents/Resources/Blazium.icns
@@ -248,6 +248,7 @@ xcuserdata/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
+!platform/android/icons/release
 [Rr]eleases/
 x64/
 x86/
