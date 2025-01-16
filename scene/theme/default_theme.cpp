@@ -1007,6 +1007,21 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_constant("separation", "HSeparator", Math::round(4 * scale));
 	theme->set_constant("separation", "VSeparator", Math::round(4 * scale));
 
+	// ColorButton
+	int x6_scale = Math::round(6 * scale);
+	theme->set_stylebox(CoreStringName(normal), "ColorButton", make_flat_stylebox(style_normal_color, x6_scale, x6_scale, x6_scale, x6_scale, default_corner_radius));
+	theme->set_stylebox("hover", "ColorButton", make_flat_stylebox(style_hover_color, x6_scale, x6_scale, x6_scale, x6_scale, default_corner_radius));
+	theme->set_stylebox("disabled", "ColorButton", make_flat_stylebox(style_disabled_color, x6_scale, x6_scale, x6_scale, x6_scale, default_corner_radius));
+	Ref<StyleBoxFlat> color_button_pressed = make_flat_stylebox(style_pressed_color, x6_scale, x6_scale, x6_scale, x6_scale, default_corner_radius, true, 4 * scale);
+	color_button_pressed->set_border_color(Color(0.75, 0.75, 0.75));
+	theme->set_stylebox(SceneStringName(pressed), "ColorButton", color_button_pressed);
+	Ref<StyleBoxFlat> color_button_focus = make_flat_stylebox(style_focus_color, 0, 0, 0, 0, MAX(default_corner_radius - 1, 0), false, 2 * scale);
+	color_button_focus->set_border_color(style_focus_color);
+	theme->set_stylebox("focus", "ColorButton", color_button_focus);
+
+	theme->set_icon("bg", "ColorButton", icons["mini_checkerboard"]);
+	theme->set_icon("overbright_indicator", "ColorButton", icons["color_picker_overbright"]);
+
 	// ColorPicker
 
 	theme->set_constant("margin", "ColorPicker", Math::round(4 * scale));
