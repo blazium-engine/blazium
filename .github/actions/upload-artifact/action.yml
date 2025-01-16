@@ -16,5 +16,4 @@ runs:
       with:
         name: ${{ inputs.name }}
         path: ${{ inputs.path }}
-        # Default is 90 days.
-        retention-days: 60
+        retention-days: 30
