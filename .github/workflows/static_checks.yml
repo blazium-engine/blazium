@@ -47,7 +47,7 @@ jobs:
           bash ./misc/scripts/gitignore_check.sh
 
       - name: Style checks via pre-commit
-        uses: pre-commit/action@v3.0.1
+        uses: WhalesState/action@main
         with:
           extra_args: --verbose --files ${{ env.CHANGED_FILES }}
 
