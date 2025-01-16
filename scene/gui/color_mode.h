@@ -54,7 +54,6 @@ public:
 	virtual void _value_changed() {}
 
 	virtual void slider_draw(int p_which) = 0;
-	virtual bool apply_theme() const { return false; }
 
 	ColorMode(ColorPicker *p_color_picker);
 	virtual ~ColorMode() {}
@@ -134,7 +133,7 @@ public:
 	float cached_saturation = 0.0;
 	Ref<GradientTexture2D> hue_texture = nullptr;
 
-	virtual String get_name() const override { return "OKHSL"; }
+	virtual String get_name() const override { return "HSL"; }
 
 	virtual float get_slider_step() const override { return 1.0; }
 	virtual String get_slider_label(int idx) const override;

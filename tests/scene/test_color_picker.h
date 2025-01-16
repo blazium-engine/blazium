@@ -43,8 +43,8 @@ TEST_CASE("[SceneTree][ColorPicker]") {
 	root->add_child(cp);
 
 	SUBCASE("[COLOR_PICKER] Mouse movement after Slider release") {
-		Point2i pos_left = Point2i(50, 340); // On the left side of the red slider.
-		Point2i pos_right = Point2i(200, 340); // On the right side of the red slider.
+		Point2i pos_left = Point2i(50, 350); // On the left side of the red slider.
+		Point2i pos_right = Point2i(200, 350); // On the right side of the red slider.
 		SEND_GUI_MOUSE_MOTION_EVENT(pos_left, MouseButtonMask::NONE, Key::NONE);
 		SEND_GUI_MOUSE_BUTTON_EVENT(pos_left, MouseButton::LEFT, MouseButtonMask::LEFT, Key::NONE);
 		CHECK(cp->get_pick_color().r < 0.5);

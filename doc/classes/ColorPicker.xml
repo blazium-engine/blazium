@@ -164,6 +164,9 @@
 		<theme_item name="center_slider_grabbers" data_type="constant" type="int" default="1">
 			Overrides the [theme_item Slider.center_grabber] theme property of the sliders.
 		</theme_item>
+		<theme_item name="colorize_sliders" data_type="constant" type="int" default="1">
+			If [code]true[/code] The color mode sliders will be colorized.
+		</theme_item>
 		<theme_item name="h_width" data_type="constant" type="int" default="30">
 			The width of the hue selection slider.
 		</theme_item>
@@ -172,6 +175,12 @@
 		</theme_item>
 		<theme_item name="margin" data_type="constant" type="int" default="4">
 			The margin around the [ColorPicker].
+		</theme_item>
+		<theme_item name="preset_size" data_type="constant" type="int" default="30">
+			Controls the size of the recent and swatches color buttons.
+		</theme_item>
+		<theme_item name="sample_height" data_type="constant" type="int" default="30">
+			Controls the height of the color sample.
 		</theme_item>
 		<theme_item name="sv_height" data_type="constant" type="int" default="256">
 			The height of the saturation-value selection box.
@@ -189,10 +198,19 @@
 			Custom texture for the hue selection slider on the right.
 		</theme_item>
 		<theme_item name="expanded_arrow" data_type="icon" type="Texture2D">
-			The icon for color preset drop down menu when expanded.
+			The arrow used for the preset containers when expanded.
 		</theme_item>
 		<theme_item name="folded_arrow" data_type="icon" type="Texture2D">
-			The icon for color preset drop down menu when folded.
+			The arrow used for the preset containers when folded. (for left-to-right layouts).
+		</theme_item>
+		<theme_item name="folded_arrow_mirrored" data_type="icon" type="Texture2D">
+			The arrow used for the preset containers when folded. (for right-to-left layouts).
+		</theme_item>
+		<theme_item name="hex_code_icon" data_type="icon" type="Texture2D">
+			The icon displayed when the hex [LineEdit] is showing the color code.
+		</theme_item>
+		<theme_item name="hex_icon" data_type="icon" type="Texture2D">
+			The icon displayed when the hex [LineEdit] is showing the hex code.
 		</theme_item>
 		<theme_item name="overbright_indicator" data_type="icon" type="Texture2D">
 			The indicator used to signalize that the color value is outside the 0-1 range.

@@ -1807,9 +1807,12 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 		p_theme->set_constant("margin", "ColorPicker", p_config.base_margin);
 		p_theme->set_constant("sv_width", "ColorPicker", 256 * EDSCALE);
 		p_theme->set_constant("sv_height", "ColorPicker", 256 * EDSCALE);
-		p_theme->set_constant("h_width", "ColorPicker", 30 * EDSCALE);
 		p_theme->set_constant("label_width", "ColorPicker", 10 * EDSCALE);
+		p_theme->set_constant("sample_height", "ColorPicker", 30 * EDSCALE);
+		p_theme->set_constant("h_width", "ColorPicker", 30 * EDSCALE);
+		p_theme->set_constant("preset_size", "ColorPicker", Math::round(30 * EDSCALE));
 		p_theme->set_constant("center_slider_grabbers", "ColorPicker", 1);
+		p_theme->set_constant("colorize_sliders", "ColorPicker", 1);
 
 		p_theme->set_icon("screen_picker", "ColorPicker", p_theme->get_icon(SNAME("ColorPick"), EditorStringName(EditorIcons)));
 		p_theme->set_icon("shape_circle", "ColorPicker", p_theme->get_icon(SNAME("PickerShapeCircle"), EditorStringName(EditorIcons)));
@@ -1822,14 +1825,14 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 		p_theme->set_icon("bar_arrow", "ColorPicker", p_theme->get_icon(SNAME("ColorPickerBarArrow"), EditorStringName(EditorIcons)));
 		p_theme->set_icon("picker_cursor", "ColorPicker", p_theme->get_icon(SNAME("PickerCursor"), EditorStringName(EditorIcons)));
 		p_theme->set_icon("picker_cursor_bg", "ColorPicker", p_theme->get_icon(SNAME("PickerCursorBg"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("hex_icon", "ColorPicker", p_theme->get_icon(SNAME("PickerHex"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("hex_code_icon", "ColorPicker", p_theme->get_icon(SNAME("Script"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("expanded_arrow", "ColorPicker", p_theme->get_icon(SNAME("GuiTreeArrowDown"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("folded_arrow", "ColorPicker", p_theme->get_icon(SNAME("GuiTreeArrowRight"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("folded_arrow_mirrored", "ColorPicker", p_theme->get_icon(SNAME("GuiTreeArrowLeft"), EditorStringName(EditorIcons)));
 
 		// ColorPickerButton.
 		p_theme->set_icon("bg", "ColorPickerButton", p_theme->get_icon(SNAME("GuiMiniCheckerboard"), EditorStringName(EditorIcons)));
-
-		// ColorPresetButton.
-		p_theme->set_stylebox("preset_fg", "ColorPresetButton", make_flat_stylebox(Color(1, 1, 1), 2, 2, 2, 2, 2));
-		p_theme->set_icon("preset_bg", "ColorPresetButton", p_theme->get_icon(SNAME("GuiMiniCheckerboard"), EditorStringName(EditorIcons)));
-		p_theme->set_icon("overbright_indicator", "ColorPresetButton", p_theme->get_icon(SNAME("OverbrightIndicator"), EditorStringName(EditorIcons)));
 	}
 }
 

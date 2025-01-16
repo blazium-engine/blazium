@@ -36,6 +36,7 @@
 #include "scene/gui/popup.h"
 
 class AspectRatioContainer;
+class ColorButton;
 class ColorMode;
 class ColorModeRGB;
 class ColorModeHSV;
@@ -52,30 +53,7 @@ class PopupMenu;
 class SpinBox;
 class StyleBoxFlat;
 class TextureRect;
-
-class ColorPresetButton : public BaseButton {
-	GDCLASS(ColorPresetButton, BaseButton);
-
-	Color preset_color;
-
-	struct ThemeCache {
-		Ref<StyleBox> foreground_style;
-
-		Ref<Texture2D> background_icon;
-		Ref<Texture2D> overbright_indicator;
-	} theme_cache;
-
-protected:
-	void _notification(int);
-	static void _bind_methods();
-
-public:
-	void set_preset_color(const Color &p_color);
-	Color get_preset_color() const;
-
-	ColorPresetButton(Color p_color, int p_size);
-	~ColorPresetButton();
-};
+class FoldableContainer;
 
 class ColorPicker : public VBoxContainer {
 	GDCLASS(ColorPicker, VBoxContainer);
@@ -120,7 +98,6 @@ private:
 #endif
 
 	int current_slider_count = SLIDER_COUNT;
-	static const int MODE_BUTTON_COUNT = 3;
 	const float WHEEL_RADIUS = 0.42;
 
 	bool slider_theme_modified = true;
@@ -136,6 +113,8 @@ private:
 	Color picker_color;
 
 	MarginContainer *internal_margin = nullptr;
+	VBoxContainer *real_vbox = nullptr;
+	HBoxContainer *hb_edit = nullptr;
 	Control *uv_edit = nullptr;
 	Control *w_edit = nullptr;
 	AspectRatioContainer *wheel_edit = nullptr;
@@ -144,24 +123,22 @@ private:
 	Ref<ShaderMaterial> circle_mat;
 	Control *wheel = nullptr;
 	Control *wheel_uv = nullptr;
-	TextureRect *sample = nullptr;
-	GridContainer *preset_container = nullptr;
+	Control *sample = nullptr;
+	FoldableContainer *preset_foldable = nullptr;
+	FoldableContainer *recent_preset_foldable = nullptr;
+	HBoxContainer *preset_hbc = nullptr;
 	HBoxContainer *recent_preset_hbc = nullptr;
-	Button *btn_add_preset = nullptr;
 	Button *btn_pick = nullptr;
-	Button *btn_preset = nullptr;
-	Button *btn_recent_preset = nullptr;
 	PopupMenu *shape_popup = nullptr;
-	PopupMenu *mode_popup = nullptr;
 	MenuButton *btn_shape = nullptr;
 	HBoxContainer *mode_hbc = nullptr;
 	HBoxContainer *sample_hbc = nullptr;
+	VBoxContainer *slider_vbc = nullptr;
 	GridContainer *slider_gc = nullptr;
 	HBoxContainer *hex_hbc = nullptr;
-	MenuButton *btn_mode = nullptr;
-	Button *mode_btns[MODE_BUTTON_COUNT];
+	Button *mode_btns[MODE_MAX];
 	Ref<ButtonGroup> mode_group = nullptr;
-	ColorPresetButton *selected_recent_preset = nullptr;
+	ColorButton *selected_recent_preset = nullptr;
 	Ref<ButtonGroup> preset_group;
 	Ref<ButtonGroup> recent_preset_group;
 
@@ -182,7 +159,6 @@ private:
 	bool text_is_constructor = false;
 	PickerShapeType current_shape = SHAPE_HSV_RECTANGLE;
 	ColorModeType current_mode = MODE_RGB;
-	bool colorize_sliders = true;
 
 	const int PRESET_COLUMN_COUNT = 9;
 	int prev_preset_size = 0;
@@ -224,16 +200,20 @@ private:
 
 		int content_margin = 0;
 		int label_width = 0;
+		int preset_size = 0;
 
+		int sample_height = 0;
 		int sv_height = 0;
 		int sv_width = 0;
 		int h_width = 0;
 
 		bool center_slider_grabbers = true;
+		bool colorize_sliders = true;
 
 		Ref<Texture2D> screen_picker;
 		Ref<Texture2D> expanded_arrow;
 		Ref<Texture2D> folded_arrow;
+		Ref<Texture2D> folded_arrow_mirrored;
 		Ref<Texture2D> add_preset;
 
 		Ref<Texture2D> shape_rect;
@@ -248,6 +228,9 @@ private:
 		Ref<Texture2D> picker_cursor_bg;
 		Ref<Texture2D> color_hue;
 
+		Ref<Texture2D> hex_icon;
+		Ref<Texture2D> hex_code_icon;
+
 		/* Mode buttons */
 		Ref<StyleBox> mode_button_normal;
 		Ref<StyleBox> mode_button_pressed;
@@ -258,7 +241,6 @@ private:
 	void _copy_hsv_to_color();
 
 	void create_slider(GridContainer *gc, int idx);
-	void _reset_sliders_theme();
 	void _html_submitted(const String &p_html);
 	void _slider_drag_started();
 	void _slider_value_changed();
@@ -276,8 +258,10 @@ private:
 	void _w_input(const Ref<InputEvent> &p_event);
 	void _slider_or_spin_input(const Ref<InputEvent> &p_event);
 	void _line_edit_input(const Ref<InputEvent> &p_event);
+	void _preset_foldable_button_pressed(int p_idx);
 	void _preset_input(const Ref<InputEvent> &p_event, const Color &p_color);
-	void _recent_preset_pressed(const bool pressed, ColorPresetButton *p_preset);
+	void _recent_preset_pressed(const bool p_pressed, ColorButton *p_preset);
+	void _preset_pressed(const bool p_pressed, ColorButton *p_preset);
 	void _text_changed(const String &p_new_text);
 	void _add_preset_pressed();
 	void _html_focus_exit();
@@ -287,14 +271,8 @@ private:
 	void _pick_button_pressed_legacy();
 	void _picker_texture_input(const Ref<InputEvent> &p_event);
 
-	inline int _get_preset_size();
-	void _add_preset_button(int p_size, const Color &p_color);
-	void _add_recent_preset_button(int p_size, const Color &p_color);
-
-	void _show_hide_preset(const bool &p_is_btn_pressed, Button *p_btn_preset, Container *p_preset_container);
-	void _update_drop_down_arrow(const bool &p_is_btn_pressed, Button *p_btn_preset);
-
-	void _set_mode_popup_value(ColorModeType p_mode);
+	void _add_preset_button(const Color &p_color);
+	void _add_recent_preset_button(const Color &p_color);
 
 	Variant _get_drag_data_fw(const Point2 &p_point, Control *p_from_control);
 	bool _can_drop_data_fw(const Point2 &p_point, const Variant &p_data, Control *p_from_control) const;
@@ -339,17 +317,17 @@ public:
 	void erase_recent_preset(const Color &p_color);
 	PackedColorArray get_presets() const;
 	PackedColorArray get_recent_presets() const;
+
+#ifdef TOOLS_ENABLED
 	void _update_presets();
 	void _update_recent_presets();
+#endif // TOOLS_ENABLED
 
 	void _select_from_preset_container(const Color &p_color);
 	bool _select_from_recent_preset_hbc(const Color &p_color);
 
 	void set_color_mode(ColorModeType p_mode);
 	ColorModeType get_color_mode() const;
-
-	void set_colorize_sliders(bool p_colorize_sliders);
-	bool is_colorizing_sliders() const;
 
 	void set_deferred_mode(bool p_enabled);
 	bool is_deferred_mode() const;
