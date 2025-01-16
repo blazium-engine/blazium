@@ -217,7 +217,9 @@ FoldableContainer::TitlePosition FoldableContainer::get_title_position() const {
 
 void FoldableContainer::add_button(const Ref<Texture2D> &p_icon, int p_position, int p_id) {
 	Button button = Button();
-	button.icon = p_icon;
+	if (p_icon.is_valid()) {
+		button.icon = p_icon;
+	}
 	button.id = p_id == -1 ? buttons.size() - 1 : p_id;
 	p_position = p_position < 0 ? MAX(buttons.size(), 0) : CLAMP(p_position, 0, buttons.size());
 
@@ -755,11 +757,11 @@ Ref<StyleBox> FoldableContainer::_get_title_style() const {
 
 Ref<Texture2D> FoldableContainer::_get_title_icon() const {
 	if (is_expanded()) {
-		return (title_position == POSITION_TOP) ? theme_cache.arrow : theme_cache.arrow_mirrored;
+		return (title_position == POSITION_TOP) ? theme_cache.expanded_arrow : theme_cache.expanded_arrow_mirrored;
 	} else if (is_layout_rtl()) {
-		return theme_cache.arrow_collapsed_mirrored;
+		return theme_cache.folded_arrow_mirrored;
 	}
-	return theme_cache.arrow_collapsed;
+	return theme_cache.folded_arrow;
 }
 
 void FoldableContainer::_shape() {
@@ -907,10 +909,10 @@ void FoldableContainer::_bind_methods() {
 	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, FoldableContainer, button_icon_pressed);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, FoldableContainer, button_icon_disabled);
 
-	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, FoldableContainer, arrow);
-	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, FoldableContainer, arrow_mirrored);
-	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, FoldableContainer, arrow_collapsed);
-	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, FoldableContainer, arrow_collapsed_mirrored);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, FoldableContainer, expanded_arrow);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, FoldableContainer, expanded_arrow_mirrored);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, FoldableContainer, folded_arrow);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, FoldableContainer, folded_arrow_mirrored);
 
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, FoldableContainer, h_separation);
 

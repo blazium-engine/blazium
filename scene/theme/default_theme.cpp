@@ -1253,10 +1253,10 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_color("button_icon_pressed", "FoldableContainer", control_font_pressed_color);
 	theme->set_color("button_icon_disabled", "FoldableContainer", control_font_disabled_color);
 
-	theme->set_icon("arrow", "FoldableContainer", icons["arrow_down"]);
-	theme->set_icon("arrow_mirrored", "FoldableContainer", icons["arrow_up"]);
-	theme->set_icon("arrow_collapsed", "FoldableContainer", icons["arrow_right"]);
-	theme->set_icon("arrow_collapsed_mirrored", "FoldableContainer", icons["arrow_left"]);
+	theme->set_icon("expanded_arrow", "FoldableContainer", icons["arrow_down"]);
+	theme->set_icon("expanded_arrow_mirrored", "FoldableContainer", icons["arrow_up"]);
+	theme->set_icon("folded_arrow", "FoldableContainer", icons["arrow_right"]);
+	theme->set_icon("folded_arrow_mirrored", "FoldableContainer", icons["arrow_left"]);
 
 	theme->set_constant("outline_size", "FoldableContainer", 0);
 	theme->set_constant("h_separation", "FoldableContainer", Math::round(2 * scale));

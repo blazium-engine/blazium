@@ -109,10 +109,10 @@ private:
 		int title_font_size = 0;
 		int title_font_outline_size = 0;
 
-		Ref<Texture2D> arrow;
-		Ref<Texture2D> arrow_mirrored;
-		Ref<Texture2D> arrow_collapsed;
-		Ref<Texture2D> arrow_collapsed_mirrored;
+		Ref<Texture2D> expanded_arrow;
+		Ref<Texture2D> expanded_arrow_mirrored;
+		Ref<Texture2D> folded_arrow;
+		Ref<Texture2D> folded_arrow_mirrored;
 
 		int h_separation = 0;
 	} theme_cache;
@@ -166,7 +166,7 @@ public:
 	void set_title_position(TitlePosition p_title_position);
 	TitlePosition get_title_position() const;
 
-	void add_button(const Ref<Texture2D> &p_icon, int p_position = -1, int p_id = -1);
+	void add_button(const Ref<Texture2D> &p_icon = nullptr, int p_position = -1, int p_id = -1);
 	void remove_button(int p_index);
 
 	void set_button_count(int p_count);
