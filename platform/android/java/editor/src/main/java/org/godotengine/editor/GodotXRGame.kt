@@ -40,7 +40,7 @@ open class GodotXRGame: GodotGame() {
 
 	override fun overrideOrientationRequest() = true
 
-	override fun updateCommandLineParams(args: List<String>) {
+	override fun updateCommandLineParams(args: Array<String>) {
 		val updatedArgs = ArrayList<String>()
 		if (!args.contains(XRMode.OPENXR.cmdLineArg)) {
 			updatedArgs.add(XRMode.OPENXR.cmdLineArg)
@@ -51,9 +51,28 @@ open class GodotXRGame: GodotGame() {
 		}
 		updatedArgs.addAll(args)
 
-		super.updateCommandLineParams(updatedArgs)
+		super.updateCommandLineParams(updatedArgs.toTypedArray())
 	}
 
 	override fun getEditorWindowInfo() = XR_RUN_GAME_INFO
 
+	override fun getProjectPermissionsToEnable(): MutableList<String> {
+		val permissionsToEnable = super.getProjectPermissionsToEnable()
+
+		val xrRuntimePermission = getXRRuntimePermissions()
+		if (xrRuntimePermission.isNotEmpty() && GodotLib.getGlobal("xr/openxr/enabled").toBoolean()) {
+			// We only request permissions when the `automatically_request_runtime_permissions`
+			// project setting is enabled.
+			// If the project setting is not defined, we fall-back to the default behavior which is
+			// to automatically request permissions.
+			val automaticallyRequestPermissionsSetting = GodotLib.getGlobal("xr/openxr/extensions/automatically_request_runtime_permissions")
+			val automaticPermissionsRequestEnabled = automaticallyRequestPermissionsSetting.isNullOrEmpty() ||
+				automaticallyRequestPermissionsSetting.toBoolean()
+			if (automaticPermissionsRequestEnabled) {
+				permissionsToEnable.addAll(xrRuntimePermission)
+			}
+		}
+
+		return permissionsToEnable
+	}
 }
