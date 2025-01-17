@@ -16,6 +16,7 @@ jobs:
   ios-template:
     runs-on: macos-latest
     name: Template (target=template_release)
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
