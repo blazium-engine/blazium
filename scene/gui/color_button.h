@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  theme_owner.h                                                         */
+/*  color_button.h                                                        */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,58 +28,44 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef THEME_OWNER_H
-#define THEME_OWNER_H
+#ifndef COLOR_BUTTON_H
+#define COLOR_BUTTON_H
 
-#include "core/object/object.h"
-#include "scene/resources/theme.h"
+#include "scene/gui/base_button.h"
 
-class Control;
-class Node;
-class ThemeContext;
-class Window;
+class ColorButton : public BaseButton {
+	GDCLASS(ColorButton, BaseButton);
 
-class ThemeOwner : public Object {
-	Node *holder = nullptr;
+	bool flat = false;
+	Color color = Color(1, 1, 1);
 
-	Control *owner_control = nullptr;
-	Window *owner_window = nullptr;
-	ThemeContext *owner_context = nullptr;
+	struct ThemeCache {
+		Ref<StyleBox> normal;
+		Ref<StyleBox> pressed;
+		Ref<StyleBox> hover;
+		Ref<StyleBox> hover_pressed;
+		Ref<StyleBox> disabled;
+		Ref<StyleBox> focus;
 
-	void _owner_context_changed();
-	ThemeContext *_get_active_owner_context() const;
+		Ref<Texture2D> background_icon;
+		Ref<Texture2D> overbright_indicator;
+	} theme_cache;
 
-	Node *_get_next_owner_node(Node *p_from_node) const;
-	Ref<Theme> _get_owner_node_theme(Node *p_owner_node) const;
+	Ref<StyleBox> _get_current_style() const;
+
+protected:
+	void _notification(int);
+	static void _bind_methods();
 
 public:
-	// Theme owner node.
+	virtual Size2 get_minimum_size() const override;
+	void set_color_no_signal(const Color &p_color);
+	void set_color(const Color &p_color);
+	Color get_color() const;
+	void set_flat(bool p_enabled);
+	bool is_flat() const;
 
-	void set_owner_node(Node *p_node);
-	Node *get_owner_node() const;
-	bool has_owner_node() const;
-
-	void set_owner_context(ThemeContext *p_context, bool p_propagate = true);
-
-	// Theme propagation.
-
-	void assign_theme_on_parented(Node *p_for_node);
-	void clear_theme_on_unparented(Node *p_for_node);
-	void propagate_theme_changed(Node *p_to_node, Node *p_owner_node, bool p_notify, bool p_assign);
-
-	// Theme lookup.
-
-	void get_theme_type_dependencies(const Node *p_for_node, const StringName &p_theme_type, Vector<StringName> &r_result) const;
-
-	Variant get_theme_item_in_types(Theme::DataType p_data_type, const StringName &p_name, const Vector<StringName> &p_theme_types);
-	bool has_theme_item_in_types(Theme::DataType p_data_type, const StringName &p_name, const Vector<StringName> &p_theme_types);
-
-	float get_theme_default_base_scale();
-	Ref<Font> get_theme_default_font();
-	int get_theme_default_font_size();
-
-	ThemeOwner(Node *p_holder) { holder = p_holder; }
-	~ThemeOwner() {}
+	ColorButton(const Color &p_color = Color(1, 1, 1));
 };
 
-#endif // THEME_OWNER_H
+#endif // COLOR_BUTTON_H

@@ -322,17 +322,17 @@
 		<theme_item name="font_size" data_type="font_size" type="int">
 			The title's font size.
 		</theme_item>
-		<theme_item name="arrow" data_type="icon" type="Texture2D">
+		<theme_item name="expanded_arrow" data_type="icon" type="Texture2D">
 			The title's icon used when expanded.
 		</theme_item>
-		<theme_item name="arrow_collapsed" data_type="icon" type="Texture2D">
-			The title's icon used when collapsed (for left-to-right layouts).
-		</theme_item>
-		<theme_item name="arrow_collapsed_mirrored" data_type="icon" type="Texture2D">
-			The title's icon used when collapsed (for right-to-left layouts).
-		</theme_item>
-		<theme_item name="arrow_mirrored" data_type="icon" type="Texture2D">
+		<theme_item name="expanded_arrow_mirrored" data_type="icon" type="Texture2D">
 			The title's icon used when expanded (for bottom title).
+		</theme_item>
+		<theme_item name="folded_arrow" data_type="icon" type="Texture2D">
+			The title's icon used when folded (for left-to-right layouts).
+		</theme_item>
+		<theme_item name="folded_arrow_mirrored" data_type="icon" type="Texture2D">
+			The title's icon used when collapsed (for right-to-left layouts).
 		</theme_item>
 		<theme_item name="button_disabled_style" data_type="style" type="StyleBox">
 			The title's button disabled style.

@@ -1007,17 +1007,36 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_constant("separation", "HSeparator", Math::round(4 * scale));
 	theme->set_constant("separation", "VSeparator", Math::round(4 * scale));
 
+	// ColorButton
+	int x6_scale = Math::round(6 * scale);
+	theme->set_stylebox(CoreStringName(normal), "ColorButton", make_flat_stylebox(style_normal_color, x6_scale, x6_scale, x6_scale, x6_scale, default_corner_radius));
+	theme->set_stylebox("hover", "ColorButton", make_flat_stylebox(style_hover_color, x6_scale, x6_scale, x6_scale, x6_scale, default_corner_radius));
+	theme->set_stylebox("disabled", "ColorButton", make_flat_stylebox(style_disabled_color, x6_scale, x6_scale, x6_scale, x6_scale, default_corner_radius));
+	Ref<StyleBoxFlat> color_button_pressed = make_flat_stylebox(style_pressed_color, x6_scale, x6_scale, x6_scale, x6_scale, default_corner_radius, true, 4 * scale);
+	color_button_pressed->set_border_color(Color(0.75, 0.75, 0.75));
+	theme->set_stylebox(SceneStringName(pressed), "ColorButton", color_button_pressed);
+	Ref<StyleBoxFlat> color_button_focus = make_flat_stylebox(style_focus_color, 0, 0, 0, 0, MAX(default_corner_radius - 1, 0), false, 2 * scale);
+	color_button_focus->set_border_color(style_focus_color);
+	theme->set_stylebox("focus", "ColorButton", color_button_focus);
+
+	theme->set_icon("bg", "ColorButton", icons["mini_checkerboard"]);
+	theme->set_icon("overbright_indicator", "ColorButton", icons["color_picker_overbright"]);
+
 	// ColorPicker
 
 	theme->set_constant("margin", "ColorPicker", Math::round(4 * scale));
 	theme->set_constant("sv_width", "ColorPicker", Math::round(256 * scale));
 	theme->set_constant("sv_height", "ColorPicker", Math::round(256 * scale));
-	theme->set_constant("h_width", "ColorPicker", Math::round(30 * scale));
 	theme->set_constant("label_width", "ColorPicker", Math::round(10 * scale));
+	theme->set_constant("h_width", "ColorPicker", Math::round(30 * scale));
+	theme->set_constant("sample_height", "ColorPicker", Math::round(30 * scale));
+	theme->set_constant("preset_size", "ColorPicker", Math::round(30 * scale));
 	theme->set_constant("center_slider_grabbers", "ColorPicker", 1);
+	theme->set_constant("colorize_sliders", "ColorPicker", 1);
 
-	theme->set_icon("folded_arrow", "ColorPicker", icons["arrow_right"]);
 	theme->set_icon("expanded_arrow", "ColorPicker", icons["arrow_down"]);
+	theme->set_icon("folded_arrow", "ColorPicker", icons["arrow_right"]);
+	theme->set_icon("folded_arrow_mirrored", "ColorPicker", icons["arrow_left"]);
 	theme->set_icon("screen_picker", "ColorPicker", icons["color_picker_pipette"]);
 	theme->set_icon("shape_circle", "ColorPicker", icons["picker_shape_circle"]);
 	theme->set_icon("shape_rect", "ColorPicker", icons["picker_shape_rectangle"]);
@@ -1029,6 +1048,8 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_icon("bar_arrow", "ColorPicker", icons["color_picker_bar_arrow"]);
 	theme->set_icon("picker_cursor", "ColorPicker", icons["color_picker_cursor"]);
 	theme->set_icon("picker_cursor_bg", "ColorPicker", icons["color_picker_cursor_bg"]);
+	theme->set_icon("hex_icon", "ColorPicker", icons["color_picker_hex"]);
+	theme->set_icon("hex_code_icon", "ColorPicker", icons["color_picker_hex_code"]);
 
 	{
 		const int precision = 7;
@@ -1078,17 +1099,6 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 
 	theme->set_constant("h_separation", "ColorPickerButton", Math::round(4 * scale));
 	theme->set_constant("outline_size", "ColorPickerButton", 0);
-
-	// ColorPresetButton
-
-	Ref<StyleBoxFlat> preset_sb = make_flat_stylebox(Color(1, 1, 1), 2, 2, 2, 2);
-	preset_sb->set_corner_radius_all(Math::round(2 * scale));
-	preset_sb->set_corner_detail(Math::round(2 * scale));
-	preset_sb->set_anti_aliased(false);
-
-	theme->set_stylebox("preset_fg", "ColorPresetButton", preset_sb);
-	theme->set_icon("preset_bg", "ColorPresetButton", icons["mini_checkerboard"]);
-	theme->set_icon("overbright_indicator", "ColorPresetButton", icons["color_picker_overbright"]);
 
 	// TooltipPanel + TooltipLabel
 
@@ -1238,10 +1248,10 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_color("button_icon_pressed", "FoldableContainer", control_font_pressed_color);
 	theme->set_color("button_icon_disabled", "FoldableContainer", control_font_disabled_color);
 
-	theme->set_icon("arrow", "FoldableContainer", icons["arrow_down"]);
-	theme->set_icon("arrow_mirrored", "FoldableContainer", icons["arrow_up"]);
-	theme->set_icon("arrow_collapsed", "FoldableContainer", icons["arrow_right"]);
-	theme->set_icon("arrow_collapsed_mirrored", "FoldableContainer", icons["arrow_left"]);
+	theme->set_icon("expanded_arrow", "FoldableContainer", icons["arrow_down"]);
+	theme->set_icon("expanded_arrow_mirrored", "FoldableContainer", icons["arrow_up"]);
+	theme->set_icon("folded_arrow", "FoldableContainer", icons["arrow_right"]);
+	theme->set_icon("folded_arrow_mirrored", "FoldableContainer", icons["arrow_left"]);
 
 	theme->set_constant("outline_size", "FoldableContainer", 0);
 	theme->set_constant("h_separation", "FoldableContainer", Math::round(2 * scale));

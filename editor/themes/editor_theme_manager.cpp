@@ -1309,10 +1309,10 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 		p_theme->set_color("button_icon_pressed", "FoldableContainer", p_config.icon_pressed_color);
 		p_theme->set_color("button_icon_disabled", "FoldableContainer", p_config.icon_disabled_color);
 
-		p_theme->set_icon("arrow", "FoldableContainer", p_theme->get_icon(SNAME("GuiTreeArrowDown"), EditorStringName(EditorIcons)));
-		p_theme->set_icon("arrow_mirrored", "FoldableContainer", p_theme->get_icon(SNAME("GuiArrowUp"), EditorStringName(EditorIcons)));
-		p_theme->set_icon("arrow_collapsed", "FoldableContainer", p_theme->get_icon(SNAME("GuiTreeArrowRight"), EditorStringName(EditorIcons)));
-		p_theme->set_icon("arrow_collapsed_mirrored", "FoldableContainer", p_theme->get_icon(SNAME("GuiTreeArrowLeft"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("expanded_arrow", "FoldableContainer", p_theme->get_icon(SNAME("GuiTreeArrowDown"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("expanded_arrow_mirrored", "FoldableContainer", p_theme->get_icon(SNAME("GuiArrowUp"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("folded_arrow", "FoldableContainer", p_theme->get_icon(SNAME("GuiTreeArrowRight"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("folded_arrow_mirrored", "FoldableContainer", p_theme->get_icon(SNAME("GuiTreeArrowLeft"), EditorStringName(EditorIcons)));
 
 		p_theme->set_constant("outline_size", "FoldableContainer", 0);
 		p_theme->set_constant("h_separation", "FoldableContainer", p_config.separation_margin);
@@ -1781,6 +1781,25 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 		}
 	}
 
+	// ColorButton
+
+	int x6_scale = Math::round(6 * EDSCALE);
+	p_theme->set_stylebox(CoreStringName(normal), "ColorButton", make_flat_stylebox(p_config.dark_color_1, x6_scale, x6_scale, x6_scale, x6_scale, p_config.corner_radius));
+	p_theme->set_stylebox("hover", "ColorButton", make_flat_stylebox(p_config.mono_color * Color(1, 1, 1, 0.11), x6_scale, x6_scale, x6_scale, x6_scale, p_config.corner_radius));
+	p_theme->set_stylebox("disabled", "ColorButton", make_flat_stylebox(p_config.disabled_bg_color, x6_scale, x6_scale, x6_scale, x6_scale, p_config.corner_radius));
+	Ref<StyleBoxFlat> color_button_pressed = make_flat_stylebox(p_config.dark_color_1.darkened(0.125), x6_scale, x6_scale, x6_scale, x6_scale, p_config.corner_radius);
+	color_button_pressed->set_border_width_all(4 * EDSCALE);
+	color_button_pressed->set_border_color(p_config.extra_border_color_2);
+	p_theme->set_stylebox(SceneStringName(pressed), "ColorButton", color_button_pressed);
+	Ref<StyleBoxFlat> color_button_focus = make_flat_stylebox(p_config.dark_color_1, 0, 0, 0, 0, MAX(p_config.corner_radius - 1, 0));
+	color_button_focus->set_draw_center(false);
+	color_button_focus->set_border_width_all(2 * EDSCALE);
+	color_button_focus->set_border_color(p_config.accent_color);
+	p_theme->set_stylebox("focus", "ColorButton", color_button_focus);
+
+	p_theme->set_icon("bg", "ColorButton", p_theme->get_icon(SNAME("GuiMiniCheckerboard"), EditorStringName(EditorIcons)));
+	p_theme->set_icon("overbright_indicator", "ColorButton", p_theme->get_icon(SNAME("OverbrightIndicator"), EditorStringName(EditorIcons)));
+
 	// ColorPicker and related nodes.
 	{
 		// ColorPicker.
@@ -1788,9 +1807,12 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 		p_theme->set_constant("margin", "ColorPicker", p_config.base_margin);
 		p_theme->set_constant("sv_width", "ColorPicker", 256 * EDSCALE);
 		p_theme->set_constant("sv_height", "ColorPicker", 256 * EDSCALE);
-		p_theme->set_constant("h_width", "ColorPicker", 30 * EDSCALE);
 		p_theme->set_constant("label_width", "ColorPicker", 10 * EDSCALE);
+		p_theme->set_constant("sample_height", "ColorPicker", 30 * EDSCALE);
+		p_theme->set_constant("h_width", "ColorPicker", 30 * EDSCALE);
+		p_theme->set_constant("preset_size", "ColorPicker", Math::round(30 * EDSCALE));
 		p_theme->set_constant("center_slider_grabbers", "ColorPicker", 1);
+		p_theme->set_constant("colorize_sliders", "ColorPicker", 1);
 
 		p_theme->set_icon("screen_picker", "ColorPicker", p_theme->get_icon(SNAME("ColorPick"), EditorStringName(EditorIcons)));
 		p_theme->set_icon("shape_circle", "ColorPicker", p_theme->get_icon(SNAME("PickerShapeCircle"), EditorStringName(EditorIcons)));
@@ -1803,14 +1825,14 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 		p_theme->set_icon("bar_arrow", "ColorPicker", p_theme->get_icon(SNAME("ColorPickerBarArrow"), EditorStringName(EditorIcons)));
 		p_theme->set_icon("picker_cursor", "ColorPicker", p_theme->get_icon(SNAME("PickerCursor"), EditorStringName(EditorIcons)));
 		p_theme->set_icon("picker_cursor_bg", "ColorPicker", p_theme->get_icon(SNAME("PickerCursorBg"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("hex_icon", "ColorPicker", p_theme->get_icon(SNAME("PickerHex"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("hex_code_icon", "ColorPicker", p_theme->get_icon(SNAME("Script"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("expanded_arrow", "ColorPicker", p_theme->get_icon(SNAME("GuiTreeArrowDown"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("folded_arrow", "ColorPicker", p_theme->get_icon(SNAME("GuiTreeArrowRight"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("folded_arrow_mirrored", "ColorPicker", p_theme->get_icon(SNAME("GuiTreeArrowLeft"), EditorStringName(EditorIcons)));
 
 		// ColorPickerButton.
 		p_theme->set_icon("bg", "ColorPickerButton", p_theme->get_icon(SNAME("GuiMiniCheckerboard"), EditorStringName(EditorIcons)));
-
-		// ColorPresetButton.
-		p_theme->set_stylebox("preset_fg", "ColorPresetButton", make_flat_stylebox(Color(1, 1, 1), 2, 2, 2, 2, 2));
-		p_theme->set_icon("preset_bg", "ColorPresetButton", p_theme->get_icon(SNAME("GuiMiniCheckerboard"), EditorStringName(EditorIcons)));
-		p_theme->set_icon("overbright_indicator", "ColorPresetButton", p_theme->get_icon(SNAME("OverbrightIndicator"), EditorStringName(EditorIcons)));
 	}
 }
 
