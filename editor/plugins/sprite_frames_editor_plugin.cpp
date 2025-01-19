@@ -55,6 +55,7 @@
 #include "scene/gui/margin_container.h"
 #include "scene/gui/option_button.h"
 #include "scene/gui/panel_container.h"
+#include "scene/gui/popup_menu.h"
 #include "scene/gui/scroll_container.h"
 #include "scene/gui/separator.h"
 #include "scene/gui/spin_box.h"
@@ -1294,6 +1295,10 @@ void SpriteFramesEditor::_animation_loop_changed() {
 	undo_redo->commit_action();
 }
 
+void SpriteFramesEditor::_animation_speed_resized() {
+	anim_speed->update_minimum_size();
+}
+
 void SpriteFramesEditor::_animation_speed_changed(double p_value) {
 	if (updating) {
 		return;
@@ -1953,6 +1958,8 @@ SpriteFramesEditor::SpriteFramesEditor() {
 	anim_speed->set_step(0.01);
 	anim_speed->set_custom_arrow_step(1);
 	anim_speed->set_tooltip_text(TTR("Animation Speed"));
+	anim_speed->get_line_edit()->set_expand_to_text_length_enabled(true);
+	anim_speed->get_line_edit()->connect(SceneStringName(resized), callable_mp(this, &SpriteFramesEditor::_animation_speed_resized));
 	anim_speed->connect(SceneStringName(value_changed), callable_mp(this, &SpriteFramesEditor::_animation_speed_changed));
 	hbc_animlist->add_child(anim_speed);
 
