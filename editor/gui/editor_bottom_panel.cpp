@@ -134,7 +134,7 @@ void EditorBottomPanel::_switch_to_item(bool p_visible, int p_idx) {
 			EditorNode::get_top_split()->hide();
 		}
 		expand_button->show();
-		button_scroll->ensure_control_visible(items[p_idx].button);
+		callable_mp(button_scroll, &ScrollContainer::ensure_control_visible).call_deferred(items[p_idx].button);
 	} else {
 		add_theme_style_override(SceneStringName(panel), get_theme_stylebox(SNAME("BottomPanel"), EditorStringName(EditorStyles)));
 		items[p_idx].button->set_pressed_no_signal(false);
