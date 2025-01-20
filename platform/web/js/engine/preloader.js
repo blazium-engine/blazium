@@ -32,7 +32,20 @@ const Preloader = /** @constructor */ function () { // eslint-disable-line no-un
 			loaded: 0,
 			done: false,
 		};
-		return fetch(file).then(function (response) {
+
+		// Check for the two meta elements in the head
+		const discordAutodetect = document.querySelector('meta[name="discord_autodetect"]')?.content === 'true';
+		const discordEmbed = document.querySelector('meta[name="discord_embed"]')?.content === 'true';
+
+		// Determine the base URL based on the meta elements
+		let baseUrl = '';
+		if (discordAutodetect) {
+			baseUrl = window.location.hostname.includes('discord') ? '.proxy/' : '';
+		} else if (discordEmbed) {
+			baseUrl = '.proxy/';
+		}
+
+		return fetch(baseUrl + file).then(function (response) {
 			if (!response.ok) {
 				return Promise.reject(new Error(`Failed loading file '${file}'`));
 			}
