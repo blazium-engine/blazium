@@ -161,11 +161,63 @@ void EditorExportPlatformWeb::_fix_html(Vector<uint8_t> &p_html, const Ref<Edito
 		head_include += "<link rel=\"manifest\" href=\"" + p_name + ".manifest.json\">\n";
 		config["serviceWorker"] = p_name + ".service.worker.js";
 	}
+	String discord_head_include;
+	if (p_preset->get("blazium/discord_embed/enabled")) {
+		discord_head_include += "<meta name=\"discord_embed\" content=\"true\"/>\n";
+		if (p_preset->get("blazium/discord_embed/autodetect")) {
+			discord_head_include += "<meta name=\"discord_autodetect\" content=\"true\"/>\n";
+		}
+	}
+
+	String blazium_header_embeds;
+	if (p_preset->get("blazium/web_headers/enabled")) {
+		if (p_preset->has("blazium/web_headers/title")) {
+			blazium_header_embeds += "<meta property=\"og:title\" content=\"" + String(p_preset->get("blazium/web_headers/title")) + "\"/>\n";
+		}
+		if (p_preset->has("blazium/web_headers/description")) {
+			blazium_header_embeds += "<meta property=\"og:description\" content=\"" + String(p_preset->get("blazium/web_headers/description")) + "\"/>\n";
+		}
+		if (p_preset->has("blazium/web_headers/url")) {
+			blazium_header_embeds += "<meta property=\"og:url\" content=\"" + String(p_preset->get("blazium/web_headers/url")) + "\"/>\n";
+		}
+		if (p_preset->has("blazium/web_headers/image")) {
+			blazium_header_embeds += "<meta property=\"og:image\" content=\"" + String(p_preset->get("blazium/web_headers/image")) + "\"/>\n";
+		}
+		if (p_preset->has("blazium/web_headers/type")) {
+			blazium_header_embeds += "<meta property=\"og:type\" content=\"" + String(p_preset->get("blazium/web_headers/type")) + "\"/>\n";
+		}
+		if (p_preset->has("blazium/web_headers/site_name")) {
+			blazium_header_embeds += "<meta property=\"og:site_name\" content=\"" + String(p_preset->get("blazium/web_headers/site_name")) + "\"/>\n";
+		}
+	}
+	String social_headers;
+	if (p_preset->get("blazium/social_headers/enabled")) {
+		if (p_preset->has("blazium/social_headers/title")) {
+			blazium_header_embeds += "<meta property=\"twitter:title\" content=\"" + String(p_preset->get("blazium/social_headers/title")) + "\"/>\n";
+		}
+		if (p_preset->has("blazium/social_headers/description")) {
+			blazium_header_embeds += "<meta property=\"twitter:description\" content=\"" + String(p_preset->get("blazium/social_headers/description")) + "\"/>\n";
+		}
+		if (p_preset->has("blazium/social_headers/url")) {
+			blazium_header_embeds += "<meta property=\"twitter:url\" content=\"" + String(p_preset->get("blazium/social_headers/url")) + "\"/>\n";
+		}
+		if (p_preset->has("blazium/social_headers/image")) {
+			blazium_header_embeds += "<meta property=\"twitter:image\" content=\"" + String(p_preset->get("blazium/social_headers/image")) + "\"/>\n";
+		}
+		if (p_preset->has("blazium/social_headers/site")) {
+			blazium_header_embeds += "<meta property=\"twitter:site\" content=\"" + String(p_preset->get("blazium/social_headers/site")) + "\"/>\n";
+		}
+		if (p_preset->has("blazium/social_headers/card")) {
+			blazium_header_embeds += "<meta property=\"twitter:card\" content=\"" + String(p_preset->get("blazium/social_headers/card")) + "\"/>\n";
+		}
+	}
 
 	// Replaces HTML string
 	const String str_config = Variant(config).to_json_string();
 	const String custom_head_include = p_preset->get("html/head_include");
 	HashMap<String, String> replaces;
+	replaces["$BLAZIUM_DISCORD_EMBEDDED_HEADERS"] = discord_head_include;
+	replaces["$BLAZIUM_HEADER_EMBEDS"] = blazium_header_embeds;
 	replaces["$GODOT_URL"] = p_name + ".js";
 	replaces["$GODOT_PROJECT_NAME"] = GLOBAL_GET("application/config/name");
 	replaces["$GODOT_HEAD_INCLUDE"] = head_include + custom_head_include;
@@ -370,6 +422,38 @@ void EditorExportPlatformWeb::get_export_options(List<ExportOption> *r_options) 
 	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "progressive_web_app/icon_180x180", PROPERTY_HINT_FILE, "*.png,*.webp,*.svg"), ""));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "progressive_web_app/icon_512x512", PROPERTY_HINT_FILE, "*.png,*.webp,*.svg"), ""));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::COLOR, "progressive_web_app/background_color", PROPERTY_HINT_COLOR_NO_ALPHA), Color()));
+
+	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "blazium/web_headers/enabled"), false, true));
+	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "blazium/web_headers/title", PROPERTY_HINT_PLACEHOLDER_TEXT, "Web Title"), ""));
+	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "blazium/web_headers/description", PROPERTY_HINT_PLACEHOLDER_TEXT, "Web Description"), ""));
+	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "blazium/web_headers/url", PROPERTY_HINT_PLACEHOLDER_TEXT, "Web URL"), ""));
+	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "blazium/web_headers/image", PROPERTY_HINT_PLACEHOLDER_TEXT, "Image URL"), ""));
+	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "blazium/web_headers/type", PROPERTY_HINT_PLACEHOLDER_TEXT, "Web Type"), "website"));
+	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "blazium/web_headers/site_name", PROPERTY_HINT_PLACEHOLDER_TEXT, "Site Name"), ""));
+
+	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "blazium/social_headers/enabled"), false, true));
+	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "blazium/social_headers/title", PROPERTY_HINT_PLACEHOLDER_TEXT, "Social Title"), ""));
+	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "blazium/social_headers/description", PROPERTY_HINT_PLACEHOLDER_TEXT, "Social Description"), ""));
+	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "blazium/social_headers/url", PROPERTY_HINT_PLACEHOLDER_TEXT, "Social URL"), ""));
+	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "blazium/social_headers/image", PROPERTY_HINT_PLACEHOLDER_TEXT, "Social Image URL"), ""));
+	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "blazium/social_headers/site", PROPERTY_HINT_PLACEHOLDER_TEXT, "Social Site"), ""));
+	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "blazium/social_headers/card", PROPERTY_HINT_PLACEHOLDER_TEXT, "Site Card"), ""));
+
+	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "blazium/discord_embed/enabled"), false, true));
+	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "blazium/discord_embed/autodetect"), false));
+}
+
+bool EditorExportPlatformWeb::get_export_option_visibility(const EditorExportPreset *p_preset, const String &p_option) const {
+	if (p_option.begins_with("blazium/web_headers") && p_option != "blazium/web_headers/enabled") {
+		return p_preset->get("blazium/web_headers/enabled");
+	}
+	if (p_option.begins_with("blazium/social_headers") && p_option != "blazium/social_headers/enabled") {
+		return p_preset->get("blazium/social_headers/enabled");
+	}
+	if (p_option.begins_with("blazium/discord_embed") && p_option != "blazium/discord_embed/enabled") {
+		return p_preset->get("blazium/discord_embed/enabled");
+	}
+	return true;
 }
 
 String EditorExportPlatformWeb::get_name() const {
