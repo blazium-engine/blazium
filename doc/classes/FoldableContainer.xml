@@ -15,7 +15,7 @@
 	<methods>
 		<method name="add_button">
 			<return type="void" />
-			<param index="0" name="icon" type="Texture2D" />
+			<param index="0" name="icon" type="Texture2D" default="null" />
 			<param index="1" name="position" type="int" default="-1" />
 			<param index="2" name="id" type="int" default="-1" />
 			<description>
@@ -25,7 +25,7 @@
 		<method name="clear">
 			<return type="void" />
 			<description>
-				Remove all the container buttons.
+				Remove all the title buttons.
 			</description>
 		</method>
 		<method name="expand">
@@ -228,6 +228,7 @@
 	</methods>
 	<members>
 		<member name="button_count" type="int" setter="set_button_count" getter="get_button_count" default="0">
+			The title buttons count, changing this will change the buttons array size which can add/remove buttons automatically.
 		</member>
 		<member name="focus_mode" type="int" setter="set_focus_mode" getter="get_focus_mode" overrides="Control" enum="Control.FocusMode" default="2" />
 		<member name="foldable_group" type="FoldableGroup" setter="set_foldable_group" getter="get_foldable_group">
@@ -273,7 +274,7 @@
 		<signal name="folding_changed">
 			<param index="0" name="is_folded" type="bool" />
 			<description>
-				Emitted when the container is expanded/collapsed.
+				Emitted when the container is folded/expanded.
 			</description>
 		</signal>
 	</signals>
