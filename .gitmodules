@@ -2,3 +2,6 @@
 	path = modules/blazium_sdk
 	url = https://github.com/blazium-engine/blazium-sdk-module
 	branch = 4.3
+[submodule "modules/godotsteam"]
+	path = modules/godotsteam
+	url = https://github.com/blazium-engine/GodotSteam
