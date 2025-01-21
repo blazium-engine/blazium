@@ -2916,7 +2916,6 @@ bool RichTextLabel::_find_layout_subitem(Item *from, Item *to) {
 void RichTextLabel::_thread_function(void *p_userdata) {
 	set_current_thread_safe_for_nodes(true);
 	_process_line_caches();
-	updating.store(false);
 	callable_mp(this, &RichTextLabel::_thread_end).call_deferred();
 }
 
@@ -3084,7 +3083,6 @@ bool RichTextLabel::_validate_line_caches() {
 	} else {
 		updating.store(true);
 		_process_line_caches();
-		updating.store(false);
 		if (!scroll_visible) {
 			vscroll->hide();
 		}
@@ -3096,6 +3094,7 @@ bool RichTextLabel::_validate_line_caches() {
 void RichTextLabel::_process_line_caches() {
 	// Shape invalid lines.
 	if (!is_inside_tree()) {
+		updating.store(false);
 		return;
 	}
 
@@ -3118,6 +3117,7 @@ void RichTextLabel::_process_line_caches() {
 			main->first_invalid_font_line.store(i);
 
 			if (stop_thread.load()) {
+				updating.store(false);
 				return;
 			}
 		}
@@ -3134,6 +3134,7 @@ void RichTextLabel::_process_line_caches() {
 			main->first_resized_line.store(i);
 
 			if (stop_thread.load()) {
+				updating.store(false);
 				return;
 			}
 		}
@@ -3149,6 +3150,7 @@ void RichTextLabel::_process_line_caches() {
 		main->first_invalid_font_line.store(i);
 
 		if (stop_thread.load()) {
+			updating.store(false);
 			return;
 		}
 		loaded.store(double(i) / double(main->lines.size()));
@@ -3157,6 +3159,7 @@ void RichTextLabel::_process_line_caches() {
 	main->first_invalid_line.store(main->lines.size());
 	main->first_resized_line.store(main->lines.size());
 	main->first_invalid_font_line.store(main->lines.size());
+	updating.store(false);
 
 	if (fit_content) {
 		update_minimum_size();
