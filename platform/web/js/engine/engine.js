@@ -248,7 +248,7 @@ const Engine = (function () {
 					// Determine the base URL based on the meta elements
 					let baseUrl = '';
 					if (discordAutodetect) {
-						bbaseUrl = window.location.hostname.includes('discord') ? '.proxy/' : '';
+						baseUrl = window.location.hostname.includes('discord') ? '.proxy/' : '';
 					} else if (discordEmbed) {
 						baseUrl = '.proxy/';
 					}
