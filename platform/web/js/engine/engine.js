@@ -244,7 +244,6 @@ const Engine = (function () {
 					// Check for the two meta elements in the head
 					const discordAutodetect = document.querySelector('meta[name="discord_autodetect"]')?.content === 'true';
 					const discordEmbed = document.querySelector('meta[name="discord_embed"]')?.content === 'true';
-				
 					// Determine the base URL based on the meta elements
 					let baseUrl = '';
 					if (discordAutodetect) {
@@ -252,10 +251,8 @@ const Engine = (function () {
 					} else if (discordEmbed) {
 						baseUrl = '.proxy/';
 					}
-				
 					// Prepend .proxy/ to the serviceWorker value if needed
 					const serviceWorkerPath = baseUrl + this.config.serviceWorker;
-				
 					return navigator.serviceWorker.register(serviceWorkerPath);
 				}
 				return Promise.resolve();
