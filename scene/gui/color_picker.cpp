@@ -1753,13 +1753,6 @@ void ColorPicker::_pick_finished() {
 }
 
 void ColorPicker::_update_menu_items() {
-	if (!options_menu) {
-		options_menu = memnew(PopupMenu);
-		add_child(options_menu, false, INTERNAL_MODE_FRONT);
-		options_menu->force_parent_owned();
-		options_menu->connect("id_pressed", callable_mp(this, &ColorPicker::_options_menu_cbk));
-	}
-
 	options_menu->clear();
 	options_menu->reset_size();
 
@@ -1783,16 +1776,6 @@ void ColorPicker::_update_menu_items() {
 		options_menu->add_icon_item(get_theme_icon(SNAME("clear"), SNAME("FileDialog")), RTR("Clear"), static_cast<int>(MenuOption::MENU_CLEAR));
 		options_menu->set_item_tooltip(-1, ETR("Clear the currently loaded color palettes in the picker."));
 	}
-}
-
-void ColorPicker::_update_menu() {
-	_update_menu_items();
-	Rect2 gt = menu_btn->get_screen_rect();
-	menu_btn->reset_size();
-	int min_size = menu_btn->get_minimum_size().width;
-	Vector2 popup_pos = gt.get_end() - Vector2(min_size, 0);
-	options_menu->set_position(popup_pos);
-	options_menu->popup();
 }
 
 void ColorPicker::_options_menu_cbk(int p_which) {
@@ -2361,12 +2344,14 @@ ColorPicker::ColorPicker() {
 	recent_preset_foldable = memnew(FoldableContainer);
 	recent_preset_foldable->set_text(ETR("Recent Colors"));
 
-	menu_btn = memnew(Button);
+	menu_btn = memnew(MenuButton);
 	menu_btn->set_flat(true);
 	menu_btn->set_tooltip_text(ETR("Show all options available."));
-	menu_btn->set_focus_mode(FOCUS_NONE);
-	menu_btn->connect(SceneStringName(pressed), callable_mp(this, &ColorPicker::_update_menu));
+	menu_btn->connect("about_to_popup", callable_mp(this, &ColorPicker::_update_menu_items));
 	preset_foldable->add_title_bar_control(menu_btn);
+
+	options_menu = menu_btn->get_popup();
+	options_menu->connect(SceneStringName(id_pressed), callable_mp(this, &ColorPicker::_options_menu_cbk));
 
 	ScrollContainer *recent_preset_scroll = memnew(ScrollContainer);
 	recent_preset_scroll->add_theme_constant_override("h_scroll_bar_separation", 4);
