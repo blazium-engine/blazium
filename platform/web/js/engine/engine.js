@@ -256,7 +256,6 @@ const Engine = (function () {
 					return navigator.serviceWorker.register(serviceWorkerPath);
 				}
 				return Promise.resolve();
-				
 			},
 		};
 
