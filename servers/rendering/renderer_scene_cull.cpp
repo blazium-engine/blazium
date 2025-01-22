@@ -2546,7 +2546,7 @@ bool RendererSceneCull::_light_instance_update_shadow(Instance *p_instance, cons
 				}
 
 				real_t radius = RSG::light_storage->light_get_param(p_instance->base, RS::LIGHT_PARAM_RANGE);
-				real_t z_near = MIN(0.005f, radius);
+				real_t z_near = MIN(0.025f, radius);
 				Projection cm;
 				cm.set_perspective(90, 1, z_near, radius);
 
@@ -2636,7 +2636,7 @@ bool RendererSceneCull::_light_instance_update_shadow(Instance *p_instance, cons
 
 			real_t radius = RSG::light_storage->light_get_param(p_instance->base, RS::LIGHT_PARAM_RANGE);
 			real_t angle = RSG::light_storage->light_get_param(p_instance->base, RS::LIGHT_PARAM_SPOT_ANGLE);
-			real_t z_near = MIN(0.005f, radius);
+			real_t z_near = MIN(0.025f, radius);
 
 			Projection cm;
 			cm.set_perspective(angle * 2.0, 1.0, z_near, radius);

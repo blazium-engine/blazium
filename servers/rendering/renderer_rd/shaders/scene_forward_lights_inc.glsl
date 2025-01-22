@@ -712,7 +712,7 @@ float light_process_spot_shadow(uint idx, vec3 vertex, vec3 normal, float taa_fr
 		vec4 v = vec4(vertex + normal_bias, 1.0);
 
 		vec4 splane = (spot_lights.data[idx].shadow_matrix * v);
-		splane.z += spot_lights.data[idx].shadow_bias / (light_length * spot_lights.data[idx].inv_radius);
+		splane.z += spot_lights.data[idx].shadow_bias;
 		splane /= splane.w;
 
 		float shadow;
