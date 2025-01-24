@@ -549,6 +549,8 @@ void RasterizerCanvasGLES3::canvas_render_items(RID p_to_render_target, Item *p_
 
 	// Clear out state used in 2D pass
 	reset_canvas();
+	state.current_batch_index = 0;
+	state.canvas_instance_batches.clear();
 	state.current_data_buffer_index = (state.current_data_buffer_index + 1) % state.canvas_instance_data_buffers.size();
 	state.current_instance_buffer_index = 0;
 }
@@ -643,8 +645,6 @@ void RasterizerCanvasGLES3::_render_items(RID p_to_render_target, int p_item_cou
 
 	if (index == 0) {
 		// Nothing to render, just return.
-		state.current_batch_index = 0;
-		state.canvas_instance_batches.clear();
 		return;
 	}
 
@@ -784,8 +784,6 @@ void RasterizerCanvasGLES3::_render_items(RID p_to_render_target, int p_item_cou
 	}
 
 	glDisable(GL_SCISSOR_TEST);
-	state.current_batch_index = 0;
-	state.canvas_instance_batches.clear();
 	state.last_item_index += index;
 }
 
