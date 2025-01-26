@@ -1166,6 +1166,14 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_icon("grabber", "VSplitContainer", icons["vsplitter"]);
 	theme->set_icon("grabber", "HSplitContainer", icons["hsplitter"]);
 
+	theme->set_stylebox("h_split_bar_background", "SplitContainer", empty);
+	theme->set_stylebox("v_split_bar_background", "SplitContainer", empty);
+	theme->set_stylebox("split_bar_background", "HSplitContainer", empty);
+	theme->set_stylebox("split_bar_background", "VSplitContainer", empty);
+
+	theme->set_color("grabber_icon_normal", "SplitContainer", control_font_color);
+	theme->set_color("grabber_icon_pressed", "SplitContainer", control_font_pressed_color);
+
 	theme->set_constant("separation", "BoxContainer", Math::round(4 * scale));
 	theme->set_constant("separation", "HBoxContainer", Math::round(4 * scale));
 	theme->set_constant("separation", "VBoxContainer", Math::round(4 * scale));
@@ -1184,6 +1192,15 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_constant("autohide", "SplitContainer", 1);
 	theme->set_constant("autohide", "HSplitContainer", 1);
 	theme->set_constant("autohide", "VSplitContainer", 1);
+	theme->set_constant("autohide_split_bar", "SplitContainer", 1);
+	theme->set_constant("autohide_split_bar", "HSplitContainer", 1);
+	theme->set_constant("autohide_split_bar", "VSplitContainer", 1);
+	theme->set_constant("draw_grabber_icon", "SplitContainer", 1);
+	theme->set_constant("draw_grabber_icon", "HSplitContainer", 1);
+	theme->set_constant("draw_grabber_icon", "VSplitContainer", 1);
+	theme->set_constant("draw_split_bar", "SplitContainer", 0);
+	theme->set_constant("draw_split_bar", "HSplitContainer", 0);
+	theme->set_constant("draw_split_bar", "VSplitContainer", 0);
 	theme->set_constant("h_separation", "FlowContainer", Math::round(4 * scale));
 	theme->set_constant("v_separation", "FlowContainer", Math::round(4 * scale));
 	theme->set_constant("h_separation", "HFlowContainer", Math::round(4 * scale));
