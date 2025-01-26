@@ -1264,6 +1264,14 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 		p_theme->set_icon("grabber", "VSplitContainer", p_theme->get_icon(SNAME("GuiVsplitter"), EditorStringName(EditorIcons)));
 		p_theme->set_icon("grabber", "HSplitContainer", p_theme->get_icon(SNAME("GuiHsplitter"), EditorStringName(EditorIcons)));
 
+		p_theme->set_stylebox("h_split_bar_background", "SplitContainer", p_config.base_empty_style);
+		p_theme->set_stylebox("v_split_bar_background", "SplitContainer", p_config.base_empty_style);
+		p_theme->set_stylebox("split_bar_background", "HSplitContainer", p_config.base_empty_style);
+		p_theme->set_stylebox("split_bar_background", "VSplitContainer", p_config.base_empty_style);
+
+		p_theme->set_color("grabber_icon_normal", "SplitContainer", p_config.icon_normal_color);
+		p_theme->set_color("grabber_icon_pressed", "SplitContainer", p_config.icon_pressed_color);
+
 		p_theme->set_constant("separation", "SplitContainer", p_config.separation_margin);
 		p_theme->set_constant("separation", "HSplitContainer", p_config.separation_margin);
 		p_theme->set_constant("separation", "VSplitContainer", p_config.separation_margin);
