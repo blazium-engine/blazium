@@ -49,6 +49,7 @@ class LineEdit;
 class MenuButton;
 class OptionButton;
 class Panel;
+class PanelContainer;
 class PopupMenu;
 class SpinBox;
 class StyleBoxFlat;
@@ -133,6 +134,7 @@ private:
 	MenuButton *btn_shape = nullptr;
 	HBoxContainer *mode_hbc = nullptr;
 	HBoxContainer *sample_hbc = nullptr;
+	PanelContainer *sliders_panel = nullptr;
 	VBoxContainer *slider_vbc = nullptr;
 	GridContainer *slider_gc = nullptr;
 	HBoxContainer *hex_hbc = nullptr;
@@ -235,6 +237,7 @@ private:
 		Ref<StyleBox> mode_button_normal;
 		Ref<StyleBox> mode_button_pressed;
 		Ref<StyleBox> mode_button_hover;
+		Ref<StyleBox> sliders_panel;
 	} theme_cache;
 
 	void _copy_color_to_hsv();
