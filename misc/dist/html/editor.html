@@ -26,9 +26,20 @@
 		<title>Blazium Engine Web Editor (___GODOT_VERSION___)</title>
 		<style>
 :root {
-  --primary-color: hsl(281, 62%, 12%);
-  --secondary-color: hsl(265, 48%, 28%);
-  --accent-color: hsl(275, 70%, 60%);
+	--primary-color: hsl(281, 62%, 12%);
+	--secondary-color: hsl(265, 48%, 28%);
+	--accent-color: hsl(282, 71%, 56%);
+	--highlight-color: hsla(282, 71%, 56%, 50%);
+}
+
+::selection {
+	background: var(--highlight-color);
+	color: white;
+}
+
+::-moz-selection {
+	background: var(--highlight-color);
+	color: white;
 }
 
 *:focus {
@@ -127,10 +138,11 @@ a:active {
 	padding: 0.5rem 1rem;
 	cursor: pointer;
 	background-color: var(--accent-color);
-	border-radius: 8px;
+	border-radius: 16px;
 	color: white;
 	border: 2px solid var(--accent-color);
 	transition: background-color 0.3s ease;
+	font: bold 1rem/1.6em sans-serif;
 }
 
 .btn:hover {
