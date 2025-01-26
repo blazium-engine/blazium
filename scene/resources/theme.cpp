@@ -1539,9 +1539,22 @@ void Theme::_freeze_change_propagation() {
 }
 
 void Theme::_unfreeze_and_propagate_changes() {
-	no_change_propagation = false;
-	_emit_theme_changed(true);
+	if (no_change_propagation) {
+		no_change_propagation = false;
+		_emit_theme_changed(true);
+	}
 }
+
+#ifndef USE_LEGACY_THEME
+// These methods are used to avoid conflicts when merging changes from different branches.
+void Theme::freeze_change_propagation() {
+	_freeze_change_propagation();
+}
+
+void Theme::unfreeze_and_propagate_changes() {
+	_unfreeze_and_propagate_changes();
+}
+#endif // !USE_LEGACY_THEME
 
 void Theme::merge_with(const Ref<Theme> &p_other) {
 	if (p_other.is_null()) {

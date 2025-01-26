@@ -80,6 +80,47 @@ class ThemeDB : public Object {
 	Ref<Theme> default_theme;
 	Ref<Theme> project_theme;
 
+#ifndef USE_LEGACY_THEME
+	// Global Theme resources used by the default theme context.
+	enum FontColorOverride {
+		FONT_COLOR_OVERRIDE_AUTO,
+		FONT_COLOR_OVERRIDE_LIGHT,
+		FONT_COLOR_OVERRIDE_DARK,
+		FONT_COLOR_OVERRIDE_CUSTOM
+	};
+
+	Color _get_font_color() const;
+
+	Color base_color;
+	Color accent_color;
+	Color font_color;
+	Color font_outline_color;
+	float contrast;
+	float normal_contrast;
+	float hover_contrast;
+	float pressed_contrast;
+	float bg_contrast;
+	int margin;
+	int padding;
+	int border_width;
+	int corner_radius;
+	int font_size;
+	int font_outline_size;
+	float font_embolden;
+	int font_spacing_glyph;
+	int font_spacing_space;
+	int font_spacing_top;
+	int font_spacing_bottom;
+	float scale;
+	String custom_font;
+	TextServer::SubpixelPositioning font_subpixel_positioning;
+	TextServer::FontLCDSubpixelLayout font_lcd_subpixel_layout;
+	TextServer::FontAntialiasing font_antialiasing;
+	TextServer::Hinting font_hinting;
+	bool font_msdf;
+	bool font_generate_mipmaps;
+#endif // !USE_LEGACY_THEME
+
 	// Universal default values, final fallback for every theme.
 
 	float fallback_base_scale = 1.0;
@@ -123,6 +164,10 @@ private:
 	HashMap<StringName, List<ThemeItemBind>> theme_item_binds_list; // Used for listing purposes.
 
 	void _sort_theme_items();
+
+#ifndef USE_LEGACY_THEME
+	void _update_default_theme();
+#endif // !USE_LEGACY_THEME
 
 protected:
 	static void _bind_methods();

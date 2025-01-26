@@ -1046,11 +1046,32 @@
 		</member>
 		<member name="gui/fonts/dynamic_fonts/use_oversampling" type="bool" setter="" getter="" default="true">
 		</member>
+		<member name="gui/theme/accent_color" type="Color" setter="" getter="" default="Color(0.226, 0.478, 0.921, 1)">
+			The theme accent color.
+		</member>
+		<member name="gui/theme/base_color" type="Color" setter="" getter="" default="Color(0.188, 0.188, 0.188, 1)">
+			The theme base color.
+		</member>
+		<member name="gui/theme/bg_contrast" type="float" setter="" getter="" default="0.2">
+			The contrast of the background style color.
+		</member>
+		<member name="gui/theme/border_width" type="int" setter="" getter="" default="2">
+			The border width for some theme styles.
+		</member>
+		<member name="gui/theme/contrast" type="float" setter="" getter="" default="-0.6">
+			Changes the contrast of the theme styles.
+		</member>
+		<member name="gui/theme/corner_radius" type="int" setter="" getter="" default="6">
+			The corner radius for theme styles.
+		</member>
 		<member name="gui/theme/custom" type="String" setter="" getter="" default="&quot;&quot;">
 			Path to a custom [Theme] resource file to use for the project ([code].theme[/code] or generic [code].tres[/code]/[code].res[/code] extension).
 		</member>
 		<member name="gui/theme/custom_font" type="String" setter="" getter="" default="&quot;&quot;">
 			Path to a custom [Font] resource to use as default for all GUI elements of the project.
+		</member>
+		<member name="gui/theme/custom_font_color" type="Color" setter="" getter="" default="Color(0.875, 0.875, 0.875, 1)">
+			Changes the font color if [member gui/theme/font_color_override] is set to Custom.
 		</member>
 		<member name="gui/theme/default_font_antialiasing" type="int" setter="" getter="" default="1">
 			Font anti-aliasing mode for the default project font. See [member FontFile.antialiasing].
@@ -1078,8 +1099,48 @@
 			The default scale factor for [Control]s, when not overridden by a [Theme].
 			[b]Note:[/b] This property is only read when the project starts. To change the default scale at runtime, set [member ThemeDB.fallback_base_scale] instead.
 		</member>
+		<member name="gui/theme/font_color_override" type="int" setter="" getter="" default="0">
+			Can be Auto, Dark, Light and Custom, if Custom is selected, it will use [member gui/theme/custom_font_color] for font color and icons.
+		</member>
+		<member name="gui/theme/font_embolden" type="float" setter="" getter="" default="0.0">
+			If is not equal to zero, emboldens the font outlines. Negative values reduce the outline thickness.
+			[b]Note:[/b] Emboldened fonts might have self-intersecting outlines, which will prevent MSDF fonts and [TextMesh] from working correctly.
+		</member>
+		<member name="gui/theme/font_outline_color" type="Color" setter="" getter="" default="Color(0, 0, 0, 1)">
+		</member>
+		<member name="gui/theme/font_outline_size" type="int" setter="" getter="" default="0">
+		</member>
+		<member name="gui/theme/font_size" type="int" setter="" getter="" default="16">
+		</member>
+		<member name="gui/theme/font_spacing_bottom" type="int" setter="" getter="" default="0">
+			Extra spacing at the bottom of the line in pixels.
+		</member>
+		<member name="gui/theme/font_spacing_glyph" type="int" setter="" getter="" default="0">
+			Extra spacing between graphical glyphs.
+		</member>
+		<member name="gui/theme/font_spacing_space" type="int" setter="" getter="" default="0">
+			Extra width of the space glyphs.
+		</member>
+		<member name="gui/theme/font_spacing_top" type="int" setter="" getter="" default="0">
+			Extra spacing at the top of the line in pixels.
+		</member>
+		<member name="gui/theme/hover_contrast" type="float" setter="" getter="" default="-0.2">
+			The contrast of the hover style color.
+		</member>
 		<member name="gui/theme/lcd_subpixel_layout" type="int" setter="" getter="" default="1">
 			LCD subpixel layout used for font anti-aliasing. See [enum TextServer.FontLCDSubpixelLayout].
+		</member>
+		<member name="gui/theme/margin" type="int" setter="" getter="" default="4">
+			The margin used to separate items, ie. separation.
+		</member>
+		<member name="gui/theme/normal_contrast" type="float" setter="" getter="" default="0.4">
+			The contrast of the normal style color.
+		</member>
+		<member name="gui/theme/padding" type="int" setter="" getter="" default="4">
+			The padding of the theme items, ie. content margins.
+		</member>
+		<member name="gui/theme/pressed_contrast" type="float" setter="" getter="" default="0.6">
+			The contrast of the pressed style color.
 		</member>
 		<member name="gui/timers/button_shortcut_feedback_highlight_time" type="float" setter="" getter="" default="0.2">
 			When [member BaseButton.shortcut_feedback] is enabled, this is the time the [BaseButton] will remain highlighted after a shortcut.

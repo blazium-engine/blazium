@@ -50,5 +50,10 @@
 				Emitted when one of the fallback values had been changed. Use it to refresh the look of controls that may rely on the fallback theme items.
 			</description>
 		</signal>
+		<signal name="icons_changed">
+			<description>
+				Emits when the theme icons scale or colors changes.
+			</description>
+		</signal>
 	</signals>
 </class>
