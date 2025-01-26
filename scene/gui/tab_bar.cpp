@@ -1012,7 +1012,10 @@ void TabBar::_update_cache(bool p_update_hover) {
 	}
 
 	int limit = get_size().width;
-	int limit_minus_buttons = limit - theme_cache.increment_icon->get_width() - theme_cache.decrement_icon->get_width();
+	int limit_minus_buttons = limit;
+	if (theme_cache.increment_icon.is_valid() && theme_cache.decrement_icon.is_valid()) {
+		limit_minus_buttons -= theme_cache.increment_icon->get_width() + theme_cache.decrement_icon->get_width();
+	}
 
 	int w = 0;
 
