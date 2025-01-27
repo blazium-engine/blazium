@@ -59,12 +59,12 @@ class EditorExportSaveProxy {
 public:
 	bool has_saved(const String &p_path) const { return saved_paths.has(p_path); }
 
-	Error save_file(void *p_userdata, const String &p_path, const Vector<uint8_t> &p_data, int p_file, int p_total, const Vector<String> &p_enc_in_filters, const Vector<String> &p_enc_ex_filters, const Vector<uint8_t> &p_key) {
+	Error save_file(void *p_userdata, const String &p_path, const Vector<uint8_t> &p_data, int p_file, int p_total, const Vector<String> &p_enc_in_filters, const Vector<String> &p_enc_ex_filters, const Vector<uint8_t> &p_key, uint64_t p_seed) {
 		if (tracking_saves) {
 			saved_paths.insert(p_path.simplify_path().trim_prefix("res://"));
 		}
 
-		return save_func(p_userdata, p_path, p_data, p_file, p_total, p_enc_in_filters, p_enc_ex_filters, p_key);
+		return save_func(p_userdata, p_path, p_data, p_file, p_total, p_enc_in_filters, p_enc_ex_filters, p_key, p_seed);
 	}
 
 	EditorExportSaveProxy(EditorExportPlatform::EditorExportSaveFunction p_save_func, bool p_track_saves) :
@@ -1432,6 +1432,8 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 							String remapped_path = config->get_value("remap", remap);
 							Vector<uint8_t> array = FileAccess::get_file_as_bytes(remapped_path);
 							err = save_proxy.save_file(p_udata, remapped_path, array, idx, total, enc_in_filters, enc_ex_filters, key, seed);
+						} else {
+							// Remove paths if feature not enabled.
 							config->erase_section_key("remap", remap);
 						}
 					}
