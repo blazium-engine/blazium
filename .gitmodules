@@ -2,3 +2,6 @@
 	path = modules/blazium_sdk
 	url = https://github.com/blazium-engine/blazium-sdk-module
 	branch = 4.3
+[submodule "modules/sqlite"]
+	path = modules/sqlite
+	url = https://github.com/blazium-engine/sqlite-module
