@@ -44,9 +44,6 @@
 #include "servers/text_server.h"
 
 #include "modules/modules_enabled.gen.h" // For svg.
-#ifdef MODULE_SVG_ENABLED
-#include "modules/svg/image_loader_svg.h"
-#endif
 
 static const int default_font_size = 16;
 
@@ -84,12 +81,14 @@ static Ref<ImageTexture> generate_icon(int p_index) {
 	Ref<Image> img = memnew(Image);
 
 #ifdef MODULE_SVG_ENABLED
-	// Upsample icon generation only if the scale isn't an integer multiplier.
-	// Generating upsampled icons is slower, and the benefit is hardly visible
-	// with integer scales.
-	const bool upsample = !Math::is_equal_approx(Math::round(scale), scale);
+	String svg = default_theme_icons_sources[p_index];
+	svg = svg.replace("\"red\"", vformat("\"#%s\"", Color(1, 1, 1).to_html(false)));
+	svg = svg.replace("\"#0f0\"", vformat("\"#%s\"", Color(1, 1, 1).to_html(false)));
 
-	Error err = ImageLoaderSVG::create_image_from_string(img, default_theme_icons_sources[p_index], scale, upsample, HashMap<Color, Color>());
+	Error err = img->load_svg_from_string(svg, scale);
+	if (err == OK) {
+		img->fix_alpha_edges();
+	}
 	ERR_FAIL_COND_V_MSG(err != OK, Ref<ImageTexture>(), "Failed generating icon, unsupported or invalid SVG data in default theme.");
 #else
 	// If the SVG module is disabled, we can't really display the UI well, but at least we won't crash.
@@ -1265,10 +1264,10 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_color("button_icon_pressed", "FoldableContainer", control_font_pressed_color);
 	theme->set_color("button_icon_disabled", "FoldableContainer", control_font_disabled_color);
 
-	theme->set_icon("expanded_arrow", "FoldableContainer", icons["arrow_down"]);
-	theme->set_icon("expanded_arrow_mirrored", "FoldableContainer", icons["arrow_up"]);
-	theme->set_icon("folded_arrow", "FoldableContainer", icons["arrow_right"]);
-	theme->set_icon("folded_arrow_mirrored", "FoldableContainer", icons["arrow_left"]);
+	theme->set_icon("expanded_arrow", "FoldableContainer", icons["expanded_arrow"]);
+	theme->set_icon("expanded_arrow_mirrored", "FoldableContainer", icons["expanded_arrow_mirrored"]);
+	theme->set_icon("folded_arrow", "FoldableContainer", icons["folded_arrow"]);
+	theme->set_icon("folded_arrow_mirrored", "FoldableContainer", icons["folded_arrow_mirrored"]);
 
 	theme->set_constant("outline_size", "FoldableContainer", 0);
 	theme->set_constant("h_separation", "FoldableContainer", Math::round(2 * scale));

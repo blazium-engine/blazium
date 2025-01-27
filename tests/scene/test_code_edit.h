@@ -4492,6 +4492,9 @@ TEST_CASE("[SceneTree][CodeEdit] symbol lookup") {
 
 		Point2 caret_pos = code_edit->get_caret_draw_pos();
 		caret_pos.x += 60;
+#ifndef USE_LEGACY_THEME
+		caret_pos.x += 2;
+#endif // !USE_LEGACY_THEME
 		SEND_GUI_MOUSE_BUTTON_EVENT(caret_pos, MouseButton::NONE, 0, Key::NONE);
 		CHECK(code_edit->get_text_for_symbol_lookup() == "this is s" + String::chr(0xFFFF) + "ome text");
 
