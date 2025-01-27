@@ -71,14 +71,18 @@ void SplitContainerDragger::gui_input(const Ref<InputEvent> &p_event) {
 		bool first_visible = first->is_visible();
 		bool second_visible = second && second->is_visible();
 		Vector2i in_parent_pos = get_transform().xform(mm->get_position());
-		int axis = sc->vertical ? 1 : 0;
+		bool vertical = sc->vertical;
+		int axis = vertical ? 1 : 0;
+		bool rtl = !vertical && is_layout_rtl();
 
 		if (sc->collapse_mode != SplitContainer::COLLAPSE_NONE) {
 			Control *target = nullptr;
 			bool target_visible = false;
 
 			if (sc->collapse_mode != SplitContainer::COLLAPSE_SECOND) {
-				if (in_parent_pos[axis] >= first->get_combined_minimum_size()[axis] * 0.5) {
+				int limit = rtl ? sc->get_size()[axis] - first->get_combined_minimum_size()[axis] * 0.5 : first->get_combined_minimum_size()[axis] * 0.5;
+				bool error = rtl ? in_parent_pos[axis] <= limit : in_parent_pos[axis] >= limit;
+				if (error) {
 					if (!first_visible) {
 						target = first;
 						target_visible = true;
@@ -89,7 +93,9 @@ void SplitContainerDragger::gui_input(const Ref<InputEvent> &p_event) {
 			}
 
 			if (!target && sc->collapse_mode != SplitContainer::COLLAPSE_FIRST) {
-				if (in_parent_pos[axis] <= sc->get_size()[axis] - second->get_combined_minimum_size()[axis] * 0.5) {
+				int limit = rtl ? second->get_combined_minimum_size()[axis] * 0.5 : sc->get_size()[axis] - second->get_combined_minimum_size()[axis] * 0.5;
+				bool error = rtl ? in_parent_pos[axis] >= limit : in_parent_pos[axis] <= limit;
+				if (error) {
 					if (!second_visible) {
 						target = second;
 						target_visible = true;
@@ -106,10 +112,10 @@ void SplitContainerDragger::gui_input(const Ref<InputEvent> &p_event) {
 		}
 
 		if (!sc->child_collapsed) {
-			if (!sc->vertical && is_layout_rtl()) {
+			if (rtl) {
 				sc->split_offset = drag_ofs - (in_parent_pos.x - drag_from);
 			} else {
-				sc->split_offset = drag_ofs + (sc->vertical ? in_parent_pos.y : in_parent_pos.x) - drag_from;
+				sc->split_offset = drag_ofs + (vertical ? in_parent_pos.y : in_parent_pos.x) - drag_from;
 			}
 		}
 
@@ -312,6 +318,7 @@ void SplitContainer::_resort_children() {
 	bool dragger_visible = !collapsed;
 	int sep = _get_separation();
 	Size2 size = get_size();
+	bool rtl = is_layout_rtl();
 
 	// One child is hidden.
 	if ((first_visible && !second_visible) || (second_visible && !first_visible)) {
@@ -333,10 +340,20 @@ void SplitContainer::_resort_children() {
 			Point2 dragger_begin;
 			Point2 target_begin;
 			if (first_visible) {
-				dragger_begin = vertical ? Point2(0, size.height - sep - dragger_ofs) : Point2(size.width - sep - dragger_ofs, 0);
+				if (vertical) {
+					dragger_begin = Point2(0, size.height - sep - dragger_ofs);
+				} else {
+					dragger_begin = rtl ? Point2(0, -dragger_ofs) : Point2(size.width - sep - dragger_ofs, 0);
+					target_begin = rtl ? Point2(sep, 0) : Point2();
+				}
 			} else {
-				dragger_begin = vertical ? Point2(0, -dragger_ofs) : Point2(-dragger_ofs, 0);
-				target_begin = vertical ? Point2(0, sep) : Point2(sep, 0);
+				if (vertical) {
+					dragger_begin = Point2(0, -dragger_ofs);
+					target_begin = Point2(0, sep);
+				} else {
+					dragger_begin = rtl ? Point2(size.width - sep - dragger_ofs, 0) : Point2(-dragger_ofs, 0);
+					target_begin = rtl ? Point2() : Point2(sep, 0);
+				}
 			}
 			dragger_control->set_rect(Rect2(dragger_begin, vertical ? Size2(size.width, dragger_thickness) : Size2(dragger_thickness, size.height)));
 			target->set_rect(Rect2(target_begin, vertical ? Point2(size.width, size.height - sep) : Point2(size.width - sep, size.height)));
@@ -360,7 +377,7 @@ void SplitContainer::_resort_children() {
 		second->set_rect(Rect2(Point2(0, dragger_pos + sep), Size2(get_size().width, get_size().height - dragger_pos - sep)));
 		dragger_control->set_rect(Rect2(Point2(0, dragger_pos - dragger_ofs), Size2(get_size().width, dragger_thickness)));
 	} else {
-		if (is_layout_rtl()) {
+		if (rtl) {
 			dragger_pos = size.width - dragger_pos;
 			second->set_rect(Rect2(Point2(), Size2(dragger_pos, get_size().height)));
 			first->set_rect(Rect2(Point2(dragger_pos + sep, 0), Size2(get_size().width - dragger_pos - sep, get_size().height)));
@@ -386,16 +403,17 @@ void SplitContainer::_compute_middle_sep(Control *p_first, Control *p_second, in
 	int axis = vertical ? 1 : 0;
 	int first_ms = p_first->get_combined_minimum_size()[axis];
 	int second_ms = p_second->get_combined_minimum_size()[axis];
+	bool rtl = !vertical && is_layout_rtl();
 
 	int size = get_size()[axis];
 
 	if (first_expanded && second_expanded) {
 		float ratio = p_first->get_stretch_ratio() / (p_first->get_stretch_ratio() + p_second->get_stretch_ratio());
-		middle_sep = CLAMP(size * ratio - Math::round(p_sep * 0.5), first_ms, size - p_sep - second_ms);
+		middle_sep = size * ratio + (rtl ? Math::round(p_sep * 0.5) : -Math::round(p_sep * 0.5));
 	} else if (first_expanded) {
-		middle_sep = size - p_sep - second_ms;
+		middle_sep = rtl ? size - second_ms : size - p_sep - second_ms;
 	} else {
-		middle_sep = first_ms;
+		middle_sep = rtl ? first_ms + p_sep : first_ms;
 	}
 
 	if (child_collapsed) {
@@ -403,7 +421,11 @@ void SplitContainer::_compute_middle_sep(Control *p_first, Control *p_second, in
 		return;
 	}
 
-	split_offset = CLAMP(split_offset, -middle_sep + first_ms, size - middle_sep - p_sep - second_ms);
+	if (rtl) {
+		split_offset = CLAMP(split_offset, -middle_sep + p_sep + first_ms, size - middle_sep - second_ms);
+	} else {
+		split_offset = CLAMP(split_offset, -middle_sep + first_ms, size - middle_sep - p_sep - second_ms);
+	}
 }
 
 void SplitContainer::set_split_offset(int p_offset) {
