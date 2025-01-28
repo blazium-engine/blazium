@@ -522,7 +522,7 @@ void EditorNode::_update_theme(bool p_skip_creation) {
 
 	Vector<Ref<Theme>> editor_themes;
 	editor_themes.push_back(theme);
-	editor_themes.push_back(ThemeDB::get_singleton()->get_default_theme());
+	editor_themes.push_back(ThemeDB::get_singleton()->get_default_theme()->duplicate(true));
 
 	ThemeContext *node_tc = ThemeDB::get_singleton()->get_theme_context(this);
 	if (node_tc) {

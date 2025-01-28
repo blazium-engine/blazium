@@ -208,6 +208,7 @@ void FoldableContainer::set_title_position(FoldableContainer::TitlePosition p_ti
 	if (title_position != p_title_position) {
 		title_position = p_title_position;
 		queue_redraw();
+		queue_sort();
 	}
 }
 
@@ -835,7 +836,7 @@ void FoldableContainer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_text_overrun_behavior"), &FoldableContainer::get_text_overrun_behavior);
 	ClassDB::bind_method(D_METHOD("set_title_position", "title_position"), &FoldableContainer::set_title_position);
 	ClassDB::bind_method(D_METHOD("get_title_position"), &FoldableContainer::get_title_position);
-	ClassDB::bind_method(D_METHOD("add_button", "icon", "position", "id"), &FoldableContainer::add_button, DEFVAL(-1), DEFVAL(-1));
+	ClassDB::bind_method(D_METHOD("add_button", "icon", "position", "id"), &FoldableContainer::add_button, DEFVAL(Ref<Texture2D>()), DEFVAL(-1), DEFVAL(-1));
 	ClassDB::bind_method(D_METHOD("remove_button", "index"), &FoldableContainer::remove_button);
 	ClassDB::bind_method(D_METHOD("set_button_count", "count"), &FoldableContainer::set_button_count);
 	ClassDB::bind_method(D_METHOD("get_button_count"), &FoldableContainer::get_button_count);

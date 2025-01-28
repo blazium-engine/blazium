@@ -41,6 +41,7 @@
 #include "scene/gui/menu_button.h"
 #include "scene/gui/option_button.h"
 #include "scene/gui/panel.h"
+#include "scene/gui/panel_container.h"
 #include "scene/gui/popup_menu.h"
 #include "scene/gui/scroll_container.h"
 #include "scene/gui/slider.h"
@@ -186,8 +187,9 @@ void ColorPicker::_notification(int p_what) {
 
 			Size2 cursor_size = (theme_cache.picker_cursor->get_size() * 0.5).round();
 			real_vbox->add_theme_constant_override(SNAME("separation"), cursor_size.height);
-			slider_vbc->add_theme_constant_override(SNAME("separation"), cursor_size.height);
 			hb_edit->add_theme_constant_override(SNAME("separation"), cursor_size.width);
+
+			sliders_panel->add_theme_style_override(SceneStringName(panel), theme_cache.sliders_panel);
 
 			slider_gc->begin_bulk_theme_override();
 			slider_gc->add_theme_constant_override("v_separation", cursor_size.height);
@@ -789,6 +791,10 @@ ColorPicker::PickerShapeType ColorPicker::get_picker_shape() const {
 }
 
 void ColorPicker::_add_preset_button(const Color &p_color) {
+	ColorButton *cur_preset = (ColorButton *)preset_group->get_pressed_button();
+	if (cur_preset && cur_preset->get_color() != color) {
+		cur_preset->set_pressed_no_signal(false);
+	}
 	ColorButton *btn_preset_new = memnew(ColorButton(p_color));
 	btn_preset_new->set_toggle_mode(true);
 	btn_preset_new->set_size_mode(BaseButton::SIZE_MODE_FIT_HEIGHT);
@@ -796,14 +802,16 @@ void ColorPicker::_add_preset_button(const Color &p_color) {
 	SET_DRAG_FORWARDING_GCDU(btn_preset_new, ColorPicker);
 	btn_preset_new->set_button_group(preset_group);
 	preset_hbc->add_child(btn_preset_new);
-	btn_preset_new->set_pressed_no_signal(true);
+	preset_hbc->move_child(btn_preset_new, 0);
+	btn_preset_new->set_pressed_no_signal(color == p_color);
 	btn_preset_new->connect(SceneStringName(gui_input), callable_mp(this, &ColorPicker::_preset_input).bind(p_color));
 	btn_preset_new->connect("toggled", callable_mp(this, &ColorPicker::_preset_pressed).bind(btn_preset_new));
 }
 
 void ColorPicker::_add_recent_preset_button(const Color &p_color) {
-	if (recent_preset_group->get_pressed_button()) {
-		recent_preset_group->get_pressed_button()->set_pressed_no_signal(false);
+	ColorButton *cur_preset = (ColorButton *)recent_preset_group->get_pressed_button();
+	if (cur_preset && cur_preset->get_color() != color) {
+		cur_preset->set_pressed_no_signal(false);
 	}
 	ColorButton *btn_preset_new = memnew(ColorButton(p_color));
 	btn_preset_new->set_toggle_mode(true);
@@ -812,7 +820,7 @@ void ColorPicker::_add_recent_preset_button(const Color &p_color) {
 	btn_preset_new->set_button_group(recent_preset_group);
 	recent_preset_hbc->add_child(btn_preset_new);
 	recent_preset_hbc->move_child(btn_preset_new, 0);
-	btn_preset_new->set_pressed_no_signal(true);
+	btn_preset_new->set_pressed_no_signal(color == p_color);
 	btn_preset_new->connect("toggled", callable_mp(this, &ColorPicker::_recent_preset_pressed).bind(btn_preset_new));
 }
 
@@ -862,10 +870,10 @@ void ColorPicker::_drop_data_fw(const Point2 &p_point, const Variant &p_data, Co
 void ColorPicker::add_preset(const Color &p_color) {
 	List<Color>::Element *e = presets.find(p_color);
 	if (e) {
-		presets.move_to_back(e);
-		preset_cache.move_to_back(preset_cache.find(p_color));
+		presets.move_to_front(e);
+		preset_cache.move_to_front(preset_cache.find(p_color));
 
-		preset_hbc->move_child(preset_group->get_pressed_button(), preset_hbc->get_child_count() - 1);
+		preset_hbc->move_child(preset_group->get_pressed_button(), 0);
 	} else {
 		presets.push_back(p_color);
 		preset_cache.push_back(p_color);
@@ -886,7 +894,7 @@ void ColorPicker::add_recent_preset(const Color &p_color) {
 		if (recent_preset_hbc->get_child_count() >= PRESET_COLUMN_COUNT) {
 			recent_preset_cache.pop_front();
 			recent_presets.pop_front();
-			recent_preset_hbc->get_child(PRESET_COLUMN_COUNT - 1)->queue_free();
+			memdelete(recent_preset_hbc->get_child(PRESET_COLUMN_COUNT - 1));
 		}
 		recent_presets.push_back(p_color);
 		recent_preset_cache.push_back(p_color);
@@ -1636,6 +1644,7 @@ void ColorPicker::set_modes_visible(bool p_visible) {
 	}
 	color_modes_visible = p_visible;
 	mode_hbc->set_visible(p_visible);
+	sliders_panel->set_self_modulate(Color(1, 1, 1, p_visible ? 1 : 0));
 }
 
 bool ColorPicker::are_modes_visible() const {
@@ -1771,9 +1780,10 @@ void ColorPicker::_bind_methods() {
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, ColorPicker, hex_icon);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, ColorPicker, hex_code_icon);
 
-	BIND_THEME_ITEM_EXT(Theme::DATA_TYPE_STYLEBOX, ColorPicker, mode_button_normal, "tab_unselected", "TabContainer");
 	BIND_THEME_ITEM_EXT(Theme::DATA_TYPE_STYLEBOX, ColorPicker, mode_button_pressed, "tab_selected", "TabContainer");
-	BIND_THEME_ITEM_EXT(Theme::DATA_TYPE_STYLEBOX, ColorPicker, mode_button_hover, "tab_selected", "TabContainer");
+	BIND_THEME_ITEM_EXT(Theme::DATA_TYPE_STYLEBOX, ColorPicker, mode_button_normal, "tab_unselected", "TabContainer");
+	BIND_THEME_ITEM_EXT(Theme::DATA_TYPE_STYLEBOX, ColorPicker, mode_button_hover, "tab_hovered", "TabContainer");
+	BIND_THEME_ITEM_EXT(Theme::DATA_TYPE_STYLEBOX, ColorPicker, sliders_panel, "panel", "TabContainer");
 }
 
 ColorPicker::ColorPicker() {
@@ -1834,6 +1844,7 @@ ColorPicker::ColorPicker() {
 	add_mode(new ColorModeOKHSL(this));
 
 	slider_vbc = memnew(VBoxContainer);
+	slider_vbc->add_theme_constant_override("separation", 0);
 	real_vbox->add_child(slider_vbc);
 
 	mode_hbc = memnew(HBoxContainer);
@@ -1856,10 +1867,13 @@ ColorPicker::ColorPicker() {
 
 	current_mode = MODE_RGB;
 
-	slider_gc = memnew(GridContainer);
-	slider_vbc->add_child(slider_gc);
+	sliders_panel = memnew(PanelContainer);
+	sliders_panel->set_h_size_flags(SIZE_EXPAND_FILL);
+	slider_vbc->add_child(sliders_panel);
 
-	slider_gc->set_h_size_flags(SIZE_EXPAND_FILL);
+	slider_gc = memnew(GridContainer);
+	sliders_panel->add_child(slider_gc);
+
 	slider_gc->set_columns(3);
 
 	for (int i = 0; i < SLIDER_COUNT + 1; i++) {
@@ -1933,6 +1947,7 @@ ColorPicker::ColorPicker() {
 	preset_foldable->connect(SNAME("button_pressed"), callable_mp(this, &ColorPicker::_preset_foldable_button_pressed));
 
 	ScrollContainer *preset_scroll = memnew(ScrollContainer);
+	preset_scroll->add_theme_constant_override("h_scroll_bar_separation", 4);
 	preset_scroll->set_follow_focus(true);
 	preset_scroll->set_vertical_scroll_mode(ScrollContainer::SCROLL_MODE_DISABLED);
 	preset_foldable->add_child(preset_scroll);
@@ -1949,6 +1964,7 @@ ColorPicker::ColorPicker() {
 	recent_preset_foldable->set_text("Recent Colors");
 
 	ScrollContainer *recent_preset_scroll = memnew(ScrollContainer);
+	recent_preset_scroll->add_theme_constant_override("h_scroll_bar_separation", 4);
 	recent_preset_scroll->set_follow_focus(true);
 	recent_preset_scroll->set_vertical_scroll_mode(ScrollContainer::SCROLL_MODE_DISABLED);
 	recent_preset_foldable->add_child(recent_preset_scroll);

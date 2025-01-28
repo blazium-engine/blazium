@@ -4,7 +4,17 @@ Import("env")
 
 import default_theme_builders
 
-env.add_source_files(env.scene_sources, "*.cpp")
+sources = [
+    "theme_db.cpp",
+    "theme_owner.cpp"
+]
+
+if env["legacy_theme"]:
+    sources += ["default_theme.cpp"]
+else:
+    sources += ["blazium_default_theme.cpp"]
+
+env.add_source_files(env.scene_sources, sources)
 
 SConscript("icons/SCsub")
 

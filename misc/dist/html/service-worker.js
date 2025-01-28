@@ -17,8 +17,8 @@ const ENSURE_CROSSORIGIN_ISOLATION_HEADERS = typeof ___GODOT_ENSURE_CROSSORIGIN_
 const CACHED_FILES = typeof ___GODOT_CACHE___ === 'undefined' ? [] : ___GODOT_CACHE___;
 // Files that we might not want the user to preload, and will only be cached on first load.
 /** @type {string[]} */
-const CACHABLE_FILES = typeof ___GODOT_OPT_CACHE___ === 'undefined' ? [] : ___GODOT_OPT_CACHE___;
-const FULL_CACHE = CACHED_FILES.concat(CACHABLE_FILES);
+const CACHEABLE_FILES = typeof ___GODOT_OPT_CACHE___ === 'undefined' ? [] : ___GODOT_OPT_CACHE___;
+const FULL_CACHE = CACHED_FILES.concat(CACHEABLE_FILES);
 
 self.addEventListener('install', (event) => {
 	event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CACHED_FILES)));
@@ -50,13 +50,12 @@ function ensureCrossOriginIsolationHeaders(response) {
 	const crossOriginIsolatedHeaders = new Headers(response.headers);
 	crossOriginIsolatedHeaders.set('Cross-Origin-Embedder-Policy', 'require-corp');
 	crossOriginIsolatedHeaders.set('Cross-Origin-Opener-Policy', 'same-origin');
-	const newResponse = new Response(response.body, {
+
+	return new Response(response.body, {
 		status: response.status,
 		statusText: response.statusText,
 		headers: crossOriginIsolatedHeaders,
 	});
-
-	return newResponse;
 }
 
 /**
@@ -99,8 +98,8 @@ self.addEventListener(
 		const referrer = event.request.referrer || '';
 		const base = referrer.slice(0, referrer.lastIndexOf('/') + 1);
 		const local = url.startsWith(base) ? url.replace(base, '') : '';
-		const isCachable = FULL_CACHE.some((v) => v === local) || (base === referrer && base.endsWith(CACHED_FILES[0]));
-		if (isNavigate || isCachable) {
+		const isCacheable = FULL_CACHE.some((v) => v === local) || (base === referrer && base.endsWith(CACHED_FILES[0]));
+		if (isNavigate || isCacheable) {
 			event.respondWith((async () => {
 				// Try to use cache first
 				const cache = await caches.open(CACHE_NAME);
@@ -112,8 +111,7 @@ self.addEventListener(
 					if (missing) {
 						try {
 							// Try network if some cached file is missing (so we can display offline page in case).
-							const response = await fetchAndCache(event, cache, isCachable);
-							return response;
+							return await fetchAndCache(event, cache, isCacheable);
 						} catch (e) {
 							// And return the hopefully always cached offline page in case of network failure.
 							console.error('Network error: ', e); // eslint-disable-line no-console
@@ -129,8 +127,7 @@ self.addEventListener(
 					return cached;
 				}
 				// Try network if don't have it in cache.
-				const response = await fetchAndCache(event, cache, isCachable);
-				return response;
+				return await fetchAndCache(event, cache, isCacheable);
 			})());
 		} else if (ENSURE_CROSSORIGIN_ISOLATION_HEADERS) {
 			event.respondWith((async () => {

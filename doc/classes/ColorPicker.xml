@@ -173,7 +173,7 @@
 		<theme_item name="label_width" data_type="constant" type="int" default="10">
 			The minimum width of the color labels next to sliders.
 		</theme_item>
-		<theme_item name="margin" data_type="constant" type="int" default="4">
+		<theme_item name="margin" data_type="constant" type="int" default="6">
 			The margin around the [ColorPicker].
 		</theme_item>
 		<theme_item name="preset_size" data_type="constant" type="int" default="30">

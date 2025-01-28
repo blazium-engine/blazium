@@ -5,3 +5,6 @@
 [submodule "modules/godotsteam"]
 	path = modules/godotsteam
 	url = https://github.com/blazium-engine/GodotSteam
+[submodule "modules/sqlite"]
+	path = modules/sqlite
+	url = https://github.com/blazium-engine/sqlite-module

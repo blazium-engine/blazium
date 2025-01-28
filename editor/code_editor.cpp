@@ -733,6 +733,7 @@ FindReplaceBar::FindReplaceBar() {
 
 	// Search toolbar
 	search_text = memnew(LineEdit);
+	search_text->set_keep_editing_on_text_submit(true);
 	vbc_lineedit->add_child(search_text);
 	search_text->set_placeholder(TTR("Find"));
 	search_text->set_tooltip_text(TTR("Find"));

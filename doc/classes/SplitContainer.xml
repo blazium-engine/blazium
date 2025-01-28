@@ -5,6 +5,7 @@
 	</brief_description>
 	<description>
 		A container that accepts only two child controls, then arranges them horizontally or vertically and creates a divisor between them. The divisor can be dragged around to change the size relation between the child controls.
+		Children can be collapsed/expanded at runtime if you drag against their half minimum size. See [member collapse_mode] for more info.
 	</description>
 	<tutorials>
 		<link title="Using Containers">$DOCS_URL/tutorials/ui/gui_containers.html</link>
@@ -13,16 +14,37 @@
 		<method name="clamp_split_offset">
 			<return type="void" />
 			<description>
-				Clamps the [member split_offset] value to not go outside the currently possible minimal and maximum values.
+				Deprecated.
+			</description>
+		</method>
+		<method name="get_drag_area_control" qualifiers="const">
+			<return type="Control" />
+			<description>
+				Returns the drag area [Control]. For example, you can move a pre-configured button into the drag area [Control] so that it rides along with the split bar. Try setting the [Button] anchors to [code]center[/code] prior to the [code]reparent()[/code] call.
+				[codeblock]
+				$BarnacleButton.reparent($SplitContainer.get_drag_area_control())
+				[/codeblock]
+				[b]Note:[/b] The drag area [Control] is drawn over the [SplitContainer]'s children, so [CanvasItem] draw objects called from the [Control] and children added to the [Control] will also appear over the [SplitContainer]'s children. Try setting [member Control.mouse_filter] of custom children to [constant Control.MOUSE_FILTER_IGNORE] to prevent blocking the mouse from dragging if desired.
+				[b]Warning:[/b] This is a required internal node, removing and freeing it may cause a crash.
 			</description>
 		</method>
 	</methods>
 	<members>
+		<member name="collapse_mode" type="int" setter="set_collapse_mode" getter="get_collapse_mode" enum="SplitContainer.CollapseMode" default="0">
+			Can allow the first child or second child or both of them to be collapsed when they are not visible. See [enum CollapseMode] for details.
+			Children can be visible/hidden while dragging, if the mouse position becomes greater than their half size, they will hide otherwise they will show if they are hidden.
+		</member>
 		<member name="collapsed" type="bool" setter="set_collapsed" getter="is_collapsed" default="false">
 			If [code]true[/code], the dragger will be disabled and the children will be sized as if the [member split_offset] was [code]0[/code].
 		</member>
+		<member name="drag_area_highlight_in_editor" type="bool" setter="set_drag_area_highlight_in_editor" getter="is_drag_area_highlight_in_editor_enabled" default="false">
+			Highlights the drag area [Rect2] so you can see where it is during development. The drag area is gold if [member dragging_enabled] is [code]true[/code], and red if [code]false[/code].
+		</member>
 		<member name="dragger_visibility" type="int" setter="set_dragger_visibility" getter="get_dragger_visibility" enum="SplitContainer.DraggerVisibility" default="0">
 			Determines the dragger's visibility. See [enum DraggerVisibility] for details.
+		</member>
+		<member name="dragging_enabled" type="bool" setter="set_dragging_enabled" getter="is_dragging_enabled" default="true">
+			Enables or disables split dragging.
 		</member>
 		<member name="split_offset" type="int" setter="set_split_offset" getter="get_split_offset" default="0">
 			The initial offset of the splitting between the two [Control]s, with [code]0[/code] being at the end of the first [Control].
@@ -33,6 +55,16 @@
 		</member>
 	</members>
 	<signals>
+		<signal name="drag_ended">
+			<description>
+				Emitted when the user ends dragging.
+			</description>
+		</signal>
+		<signal name="drag_started">
+			<description>
+				Emitted when the user starts dragging.
+			</description>
+		</signal>
 		<signal name="dragged">
 			<param index="0" name="offset" type="int" />
 			<description>
@@ -50,15 +82,45 @@
 		<constant name="DRAGGER_HIDDEN_COLLAPSED" value="2" enum="DraggerVisibility">
 			The split dragger is never visible and its space collapsed.
 		</constant>
+		<constant name="COLLAPSE_NONE" value="0" enum="CollapseMode">
+			Hiding the first or second sortable control child will result in hiding the dragger and the other control child will fill the visible area.
+		</constant>
+		<constant name="COLLAPSE_FIRST" value="1" enum="CollapseMode">
+			Hiding the first sortable control child will keep the dragger visible and you will be able to drag again to show it.
+			[b]Note:[/b] hiding the second sortable control will also hide the dragger.
+		</constant>
+		<constant name="COLLAPSE_SECOND" value="2" enum="CollapseMode">
+			Hiding the second sortable control child will keep the dragger visible and you will be able to drag again to show it.
+			[b]Note:[/b] hiding the first sortable control will also hide the dragger.
+		</constant>
+		<constant name="COLLAPSE_ALL" value="3" enum="CollapseMode">
+			Hiding the first or second sortable control child will keep the dragger visible and you will be able to drag again to show them.
+			[b]Note:[/b] only one sortable control can be collapsed at time.
+		</constant>
 	</constants>
 	<theme_items>
+		<theme_item name="grabber_icon_normal" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.6)">
+			The grabber icon normal color.
+		</theme_item>
+		<theme_item name="grabber_icon_pressed" data_type="color" type="Color" default="Color(0.226, 0.478, 0.921, 1)">
+			The grabber icon pressed color.
+		</theme_item>
 		<theme_item name="autohide" data_type="constant" type="int" default="1">
-			Boolean value. If 1 ([code]true[/code]), the grabber will hide automatically when it isn't under the cursor. If 0 ([code]false[/code]), it's always visible.
+			Boolean value. If 1 ([code]true[/code]), the grabber icon will hide automatically when it isn't under the cursor. If 0 ([code]false[/code]), it's always visible.
+		</theme_item>
+		<theme_item name="autohide_split_bar" data_type="constant" type="int" default="1">
+			Boolean value. If 1 ([code]true[/code]), the split bar background will hide automatically when it isn't under the cursor. If 0 ([code]false[/code]), it's always visible.
+		</theme_item>
+		<theme_item name="draw_grabber_icon" data_type="constant" type="int" default="1">
+			If 1 ([code]true[/code]), the grabber icon will be visible. If 0 ([code]false[/code]), it will be hidden.
+		</theme_item>
+		<theme_item name="draw_split_bar" data_type="constant" type="int" default="0">
+			If 1 ([code]true[/code]), the split bar background will be visible. If 0 ([code]false[/code]), it will be hidden.
 		</theme_item>
 		<theme_item name="minimum_grab_thickness" data_type="constant" type="int" default="6">
 			The minimum thickness of the area users can click on to grab the splitting line. If [theme_item separation] or [theme_item h_grabber] / [theme_item v_grabber]'s thickness are too small, this ensure that the splitting line can still be dragged.
 		</theme_item>
-		<theme_item name="separation" data_type="constant" type="int" default="12">
+		<theme_item name="separation" data_type="constant" type="int" default="6">
 			The space between sides of the container.
 		</theme_item>
 		<theme_item name="grabber" data_type="icon" type="Texture2D">
@@ -69,6 +131,15 @@
 		</theme_item>
 		<theme_item name="v_grabber" data_type="icon" type="Texture2D">
 			The icon used for the grabber drawn in the middle area when [member vertical] is [code]true[/code].
+		</theme_item>
+		<theme_item name="h_split_bar_background" data_type="style" type="StyleBox">
+			Determines the background of the split bar when [member vertical] is [code]false[/code].
+		</theme_item>
+		<theme_item name="split_bar_background" data_type="style" type="StyleBox">
+			Determines the background of the split bar. Can have expand margins to draw outside the bounds.
+		</theme_item>
+		<theme_item name="v_split_bar_background" data_type="style" type="StyleBox">
+			Determines the background of the split bar when [member vertical] is [code]true[/code].
 		</theme_item>
 	</theme_items>
 </class>

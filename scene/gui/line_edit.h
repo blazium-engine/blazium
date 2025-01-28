@@ -88,6 +88,7 @@ private:
 	HorizontalAlignment alignment = HORIZONTAL_ALIGNMENT_LEFT;
 
 	bool editing = false;
+	bool keep_editing_on_text_submit = false;
 	bool editable = false;
 	bool pass = false;
 	bool text_changed_dirty = false;
@@ -208,9 +209,6 @@ private:
 		float base_scale = 1.0;
 	} theme_cache;
 
-	void _edit();
-	void _unedit();
-
 	void _close_ime_window();
 	void _update_ime_window_position();
 
@@ -266,7 +264,11 @@ protected:
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
 
 public:
+	void edit();
+	void unedit();
 	bool is_editing() const;
+	void set_keep_editing_on_text_submit(bool p_enabled);
+	bool is_editing_kept_on_text_submit() const;
 
 	bool has_ime_text() const;
 	void cancel_ime();
