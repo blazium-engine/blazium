@@ -1552,6 +1552,9 @@
 		<member name="DisplayServer" type="DisplayServer" setter="" getter="">
 			The [DisplayServer] singleton.
 		</member>
+		<member name="ENV" type="ENV" setter="" getter="">
+			The [ENV] singleton.
+		</member>
 		<member name="EditorInterface" type="EditorInterface" setter="" getter="">
 			The [EditorInterface] singleton.
 			[b]Note:[/b] Only available in editor builds.
