@@ -10,23 +10,23 @@ func _ready() -> void:
 
 	reconnection_token = config.get_value("LobbyClient", "reconnection_token", "")
 
-	disconnected_from_lobby.connect(_disconnected_from_lobby)
+	disconnected_from_server.connect(_disconnected_from_server)
 	log_updated.connect(_log_updated)
-	connected_to_lobby.connect(_connected_to_lobby)
+	connected_to_server.connect(_connected_to_server)
 
-	connect_to_lobby()
+	connect_to_server()
 
 func _log_updated(command: String, message: String):
 	print("LobbyClient: ", command, ": ", message)
 
-func _connected_to_lobby(_peer: LobbyPeer, new_reconnection_token: String):
+func _connected_to_server(_peer: LobbyPeer, new_reconnection_token: String):
 	reconnects = 0
 	config.set_value("LobbyClient", "reconnection_token", new_reconnection_token)
 	var err = config.save("user://blazium.cfg")
 	if err != OK:
 		push_error(error_string(err))
 
-func _disconnected_from_lobby(reason: String):
+func _disconnected_from_server(reason: String):
 	if reason == "Reconnect Close":
 		reconnection_token = ""
 	print("Disconnected. ", reason)
@@ -36,4 +36,4 @@ func _disconnected_from_lobby(reason: String):
 	reconnects += 1
 	if is_inside_tree():
 		await get_tree().create_timer(0.5 * reconnects).timeout
-	connect_to_lobby()
+	connect_to_server()
