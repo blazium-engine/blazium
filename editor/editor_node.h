@@ -319,15 +319,16 @@ private:
 	String renderer_request;
 
 	// Split containers.
-	DockSplitContainer *left_l_hsplit = nullptr;
+	DockSplitContainer *left_hsplit = nullptr;
+	DockSplitContainer *left_dock_hsplit = nullptr;
 	DockSplitContainer *left_l_vsplit = nullptr;
-	DockSplitContainer *left_r_hsplit = nullptr;
 	DockSplitContainer *left_r_vsplit = nullptr;
-	DockSplitContainer *main_hsplit = nullptr;
 	DockSplitContainer *right_hsplit = nullptr;
+	DockSplitContainer *main_hsplit = nullptr;
+	DockSplitContainer *center_vsplit = nullptr;
+	DockSplitContainer *right_dock_hsplit = nullptr;
 	DockSplitContainer *right_l_vsplit = nullptr;
 	DockSplitContainer *right_r_vsplit = nullptr;
-	DockSplitContainer *center_split = nullptr;
 
 	// Main tabs.
 	EditorSceneTabs *scene_tabs = nullptr;
