@@ -50,6 +50,7 @@
 #include "scene/animation/animation_player.h"
 #include "scene/animation/animation_tree.h"
 #include "scene/gui/dialogs.h"
+#include "scene/gui/flow_container.h"
 #include "scene/gui/label.h"
 #include "scene/gui/line_edit.h"
 #include "scene/gui/menu_button.h"
@@ -163,6 +164,7 @@ void AnimationPlayerEditor::_notification(int p_what) {
 			play_from->set_icon(get_editor_theme_icon(SNAME("Play")));
 			play_bw->set_icon(get_editor_theme_icon(SNAME("PlayStartBackwards")));
 			play_bw_from->set_icon(get_editor_theme_icon(SNAME("PlayBackwards")));
+			tool_anim->set_icon(get_editor_theme_icon(SNAME("Animation")));
 
 			autoplay_icon = get_editor_theme_icon(SNAME("AutoPlay"));
 			reset_icon = get_editor_theme_icon(SNAME("Reload"));
@@ -181,7 +183,6 @@ void AnimationPlayerEditor::_notification(int p_what) {
 
 			pin->set_icon(get_editor_theme_icon(SNAME("Pin")));
 
-			tool_anim->add_theme_style_override(CoreStringName(normal), get_theme_stylebox(CoreStringName(normal), SNAME("Button")));
 			track_editor->get_edit_menu()->add_theme_style_override(CoreStringName(normal), get_theme_stylebox(CoreStringName(normal), SNAME("Button")));
 
 #define ITEM_ICON(m_item, m_icon) tool_anim->get_popup()->set_item_icon(tool_anim->get_popup()->get_item_index(m_item), get_editor_theme_icon(SNAME(m_icon)))
@@ -1929,49 +1930,55 @@ AnimationPlayerEditor::AnimationPlayerEditor(AnimationPlayerEditorPlugin *p_plug
 	set_focus_mode(FOCUS_ALL);
 	set_process_shortcut_input(true);
 
-	HBoxContainer *hb = memnew(HBoxContainer);
-	add_child(hb);
+	HFlowContainer *main_flow = memnew(HFlowContainer);
+	main_flow->add_theme_constant_override(SNAME("h_separation"), 8 * EDSCALE);
+	add_child(main_flow);
+
+	HBoxContainer *play_hb = memnew(HBoxContainer);
+	main_flow->add_child(play_hb);
 
 	play_bw_from = memnew(Button);
 	play_bw_from->set_theme_type_variation("FlatButton");
 	play_bw_from->set_tooltip_text(TTR("Play selected animation backwards from current pos. (A)"));
-	hb->add_child(play_bw_from);
+	play_hb->add_child(play_bw_from);
 
 	play_bw = memnew(Button);
 	play_bw->set_theme_type_variation("FlatButton");
 	play_bw->set_tooltip_text(TTR("Play selected animation backwards from end. (Shift+A)"));
-	hb->add_child(play_bw);
+	play_hb->add_child(play_bw);
 
 	stop = memnew(Button);
 	stop->set_theme_type_variation("FlatButton");
-	hb->add_child(stop);
+	play_hb->add_child(stop);
 	stop->set_tooltip_text(TTR("Pause/stop animation playback. (S)"));
 
 	play = memnew(Button);
 	play->set_theme_type_variation("FlatButton");
 	play->set_tooltip_text(TTR("Play selected animation from start. (Shift+D)"));
-	hb->add_child(play);
+	play_hb->add_child(play);
 
 	play_from = memnew(Button);
 	play_from->set_theme_type_variation("FlatButton");
 	play_from->set_tooltip_text(TTR("Play selected animation from current pos. (D)"));
-	hb->add_child(play_from);
+	play_hb->add_child(play_from);
 
 	frame = memnew(SpinBox);
-	hb->add_child(frame);
+	play_hb->add_child(frame);
 	frame->set_custom_minimum_size(Size2(80, 0) * EDSCALE);
 	frame->set_stretch_ratio(2);
 	frame->set_step(0.0001);
 	frame->set_tooltip_text(TTR("Animation position (in seconds)."));
 
-	hb->add_child(memnew(VSeparator));
-
 	scale = memnew(LineEdit);
-	hb->add_child(scale);
+	play_hb->add_child(scale);
 	scale->set_h_size_flags(SIZE_EXPAND_FILL);
 	scale->set_stretch_ratio(1);
 	scale->set_tooltip_text(TTR("Scale animation playback globally for the node."));
 	scale->hide();
+
+	HBoxContainer *hb = memnew(HBoxContainer);
+	hb->set_h_size_flags(Control::SIZE_EXPAND_FILL);
+	main_flow->add_child(hb);
 
 	delete_dialog = memnew(ConfirmationDialog);
 	add_child(delete_dialog);
@@ -1980,8 +1987,8 @@ AnimationPlayerEditor::AnimationPlayerEditor(AnimationPlayerEditorPlugin *p_plug
 	tool_anim = memnew(MenuButton);
 	tool_anim->set_shortcut_context(this);
 	tool_anim->set_flat(false);
+	tool_anim->set_theme_type_variation("FlatMenuButton");
 	tool_anim->set_tooltip_text(TTR("Animation Tools"));
-	tool_anim->set_text(TTR("Animation"));
 	tool_anim->get_popup()->add_shortcut(ED_SHORTCUT("animation_player_editor/new_animation", TTR("New...")), TOOL_NEW_ANIM);
 	tool_anim->get_popup()->add_separator();
 	tool_anim->get_popup()->add_shortcut(ED_SHORTCUT("animation_player_editor/animation_libraries", TTR("Manage Animations...")), TOOL_ANIM_LIBRARY);
@@ -1999,6 +2006,7 @@ AnimationPlayerEditor::AnimationPlayerEditor(AnimationPlayerEditorPlugin *p_plug
 	animation = memnew(OptionButton);
 	hb->add_child(animation);
 	animation->set_h_size_flags(SIZE_EXPAND_FILL);
+	animation->set_custom_minimum_size(Size2(128 * EDSCALE, 0));
 	animation->set_tooltip_text(TTR("Display list of animations in player."));
 	animation->set_clip_text(true);
 	animation->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);

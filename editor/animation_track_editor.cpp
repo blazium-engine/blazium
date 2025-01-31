@@ -1953,7 +1953,7 @@ AnimationTimelineEdit::AnimationTimelineEdit() {
 	length->connect(SceneStringName(value_changed), callable_mp(this, &AnimationTimelineEdit::_anim_length_changed));
 	len_hb->add_child(length);
 	loop = memnew(Button);
-	loop->set_flat(true);
+	loop->set_theme_type_variation("FlatButton");
 	loop->set_tooltip_text(TTR("Animation Looping"));
 	loop->connect(SceneStringName(pressed), callable_mp(this, &AnimationTimelineEdit::_anim_loop_pressed));
 	loop->set_toggle_mode(true);
@@ -3200,7 +3200,7 @@ Variant AnimationTrackEdit::get_drag_data(const Point2 &p_point) {
 	drag_data["index"] = track;
 
 	Button *tb = memnew(Button);
-	tb->set_flat(true);
+	tb->set_theme_type_variation("FlatButton");
 	tb->set_text(path_cache);
 	tb->set_icon(icon_cache);
 	tb->add_theme_constant_override("icon_max_width", get_theme_constant("class_icon_size", EditorStringName(Editor)));
@@ -7273,6 +7273,7 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	add_child(bottom_hb);
 
 	imported_anim_warning = memnew(Button);
+	imported_anim_warning->set_theme_type_variation("FlatButton");
 	imported_anim_warning->hide();
 	imported_anim_warning->set_text(TTR("Imported Scene"));
 	imported_anim_warning->set_tooltip_text(TTR("Warning: Editing imported animation"));
@@ -7280,6 +7281,7 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	bottom_hb->add_child(imported_anim_warning);
 
 	dummy_player_warning = memnew(Button);
+	dummy_player_warning->set_theme_type_variation("FlatButton");
 	dummy_player_warning->hide();
 	dummy_player_warning->set_text(TTR("Dummy Player"));
 	dummy_player_warning->set_tooltip_text(TTR("Warning: Editing dummy AnimationPlayer"));
@@ -7287,6 +7289,7 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	bottom_hb->add_child(dummy_player_warning);
 
 	inactive_player_warning = memnew(Button);
+	inactive_player_warning->set_theme_type_variation("FlatButton");
 	inactive_player_warning->hide();
 	inactive_player_warning->set_text(TTR("Inactive Player"));
 	inactive_player_warning->set_tooltip_text(TTR("Warning: AnimationPlayer is inactive"));
@@ -7296,7 +7299,7 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	bottom_hb->add_spacer();
 
 	bezier_edit_icon = memnew(Button);
-	bezier_edit_icon->set_flat(true);
+	bezier_edit_icon->set_theme_type_variation("FlatButton");
 	bezier_edit_icon->set_disabled(true);
 	bezier_edit_icon->set_toggle_mode(true);
 	bezier_edit_icon->connect(SceneStringName(pressed), callable_mp(this, &AnimationTrackEditor::_toggle_bezier_edit));
@@ -7305,7 +7308,7 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	bottom_hb->add_child(bezier_edit_icon);
 
 	selected_filter = memnew(Button);
-	selected_filter->set_flat(true);
+	selected_filter->set_theme_type_variation("FlatButton");
 	selected_filter->connect(SceneStringName(pressed), callable_mp(this, &AnimationTrackEditor::_view_group_toggle)); // Same function works the same.
 	selected_filter->set_toggle_mode(true);
 	selected_filter->set_tooltip_text(TTR("Only show tracks from nodes selected in tree."));
@@ -7313,7 +7316,7 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	bottom_hb->add_child(selected_filter);
 
 	view_group = memnew(Button);
-	view_group->set_flat(true);
+	view_group->set_theme_type_variation("FlatButton");
 	view_group->connect(SceneStringName(pressed), callable_mp(this, &AnimationTrackEditor::_view_group_toggle));
 	view_group->set_toggle_mode(true);
 	view_group->set_tooltip_text(TTR("Group tracks by node or display them as plain list."));
@@ -7322,7 +7325,7 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	bottom_hb->add_child(memnew(VSeparator));
 
 	snap = memnew(Button);
-	snap->set_flat(true);
+	snap->set_theme_type_variation("FlatButton");
 	snap->set_text(TTR("Snap:") + " ");
 	bottom_hb->add_child(snap);
 	snap->set_disabled(true);
@@ -7357,7 +7360,7 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	zoom->set_min(0.0);
 	zoom->set_max(2.0);
 	zoom->set_value(1.0);
-	zoom->set_custom_minimum_size(Size2(200, 0) * EDSCALE);
+	zoom->set_custom_minimum_size(Size2(128 * EDSCALE, 0));
 	zoom->set_v_size_flags(SIZE_SHRINK_CENTER);
 	bottom_hb->add_child(zoom);
 	timeline->set_zoom(zoom);
@@ -7365,13 +7368,13 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	ED_SHORTCUT("animation_editor/auto_fit", TTR("Fit to panel"), KeyModifierMask::ALT | Key::F);
 
 	auto_fit = memnew(Button);
-	auto_fit->set_flat(true);
+	auto_fit->set_theme_type_variation("FlatButton");
 	auto_fit->connect(SceneStringName(pressed), callable_mp(this, &AnimationTrackEditor::_auto_fit));
 	auto_fit->set_shortcut(ED_GET_SHORTCUT("animation_editor/auto_fit"));
 	bottom_hb->add_child(auto_fit);
 
 	auto_fit_bezier = memnew(Button);
-	auto_fit_bezier->set_flat(true);
+	auto_fit_bezier->set_theme_type_variation("FlatButton");
 	auto_fit_bezier->set_visible(false);
 	auto_fit_bezier->connect(SceneStringName(pressed), callable_mp(this, &AnimationTrackEditor::_auto_fit_bezier));
 	auto_fit_bezier->set_shortcut(ED_GET_SHORTCUT("animation_editor/auto_fit"));
@@ -7381,6 +7384,7 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	edit->set_shortcut_context(this);
 	edit->set_text(TTR("Edit"));
 	edit->set_flat(false);
+	edit->set_theme_type_variation("FlatMenuButton");
 	edit->set_disabled(true);
 	edit->set_tooltip_text(TTR("Animation properties."));
 	edit->get_popup()->add_item(TTR("Copy Tracks..."), EDIT_COPY_TRACKS);
@@ -7623,6 +7627,7 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	track_copy_dialog->add_child(track_copy_vbox);
 
 	Button *select_all_button = memnew(Button);
+	select_all_button->set_theme_type_variation("FlatButton");
 	select_all_button->set_text(TTR("Select All/None"));
 	select_all_button->connect(SceneStringName(pressed), callable_mp(this, &AnimationTrackEditor::_select_all_tracks_for_copy));
 	track_copy_vbox->add_child(select_all_button);
