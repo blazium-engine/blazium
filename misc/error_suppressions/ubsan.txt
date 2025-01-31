@@ -28,5 +28,5 @@ integer-divide-by-zero:thirdparty/misc/ok_color.h
 integer-divide-by-zero:thirdparty/rvo2/rvo2_2d/Agent2d.cpp
 shift-base:thirdparty/libogg/bitwise.c
 shift-base:thirdparty/libvorbis/sharedbook.c
-shift-base:thirdparty/noise/FastNoiseLite.h
-signed-integer-overflow:thirdparty/noise/FastNoiseLite.h
+shift-base:thirdparty/misc/FastNoiseLite.h
+signed-integer-overflow:thirdparty/misc/FastNoiseLite.h
