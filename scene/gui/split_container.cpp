@@ -92,7 +92,7 @@ void SplitContainerDragger::gui_input(const Ref<InputEvent> &p_event) {
 				}
 			}
 
-			if (!target && sc->collapse_mode != SplitContainer::COLLAPSE_FIRST) {
+			if (sc->collapse_mode != SplitContainer::COLLAPSE_FIRST) {
 				int limit = rtl ? second->get_combined_minimum_size()[axis] * 0.5 : sc->get_size()[axis] - second->get_combined_minimum_size()[axis] * 0.5;
 				bool error = rtl ? in_parent_pos[axis] >= limit : in_parent_pos[axis] <= limit;
 				if (error) {
@@ -244,22 +244,29 @@ int SplitContainer::_get_separation() const {
 
 Size2 SplitContainer::get_minimum_size() const {
 	Control *first = _get_child(0);
+	if (!first) {
+		return Size2();
+	}
+
+	Size2 ms;
 	Control *second = _get_child(1);
-	Size2i ms;
 	int axis = vertical ? 1 : 0;
 
-	if (first && first->is_visible()) {
+	if (first->is_visible() || (collapse_mode == COLLAPSE_FIRST || collapse_mode == COLLAPSE_ALL)) {
 		ms = first->get_combined_minimum_size();
 	}
 
-	if (second && second->is_visible()) {
-		Size2i ms2 = second->get_combined_minimum_size();
+	if (second && (second->is_visible() || (collapse_mode == COLLAPSE_SECOND || collapse_mode == COLLAPSE_ALL))) {
+		Size2 ms2 = second->get_combined_minimum_size();
 		int cross_axis = vertical ? 0 : 1;
 		ms[axis] += ms2[axis];
 		ms[cross_axis] = MAX(ms[cross_axis], ms2[cross_axis]);
 	}
 
-	ms[axis] += _get_separation();
+	if (first && second) {
+		ms[axis] += _get_separation();
+	}
+
 	return ms;
 }
 
@@ -358,6 +365,7 @@ void SplitContainer::_resort_children() {
 			dragger_control->set_rect(Rect2(dragger_begin, vertical ? Size2(size.width, dragger_thickness) : Size2(dragger_thickness, size.height)));
 			target->set_rect(Rect2(target_begin, vertical ? Point2(size.width, size.height - sep) : Point2(size.width - sep, size.height)));
 		}
+		dragger_control->queue_redraw();
 		return;
 	}
 
@@ -387,6 +395,7 @@ void SplitContainer::_resort_children() {
 		}
 		dragger_control->set_rect(Rect2(Point2(dragger_pos - dragger_ofs, 0), Size2(dragger_thickness, get_size().height)));
 	}
+	dragger_control->queue_redraw();
 }
 
 void SplitContainer::_compute_middle_sep(Control *p_first, Control *p_second, int p_sep) {
