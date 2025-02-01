@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef JOLT_PROJECT_SETTINGS_H
-#define JOLT_PROJECT_SETTINGS_H
+#pragma once
 
 #include <stdint.h>
 
@@ -83,5 +82,3 @@ public:
 	static void register_settings();
 	static void read_settings();
 };
-
-#endif // JOLT_PROJECT_SETTINGS_H

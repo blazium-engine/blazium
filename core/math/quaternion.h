@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef QUATERNION_H
-#define QUATERNION_H
+#pragma once
 
 #include "core/math/math_funcs.h"
 #include "core/math/vector3.h"
@@ -249,5 +248,3 @@ constexpr Quaternion Quaternion::operator*(const Quaternion &p_q) const {
 constexpr Quaternion operator*(real_t p_real, const Quaternion &p_quaternion) {
 	return p_quaternion * p_real;
 }
-
-#endif // QUATERNION_H

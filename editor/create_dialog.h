@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef CREATE_DIALOG_H
-#define CREATE_DIALOG_H
+#pragma once
 
 #include "editor/editor_help.h"
 #include "scene/gui/dialogs.h"
@@ -125,5 +124,3 @@ public:
 
 	CreateDialog();
 };
-
-#endif // CREATE_DIALOG_H

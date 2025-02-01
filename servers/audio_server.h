@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef AUDIO_SERVER_H
-#define AUDIO_SERVER_H
+#pragma once
 
 #include "core/math/audio_frame.h"
 #include "core/object/class_db.h"
@@ -545,5 +544,3 @@ public:
 };
 
 typedef AudioServer AS;
-
-#endif // AUDIO_SERVER_H

@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef JOINT_3D_H
-#define JOINT_3D_H
+#pragma once
 
 #include "scene/3d/node_3d.h"
 #include "scene/3d/physics/physics_body_3d.h"
@@ -98,4 +97,3 @@ public:
 };
 
 VARIANT_ENUM_CAST(Joint3D::DisableMode);
-#endif // JOINT_3D_H

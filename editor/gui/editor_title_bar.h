@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef EDITOR_TITLE_BAR_H
-#define EDITOR_TITLE_BAR_H
+#pragma once
 
 #include "scene/gui/box_container.h"
 
@@ -48,5 +47,3 @@ public:
 	void set_can_move_window(bool p_enabled);
 	bool get_can_move_window() const;
 };
-
-#endif // EDITOR_TITLE_BAR_H

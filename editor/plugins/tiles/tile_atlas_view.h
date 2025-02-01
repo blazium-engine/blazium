@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef TILE_ATLAS_VIEW_H
-#define TILE_ATLAS_VIEW_H
+#pragma once
 
 #include "scene/gui/control.h"
 #include "scene/resources/2d/tile_set.h"
@@ -171,5 +170,3 @@ public:
 	TileAtlasView();
 	~TileAtlasView();
 };
-
-#endif // TILE_ATLAS_VIEW_H

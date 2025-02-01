@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef EDITOR_SCROLL_BOX_H
-#define EDITOR_SCROLL_BOX_H
+#pragma once
 
 #include "scene/gui/box_container.h"
 
@@ -94,5 +93,3 @@ public:
 	EditorVScrollBox() :
 			EditorScrollBox(true) { is_fixed = true; }
 };
-
-#endif // EDITOR_SCROLL_BOX_H

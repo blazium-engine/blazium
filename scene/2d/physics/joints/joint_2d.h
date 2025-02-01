@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef JOINT_2D_H
-#define JOINT_2D_H
+#pragma once
 
 #include "scene/2d/node_2d.h"
 
@@ -95,4 +94,3 @@ public:
 };
 
 VARIANT_ENUM_CAST(Joint2D::DisableMode);
-#endif // JOINT_2D_H

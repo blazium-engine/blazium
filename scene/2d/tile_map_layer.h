@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef TILE_MAP_LAYER_H
-#define TILE_MAP_LAYER_H
+#pragma once
 
 #include "scene/resources/2d/tile_set.h"
 
@@ -516,5 +515,3 @@ public:
 };
 
 VARIANT_ENUM_CAST(TileMapLayer::DebugVisibilityMode);
-
-#endif // TILE_MAP_LAYER_H

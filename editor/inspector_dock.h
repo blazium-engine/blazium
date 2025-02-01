@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef INSPECTOR_DOCK_H
-#define INSPECTOR_DOCK_H
+#pragma once
 
 #include "editor/create_dialog.h"
 #include "editor/editor_data.h"
@@ -166,5 +165,3 @@ public:
 	InspectorDock(EditorData &p_editor_data);
 	~InspectorDock();
 };
-
-#endif // INSPECTOR_DOCK_H

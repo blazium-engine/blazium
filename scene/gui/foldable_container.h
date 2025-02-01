@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef FOLDABLE_CONTAINER_H
-#define FOLDABLE_CONTAINER_H
+#pragma once
 
 #include "scene/gui/container.h"
 
@@ -174,5 +173,3 @@ public:
 
 	FoldableGroup();
 };
-
-#endif // FOLDABLE_CONTAINER_H

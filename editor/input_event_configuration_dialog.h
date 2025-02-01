@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef INPUT_EVENT_CONFIGURATION_DIALOG_H
-#define INPUT_EVENT_CONFIGURATION_DIALOG_H
+#pragma once
 
 #include "scene/gui/dialogs.h"
 
@@ -134,5 +133,3 @@ public:
 
 	InputEventConfigurationDialog();
 };
-
-#endif // INPUT_EVENT_CONFIGURATION_DIALOG_H

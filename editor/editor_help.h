@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef EDITOR_HELP_H
-#define EDITOR_HELP_H
+#pragma once
 
 #include "core/os/thread.h"
 #include "core/templates/safe_refcount.h"
@@ -402,5 +401,3 @@ public:
 	virtual ~EditorHelpHighlighter();
 };
 #endif // defined(MODULE_GDSCRIPT_ENABLED) || defined(MODULE_MONO_ENABLED)
-
-#endif // EDITOR_HELP_H

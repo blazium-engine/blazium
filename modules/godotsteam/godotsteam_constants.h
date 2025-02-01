@@ -1,5 +1,4 @@
-#ifndef GODOTSTEAM_CONSTANTS_H
-#define GODOTSTEAM_CONSTANTS_H
+#pragma once
 
 // Constants with 'deprecated/': these were listed in the SDK docs but do not exist in the header files; safe to remove probably
 // Possibly deprecated or never existed?
@@ -148,5 +147,3 @@
 #define LEADERBOARD_DETAIL_MAX k_cLeaderboardDetailsMax
 #define LEADERBOARD_NAME_MAX k_cchLeaderboardNameMax
 #define STAT_NAME_MAX k_cchStatNameMax
-
-#endif // GODOTSTEAM_CONSTANTS_H

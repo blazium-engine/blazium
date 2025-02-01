@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef TILE_MAP_H
-#define TILE_MAP_H
+#pragma once
 
 #include "scene/2d/tile_map_layer.h"
 #include "scene/property_list_helper.h"
@@ -247,5 +246,3 @@ public:
 };
 
 VARIANT_ENUM_CAST(TileMap::VisibilityMode);
-
-#endif // TILE_MAP_H

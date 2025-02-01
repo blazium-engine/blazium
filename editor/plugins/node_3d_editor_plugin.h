@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef NODE_3D_EDITOR_PLUGIN_H
-#define NODE_3D_EDITOR_PLUGIN_H
+#pragma once
 
 #include "core/math/dynamic_bvh.h"
 #include "editor/plugins/editor_plugin.h"
@@ -1053,5 +1052,3 @@ public:
 	void set_navigation_mode(Node3DEditorViewport::NavigationMode p_nav_mode);
 	void set_viewport(Node3DEditorViewport *p_viewport);
 };
-
-#endif // NODE_3D_EDITOR_PLUGIN_H

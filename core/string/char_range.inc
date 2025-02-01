@@ -30,8 +30,7 @@
 
 // This file was generated using the `misc/scripts/char_range_fetch.py` script.
 
-#ifndef CHAR_RANGE_INC
-#define CHAR_RANGE_INC
+#pragma once
 
 #include "core/typedefs.h"
 
@@ -3630,5 +3629,3 @@ constexpr inline CharRange unicode_letter[] = {
 	{ 0x30000, 0x3134a },
 	{ 0x31350, 0x323af },
 };
-
-#endif // CHAR_RANGE_INC

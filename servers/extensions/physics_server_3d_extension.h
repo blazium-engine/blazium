@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef PHYSICS_SERVER_3D_EXTENSION_H
-#define PHYSICS_SERVER_3D_EXTENSION_H
+#pragma once
 
 #include "core/extension/ext_wrappers.gen.inc"
 #include "core/object/script_language.h"
@@ -545,5 +544,3 @@ public:
 	PhysicsServer3DExtension();
 	~PhysicsServer3DExtension();
 };
-
-#endif // PHYSICS_SERVER_3D_EXTENSION_H

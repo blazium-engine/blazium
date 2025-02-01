@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef RENDERING_DEVICE_H
-#define RENDERING_DEVICE_H
+#pragma once
 
 #include "core/object/worker_thread_pool.h"
 #include "core/os/thread_safe.h"
@@ -1488,5 +1487,3 @@ VARIANT_BITFIELD_CAST(RenderingDevice::BarrierMask);
 #endif
 
 typedef RenderingDevice RD;
-
-#endif // RENDERING_DEVICE_H

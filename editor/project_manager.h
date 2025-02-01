@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef PROJECT_MANAGER_H
-#define PROJECT_MANAGER_H
+#pragma once
 
 #include "scene/gui/control.h"
 
@@ -269,5 +268,3 @@ public:
 	ProjectManager(bool p_custom_res);
 	~ProjectManager();
 };
-
-#endif // PROJECT_MANAGER_H

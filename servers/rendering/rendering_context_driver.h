@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef RENDERING_CONTEXT_DRIVER_H
-#define RENDERING_CONTEXT_DRIVER_H
+#pragma once
 
 #include "servers/display_server.h"
 
@@ -105,5 +104,3 @@ public:
 	virtual void surface_destroy(SurfaceID p_surface) = 0;
 	virtual bool is_debug_utils_enabled() const = 0;
 };
-
-#endif // RENDERING_CONTEXT_DRIVER_H

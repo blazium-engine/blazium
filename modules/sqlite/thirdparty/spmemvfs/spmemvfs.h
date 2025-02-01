@@ -26,9 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __spmemvfs_h__
-#define __spmemvfs_h__
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -59,6 +56,4 @@ int spmemvfs_close_db(spmemvfs_db_t *db);
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

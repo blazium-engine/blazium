@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef CODE_EDITOR_H
-#define CODE_EDITOR_H
+#pragma once
 
 #include "core/object/script_language.h"
 #include "scene/gui/box_container.h"
@@ -307,5 +306,3 @@ public:
 
 	CodeTextEditor();
 };
-
-#endif // CODE_EDITOR_H

@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef GPU_PARTICLES_COLLISION_SDF_EDITOR_PLUGIN_H
-#define GPU_PARTICLES_COLLISION_SDF_EDITOR_PLUGIN_H
+#pragma once
 
 #include "editor/plugins/editor_plugin.h"
 
@@ -69,5 +68,3 @@ public:
 	GPUParticlesCollisionSDF3DEditorPlugin();
 	~GPUParticlesCollisionSDF3DEditorPlugin();
 };
-
-#endif // GPU_PARTICLES_COLLISION_SDF_EDITOR_PLUGIN_H
