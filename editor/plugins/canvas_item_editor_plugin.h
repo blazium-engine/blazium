@@ -51,6 +51,8 @@ class ViewPanner;
 class VScrollBar;
 class VSeparator;
 class VSplitContainer;
+class OptionButton;
+class PopupMenu;
 
 class CanvasItemEditorSelectedItem : public Object {
 	GDCLASS(CanvasItemEditorSelectedItem, Object);
@@ -78,10 +80,10 @@ class CanvasItemEditor : public VBoxContainer {
 public:
 	enum Tool {
 		TOOL_SELECT,
-		TOOL_LIST_SELECT,
 		TOOL_MOVE,
-		TOOL_SCALE,
 		TOOL_ROTATE,
+		TOOL_SCALE,
+		TOOL_LIST_SELECT,
 		TOOL_EDIT_PIVOT,
 		TOOL_PAN,
 		TOOL_RULER,
@@ -145,6 +147,7 @@ private:
 		CLEAR_GUIDES,
 		VIEW_CENTER_TO_SELECTION,
 		VIEW_FRAME_TO_SELECTION,
+		VIEW_TOGGLE_GRID,
 		PREVIEW_CANVAS_SCALE,
 		SKELETON_MAKE_BONES,
 		SKELETON_SHOW_BONES
@@ -312,30 +315,24 @@ private:
 	};
 	List<PoseClipboard> pose_clipboard;
 
-	Button *select_button = nullptr;
+	OptionButton *select_options = nullptr;
+	PopupMenu *select_popup = nullptr;
 
-	Button *move_button = nullptr;
-	Button *scale_button = nullptr;
-	Button *rotate_button = nullptr;
-
-	Button *list_select_button = nullptr;
-	Button *pivot_button = nullptr;
-	Button *pan_button = nullptr;
-
-	Button *ruler_button = nullptr;
-
-	Button *smart_snap_button = nullptr;
+	Button *button_center_view = nullptr;
+	Button *button_frame_view = nullptr;
+	Button *button_grid_toggle = nullptr;
 	Button *grid_snap_button = nullptr;
+	Button *smart_snap_button = nullptr;
+
 	MenuButton *snap_config_menu = nullptr;
 	PopupMenu *smartsnap_config_popup = nullptr;
 
+	Button *override_camera_button = nullptr;
 	Button *lock_button = nullptr;
 	Button *unlock_button = nullptr;
-
 	Button *group_button = nullptr;
 	Button *ungroup_button = nullptr;
 
-	Button *override_camera_button = nullptr;
 	MenuButton *view_menu = nullptr;
 	PopupMenu *grid_menu = nullptr;
 	PopupMenu *theme_menu = nullptr;
@@ -354,6 +351,9 @@ private:
 
 	Control *top_ruler = nullptr;
 	Control *left_ruler = nullptr;
+
+	VBoxContainer *controls_vb = nullptr;
+	EditorZoomWidget *zoom_widget = nullptr;
 
 	Point2 drag_start_origin;
 	DragType drag_type = DRAG_NONE;
@@ -416,6 +416,7 @@ private:
 	void _adjust_new_node_position(Node *p_node);
 	void _reset_create_position();
 	void _update_editor_settings();
+	void _toggle_grid();
 	bool _is_grid_visible() const;
 	void _prepare_grid_menu();
 	void _on_grid_menu_id_pressed(int p_id);
@@ -514,16 +515,12 @@ private:
 			const SnapTarget p_snap_target, List<const CanvasItem *> p_exceptions,
 			const Node *p_current);
 
-	VBoxContainer *controls_vb = nullptr;
-	Button *button_center_view = nullptr;
-	EditorZoomWidget *zoom_widget = nullptr;
 	void _update_zoom(real_t p_zoom);
 	void _shortcut_zoom_set(real_t p_zoom);
 	void _zoom_on_position(real_t p_zoom, Point2 p_position = Point2());
 	void _button_toggle_smart_snap(bool p_status);
 	void _button_toggle_grid_snap(bool p_status);
 	void _button_override_camera(bool p_pressed);
-	void _button_tool_select(int p_index);
 
 	void _update_override_camera_button(bool p_game_running);
 
@@ -585,8 +582,8 @@ public:
 
 	void update_viewport();
 
-	Tool get_current_tool() { return tool; }
-	void set_current_tool(Tool p_tool);
+	void set_current_tool(int p_tool);
+	Tool get_current_tool() const { return tool; }
 
 	void edit(CanvasItem *p_canvas_item);
 

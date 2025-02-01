@@ -629,15 +629,11 @@ public:
 	static const unsigned int VIEWPORTS_COUNT = 4;
 
 	enum ToolMode {
-		TOOL_MODE_SELECT,
-		TOOL_MODE_MOVE,
-		TOOL_MODE_ROTATE,
-		TOOL_MODE_SCALE,
-		TOOL_MODE_LIST_SELECT,
-		TOOL_LOCK_SELECTED,
-		TOOL_UNLOCK_SELECTED,
-		TOOL_GROUP_SELECTED,
-		TOOL_UNGROUP_SELECTED,
+		TOOL_SELECT,
+		TOOL_MOVE,
+		TOOL_ROTATE,
+		TOOL_SCALE,
+		TOOL_LIST_SELECT,
 		TOOL_RULER,
 		TOOL_MAX
 	};
@@ -645,9 +641,7 @@ public:
 	enum ToolOptions {
 		TOOL_OPT_LOCAL_COORDS,
 		TOOL_OPT_USE_SNAP,
-		TOOL_OPT_OVERRIDE_CAMERA,
 		TOOL_OPT_MAX
-
 	};
 
 private:
@@ -720,14 +714,8 @@ private:
 	} gizmo;
 
 	enum MenuOption {
-		MENU_TOOL_SELECT,
-		MENU_TOOL_MOVE,
-		MENU_TOOL_ROTATE,
-		MENU_TOOL_SCALE,
-		MENU_TOOL_LIST_SELECT,
 		MENU_TOOL_LOCAL_COORDS,
 		MENU_TOOL_USE_SNAP,
-		MENU_TOOL_OVERRIDE_CAMERA,
 		MENU_TRANSFORM_CONFIGURE_SNAP,
 		MENU_TRANSFORM_DIALOG,
 		MENU_VIEW_USE_1_VIEWPORT,
@@ -745,10 +733,18 @@ private:
 		MENU_GROUP_SELECTED,
 		MENU_UNGROUP_SELECTED,
 		MENU_SNAP_TO_FLOOR,
-		MENU_RULER,
+		MENU_RULER
 	};
 
-	Button *tool_button[TOOL_MAX];
+	OptionButton *select_options = nullptr;
+	PopupMenu *select_popup = nullptr;
+
+	Button *override_camera_button = nullptr;
+	Button *lock_button = nullptr;
+	Button *unlock_button = nullptr;
+	Button *group_button = nullptr;
+	Button *ungroup_button = nullptr;
+
 	Button *tool_option_button[TOOL_OPT_MAX];
 
 	MenuButton *transform_menu = nullptr;
@@ -783,6 +779,7 @@ private:
 	void _menu_item_toggled(bool pressed, int p_option);
 	void _menu_gizmo_toggled(int p_option);
 	void _update_camera_override_button(bool p_game_running);
+	void _button_override_camera(bool p_pressed);
 	void _update_camera_override_viewport(Object *p_viewport);
 	// Used for secondary menu items which are displayed depending on the currently selected node
 	// (such as MeshInstance's "Mesh" menu).
@@ -917,7 +914,9 @@ public:
 	Transform3D get_gizmo_transform() const { return gizmo.transform; }
 	bool is_gizmo_visible() const;
 
+	void set_tool_mode(int p_tool);
 	ToolMode get_tool_mode() const { return tool_mode; }
+
 	bool are_local_coords_enabled() const;
 	void set_local_coords_enabled(bool p_toggled_on) const;
 	bool is_snap_enabled() const;
