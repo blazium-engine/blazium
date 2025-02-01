@@ -37,13 +37,14 @@
 
 #include "editor/plugins/editor_plugin.h"
 #include "scene/gui/box_container.h"
-#include "scene/gui/item_list.h"
-#include "scene/gui/slider.h"
-#include "scene/gui/spin_box.h"
 
 class ConfirmationDialog;
 class MenuButton;
 class Node3DEditorPlugin;
+class LineEdit;
+class SpinBox;
+class HSlider;
+class ItemList;
 
 class GridMapEditor : public VBoxContainer {
 	GDCLASS(GridMapEditor, VBoxContainer);
