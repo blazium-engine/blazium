@@ -587,7 +587,7 @@ TEST_CASE("[SceneTree][TabContainer] layout and offset") {
 
 	SUBCASE("[TabContainer] tab position") {
 		float tab_height = tab_rects[0].size.y;
-		Ref<StyleBox> panel_style = tab_container->get_theme_stylebox("panel_style");
+		Ref<StyleBox> panel_style = tab_container->get_theme_stylebox("panel");
 
 		// Initial position, same as top position.
 		// Tab bar is at the top.
@@ -605,10 +605,10 @@ TEST_CASE("[SceneTree][TabContainer] layout and offset") {
 		CHECK(tab0->get_anchor(SIDE_BOTTOM) == 1);
 		CHECK(tab0->get_anchor(SIDE_LEFT) == 0);
 		CHECK(tab0->get_anchor(SIDE_RIGHT) == 1);
-		CHECK(tab0->get_offset(SIDE_TOP) == tab_height);
-		CHECK(tab0->get_offset(SIDE_BOTTOM) == 0);
-		CHECK(tab0->get_offset(SIDE_LEFT) == 0);
-		CHECK(tab0->get_offset(SIDE_RIGHT) == 0);
+		CHECK(tab0->get_offset(SIDE_TOP) == tab_height + panel_style->get_margin(SIDE_TOP));
+		CHECK(tab0->get_offset(SIDE_BOTTOM) == -panel_style->get_margin(SIDE_BOTTOM));
+		CHECK(tab0->get_offset(SIDE_LEFT) == panel_style->get_margin(SIDE_LEFT));
+		CHECK(tab0->get_offset(SIDE_RIGHT) == -panel_style->get_margin(SIDE_RIGHT));
 
 		// Bottom position.
 		tab_container->set_tabs_position(TabContainer::POSITION_BOTTOM);
@@ -630,10 +630,10 @@ TEST_CASE("[SceneTree][TabContainer] layout and offset") {
 		CHECK(tab0->get_anchor(SIDE_BOTTOM) == 1);
 		CHECK(tab0->get_anchor(SIDE_LEFT) == 0);
 		CHECK(tab0->get_anchor(SIDE_RIGHT) == 1);
-		CHECK(tab0->get_offset(SIDE_TOP) == 0);
-		CHECK(tab0->get_offset(SIDE_BOTTOM) == -tab_height);
-		CHECK(tab0->get_offset(SIDE_LEFT) == 0);
-		CHECK(tab0->get_offset(SIDE_RIGHT) == 0);
+		CHECK(tab0->get_offset(SIDE_TOP) == panel_style->get_margin(SIDE_TOP));
+		CHECK(tab0->get_offset(SIDE_BOTTOM) == -tab_height - panel_style->get_margin(SIDE_BOTTOM));
+		CHECK(tab0->get_offset(SIDE_LEFT) == panel_style->get_margin(SIDE_LEFT));
+		CHECK(tab0->get_offset(SIDE_RIGHT) == -panel_style->get_margin(SIDE_RIGHT));
 
 		// Top position.
 		tab_container->set_tabs_position(TabContainer::POSITION_TOP);
@@ -655,10 +655,10 @@ TEST_CASE("[SceneTree][TabContainer] layout and offset") {
 		CHECK(tab0->get_anchor(SIDE_BOTTOM) == 1);
 		CHECK(tab0->get_anchor(SIDE_LEFT) == 0);
 		CHECK(tab0->get_anchor(SIDE_RIGHT) == 1);
-		CHECK(tab0->get_offset(SIDE_TOP) == tab_height);
-		CHECK(tab0->get_offset(SIDE_BOTTOM) == 0);
-		CHECK(tab0->get_offset(SIDE_LEFT) == 0);
-		CHECK(tab0->get_offset(SIDE_RIGHT) == 0);
+		CHECK(tab0->get_offset(SIDE_TOP) == tab_height + panel_style->get_margin(SIDE_TOP));
+		CHECK(tab0->get_offset(SIDE_BOTTOM) == -panel_style->get_margin(SIDE_BOTTOM));
+		CHECK(tab0->get_offset(SIDE_LEFT) == panel_style->get_margin(SIDE_LEFT));
+		CHECK(tab0->get_offset(SIDE_RIGHT) == -panel_style->get_margin(SIDE_RIGHT));
 	}
 
 	memdelete(tab_container);
