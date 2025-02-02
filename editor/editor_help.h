@@ -59,6 +59,8 @@ class FindBar : public HBoxContainer {
 
 	int results_count = 0;
 
+	virtual void input(const Ref<InputEvent> &p_event) override;
+
 	void _hide_bar();
 
 	void _search_text_changed(const String &p_text);
@@ -69,7 +71,6 @@ class FindBar : public HBoxContainer {
 
 protected:
 	void _notification(int p_what);
-	virtual void unhandled_input(const Ref<InputEvent> &p_event) override;
 
 	bool _search(bool p_search_previous = false);
 

@@ -152,7 +152,7 @@ void FindReplaceBar::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_VISIBILITY_CHANGED: {
-			set_process_unhandled_input(is_visible_in_tree());
+			set_process_input(is_visible_in_tree());
 		} break;
 
 		case NOTIFICATION_THEME_CHANGED: {
@@ -168,11 +168,11 @@ void FindReplaceBar::_notification(int p_what) {
 	}
 }
 
-void FindReplaceBar::unhandled_input(const Ref<InputEvent> &p_event) {
+// Implemented in input(..) as the LineEdit consumes the Escape pressed key.
+void FindReplaceBar::input(const Ref<InputEvent> &p_event) {
 	ERR_FAIL_COND(p_event.is_null());
 
 	Ref<InputEventKey> k = p_event;
-
 	if (k.is_valid() && k->is_action_pressed(SNAME("ui_cancel"), false, true)) {
 		Control *focus_owner = get_viewport()->gui_get_focus_owner();
 
@@ -180,13 +180,6 @@ void FindReplaceBar::unhandled_input(const Ref<InputEvent> &p_event) {
 			_hide_bar();
 			accept_event();
 		}
-	}
-}
-
-void FindReplaceBar::_focus_lost() {
-	if (Input::get_singleton()->is_action_pressed(SNAME("ui_cancel"))) {
-		// Unfocused after pressing Escape, so hide the bar.
-		_hide_bar(true);
 	}
 }
 
@@ -571,8 +564,8 @@ bool FindReplaceBar::search_next() {
 	return _search(flags, line, col);
 }
 
-void FindReplaceBar::_hide_bar(bool p_force_focus) {
-	if (replace_text->has_focus() || search_text->has_focus() || p_force_focus) {
+void FindReplaceBar::_hide_bar() {
+	if (replace_text->has_focus() || search_text->has_focus()) {
 		text_editor->grab_focus();
 	}
 
@@ -796,7 +789,6 @@ FindReplaceBar::FindReplaceBar() {
 	search_text->set_custom_minimum_size(Size2(100 * EDSCALE, 0));
 	search_text->connect(SceneStringName(text_changed), callable_mp(this, &FindReplaceBar::_search_text_changed));
 	search_text->connect(SceneStringName(text_submitted), callable_mp(this, &FindReplaceBar::_search_text_submitted));
-	search_text->connect(SceneStringName(focus_exited), callable_mp(this, &FindReplaceBar::_focus_lost));
 
 	matches_label = memnew(Label);
 	hbc_button_search->add_child(matches_label);
@@ -835,7 +827,6 @@ FindReplaceBar::FindReplaceBar() {
 	replace_text->set_tooltip_text(TTR("Replace"));
 	replace_text->set_custom_minimum_size(Size2(100 * EDSCALE, 0));
 	replace_text->connect(SceneStringName(text_submitted), callable_mp(this, &FindReplaceBar::_replace_text_submitted));
-	replace_text->connect(SceneStringName(focus_exited), callable_mp(this, &FindReplaceBar::_focus_lost));
 
 	replace = memnew(Button);
 	hbc_button_replace->add_child(replace);
@@ -857,7 +848,7 @@ FindReplaceBar::FindReplaceBar() {
 	add_child(hide_button);
 	hide_button->set_tooltip_text(TTR("Hide"));
 	hide_button->set_focus_mode(FOCUS_NONE);
-	hide_button->connect(SceneStringName(pressed), callable_mp(this, &FindReplaceBar::_hide_bar).bind(false));
+	hide_button->connect(SceneStringName(pressed), callable_mp(this, &FindReplaceBar::_hide_bar));
 	hide_button->set_v_size_flags(SIZE_SHRINK_CENTER);
 }
 
