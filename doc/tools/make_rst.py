@@ -920,7 +920,7 @@ def make_rst_class(class_def: ClassDef, state: State, dry_run: bool, output_dir:
         # Ascendants
         if class_def.inherits:
             inherits = class_def.inherits.strip()
-            f.write(f'**{translate("Inherits:")}** ')
+            f.write(f"**{translate('Inherits:')}** ")
             first = True
             while inherits is not None:
                 if not first:
@@ -947,7 +947,7 @@ def make_rst_class(class_def: ClassDef, state: State, dry_run: bool, output_dir:
                 inherited.append(c.name)
 
         if len(inherited):
-            f.write(f'**{translate("Inherited By:")}** ')
+            f.write(f"**{translate('Inherited By:')}** ")
             for i, child in enumerate(inherited):
                 if i > 0:
                     f.write(", ")
@@ -2545,7 +2545,7 @@ def format_table(f: TextIO, data: List[Tuple[Optional[str], ...]], remove_empty_
         for i, text in enumerate(row):
             if column_sizes[i] == 0 and remove_empty_columns:
                 continue
-            row_text += f' {(text or "").ljust(column_sizes[i])} |'
+            row_text += f" {(text or '').ljust(column_sizes[i])} |"
         row_text += "\n"
 
         f.write(f"   {row_text}")
