@@ -241,18 +241,12 @@ const Engine = (function () {
 			 */
 			installServiceWorker: function () {
 				if (this.config.serviceWorker && 'serviceWorker' in navigator) {
-					// Check for the two meta elements in the head
-					const discordAutodetect = document.querySelector('meta[name="discord_autodetect"]')?.content === 'true';
-					const discordEmbed = document.querySelector('meta[name="discord_embed"]')?.content === 'true';
-					// Determine the base URL based on the meta elements
-					let baseUrl = '';
-					if (discordAutodetect) {
-						baseUrl = window.location.hostname.includes('discord') ? '.proxy/' : '';
-					} else if (discordEmbed) {
-						baseUrl = '.proxy/';
-					}
+					let path = this.config.serviceWorker;
 					// Prepend .proxy/ to the serviceWorker value if needed
-					const serviceWorkerPath = baseUrl + this.config.serviceWorker;
+					if (DiscordEmbed.isDiscordEmbed()) {
+						path = `.proxy/${path}`;
+					}
+					const serviceWorkerPath = path;
 					return navigator.serviceWorker.register(serviceWorkerPath);
 				}
 				return Promise.resolve();

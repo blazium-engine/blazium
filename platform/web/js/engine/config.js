@@ -293,24 +293,29 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 				return {};
 			},
 			'locateFile': function (path) {
+				let locatedPath = path;
 				if (!path.startsWith('godot.')) {
-					return path;
+					return locatedPath;
 				} else if (path.endsWith('.worker.js')) {
-					return `${loadPath}.worker.js`;
+					locatedPath = `${loadPath}.worker.js`;
 				} else if (path.endsWith('.audio.worklet.js')) {
-					return `${loadPath}.audio.worklet.js`;
+					locatedPath = `${loadPath}.audio.worklet.js`;
 				} else if (path.endsWith('.audio.position.worklet.js')) {
-					return `${loadPath}.audio.position.worklet.js`;
+					locatedPath = `${loadPath}.audio.position.worklet.js`;
 				} else if (path.endsWith('.js')) {
-					return `${loadPath}.js`;
+					locatedPath = `${loadPath}.js`;
 				} else if (path in gdext) {
-					return path;
+					return locatedPath;
 				} else if (path.endsWith('.side.wasm')) {
-					return `${loadPath}.side.wasm`;
+					locatedPath = `${loadPath}.side.wasm`;
 				} else if (path.endsWith('.wasm')) {
-					return `${loadPath}.wasm`;
+					locatedPath = `${loadPath}.wasm`;
 				}
-				return path;
+				// Prepend .proxy/ to the locatedPath value if needed
+				if (DiscordEmbed.isDiscordEmbed()) {
+					locatedPath = `.proxy/${locatedPath}`;
+				}
+				return locatedPath;
 			},
 		};
 	};

@@ -102,17 +102,122 @@ body {
 		<canvas id="canvas">
 			Your browser does not support the canvas tag.
 		</canvas>
-
 		<noscript>
 			Your browser does not support JavaScript.
 		</noscript>
+		<script>
+const PROXY_PREFIX = '/.proxy';
+const DiscordEmbed = {
+	isDiscordEmbed: () => {
+		// Check for the two meta elements in the head
+		const discordAutodetect = document.querySelector('meta[name="discord_autodetect"]')?.content === 'true';
+		const discordEmbed = document.querySelector('meta[name="discord_embed"]')?.content === 'true';
 
+		if (discordAutodetect) {
+			return DiscordEmbed.isDiscordURL(window.location.hostname);
+		}
+		return discordEmbed;
+	},
+	isDiscordURL: (url) => {
+		const arr = ['discord.com', 'discordapp.com', 'discordsays.com', 'discordapp.net', 'discordsez.com'];
+		return arr.some((substring) => url.toString().includes(substring));
+	},
+	patchUrlMappings: (
+		patchFetch = true,
+		patchWebSocket = true,
+		patchXhr = true
+	) => {
+		// Bail out if we're not in a browser
+		if (typeof window === 'undefined') {
+			return;
+		}
+		if (patchFetch) {
+			const fetchImpl = window.fetch;
+			// fetch is a duplex, but this is consistent
+			window.fetch = function (input, init) {
+				// If fetch has Request as input, we need to resolve any stream
+				// before we create a new request with the mapped url
+				if (input instanceof Request) {
+					const newUrl = DiscordEmbed.attemptRemap(DiscordEmbed.absoluteURL(input.url));
+					const { ...newInit } = (init ?? {});
+					Object.keys(Request.prototype).forEach((value) => {
+						if (value === 'url') {
+							return;
+						}
+						try {
+							newInit[value] = input[value];
+						} catch (ex) {
+							console.warn(`Remapping fetch request key "${value}" failed`, ex);
+						}
+					});
+					return new Promise((resolve, reject) => {
+						try {
+							input.blob().then((blob) => {
+								if (input.method.toUpperCase() !== 'HEAD' && input.method.toUpperCase() !== 'GET' && blob.size > 0) {
+									newInit.body = blob;
+								}
+
+								resolve(fetchImpl(new Request(newUrl, newInit)));
+							});
+						} catch (ex) {
+							reject(ex);
+						}
+					});
+				}
+				// Assuming a generic url or string
+				const remapped = DiscordEmbed.attemptRemap(input instanceof URL ? input : DiscordEmbed.absoluteURL(input));
+				return fetchImpl(remapped, init);
+			};
+		}
+		if (patchWebSocket) {
+			class WebSocketProxy extends WebSocket {
+				constructor(url, protocols) {
+					const remapped = DiscordEmbed.attemptRemap(url instanceof URL ? url : DiscordEmbed.absoluteURL(url));
+					super(remapped, protocols);
+				}
+			}
+			window.WebSocket = WebSocketProxy;
+		}
+		if (patchXhr) {
+			const openImpl = XMLHttpRequest.prototype.open;
+			XMLHttpRequest.prototype.open = function (
+				method,
+				url,
+				async,
+				username,
+				password
+			) {
+				const remapped = DiscordEmbed.attemptRemap(DiscordEmbed.absoluteURL(url));
+				openImpl.apply(this, [method, remapped, async, username, password]);
+			};
+		}
+	},
+	attemptRemap: (url) => {
+		const newURL = new URL(url.toString());
+		// Only apply proxy prefix once and not for discord links
+		if (!newURL.pathname.startsWith(PROXY_PREFIX)
+			&& !DiscordEmbed.isDiscordURL(newURL.hostname)) {
+			newURL.pathname = PROXY_PREFIX + newURL.pathname;
+		}
+		return newURL;
+	},
+	// If the first arg is a complete url, it will ignore the second arg
+	// This call structure lets us set relative urls to have a full url with the proper protocol and host
+	absoluteURL: (
+		url,
+		protocol = window.location.protocol,
+		host = window.location.host
+	) => new URL(url, `${protocol}//${host}`),
+};
+if (DiscordEmbed.isDiscordEmbed()) {
+	DiscordEmbed.patchUrlMappings();
+}
+		</script>
 		<div id="status">
 			<img id="status-splash" src="$GODOT_SPLASH" alt="">
 			<progress id="status-progress"></progress>
 			<div id="status-notice"></div>
 		</div>
-
 		<script src="$GODOT_URL"></script>
 		<script>
 const GODOT_CONFIG = $GODOT_CONFIG;

@@ -132,6 +132,7 @@ module.exports = [
 				'Blazium': true,
 				'InternalConfig': true,
 				'Preloader': true,
+				'DiscordEmbed': true,
 			},
 		},
 	},
