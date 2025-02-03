@@ -194,6 +194,10 @@ Control *SplitContainer::_get_child(int p_idx) const {
 			continue;
 		}
 
+		if (collapse_mode == COLLAPSE_NONE && !c->is_visible()) {
+			continue;
+		}
+
 		if (idx == p_idx) {
 			return c;
 		}
