@@ -646,6 +646,7 @@ void EditorAssetInstaller::_notification(int p_what) {
 				// By default, OBJ files are imported as Mesh resources rather than PackedScenes.
 				extension_icon_map["obj"] = get_editor_theme_icon(SNAME("MeshItem"));
 
+				extension_icon_map["csv"] = get_editor_theme_icon(SNAME("TextFile"));
 				extension_icon_map["txt"] = get_editor_theme_icon(SNAME("TextFile"));
 				extension_icon_map["md"] = get_editor_theme_icon(SNAME("TextFile"));
 				extension_icon_map["rst"] = get_editor_theme_icon(SNAME("TextFile"));
