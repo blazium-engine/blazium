@@ -143,6 +143,7 @@ String Performance::get_monitor_name(Monitor p_monitor) const {
 		PNAME("navigation/obstacles"),
 
 	};
+	static_assert(std::size(names) == MONITOR_MAX);
 
 	return names[p_monitor];
 }
