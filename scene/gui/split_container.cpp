@@ -237,7 +237,7 @@ int SplitContainer::_get_separation() const {
 	}
 
 	int sep = 0;
-	if (dragger_control->is_visible() || collapsed) {
+	if (dragger_control->is_visible()) {
 		sep = MAX(theme_cache.separation, 0);
 		if (!collapsed && theme_cache.draw_grabber_icon) {
 			sep = MAX(sep, vertical ? _get_grabber_icon()->get_height() : _get_grabber_icon()->get_width());
@@ -327,7 +327,6 @@ void SplitContainer::_resort_children() {
 	}
 
 	bool dragger_visible = !collapsed;
-	int sep = _get_separation();
 	Size2 size = get_size();
 	bool rtl = is_layout_rtl();
 
@@ -344,7 +343,7 @@ void SplitContainer::_resort_children() {
 		if (!dragger_visible) {
 			target->set_rect(Rect2(Point2(), size));
 		} else {
-			// Force clamping split offset if a child is collapsed to get correct split_offset when resized.
+			int sep = _get_separation();
 			_compute_middle_sep(first, second, sep);
 			int dragger_thickness = MAX(sep, theme_cache.minimum_grab_thickness);
 			int dragger_ofs = Math::round((dragger_thickness - sep) * 0.5);
@@ -375,6 +374,7 @@ void SplitContainer::_resort_children() {
 
 	dragger_control->set_visible(dragger_visible);
 
+	int sep = _get_separation();
 	_compute_middle_sep(first, second, sep);
 
 	int dragger_thickness = MAX(sep, theme_cache.minimum_grab_thickness);
@@ -385,19 +385,19 @@ void SplitContainer::_resort_children() {
 	}
 
 	if (vertical) {
-		first->set_rect(Rect2(Point2(), Size2(get_size().width, dragger_pos)));
-		second->set_rect(Rect2(Point2(0, dragger_pos + sep), Size2(get_size().width, get_size().height - dragger_pos - sep)));
-		dragger_control->set_rect(Rect2(Point2(0, dragger_pos - dragger_ofs), Size2(get_size().width, dragger_thickness)));
+		first->set_rect(Rect2(Point2(), Size2(size.width, dragger_pos)));
+		second->set_rect(Rect2(Point2(0, dragger_pos + sep), Size2(size.width, size.height - dragger_pos - sep)));
+		dragger_control->set_rect(Rect2(Point2(0, dragger_pos - dragger_ofs), Size2(size.width, dragger_thickness)));
 	} else {
 		if (rtl) {
 			dragger_pos = size.width - dragger_pos;
-			second->set_rect(Rect2(Point2(), Size2(dragger_pos, get_size().height)));
-			first->set_rect(Rect2(Point2(dragger_pos + sep, 0), Size2(get_size().width - dragger_pos - sep, get_size().height)));
+			second->set_rect(Rect2(Point2(), Size2(dragger_pos, size.height)));
+			first->set_rect(Rect2(Point2(dragger_pos + sep, 0), Size2(size.width - dragger_pos - sep, size.height)));
 		} else {
-			first->set_rect(Rect2(Point2(), Size2(dragger_pos, get_size().height)));
-			second->set_rect(Rect2(Point2(dragger_pos + sep, 0), Size2(get_size().width - dragger_pos - sep, get_size().height)));
+			first->set_rect(Rect2(Point2(), Size2(dragger_pos, size.height)));
+			second->set_rect(Rect2(Point2(dragger_pos + sep, 0), Size2(size.width - dragger_pos - sep, size.height)));
 		}
-		dragger_control->set_rect(Rect2(Point2(dragger_pos - dragger_ofs, 0), Size2(dragger_thickness, get_size().height)));
+		dragger_control->set_rect(Rect2(Point2(dragger_pos - dragger_ofs, 0), Size2(dragger_thickness, size.height)));
 	}
 	dragger_control->queue_redraw();
 }
@@ -430,7 +430,11 @@ void SplitContainer::_compute_middle_sep(Control *p_first, Control *p_second, in
 	}
 
 	if (child_collapsed) {
-		split_offset = first_visible ? size - middle_sep - p_sep : -middle_sep;
+		if (rtl) {
+			split_offset = first_visible ? size - middle_sep : -middle_sep + p_sep;
+		} else {
+			split_offset = first_visible ? size - middle_sep - p_sep : -middle_sep;
+		}
 		return;
 	}
 
