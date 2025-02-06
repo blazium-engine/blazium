@@ -3206,7 +3206,7 @@ void Node3DEditorViewport::_draw() {
 	if (message_time > 0) {
 		Ref<Font> font = get_theme_font(SceneStringName(font), SNAME("Label"));
 		int font_size = get_theme_font_size(SceneStringName(font_size), SNAME("Label"));
-		Point2 msgpos = Point2(5, get_size().y - 20);
+		Point2 msgpos = Point2(10 * EDSCALE, get_size().y - 14 * EDSCALE);
 		font->draw_string(ci, msgpos + Point2(1, 1), message, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(0, 0, 0, 0.8));
 		font->draw_string(ci, msgpos + Point2(-1, -1), message, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(0, 0, 0, 0.8));
 		font->draw_string(ci, msgpos, message, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(1, 1, 1, 1));
@@ -6648,10 +6648,6 @@ void Node3DEditor::_menu_item_pressed(int p_option) {
 					continue;
 				}
 
-				if (spatial->get_viewport() != EditorNode::get_singleton()->get_scene_root()) {
-					continue;
-				}
-
 				undo_redo->add_do_method(spatial, "set_meta", "_edit_lock_", true);
 				undo_redo->add_undo_method(spatial, "remove_meta", "_edit_lock_");
 				undo_redo->add_do_method(this, "emit_signal", "item_lock_status_changed");
@@ -6670,10 +6666,6 @@ void Node3DEditor::_menu_item_pressed(int p_option) {
 			for (Node *E : selection) {
 				Node3D *spatial = Object::cast_to<Node3D>(E);
 				if (!spatial || !spatial->is_inside_tree()) {
-					continue;
-				}
-
-				if (spatial->get_viewport() != EditorNode::get_singleton()->get_scene_root()) {
 					continue;
 				}
 
@@ -6698,10 +6690,6 @@ void Node3DEditor::_menu_item_pressed(int p_option) {
 					continue;
 				}
 
-				if (spatial->get_viewport() != EditorNode::get_singleton()->get_scene_root()) {
-					continue;
-				}
-
 				undo_redo->add_do_method(spatial, "set_meta", "_edit_group_", true);
 				undo_redo->add_undo_method(spatial, "remove_meta", "_edit_group_");
 				undo_redo->add_do_method(this, "emit_signal", "item_group_status_changed");
@@ -6719,10 +6707,6 @@ void Node3DEditor::_menu_item_pressed(int p_option) {
 			for (Node *E : selection) {
 				Node3D *spatial = Object::cast_to<Node3D>(E);
 				if (!spatial || !spatial->is_inside_tree()) {
-					continue;
-				}
-
-				if (spatial->get_viewport() != EditorNode::get_singleton()->get_scene_root()) {
 					continue;
 				}
 

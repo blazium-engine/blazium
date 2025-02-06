@@ -261,6 +261,11 @@ bool AbstractPolygon2DEditor::forward_gui_input(const Ref<InputEvent> &p_event) 
 		return false;
 	}
 
+	Viewport *vp = _get_node()->get_viewport();
+	if (vp && !vp->is_visible_subviewport()) {
+		return false;
+	}
+
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
 	Ref<InputEventMouseButton> mb = p_event;
 
@@ -278,10 +283,11 @@ bool AbstractPolygon2DEditor::forward_gui_input(const Ref<InputEvent> &p_event) 
 	}
 
 	if (mb.is_valid()) {
-		Transform2D xform = canvas_item_editor->get_canvas_transform() * _get_node()->get_global_transform();
+		Transform2D xform = canvas_item_editor->get_canvas_transform() * _get_node()->get_screen_transform();
 
 		Vector2 gpoint = mb->get_position();
-		Vector2 cpoint = _get_node()->to_local(canvas_item_editor->snap_point(canvas_item_editor->get_canvas_transform().affine_inverse().xform(mb->get_position())));
+		Vector2 cpoint = canvas_item_editor->snap_point(canvas_item_editor->get_canvas_transform().affine_inverse().xform(gpoint));
+		cpoint = _get_node()->get_screen_transform().affine_inverse().xform(cpoint);
 
 		if (mode == MODE_EDIT || (_is_line() && mode == MODE_CREATE)) {
 			if (mb->get_button_index() == MouseButton::LEFT) {
@@ -413,7 +419,8 @@ bool AbstractPolygon2DEditor::forward_gui_input(const Ref<InputEvent> &p_event) 
 		Vector2 gpoint = mm->get_position();
 
 		if (edited_point.valid() && (wip_active || mm->get_button_mask().has_flag(MouseButtonMask::LEFT))) {
-			Vector2 cpoint = _get_node()->to_local(canvas_item_editor->snap_point(canvas_item_editor->get_canvas_transform().affine_inverse().xform(gpoint)));
+			Vector2 cpoint = canvas_item_editor->snap_point(canvas_item_editor->get_canvas_transform().affine_inverse().xform(gpoint));
+			cpoint = _get_node()->get_screen_transform().affine_inverse().xform(cpoint);
 
 			//Move the point in a single axis. Should only work when editing a polygon and while holding shift.
 			if (mode == MODE_EDIT && mm->is_shift_pressed()) {
@@ -500,7 +507,12 @@ void AbstractPolygon2DEditor::forward_canvas_draw_over_viewport(Control *p_overl
 		return;
 	}
 
-	Transform2D xform = canvas_item_editor->get_canvas_transform() * _get_node()->get_global_transform();
+	Viewport *vp = _get_node()->get_viewport();
+	if (vp && !vp->is_visible_subviewport()) {
+		return;
+	}
+
+	Transform2D xform = canvas_item_editor->get_canvas_transform() * _get_node()->get_screen_transform();
 	// All polygon points are sharp, so use the sharp handle icon
 	const Ref<Texture2D> handle = get_editor_theme_icon(SNAME("EditorPathSharpHandle"));
 
@@ -658,7 +670,7 @@ AbstractPolygon2DEditor::PosVertex AbstractPolygon2DEditor::closest_point(const 
 	const real_t grab_threshold = EDITOR_GET("editors/polygon_editor/point_grab_radius");
 
 	const int n_polygons = _get_polygon_count();
-	const Transform2D xform = canvas_item_editor->get_canvas_transform() * _get_node()->get_global_transform();
+	const Transform2D xform = canvas_item_editor->get_canvas_transform() * _get_node()->get_screen_transform();
 
 	PosVertex closest;
 	real_t closest_dist = 1e10;
@@ -688,7 +700,7 @@ AbstractPolygon2DEditor::PosVertex AbstractPolygon2DEditor::closest_edge_point(c
 	const real_t eps2 = eps * eps;
 
 	const int n_polygons = _get_polygon_count();
-	const Transform2D xform = canvas_item_editor->get_canvas_transform() * _get_node()->get_global_transform();
+	const Transform2D xform = canvas_item_editor->get_canvas_transform() * _get_node()->get_screen_transform();
 
 	PosVertex closest;
 	real_t closest_dist = 1e10;
