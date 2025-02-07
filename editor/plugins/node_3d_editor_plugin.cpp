@@ -8116,14 +8116,12 @@ void Node3DEditor::_snap_selected_nodes_to_floor() {
 	}
 }
 
-void Node3DEditor::shortcut_input(const Ref<InputEvent> &p_event) {
-	ERR_FAIL_COND(p_event.is_null());
-
+bool Node3DEditor::is_snap_enabled() const {
 	if (!is_visible_in_tree()) {
-		return;
+		return false;
 	}
 
-	snap_key_enabled = Input::get_singleton()->is_key_pressed(Key::CTRL);
+	return snap_enabled ^ Input::get_singleton()->is_key_pressed(Key::CTRL);
 }
 
 void Node3DEditor::_sun_environ_settings_pressed() {
@@ -8863,8 +8861,6 @@ Node3DEditor::Node3DEditor() {
 	editor_selection = EditorNode::get_singleton()->get_editor_selection();
 	editor_selection->add_editor_plugin(this);
 
-	snap_enabled = false;
-	snap_key_enabled = false;
 	tool_mode = TOOL_MODE_SELECT;
 
 	camera_override_viewport_id = 0;
@@ -9283,7 +9279,6 @@ Node3DEditor::Node3DEditor() {
 
 	selected = nullptr;
 
-	set_process_shortcut_input(true);
 	add_to_group(SceneStringName(_spatial_editor_group));
 
 	current_hover_gizmo_handle = -1;

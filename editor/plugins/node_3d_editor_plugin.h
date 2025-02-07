@@ -761,8 +761,7 @@ private:
 	ConfirmationDialog *xform_dialog = nullptr;
 	ConfirmationDialog *settings_dialog = nullptr;
 
-	bool snap_enabled;
-	bool snap_key_enabled;
+	bool snap_enabled = false;
 	LineEdit *snap_translate = nullptr;
 	LineEdit *snap_rotate = nullptr;
 	LineEdit *snap_scale = nullptr;
@@ -901,7 +900,6 @@ private:
 protected:
 	void _notification(int p_what);
 	//void _gui_input(InputEvent p_event);
-	virtual void shortcut_input(const Ref<InputEvent> &p_event) override;
 
 	static void _bind_methods();
 
@@ -922,7 +920,7 @@ public:
 	ToolMode get_tool_mode() const { return tool_mode; }
 	bool are_local_coords_enabled() const;
 	void set_local_coords_enabled(bool p_toggled_on) const;
-	bool is_snap_enabled() const { return snap_enabled ^ snap_key_enabled; }
+	bool is_snap_enabled() const;
 	real_t get_translate_snap() const;
 	real_t get_rotate_snap() const;
 	real_t get_scale_snap() const;
