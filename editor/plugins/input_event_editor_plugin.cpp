@@ -35,9 +35,6 @@
 #include "scene/gui/button.h"
 #include "scene/gui/label.h"
 
-void InputEventConfigContainer::_bind_methods() {
-}
-
 void InputEventConfigContainer::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE:

@@ -207,6 +207,10 @@
 		<member name="emission_ring_axis" type="Vector3" setter="set_emission_ring_axis" getter="get_emission_ring_axis">
 			The axis of the ring when using the emitter [constant EMISSION_SHAPE_RING].
 		</member>
+		<member name="emission_ring_cone_angle" type="float" setter="set_emission_ring_cone_angle" getter="get_emission_ring_cone_angle">
+			The angle of the cone when using the emitter [constant EMISSION_SHAPE_RING]. The default angle of 90 degrees results in a ring, while an angle of 0 degrees results in a cone. Intermediate values will result in a ring where one end is larger than the other.
+			[b]Note:[/b] Depending on [member emission_ring_height], the angle may be clamped if the ring's end is reached to form a perfect cone.
+		</member>
 		<member name="emission_ring_height" type="float" setter="set_emission_ring_height" getter="get_emission_ring_height">
 			The height of the ring when using the emitter [constant EMISSION_SHAPE_RING].
 		</member>
@@ -405,6 +409,13 @@
 			A pivot point used to calculate radial and orbital velocity of particles.
 		</member>
 	</members>
+	<signals>
+		<signal name="emission_shape_changed">
+			<description>
+				Emitted when this material's emission shape is changed in any way. This includes changes to [member emission_shape], [member emission_shape_scale], or [member emission_sphere_radius], and any other property that affects the emission shape's offset, size, scale, or orientation.
+			</description>
+		</signal>
+	</signals>
 	<constants>
 		<constant name="PARAM_INITIAL_LINEAR_VELOCITY" value="0" enum="Parameter">
 			Use with [method set_param_min], [method set_param_max], and [method set_param_texture] to set initial velocity properties.

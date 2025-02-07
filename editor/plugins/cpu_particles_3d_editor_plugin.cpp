@@ -161,9 +161,6 @@ void CPUParticles3DEditor::_generate_emission_points() {
 	}
 }
 
-void CPUParticles3DEditor::_bind_methods() {
-}
-
 CPUParticles3DEditor::CPUParticles3DEditor() {
 	particles_editor_hb = memnew(HBoxContainer);
 	Node3DEditor::get_singleton()->add_control_to_menu_panel(particles_editor_hb);
@@ -215,7 +212,7 @@ void CPUParticles3DEditorPlugin::make_visible(bool p_visible) {
 
 CPUParticles3DEditorPlugin::CPUParticles3DEditorPlugin() {
 	particles_editor = memnew(CPUParticles3DEditor);
-	EditorNode::get_singleton()->get_main_screen_control()->add_child(particles_editor);
+	EditorNode::get_singleton()->get_gui_base()->add_child(particles_editor);
 
 	particles_editor->hide();
 }

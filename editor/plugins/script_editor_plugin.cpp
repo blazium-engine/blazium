@@ -44,6 +44,7 @@
 #include "editor/editor_command_palette.h"
 #include "editor/editor_help_search.h"
 #include "editor/editor_interface.h"
+#include "editor/editor_main_screen.h"
 #include "editor/editor_node.h"
 #include "editor/editor_paths.h"
 #include "editor/editor_script.h"
@@ -4552,26 +4553,12 @@ ScriptEditorPlugin::ScriptEditorPlugin() {
 	Ref<Shortcut> make_floating_shortcut = ED_SHORTCUT_AND_COMMAND("script_editor/make_floating", TTR("Make Floating"));
 	window_wrapper->set_wrapped_control(script_editor, make_floating_shortcut);
 
-	EditorNode::get_singleton()->get_main_screen_control()->add_child(window_wrapper);
+	EditorNode::get_singleton()->get_editor_main_screen()->get_control()->add_child(window_wrapper);
 	window_wrapper->set_v_size_flags(Control::SIZE_EXPAND_FILL);
 	window_wrapper->hide();
 	window_wrapper->connect("window_visibility_changed", callable_mp(this, &ScriptEditorPlugin::_window_visibility_changed));
 
-	EDITOR_GET("text_editor/behavior/files/auto_reload_scripts_on_external_change");
-	ScriptServer::set_reload_scripts_on_save(EDITOR_DEF("text_editor/behavior/files/auto_reload_and_parse_scripts_on_save", true));
-	EDITOR_DEF("text_editor/behavior/files/open_dominant_script_on_scene_change", false);
-	EDITOR_DEF("text_editor/external/use_external_editor", false);
-	EDITOR_DEF("text_editor/external/exec_path", "");
-	EDITOR_DEF("text_editor/script_list/script_temperature_enabled", true);
-	EDITOR_DEF("text_editor/script_list/script_temperature_history_size", 15);
-	EDITOR_DEF("text_editor/script_list/group_help_pages", true);
-	EditorSettings::get_singleton()->add_property_hint(PropertyInfo(Variant::INT, "text_editor/script_list/sort_scripts_by", PROPERTY_HINT_ENUM, "Name,Path,None"));
-	EDITOR_DEF("text_editor/script_list/sort_scripts_by", 0);
-	EditorSettings::get_singleton()->add_property_hint(PropertyInfo(Variant::INT, "text_editor/script_list/list_script_names_as", PROPERTY_HINT_ENUM, "Name,Parent Directory And Name,Full Path"));
-	EDITOR_DEF("text_editor/script_list/list_script_names_as", 0);
-	EditorSettings::get_singleton()->add_property_hint(PropertyInfo(Variant::STRING, "text_editor/external/exec_path", PROPERTY_HINT_GLOBAL_FILE));
-	EDITOR_DEF("text_editor/external/exec_flags", "{file}");
-	EditorSettings::get_singleton()->add_property_hint(PropertyInfo(Variant::STRING, "text_editor/external/exec_flags", PROPERTY_HINT_PLACEHOLDER_TEXT, "Call flags with placeholders: {project}, {file}, {col}, {line}."));
+	ScriptServer::set_reload_scripts_on_save(EDITOR_GET("text_editor/behavior/files/auto_reload_and_parse_scripts_on_save"));
 }
 
 ScriptEditorPlugin::~ScriptEditorPlugin() {

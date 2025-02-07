@@ -202,9 +202,6 @@ void GPUParticles3DEditorBase::_node_selected(const NodePath &p_path) {
 	emission_dialog->popup_centered(Size2(300, 130));
 }
 
-void GPUParticles3DEditorBase::_bind_methods() {
-}
-
 GPUParticles3DEditorBase::GPUParticles3DEditorBase() {
 	emission_dialog = memnew(ConfirmationDialog);
 	emission_dialog->set_title(TTR("Create Emitter"));
@@ -406,9 +403,6 @@ void GPUParticles3DEditor::_generate_emission_points() {
 	}
 }
 
-void GPUParticles3DEditor::_bind_methods() {
-}
-
 GPUParticles3DEditor::GPUParticles3DEditor() {
 	node = nullptr;
 	particles_editor_hb = memnew(HBoxContainer);
@@ -462,7 +456,7 @@ void GPUParticles3DEditorPlugin::make_visible(bool p_visible) {
 
 GPUParticles3DEditorPlugin::GPUParticles3DEditorPlugin() {
 	particles_editor = memnew(GPUParticles3DEditor);
-	EditorNode::get_singleton()->get_main_screen_control()->add_child(particles_editor);
+	EditorNode::get_singleton()->get_gui_base()->add_child(particles_editor);
 
 	particles_editor->hide();
 }

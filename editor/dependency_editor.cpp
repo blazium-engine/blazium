@@ -243,9 +243,6 @@ void DependencyEditor::edit(const String &p_path) {
 	}
 }
 
-void DependencyEditor::_bind_methods() {
-}
-
 DependencyEditor::DependencyEditor() {
 	VBoxContainer *vb = memnew(VBoxContainer);
 	vb->set_name(TTR("Dependencies"));
@@ -357,9 +354,6 @@ void DependencyEditorOwners::_file_option(int p_option) {
 			}
 		} break;
 	}
-}
-
-void DependencyEditorOwners::_bind_methods() {
 }
 
 void DependencyEditorOwners::_fill_owners(EditorFileSystemDirectory *efsd) {
@@ -874,9 +868,6 @@ void OrphanResourcesDialog::_button_pressed(Object *p_item, int p_column, int p_
 
 	String path = ti->get_metadata(0);
 	dep_edit->edit(path);
-}
-
-void OrphanResourcesDialog::_bind_methods() {
 }
 
 OrphanResourcesDialog::OrphanResourcesDialog() {

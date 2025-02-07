@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  texture_editor_plugin.h                                               */
+/*  particles_3d_emission_shape_gizmo_plugin.h                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,59 +28,30 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef TEXTURE_EDITOR_PLUGIN_H
-#define TEXTURE_EDITOR_PLUGIN_H
+#ifndef PARTICLES_3D_EMISSION_SHAPE_GIZMO_PLUGIN_H
+#define PARTICLES_3D_EMISSION_SHAPE_GIZMO_PLUGIN_H
 
-#include "editor/editor_inspector.h"
-#include "editor/plugins/editor_plugin.h"
-#include "scene/gui/margin_container.h"
+#include "editor/plugins/gizmos/gizmo_3d_helper.h"
+#include "editor/plugins/node_3d_editor_gizmos.h"
 
-class AspectRatioContainer;
-class ColorRect;
-class Texture2D;
-class TextureRect;
+class Particles3DEmissionShapeGizmoPlugin : public EditorNode3DGizmoPlugin {
+	GDCLASS(Particles3DEmissionShapeGizmoPlugin, EditorNode3DGizmoPlugin);
 
-class TexturePreview : public MarginContainer {
-	GDCLASS(TexturePreview, MarginContainer);
-
-private:
-	TextureRect *texture_display = nullptr;
-
-	MarginContainer *margin_container = nullptr;
-	AspectRatioContainer *centering_container = nullptr;
-	ColorRect *bg_rect = nullptr;
-	TextureRect *checkerboard = nullptr;
-	Label *metadata_label = nullptr;
-
-	Color cached_outline_color;
-
-	void _draw_outline();
-	void _update_metadata_label_text();
-
-protected:
-	void _notification(int p_what);
-	void _update_texture_display_ratio();
+	Ref<Gizmo3DHelper> helper;
 
 public:
-	TextureRect *get_texture_display();
-	TexturePreview(Ref<Texture2D> p_texture, bool p_show_metadata);
+	bool has_gizmo(Node3D *p_spatial) override;
+	String get_gizmo_name() const override;
+	int get_priority() const override;
+	bool is_selectable_when_hidden() const override;
+	void redraw(EditorNode3DGizmo *p_gizmo) override;
+
+	String get_handle_name(const EditorNode3DGizmo *p_gizmo, int p_id, bool p_secondary) const override;
+	Variant get_handle_value(const EditorNode3DGizmo *p_gizmo, int p_id, bool p_secondary) const override;
+	void set_handle(const EditorNode3DGizmo *p_gizmo, int p_id, bool p_secondary, Camera3D *p_camera, const Point2 &p_point) override;
+	void commit_handle(const EditorNode3DGizmo *p_gizmo, int p_id, bool p_secondary, const Variant &p_restore, bool p_cancel = false) override;
+
+	Particles3DEmissionShapeGizmoPlugin();
 };
 
-class EditorInspectorPluginTexture : public EditorInspectorPlugin {
-	GDCLASS(EditorInspectorPluginTexture, EditorInspectorPlugin);
-
-public:
-	virtual bool can_handle(Object *p_object) override;
-	virtual void parse_begin(Object *p_object) override;
-};
-
-class TextureEditorPlugin : public EditorPlugin {
-	GDCLASS(TextureEditorPlugin, EditorPlugin);
-
-public:
-	virtual String get_name() const override { return "Texture2D"; }
-
-	TextureEditorPlugin();
-};
-
-#endif // TEXTURE_EDITOR_PLUGIN_H
+#endif // PARTICLES_3D_EMISSION_SHAPE_GIZMO_PLUGIN_H

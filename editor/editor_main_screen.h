@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  texture_editor_plugin.h                                               */
+/*  editor_main_screen.h                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,59 +28,64 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef TEXTURE_EDITOR_PLUGIN_H
-#define TEXTURE_EDITOR_PLUGIN_H
+#ifndef EDITOR_MAIN_SCREEN_H
+#define EDITOR_MAIN_SCREEN_H
 
-#include "editor/editor_inspector.h"
-#include "editor/plugins/editor_plugin.h"
-#include "scene/gui/margin_container.h"
+#include "scene/gui/panel_container.h"
 
-class AspectRatioContainer;
-class ColorRect;
-class Texture2D;
-class TextureRect;
+class Button;
+class ConfigFile;
+class EditorPlugin;
+class HBoxContainer;
+class VBoxContainer;
 
-class TexturePreview : public MarginContainer {
-	GDCLASS(TexturePreview, MarginContainer);
+class EditorMainScreen : public PanelContainer {
+	GDCLASS(EditorMainScreen, PanelContainer);
+
+public:
+	enum EditorTable {
+		EDITOR_2D = 0,
+		EDITOR_3D,
+		EDITOR_SCRIPT,
+		EDITOR_ASSETLIB,
+	};
 
 private:
-	TextureRect *texture_display = nullptr;
+	VBoxContainer *main_screen_vbox = nullptr;
+	EditorPlugin *selected_plugin = nullptr;
 
-	MarginContainer *margin_container = nullptr;
-	AspectRatioContainer *centering_container = nullptr;
-	ColorRect *bg_rect = nullptr;
-	TextureRect *checkerboard = nullptr;
-	Label *metadata_label = nullptr;
+	HBoxContainer *button_hb = nullptr;
+	Vector<Button *> buttons;
+	Vector<EditorPlugin *> editor_table;
 
-	Color cached_outline_color;
-
-	void _draw_outline();
-	void _update_metadata_label_text();
+	int _get_current_main_editor() const;
 
 protected:
 	void _notification(int p_what);
-	void _update_texture_display_ratio();
 
 public:
-	TextureRect *get_texture_display();
-	TexturePreview(Ref<Texture2D> p_texture, bool p_show_metadata);
+	void set_button_container(HBoxContainer *p_button_hb);
+
+	void save_layout_to_config(Ref<ConfigFile> p_config_file, const String &p_section) const;
+	void load_layout_from_config(Ref<ConfigFile> p_config_file, const String &p_section);
+
+	void set_button_enabled(int p_index, bool p_enabled);
+	bool is_button_enabled(int p_index) const;
+
+	void select_next();
+	void select_prev();
+	void select_by_name(const String &p_name);
+	void select(int p_index);
+	int get_selected_index() const;
+	int get_plugin_index(EditorPlugin *p_editor) const;
+	EditorPlugin *get_selected_plugin() const;
+
+	VBoxContainer *get_control() const;
+
+	void add_main_plugin(EditorPlugin *p_editor);
+	void remove_main_plugin(EditorPlugin *p_editor);
+
+	EditorMainScreen();
 };
 
-class EditorInspectorPluginTexture : public EditorInspectorPlugin {
-	GDCLASS(EditorInspectorPluginTexture, EditorInspectorPlugin);
-
-public:
-	virtual bool can_handle(Object *p_object) override;
-	virtual void parse_begin(Object *p_object) override;
-};
-
-class TextureEditorPlugin : public EditorPlugin {
-	GDCLASS(TextureEditorPlugin, EditorPlugin);
-
-public:
-	virtual String get_name() const override { return "Texture2D"; }
-
-	TextureEditorPlugin();
-};
-
-#endif // TEXTURE_EDITOR_PLUGIN_H
+#endif // EDITOR_MAIN_SCREEN_H

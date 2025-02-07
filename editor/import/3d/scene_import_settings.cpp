@@ -37,6 +37,7 @@
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
 #include "editor/gui/editor_file_dialog.h"
+#include "editor/plugins/skeleton_3d_editor_plugin.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/3d/importer_mesh_instance_3d.h"
 #include "scene/3d/light_3d.h"
@@ -438,7 +439,9 @@ void SceneImportSettingsDialog::_fill_scene(Node *p_node, TreeItem *p_parent_ite
 				animation_player->connect(SceneStringName(animation_finished), callable_mp(this, &SceneImportSettingsDialog::_animation_finished));
 			} else if (Object::cast_to<Skeleton3D>(p_node)) {
 				category = ResourceImporterScene::INTERNAL_IMPORT_CATEGORY_SKELETON_3D_NODE;
-				skeletons.push_back(Object::cast_to<Skeleton3D>(p_node));
+				Skeleton3D *skeleton = Object::cast_to<Skeleton3D>(p_node);
+				skeleton->connect(SNAME("tree_entered"), callable_mp(this, &SceneImportSettingsDialog::_skeleton_tree_entered).bind(skeleton));
+				skeletons.push_back(skeleton);
 			} else {
 				category = ResourceImporterScene::INTERNAL_IMPORT_CATEGORY_NODE;
 			}
@@ -497,6 +500,11 @@ void SceneImportSettingsDialog::_fill_scene(Node *p_node, TreeItem *p_parent_ite
 		} else {
 			contents_aabb.merge_with(aabb);
 		}
+	}
+
+	Skeleton3D *skeleton = Object::cast_to<Skeleton3D>(p_node);
+	if (skeleton) {
+		bones_mesh_preview->set_mesh(Skeleton3DGizmoPlugin::get_bones_mesh(skeleton, -1, true));
 	}
 }
 
@@ -818,6 +826,7 @@ void SceneImportSettingsDialog::_select(Tree *p_from, const String &p_type, cons
 		mesh_preview->hide();
 		_reset_animation();
 
+		bones_mesh_preview->hide();
 		if (Object::cast_to<Node3D>(scene)) {
 			Object::cast_to<Node3D>(scene)->show();
 		}
@@ -852,6 +861,7 @@ void SceneImportSettingsDialog::_select(Tree *p_from, const String &p_type, cons
 				scene_import_settings_data->category = ResourceImporterScene::INTERNAL_IMPORT_CATEGORY_ANIMATION_NODE;
 			} else if (Object::cast_to<Skeleton3D>(nd.node)) {
 				scene_import_settings_data->category = ResourceImporterScene::INTERNAL_IMPORT_CATEGORY_SKELETON_3D_NODE;
+				bones_mesh_preview->show();
 			} else {
 				scene_import_settings_data->category = ResourceImporterScene::INTERNAL_IMPORT_CATEGORY_NODE;
 				scene_import_settings_data->hide_options = editing_animation;
@@ -1071,6 +1081,10 @@ void SceneImportSettingsDialog::_animation_slider_value_changed(double p_value) 
 		set_process(false);
 	}
 	animation_player->seek(p_value * animation_map[selected_id].animation->get_length(), true);
+}
+
+void SceneImportSettingsDialog::_skeleton_tree_entered(Skeleton3D *skeleton) {
+	bones_mesh_preview->set_skeleton_path(skeleton->get_path());
 }
 
 void SceneImportSettingsDialog::_animation_finished(const StringName &p_name) {
@@ -1816,6 +1830,13 @@ SceneImportSettingsDialog::SceneImportSettingsDialog() {
 		collider_mat->set_shading_mode(StandardMaterial3D::SHADING_MODE_UNSHADED);
 		collider_mat->set_flag(StandardMaterial3D::FLAG_DISABLE_FOG, true);
 		collider_mat->set_albedo(Color(0.5, 0.5, 1.0));
+	}
+
+	{
+		bones_mesh_preview = memnew(MeshInstance3D);
+		bones_mesh_preview->set_cast_shadows_setting(GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
+		bones_mesh_preview->set_skeleton_path(NodePath());
+		base_viewport->add_child(bones_mesh_preview);
 	}
 
 	inspector = memnew(EditorInspector);
