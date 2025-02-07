@@ -460,10 +460,6 @@ void CPUParticles3D::set_emission_ring_cone_angle(real_t p_angle) {
 	update_gizmos();
 }
 
-void CPUParticles3D::set_emission_ring_cone_angle(real_t p_angle) {
-	emission_ring_cone_angle = p_angle;
-}
-
 void CPUParticles3D::set_scale_curve_x(Ref<Curve> p_scale_curve) {
 	scale_curve_x = p_scale_curve;
 }

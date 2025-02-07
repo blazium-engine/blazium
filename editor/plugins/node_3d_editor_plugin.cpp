@@ -844,7 +844,7 @@ ObjectID Node3DEditorViewport::_select_ray(const Point2 &p_pos) const {
 		for (int j = 0; j < gizmos.size(); j++) {
 			Ref<EditorNode3DGizmo> seg = gizmos[j];
 
-			if ((!seg.is_valid()) || found_gizmos.has(seg)) {
+			if (seg.is_null() || found_gizmos.has(seg)) {
 				continue;
 			}
 
@@ -908,7 +908,7 @@ void Node3DEditorViewport::_find_items_at_pos(const Point2 &p_pos, Vector<_RayRe
 		for (int j = 0; j < gizmos.size(); j++) {
 			Ref<EditorNode3DGizmo> seg = gizmos[j];
 
-			if (!seg.is_valid()) {
+			if (seg.is_null()) {
 				continue;
 			}
 
@@ -1025,7 +1025,7 @@ void Node3DEditorViewport::_select_region() {
 			Vector<Ref<Node3DGizmo>> gizmos = single_selected->get_gizmos();
 			for (int j = 0; j < gizmos.size(); j++) {
 				Ref<EditorNode3DGizmo> seg = gizmos[j];
-				if (!seg.is_valid()) {
+				if (seg.is_null()) {
 					continue;
 				}
 
@@ -1125,7 +1125,7 @@ void Node3DEditorViewport::_select_region() {
 		Vector<Ref<Node3DGizmo>> gizmos = sp->get_gizmos();
 		for (int j = 0; j < gizmos.size(); j++) {
 			Ref<EditorNode3DGizmo> seg = gizmos[j];
-			if (!seg.is_valid()) {
+			if (seg.is_null()) {
 				continue;
 			}
 
@@ -1872,7 +1872,7 @@ void Node3DEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 						for (int i = 0; i < gizmos.size(); i++) {
 							Ref<EditorNode3DGizmo> seg = gizmos[i];
 
-							if ((!seg.is_valid())) {
+							if (seg.is_null()) {
 								continue;
 							}
 
@@ -1909,7 +1909,7 @@ void Node3DEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 						for (int i = 0; i < gizmos.size(); i++) {
 							Ref<EditorNode3DGizmo> seg = gizmos[i];
 
-							if ((!seg.is_valid())) {
+							if (seg.is_null()) {
 								continue;
 							}
 
@@ -2076,7 +2076,7 @@ void Node3DEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 
 			for (int i = 0; i < gizmos.size(); i++) {
 				Ref<EditorNode3DGizmo> seg = gizmos[i];
-				if (!seg.is_valid()) {
+				if (seg.is_null()) {
 					continue;
 				}
 
@@ -2093,15 +2093,15 @@ void Node3DEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 			}
 
 			bool current_hover_handle_secondary = false;
-			int curreny_hover_handle = spatial_editor->get_current_hover_gizmo_handle(current_hover_handle_secondary);
-			if (found_gizmo != spatial_editor->get_current_hover_gizmo() || found_handle != curreny_hover_handle || found_handle_secondary != current_hover_handle_secondary) {
+			int current_hover_handle = spatial_editor->get_current_hover_gizmo_handle(current_hover_handle_secondary);
+			if (found_gizmo != spatial_editor->get_current_hover_gizmo() || found_handle != current_hover_handle || found_handle_secondary != current_hover_handle_secondary) {
 				spatial_editor->set_current_hover_gizmo(found_gizmo);
 				spatial_editor->set_current_hover_gizmo_handle(found_handle, found_handle_secondary);
 				spatial_editor->get_single_selected_node()->update_gizmos();
 			}
 		}
 
-		if (spatial_editor->get_current_hover_gizmo().is_null() && !m->get_button_mask().has_flag(MouseButtonMask::LEFT) && !_edit.gizmo.is_valid()) {
+		if (spatial_editor->get_current_hover_gizmo().is_null() && !m->get_button_mask().has_flag(MouseButtonMask::LEFT) && _edit.gizmo.is_null()) {
 			_transform_gizmo_select(_edit.mouse_pos, true);
 		}
 
@@ -4724,8 +4724,8 @@ bool Node3DEditorViewport::_create_instance(Node *p_parent, const String &p_path
 
 	Node *instantiated_scene = nullptr;
 
-	if (mesh != nullptr || scene != nullptr) {
-		if (mesh != nullptr) {
+	if (mesh.is_valid() || scene.is_valid()) {
+		if (mesh.is_valid()) {
 			MeshInstance3D *mesh_instance = memnew(MeshInstance3D);
 			mesh_instance->set_mesh(mesh);
 
@@ -4737,7 +4737,7 @@ bool Node3DEditorViewport::_create_instance(Node *p_parent, const String &p_path
 
 			instantiated_scene = mesh_instance;
 		} else {
-			if (!scene.is_valid()) { // invalid scene
+			if (scene.is_null()) { // invalid scene
 				return false;
 			} else {
 				instantiated_scene = scene->instantiate(PackedScene::GEN_EDIT_STATE_INSTANCE);
@@ -4756,7 +4756,7 @@ bool Node3DEditorViewport::_create_instance(Node *p_parent, const String &p_path
 		}
 	}
 
-	if (scene != nullptr) {
+	if (scene.is_valid()) {
 		instantiated_scene->set_scene_file_path(ProjectSettings::get_singleton()->localize_path(p_path));
 	}
 
@@ -6644,7 +6644,7 @@ void Node3DEditor::edit(Node3D *p_spatial) {
 			Vector<Ref<Node3DGizmo>> gizmos = selected->get_gizmos();
 			for (int i = 0; i < gizmos.size(); i++) {
 				Ref<EditorNode3DGizmo> seg = gizmos[i];
-				if (!seg.is_valid()) {
+				if (seg.is_null()) {
 					continue;
 				}
 				seg->set_selected(false);
@@ -6668,7 +6668,7 @@ void Node3DEditor::edit(Node3D *p_spatial) {
 			Vector<Ref<Node3DGizmo>> gizmos = selected->get_gizmos();
 			for (int i = 0; i < gizmos.size(); i++) {
 				Ref<EditorNode3DGizmo> seg = gizmos[i];
-				if (!seg.is_valid()) {
+				if (seg.is_null()) {
 					continue;
 				}
 				seg->set_selected(true);
@@ -7256,12 +7256,12 @@ void fragment() {
 
 			col.a = EDITOR_GET("editors/3d/manipulator_gizmo_opacity");
 
-			move_gizmo[i] = Ref<ArrayMesh>(memnew(ArrayMesh));
-			move_plane_gizmo[i] = Ref<ArrayMesh>(memnew(ArrayMesh));
-			rotate_gizmo[i] = Ref<ArrayMesh>(memnew(ArrayMesh));
-			scale_gizmo[i] = Ref<ArrayMesh>(memnew(ArrayMesh));
-			scale_plane_gizmo[i] = Ref<ArrayMesh>(memnew(ArrayMesh));
-			axis_gizmo[i] = Ref<ArrayMesh>(memnew(ArrayMesh));
+			move_gizmo[i].instantiate();
+			move_plane_gizmo[i].instantiate();
+			rotate_gizmo[i].instantiate();
+			scale_gizmo[i].instantiate();
+			scale_plane_gizmo[i].instantiate();
+			axis_gizmo[i].instantiate();
 
 			Ref<StandardMaterial3D> mat = memnew(StandardMaterial3D);
 			mat->set_shading_mode(StandardMaterial3D::SHADING_MODE_UNSHADED);
@@ -7492,7 +7492,7 @@ void fragment() {
 					border_mat->set_shader(border_shader);
 					border_mat->set_shader_parameter("albedo", Color(0.75, 0.75, 0.75, col.a / 3.0));
 
-					rotate_gizmo[3] = Ref<ArrayMesh>(memnew(ArrayMesh));
+					rotate_gizmo[3].instantiate();
 					rotate_gizmo[3]->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays);
 					rotate_gizmo[3]->surface_set_material(0, border_mat);
 				}
@@ -7886,7 +7886,7 @@ void Node3DEditor::_selection_changed() {
 		Vector<Ref<Node3DGizmo>> gizmos = selected->get_gizmos();
 		for (int i = 0; i < gizmos.size(); i++) {
 			Ref<EditorNode3DGizmo> seg = gizmos[i];
-			if (!seg.is_valid()) {
+			if (seg.is_null()) {
 				continue;
 			}
 			seg->set_selected(false);
@@ -8854,7 +8854,7 @@ Node3DEditor::Node3DEditor() {
 	gizmo.visible = true;
 	gizmo.scale = 1.0;
 
-	viewport_environment = Ref<Environment>(memnew(Environment));
+	viewport_environment.instantiate();
 	VBoxContainer *vbc = this;
 
 	custom_camera = nullptr;
@@ -9621,7 +9621,7 @@ struct _GizmoPluginNameComparator {
 };
 
 void Node3DEditor::add_gizmo_plugin(Ref<EditorNode3DGizmoPlugin> p_plugin) {
-	ERR_FAIL_NULL(p_plugin.ptr());
+	ERR_FAIL_COND(p_plugin.is_null());
 
 	gizmo_plugins_by_priority.push_back(p_plugin);
 	gizmo_plugins_by_priority.sort_custom<_GizmoPluginPriorityComparator>();

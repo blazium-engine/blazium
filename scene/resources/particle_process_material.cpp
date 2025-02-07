@@ -1656,11 +1656,6 @@ void ParticleProcessMaterial::set_emission_ring_cone_angle(real_t p_angle) {
 #endif
 }
 
-void ParticleProcessMaterial::set_emission_ring_cone_angle(real_t p_angle) {
-	emission_ring_cone_angle = p_angle;
-	RenderingServer::get_singleton()->material_set_param(_get_material(), shader_names->emission_ring_cone_angle, p_angle);
-}
-
 void ParticleProcessMaterial::set_inherit_velocity_ratio(double p_ratio) {
 	inherit_emitter_velocity_ratio = p_ratio;
 	RenderingServer::get_singleton()->material_set_param(_get_material(), shader_names->inherit_emitter_velocity_ratio, p_ratio);

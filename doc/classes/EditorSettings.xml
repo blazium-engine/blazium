@@ -277,6 +277,9 @@
 		<member name="editors/2d/viewport_border_color" type="Color" setter="" getter="">
 			The color of the viewport border in the 2D editor. This border represents the viewport's size at the base resolution defined in the Project Settings. Objects placed outside this border will not be visible unless a [Camera2D] node is used, or unless the window is resized and the stretch mode is set to [code]disabled[/code].
 		</member>
+		<member name="editors/2d/zoom_speed_factor" type="float" setter="" getter="">
+			The factor to use when zooming in or out in the 2D editor. For example, [code]1.1[/code] will zoom in by 10% with every step. If set to [code]2.0[/code], zooming will only cycle through powers of two.
+		</member>
 		<member name="editors/3d/default_fov" type="float" setter="" getter="">
 			The default camera vertical field of view to use in the 3D editor (in degrees). The camera field of view can be adjusted on a per-scene basis using the [b]View[/b] menu at the top of the 3D editor. If a scene had its camera field of view adjusted using the [b]View[/b] menu, this setting is ignored in the scene in question. This setting is also ignored while a [Camera3D] node is being previewed in the editor.
 			[b]Note:[/b] The editor camera always uses the [b]Keep Height[/b] aspect mode.
@@ -795,6 +798,9 @@
 		</member>
 		<member name="interface/editor/import_resources_when_unfocused" type="bool" setter="" getter="">
 			If [code]true[/code], (re)imports resources even if the editor window is unfocused or minimized. If [code]false[/code], resources are only (re)imported when the editor window is focused. This can be set to [code]true[/code] to speed up iteration by starting the import process earlier when saving files in the project folder. This also allows getting visual feedback on changes without having to click the editor window, which is useful with multi-monitor setups. The downside of setting this to [code]true[/code] is that it increases idle CPU usage and may steal CPU time from other applications when importing resources.
+		</member>
+		<member name="interface/editor/keep_screen_on" type="bool" setter="" getter="">
+			If [code]true[/code], keeps the screen on (even in case of inactivity), so the screensaver does not take over. Works on desktop and mobile platforms.
 		</member>
 		<member name="interface/editor/localize_settings" type="bool" setter="" getter="">
 			If [code]true[/code], setting names in the editor are localized when possible.

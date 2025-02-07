@@ -43,6 +43,7 @@
 #include "scene/3d/physics/static_body_3d.h"
 #include "scene/gui/dialogs.h"
 #include "scene/gui/menu_button.h"
+#include "scene/gui/popup_menu.h"
 
 void CSGShapeEditor::_node_removed(Node *p_node) {
 	if (p_node == node) {

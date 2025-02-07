@@ -880,7 +880,7 @@ EditorSettingsDialog::EditorSettingsDialog() {
 
 	bool use_advanced = EDITOR_DEF("_editor_settings_advanced_mode", false);
 	advanced_switch->set_pressed(use_advanced);
-	advanced_switch->connect(SceneStringName(toggled), callable_mp(this, &EditorSettingsDialog::_advanced_toggled));
+	advanced_switch->connect(SNAME("toggled"), callable_mp(this, &EditorSettingsDialog::_advanced_toggled));
 
 	inspector = memnew(SectionedInspector);
 	inspector->get_inspector()->set_use_filter(true);

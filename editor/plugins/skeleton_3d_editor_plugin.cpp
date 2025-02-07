@@ -1225,11 +1225,6 @@ Skeleton3DGizmoPlugin::~Skeleton3DGizmoPlugin() {
 	selection_materials.selected_mat.unref();
 }
 
-Skeleton3DGizmoPlugin::~Skeleton3DGizmoPlugin() {
-	selection_materials.unselected_mat.unref();
-	selection_materials.selected_mat.unref();
-}
-
 bool Skeleton3DGizmoPlugin::has_gizmo(Node3D *p_spatial) {
 	return Object::cast_to<Skeleton3D>(p_spatial) != nullptr;
 }
