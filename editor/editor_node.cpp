@@ -7024,6 +7024,7 @@ EditorNode::EditorNode() {
 	left_hsplit->add_child(right_hsplit);
 
 	main_hsplit = memnew(DockSplitContainer);
+	main_hsplit->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	main_hsplit->set_name("HSplitMain");
 	right_hsplit->add_child(main_hsplit);
 	VBoxContainer *center_vb = memnew(VBoxContainer);
