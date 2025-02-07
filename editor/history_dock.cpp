@@ -245,6 +245,7 @@ HistoryDock::HistoryDock() {
 	current_scene_checkbox->set_text(TTR("Scene"));
 	current_scene_checkbox->set_h_size_flags(SIZE_EXPAND_FILL);
 	current_scene_checkbox->set_clip_text(true);
+	current_scene_checkbox->set_pressed(true);
 	current_scene_checkbox->connect(SceneStringName(toggled), callable_mp(this, &HistoryDock::refresh_history).unbind(1));
 	current_scene_checkbox->connect(SceneStringName(toggled), callable_mp(this, &HistoryDock::save_options).unbind(1));
 
@@ -255,6 +256,7 @@ HistoryDock::HistoryDock() {
 	global_history_checkbox->set_text(TTR("Global"));
 	global_history_checkbox->set_h_size_flags(SIZE_EXPAND_FILL);
 	global_history_checkbox->set_clip_text(true);
+	global_history_checkbox->set_pressed(true);
 	global_history_checkbox->connect(SceneStringName(toggled), callable_mp(this, &HistoryDock::refresh_history).unbind(1));
 	global_history_checkbox->connect(SceneStringName(toggled), callable_mp(this, &HistoryDock::save_options).unbind(1));
 
