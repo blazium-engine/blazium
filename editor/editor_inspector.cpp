@@ -4365,6 +4365,7 @@ EditorInspector::EditorInspector() {
 	object = nullptr;
 	main_vbox = memnew(VBoxContainer);
 	main_vbox->set_h_size_flags(SIZE_EXPAND_FILL);
+	set_custom_minimum_size(Size2(220 * EDSCALE, 0));
 	add_child(main_vbox);
 	set_horizontal_scroll_mode(SCROLL_MODE_DISABLED);
 	set_follow_focus(true);
