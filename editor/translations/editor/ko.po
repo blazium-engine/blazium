@@ -12763,11 +12763,11 @@ msgstr ""
 
 msgid ""
 "Warning: This project was last edited in Godot %s. Opening will change it to "
-"Godot %s.\n"
+"Blazium %s.\n"
 "\n"
 msgstr ""
 "경고: 이 프로젝트는 Godot %s에서 최종 편집되었습니다.\n"
-"프로젝트를 열면 Godot %s로 변경됩니다.\n"
+"프로젝트를 열면 Blazium %s로 변경됩니다.\n"
 "\n"
 
 msgid ""

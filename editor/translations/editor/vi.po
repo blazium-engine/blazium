@@ -5589,11 +5589,11 @@ msgstr ""
 
 msgid ""
 "Warning: This project was last edited in Godot %s. Opening will change it to "
-"Godot %s.\n"
+"Blazium %s.\n"
 "\n"
 msgstr ""
 "Cảnh báo: Dự án này đã được sửa lần cuối bằng Godot %s. Mở dự án này sẽ thay "
-"đổi nó sang Godot %s.\n"
+"đổi nó sang Blazium %s.\n"
 "\n"
 
 msgid "Open anyway? Project will be modified."

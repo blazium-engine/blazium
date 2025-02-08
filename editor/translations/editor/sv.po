@@ -6945,11 +6945,11 @@ msgstr ""
 
 msgid ""
 "Warning: This project was last edited in Godot %s. Opening will change it to "
-"Godot %s.\n"
+"Blazium %s.\n"
 "\n"
 msgstr ""
 "Varning: Detta projekt var senast editerat i Godot %s. Att öppna det kommer "
-"att ändra det till Godot %s.\n"
+"att ändra det till Blazium %s.\n"
 "\n"
 
 msgid ""

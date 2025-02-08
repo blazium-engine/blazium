@@ -13024,10 +13024,10 @@ msgstr ""
 
 msgid ""
 "Warning: This project was last edited in Godot %s. Opening will change it to "
-"Godot %s.\n"
+"Blazium %s.\n"
 "\n"
 msgstr ""
-"警告：該專案的最近一次編輯使用的是 Godot%s。開啟後將修改為 Godot%s。\n"
+"警告：該專案的最近一次編輯使用的是 Godot%s。開啟後將修改為 Blazium%s。\n"
 "\n"
 
 msgid ""

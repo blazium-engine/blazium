@@ -14285,11 +14285,11 @@ msgstr ""
 
 msgid ""
 "Warning: This project was last edited in Godot %s. Opening will change it to "
-"Godot %s.\n"
+"Blazium %s.\n"
 "\n"
 msgstr ""
 "Attention : Ce projet a été édité pour la dernière fois avec Godot %s. "
-"L'ouverture le convertira pour Godot %s.\n"
+"L'ouverture le convertira pour Blazium %s.\n"
 "\n"
 
 msgid ""
