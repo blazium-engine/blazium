@@ -14082,11 +14082,11 @@ msgstr ""
 
 msgid ""
 "Warning: This project was last edited in Godot %s. Opening will change it to "
-"Godot %s.\n"
+"Blazium %s.\n"
 "\n"
 msgstr ""
 "Rabhadh: Cuireadh an tionscadal seo in eagar go deireanach in Godot %s. "
-"Athróidh an oscailt é go Godot %s.\n"
+"Athróidh an oscailt é go Blazium %s.\n"
 "\n"
 
 msgid ""

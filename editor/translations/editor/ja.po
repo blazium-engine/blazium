@@ -13679,10 +13679,10 @@ msgstr ""
 
 msgid ""
 "Warning: This project was last edited in Godot %s. Opening will change it to "
-"Godot %s.\n"
+"Blazium %s.\n"
 "\n"
 msgstr ""
-"警告: このプロジェクトは Godot %s で最後に編集されました。開くと、Godot %s に"
+"警告: このプロジェクトは Godot %s で最後に編集されました。開くと、Blazium %s に"
 "変更されます。\n"
 "\n"
 

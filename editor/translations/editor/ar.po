@@ -12533,7 +12533,7 @@ msgstr ""
 
 msgid ""
 "Warning: This project was last edited in Godot %s. Opening will change it to "
-"Godot %s.\n"
+"Blazium %s.\n"
 "\n"
 msgstr ""
 "تحذير: هذا المشروع كان قد بُنِيَ بإصدار جوْدَتْ %s.فتح المشروع سوف يُرقيه أو ينزله "

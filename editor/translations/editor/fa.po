@@ -5441,10 +5441,10 @@ msgstr ""
 
 msgid ""
 "Warning: This project was last edited in Godot %s. Opening will change it to "
-"Godot %s.\n"
+"Blazium %s.\n"
 "\n"
 msgstr ""
-"هشدار: این پروژه آخرین بار در گودو %s ویراش شده است. گشودن پروژه را به گودو "
+"هشدار: این پروژه آخرین بار در گودو %s ویراش شده است. گشودن پروژه را بلازیوم "
 "%s تغییر می‌دهد.\n"
 "\n"
 
