@@ -6,6 +6,8 @@
   </a>
 </p>
 
+[![Code Triagers Badge](https://www.codetriage.com/blazium-engine/blazium/badges/users.svg)](https://www.codetriage.com/blazium-engine/blazium)
+
 ## 2D and 3D cross-platform game engine
 
 **[Blazium Engine](https://blazium.app) is a feature-packed, cross-platform
@@ -74,6 +76,5 @@ provided by the community, such as text and video tutorials, demos, etc.
 Consult the [community channels](https://docs.blazium.app/community/channels.html)
 for more information.
 
-[![Code Triagers Badge](https://www.codetriage.com/blazium-engine/blazium/badges/users.svg)](https://www.codetriage.com/blazium-engine/blazium)
-[![Translate on Weblate](https://hosted.weblate.org/widgets/godot-engine/-/godot/svg-badge.svg)](https://hosted.weblate.org/engage/godot-engine/?utm_source=widget)
-[![TODOs](https://badgen.net/https/api.tickgit.com/badgen/github.com/godotengine/godot)](https://www.tickgit.com/browse?repo=github.com/godotengine/godot)
+
+![Alt](https://repobeats.axiom.co/api/embed/fd66cb7230a67870b789048b7543660798fb8126.svg "Repobeats analytics image")
