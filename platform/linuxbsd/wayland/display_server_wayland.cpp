@@ -1248,6 +1248,10 @@ void DisplayServerWayland::process_events() {
 				DEBUG_LOG_WAYLAND("Unsuspending from timeout.");
 			}
 		}
+
+		// Since we're not rendering, nothing is committing the windows'
+		// surfaces. We have to do it ourselves.
+		wayland_thread.commit_surfaces();
 	}
 
 #ifdef DBUS_ENABLED
