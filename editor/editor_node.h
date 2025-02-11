@@ -678,6 +678,8 @@ private:
 	void _progress_dialog_visibility_changed();
 	void _load_error_dialog_visibility_changed();
 
+	void _execute_upgrades();
+
 protected:
 	friend class FileSystemDock;
 
