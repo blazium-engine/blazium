@@ -4459,12 +4459,12 @@ void EditorNode::_instantiate_request(const Vector<String> &p_files) {
 }
 
 void EditorNode::_close_messages() {
-	old_split_ofs = center_vsplit->get_split_offset();
-	center_vsplit->set_split_offset(0);
+	old_split_ofs = center_split->get_split_offset();
+	center_split->set_split_offset(0);
 }
 
 void EditorNode::_show_messages() {
-	center_vsplit->set_split_offset(old_split_ofs);
+	center_split->set_split_offset(old_split_ofs);
 }
 
 void EditorNode::_add_to_recent_scenes(const String &p_scene) {
@@ -5149,7 +5149,7 @@ void EditorNode::_load_editor_layout() {
 void EditorNode::_save_central_editor_layout_to_config(Ref<ConfigFile> p_config_file) {
 	// Bottom panel.
 
-	int center_split_offset = center_vsplit->get_split_offset();
+	int center_split_offset = center_split->get_split_offset();
 	p_config_file->set_value(EDITOR_NODE_CONFIG_SECTION, "center_split_offset", center_split_offset);
 
 	bottom_panel->save_layout_to_config(p_config_file, EDITOR_NODE_CONFIG_SECTION);
@@ -5171,7 +5171,7 @@ void EditorNode::_load_central_editor_layout_from_config(Ref<ConfigFile> p_confi
 
 	if (p_config_file->has_section_key(EDITOR_NODE_CONFIG_SECTION, "center_split_offset")) {
 		int center_split_offset = p_config_file->get_value(EDITOR_NODE_CONFIG_SECTION, "center_split_offset");
-		center_vsplit->set_split_offset(center_split_offset);
+		center_split->set_split_offset(center_split_offset);
 	}
 
 	// Debugger tab.
@@ -6640,7 +6640,7 @@ EditorNode::EditorNode() {
 	// Define a minimum window size to prevent UI elements from overlapping or being cut off.
 	Window *w = Object::cast_to<Window>(SceneTree::get_singleton()->get_root());
 	if (w) {
-		const Size2 minimum_size = Size2(640, 480) * EDSCALE;
+		const Size2 minimum_size = Size2(1024, 600) * EDSCALE;
 		w->set_min_size(minimum_size); // Calling it this early doesn't sync the property with DS.
 		DisplayServer::get_singleton()->window_set_min_size(minimum_size);
 	}
@@ -6825,20 +6825,16 @@ EditorNode::EditorNode() {
 	title_bar = memnew(EditorTitleBar);
 	main_vbox->add_child(title_bar);
 
-	left_hsplit = memnew(DockSplitContainer);
-	left_hsplit->set_v_size_flags(Control::SIZE_EXPAND_FILL);
-	left_hsplit->set_name("LeftHSplit");
-	main_vbox->add_child(left_hsplit);
+	left_l_hsplit = memnew(DockSplitContainer);
+	left_l_hsplit->set_name("DockHSplitLeftL");
+	main_vbox->add_child(left_l_hsplit);
 
-	left_dock_hsplit = memnew(DockSplitContainer);
-	left_dock_hsplit->set_name("DockHSplitLeft");
-	left_hsplit->add_child(left_dock_hsplit);
+	left_l_hsplit->set_v_size_flags(Control::SIZE_EXPAND_FILL);
 
 	left_l_vsplit = memnew(DockSplitContainer);
 	left_l_vsplit->set_name("DockVSplitLeftL");
-	left_l_vsplit->set_v_size_flags(Control::SIZE_EXPAND_FILL);
 	left_l_vsplit->set_vertical(true);
-	left_dock_hsplit->add_child(left_l_vsplit);
+	left_l_hsplit->add_child(left_l_vsplit);
 
 	TabContainer *dock_slot[EditorDockManager::DOCK_SLOT_MAX];
 	dock_slot[EditorDockManager::DOCK_SLOT_LEFT_UL] = memnew(TabContainer);
@@ -6848,11 +6844,13 @@ EditorNode::EditorNode() {
 	dock_slot[EditorDockManager::DOCK_SLOT_LEFT_BL]->set_name("DockSlotLeftBL");
 	left_l_vsplit->add_child(dock_slot[EditorDockManager::DOCK_SLOT_LEFT_BL]);
 
+	left_r_hsplit = memnew(DockSplitContainer);
+	left_r_hsplit->set_name("DockHSplitLeftR");
+	left_l_hsplit->add_child(left_r_hsplit);
 	left_r_vsplit = memnew(DockSplitContainer);
 	left_r_vsplit->set_name("DockVSplitLeftR");
 	left_r_vsplit->set_vertical(true);
-	left_dock_hsplit->add_child(left_r_vsplit);
-
+	left_r_hsplit->add_child(left_r_vsplit);
 	dock_slot[EditorDockManager::DOCK_SLOT_LEFT_UR] = memnew(TabContainer);
 	dock_slot[EditorDockManager::DOCK_SLOT_LEFT_UR]->set_name("DockSlotLeftUR");
 	left_r_vsplit->add_child(dock_slot[EditorDockManager::DOCK_SLOT_LEFT_UR]);
@@ -6860,34 +6858,29 @@ EditorNode::EditorNode() {
 	dock_slot[EditorDockManager::DOCK_SLOT_LEFT_BR]->set_name("DockSlotLeftBR");
 	left_r_vsplit->add_child(dock_slot[EditorDockManager::DOCK_SLOT_LEFT_BR]);
 
-	right_hsplit = memnew(DockSplitContainer);
-	right_hsplit->set_name("HSplitRight");
-	left_hsplit->add_child(right_hsplit);
-
 	main_hsplit = memnew(DockSplitContainer);
-	main_hsplit->set_h_size_flags(Control::SIZE_EXPAND_FILL);
-	main_hsplit->set_name("HSplitMain");
-	right_hsplit->add_child(main_hsplit);
+	main_hsplit->set_name("DockHSplitMain");
+	left_r_hsplit->add_child(main_hsplit);
 	VBoxContainer *center_vb = memnew(VBoxContainer);
 	main_hsplit->add_child(center_vb);
 
 	center_vb->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 
-	center_vsplit = memnew(DockSplitContainer);
-	center_vsplit->set_name("VSplitCenter");
-	center_vsplit->set_vertical(true);
-	center_vsplit->set_v_size_flags(Control::SIZE_EXPAND_FILL);
-	center_vsplit->set_collapsed(false);
-	center_vb->add_child(center_vsplit);
+	center_split = memnew(DockSplitContainer);
+	center_split->set_name("DockVSplitCenter");
+	center_split->set_vertical(true);
+	center_split->set_v_size_flags(Control::SIZE_EXPAND_FILL);
+	center_split->set_collapsed(false);
+	center_vb->add_child(center_split);
 
-	right_dock_hsplit = memnew(DockSplitContainer);
-	right_dock_hsplit->set_name("DockHSplitRight");
-	right_hsplit->add_child(right_dock_hsplit);
+	right_hsplit = memnew(DockSplitContainer);
+	right_hsplit->set_name("DockHSplitRight");
+	main_hsplit->add_child(right_hsplit);
 
 	right_l_vsplit = memnew(DockSplitContainer);
 	right_l_vsplit->set_name("DockVSplitRightL");
 	right_l_vsplit->set_vertical(true);
-	right_dock_hsplit->add_child(right_l_vsplit);
+	right_hsplit->add_child(right_l_vsplit);
 	dock_slot[EditorDockManager::DOCK_SLOT_RIGHT_UL] = memnew(TabContainer);
 	dock_slot[EditorDockManager::DOCK_SLOT_RIGHT_UL]->set_name("DockSlotRightUL");
 	right_l_vsplit->add_child(dock_slot[EditorDockManager::DOCK_SLOT_RIGHT_UL]);
@@ -6898,7 +6891,7 @@ EditorNode::EditorNode() {
 	right_r_vsplit = memnew(DockSplitContainer);
 	right_r_vsplit->set_name("DockVSplitRightR");
 	right_r_vsplit->set_vertical(true);
-	right_dock_hsplit->add_child(right_r_vsplit);
+	right_hsplit->add_child(right_r_vsplit);
 	dock_slot[EditorDockManager::DOCK_SLOT_RIGHT_UR] = memnew(TabContainer);
 	dock_slot[EditorDockManager::DOCK_SLOT_RIGHT_UR]->set_name("DockSlotRightUR");
 	right_r_vsplit->add_child(dock_slot[EditorDockManager::DOCK_SLOT_RIGHT_UR]);
@@ -6914,11 +6907,10 @@ EditorNode::EditorNode() {
 	editor_dock_manager->add_vsplit(right_l_vsplit);
 	editor_dock_manager->add_vsplit(right_r_vsplit);
 
-	editor_dock_manager->add_hsplit(left_hsplit);
+	editor_dock_manager->add_hsplit(left_l_hsplit);
+	editor_dock_manager->add_hsplit(left_r_hsplit);
 	editor_dock_manager->add_hsplit(main_hsplit);
-	editor_dock_manager->add_hsplit(left_dock_hsplit);
 	editor_dock_manager->add_hsplit(right_hsplit);
-	editor_dock_manager->add_hsplit(right_dock_hsplit);
 
 	for (int i = 0; i < EditorDockManager::DOCK_SLOT_MAX; i++) {
 		editor_dock_manager->register_dock_slot((EditorDockManager::DockSlot)i, dock_slot[i]);
@@ -6937,7 +6929,7 @@ EditorNode::EditorNode() {
 	add_child(scan_changes_timer);
 
 	top_split = memnew(VSplitContainer);
-	center_vsplit->add_child(top_split);
+	center_split->add_child(top_split);
 	top_split->set_v_size_flags(Control::SIZE_EXPAND_FILL);
 	top_split->set_collapsed(true);
 
@@ -7375,8 +7367,8 @@ EditorNode::EditorNode() {
 	editor_dock_manager->add_dock(history_dock, TTR("History"), EditorDockManager::DOCK_SLOT_RIGHT_UL, nullptr, "History");
 
 	// Add some offsets to left_r and main hsplits to make LEFT_R and RIGHT_L docks wider than minsize.
-	left_hsplit->set_split_offset(270 * EDSCALE);
-	right_hsplit->set_split_offset(-270 * EDSCALE);
+	left_r_hsplit->set_split_offset(270 * EDSCALE);
+	main_hsplit->set_split_offset(-270 * EDSCALE);
 
 	// Define corresponding default layout.
 
@@ -7401,14 +7393,14 @@ EditorNode::EditorNode() {
 	// Bottom panels.
 
 	bottom_panel = memnew(EditorBottomPanel);
-	center_vsplit->add_child(bottom_panel);
-	center_vsplit->set_dragger_visibility(SplitContainer::DRAGGER_HIDDEN);
+	center_split->add_child(bottom_panel);
+	center_split->set_dragger_visibility(SplitContainer::DRAGGER_HIDDEN);
 
 	log = memnew(EditorLog);
 	Button *output_button = bottom_panel->add_item(TTR("Output"), log, ED_SHORTCUT_AND_COMMAND("bottom_panels/toggle_output_bottom_panel", TTR("Toggle Output Bottom Panel"), KeyModifierMask::ALT | Key::O));
 	log->set_tool_button(output_button);
 
-	center_vsplit->connect(SceneStringName(resized), callable_mp(this, &EditorNode::_vp_resized));
+	center_split->connect(SceneStringName(resized), callable_mp(this, &EditorNode::_vp_resized));
 
 	native_shader_source_visualizer = memnew(EditorNativeShaderSourceVisualizer);
 	gui_base->add_child(native_shader_source_visualizer);
