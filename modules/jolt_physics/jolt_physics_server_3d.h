@@ -425,6 +425,7 @@ public:
 	virtual int get_process_info(PhysicsServer3D::ProcessInfo p_process_info) override;
 	virtual int space_get_last_process_info(RID p_space, ProcessInfo p_info) override;
 
+	bool is_on_separate_thread() const { return on_separate_thread; }
 	bool is_active() const { return active; }
 
 	void free_space(JoltSpace3D *p_space);
