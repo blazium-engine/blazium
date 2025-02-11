@@ -61,20 +61,16 @@ This document also includes guidelines for reporting bugs.
 
 ## Documentation and demos
 
-The official documentation is hosted on [Read the Docs](https://docs.blazium.app).
+The official documentation is hosted on [DigitalOcean](https://docs.blazium.app).
 It is maintained by the Blazium community in its own [GitHub repository](https://github.com/blazium-engine/blazium-docs).
 
 The [class reference](https://docs.blazium.app/classes/index.html)
 is also accessible from the Blazium editor.
 
-We also maintain official demos in their own [GitHub repository]()
-as well as a list of [awesome Blazium community resources]().
-
 There are also a number of other
 [learning resources](https://docs.blazium.app/community/tutorials.html)
 provided by the community, such as text and video tutorials, demos, etc.
-Consult the [community channels](https://docs.blazium.app/community/channels.html)
-for more information.
 
 
 ![Alt](https://repobeats.axiom.co/api/embed/fd66cb7230a67870b789048b7543660798fb8126.svg "Repobeats analytics image")
+[![DigitalOcean Referral Badge](https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%201.svg)](https://www.digitalocean.com/?refcode=c9796b8f52e2&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge)
