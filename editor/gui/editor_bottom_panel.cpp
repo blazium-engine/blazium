@@ -253,6 +253,10 @@ void EditorBottomPanel::toggle_last_opened_bottom_panel() {
 	}
 }
 
+void EditorBottomPanel::set_expanded(bool p_expanded) {
+	expand_button->set_pressed(p_expanded);
+}
+
 EditorBottomPanel::EditorBottomPanel() {
 	item_vbox = memnew(VBoxContainer);
 	add_child(item_vbox);
