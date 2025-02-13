@@ -100,7 +100,10 @@ void EditorResourcePreviewGenerator::DrawRequester::request_and_wait(RID p_viewp
 	Callable request_vp_update_once = callable_mp(RS::get_singleton(), &RS::viewport_set_update_mode).bind(p_viewport, RS::VIEWPORT_UPDATE_ONCE);
 
 	if (EditorResourcePreview::get_singleton()->is_threaded()) {
-		RS::get_singleton()->connect(SNAME("frame_pre_draw"), request_vp_update_once, Object::CONNECT_ONE_SHOT);
+		// FIXME: BLAZIUM frame_pre_draw is reconnected again on first load after applying 1st godot patches.
+		if (!RS::get_singleton()->is_connected(SNAME("frame_pre_draw"), request_vp_update_once)) {
+			RS::get_singleton()->connect(SNAME("frame_pre_draw"), request_vp_update_once, Object::CONNECT_ONE_SHOT);
+		}
 		RS::get_singleton()->request_frame_drawn_callback(callable_mp(const_cast<EditorResourcePreviewGenerator::DrawRequester *>(this), &EditorResourcePreviewGenerator::DrawRequester::_post_semaphore));
 
 		semaphore.wait();
