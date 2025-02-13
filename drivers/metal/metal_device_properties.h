@@ -113,6 +113,7 @@ struct MetalLimits {
 	uint32_t maxVertexInputBindings;
 	uint32_t maxVertexInputBindingStride;
 	uint32_t maxDrawIndexedIndexValue;
+	uint32_t maxShaderVaryings;
 
 	uint32_t minSubgroupSize; /**< The minimum number of threads in a SIMD-group. */
 	uint32_t maxSubgroupSize; /**< The maximum number of threads in a SIMD-group. */

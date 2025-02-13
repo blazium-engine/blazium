@@ -3878,6 +3878,8 @@ uint64_t RenderingDeviceDriverMetal::limit_get(Limit p_limit) {
 			return (int64_t)limits.subgroupSupportedShaderStages;
 		case LIMIT_SUBGROUP_OPERATIONS:
 			return (int64_t)limits.subgroupSupportedOperations;
+		case LIMIT_MAX_SHADER_VARYINGS:
+			return limits.maxShaderVaryings;
 		UNKNOWN(LIMIT_VRS_TEXEL_WIDTH);
 		UNKNOWN(LIMIT_VRS_TEXEL_HEIGHT);
 		default:
