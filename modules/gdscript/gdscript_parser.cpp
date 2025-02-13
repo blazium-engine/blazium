@@ -3489,6 +3489,8 @@ GDScriptParser::ExpressionNode *GDScriptParser::parse_preload(ExpressionNode *p_
 
 	if (preload->path == nullptr) {
 		push_error(R"(Expected resource path after "(".)");
+	} else if (preload->path->type == Node::LITERAL) {
+		override_completion_context(preload->path, COMPLETION_RESOURCE_PATH, preload);
 	}
 
 	pop_completion_call();
