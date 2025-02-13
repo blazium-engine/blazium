@@ -40,8 +40,8 @@ partial class ExportedToolButtons
     internal new static global::System.Collections.Generic.List<global::Godot.Bridge.PropertyInfo> GetGodotPropertyList()
     {
         var properties = new global::System.Collections.Generic.List<global::Godot.Bridge.PropertyInfo>();
-        properties.Add(new(type: (global::Godot.Variant.Type)25, name: PropertyName.@MyButton1, hint: (global::Godot.PropertyHint)39, hintString: "Click me!", usage: (global::Godot.PropertyUsageFlags)4, exported: true));
-        properties.Add(new(type: (global::Godot.Variant.Type)25, name: PropertyName.@MyButton2, hint: (global::Godot.PropertyHint)39, hintString: "Click me!,ColorRect", usage: (global::Godot.PropertyUsageFlags)4, exported: true));
+        properties.Add(new(type: (global::Godot.Variant.Type)25, name: PropertyName.@MyButton1, hint: (global::Godot.PropertyHint)38, hintString: "Click me!", usage: (global::Godot.PropertyUsageFlags)4, exported: true));
+        properties.Add(new(type: (global::Godot.Variant.Type)25, name: PropertyName.@MyButton2, hint: (global::Godot.PropertyHint)38, hintString: "Click me!,ColorRect", usage: (global::Godot.PropertyUsageFlags)4, exported: true));
         return properties;
     }
 #pragma warning restore CS0109
