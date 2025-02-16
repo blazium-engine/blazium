@@ -247,6 +247,8 @@ private:
 		bool debug = false;
 		bool pack_only = false;
 		bool android_build_template = false;
+		bool patch = false;
+		Vector<String> patches;
 	} export_defer;
 
 	static EditorNode *singleton;
@@ -290,16 +292,15 @@ private:
 	String renderer_request;
 
 	// Split containers.
-	DockSplitContainer *left_hsplit = nullptr;
-	DockSplitContainer *left_dock_hsplit = nullptr;
+	DockSplitContainer *left_l_hsplit = nullptr;
 	DockSplitContainer *left_l_vsplit = nullptr;
+	DockSplitContainer *left_r_hsplit = nullptr;
 	DockSplitContainer *left_r_vsplit = nullptr;
-	DockSplitContainer *right_hsplit = nullptr;
 	DockSplitContainer *main_hsplit = nullptr;
-	DockSplitContainer *center_vsplit = nullptr;
-	DockSplitContainer *right_dock_hsplit = nullptr;
+	DockSplitContainer *right_hsplit = nullptr;
 	DockSplitContainer *right_l_vsplit = nullptr;
 	DockSplitContainer *right_r_vsplit = nullptr;
+	DockSplitContainer *center_split = nullptr;
 
 	// Main tabs.
 	EditorSceneTabs *scene_tabs = nullptr;
@@ -863,7 +864,7 @@ public:
 
 	void _copy_warning(const String &p_str);
 
-	Error export_preset(const String &p_preset, const String &p_path, bool p_debug, bool p_pack_only, bool p_android_build_template);
+	Error export_preset(const String &p_preset, const String &p_path, bool p_debug, bool p_pack_only, bool p_android_build_template, bool p_patch, const Vector<String> &p_patches);
 	bool is_project_exporting() const;
 
 	Control *get_gui_base() { return gui_base; }

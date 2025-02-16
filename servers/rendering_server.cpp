@@ -2477,6 +2477,7 @@ void RenderingServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("light_directional_set_sky_mode", "light", "mode"), &RenderingServer::light_directional_set_sky_mode);
 
 	ClassDB::bind_method(D_METHOD("light_projectors_set_filter", "filter"), &RenderingServer::light_projectors_set_filter);
+	ClassDB::bind_method(D_METHOD("lightmaps_set_bicubic_filter", "enable"), &RenderingServer::lightmaps_set_bicubic_filter);
 
 	BIND_ENUM_CONSTANT(LIGHT_PROJECTOR_FILTER_NEAREST);
 	BIND_ENUM_CONSTANT(LIGHT_PROJECTOR_FILTER_LINEAR);
@@ -3261,6 +3262,7 @@ void RenderingServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("canvas_item_set_z_index", "item", "z_index"), &RenderingServer::canvas_item_set_z_index);
 	ClassDB::bind_method(D_METHOD("canvas_item_set_z_as_relative_to_parent", "item", "enabled"), &RenderingServer::canvas_item_set_z_as_relative_to_parent);
 	ClassDB::bind_method(D_METHOD("canvas_item_set_copy_to_backbuffer", "item", "enabled", "rect"), &RenderingServer::canvas_item_set_copy_to_backbuffer);
+	ClassDB::bind_method(D_METHOD("canvas_item_attach_skeleton", "item", "skeleton"), &RenderingServer::canvas_item_attach_skeleton);
 
 	ClassDB::bind_method(D_METHOD("canvas_item_clear", "item"), &RenderingServer::canvas_item_clear);
 	ClassDB::bind_method(D_METHOD("canvas_item_set_draw_index", "item", "index"), &RenderingServer::canvas_item_set_draw_index);
@@ -3625,6 +3627,7 @@ void RenderingServer::init() {
 
 	GLOBAL_DEF(PropertyInfo(Variant::FLOAT, "rendering/lightmapping/probe_capture/update_speed", PROPERTY_HINT_RANGE, "0.001,256,0.001"), 15);
 	GLOBAL_DEF(PropertyInfo(Variant::FLOAT, "rendering/lightmapping/primitive_meshes/texel_size", PROPERTY_HINT_RANGE, "0.001,100,0.001"), 0.2);
+	GLOBAL_DEF("rendering/lightmapping/lightmap_gi/use_bicubic_filter", true);
 
 	GLOBAL_DEF(PropertyInfo(Variant::INT, "rendering/global_illumination/sdfgi/probe_ray_count", PROPERTY_HINT_ENUM, "8 (Fastest),16,32,64,96,128 (Slowest)"), 1);
 	GLOBAL_DEF(PropertyInfo(Variant::INT, "rendering/global_illumination/sdfgi/frames_to_converge", PROPERTY_HINT_ENUM, "5 (Less Latency but Lower Quality),10,15,20,25,30 (More Latency but Higher Quality)"), 5);

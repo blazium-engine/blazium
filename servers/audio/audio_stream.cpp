@@ -76,6 +76,42 @@ int AudioStreamPlayback::mix(AudioFrame *p_buffer, float p_rate_scale, int p_fra
 	return ret;
 }
 
+PackedVector2Array AudioStreamPlayback::_mix_audio_bind(float p_rate_scale, int p_frames) {
+	Vector<AudioFrame> frames = mix_audio(p_rate_scale, p_frames);
+
+	PackedVector2Array res;
+	res.resize(frames.size());
+
+	Vector2 *res_ptrw = res.ptrw();
+	for (int i = 0; i < frames.size(); i++) {
+		res_ptrw[i] = Vector2(frames[i].left, frames[i].right);
+	}
+
+	return res;
+}
+
+Vector<AudioFrame> AudioStreamPlayback::mix_audio(float p_rate_scale, int p_frames) {
+	Vector<AudioFrame> res;
+	res.resize(p_frames);
+
+	int frames = mix(res.ptrw(), p_rate_scale, p_frames);
+	res.resize(frames);
+
+	return res;
+}
+
+void AudioStreamPlayback::start_playback(double p_from_pos) {
+	start(p_from_pos);
+}
+
+void AudioStreamPlayback::stop_playback() {
+	stop();
+}
+
+void AudioStreamPlayback::seek_playback(double p_time) {
+	seek(p_time);
+}
+
 void AudioStreamPlayback::tag_used_streams() {
 	GDVIRTUAL_CALL(_tag_used_streams);
 }
@@ -108,6 +144,13 @@ void AudioStreamPlayback::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("set_sample_playback", "playback_sample"), &AudioStreamPlayback::set_sample_playback);
 	ClassDB::bind_method(D_METHOD("get_sample_playback"), &AudioStreamPlayback::get_sample_playback);
+	ClassDB::bind_method(D_METHOD("mix_audio", "rate_scale", "frames"), &AudioStreamPlayback::_mix_audio_bind);
+	ClassDB::bind_method(D_METHOD("start", "from_pos"), &AudioStreamPlayback::start_playback, DEFVAL(0.0));
+	ClassDB::bind_method(D_METHOD("seek", "time"), &AudioStreamPlayback::seek_playback, DEFVAL(0.0));
+	ClassDB::bind_method(D_METHOD("stop"), &AudioStreamPlayback::stop_playback);
+	ClassDB::bind_method(D_METHOD("get_loop_count"), &AudioStreamPlayback::get_loop_count);
+	ClassDB::bind_method(D_METHOD("get_playback_position"), &AudioStreamPlayback::get_playback_position);
+	ClassDB::bind_method(D_METHOD("is_playing"), &AudioStreamPlayback::is_playing);
 }
 
 AudioStreamPlayback::AudioStreamPlayback() {}
@@ -173,12 +216,12 @@ int AudioStreamPlaybackResampled::mix(AudioFrame *p_buffer, float p_rate_scale, 
 		}
 
 		float mu2 = mu * mu;
-		AudioFrame a0 = 3 * y1 - 3 * y2 + y3 - y0;
-		AudioFrame a1 = 2 * y0 - 5 * y1 + 4 * y2 - y3;
-		AudioFrame a2 = y2 - y0;
-		AudioFrame a3 = 2 * y1;
+		float h11 = mu2 * (mu - 1);
+		float z = mu2 - h11;
+		float h01 = z - h11;
+		float h10 = mu - z;
 
-		p_buffer[i] = (a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3) / 2;
+		p_buffer[i] = y1 + (y2 - y1) * h01 + ((y2 - y0) * h10 + (y3 - y1) * h11) * 0.5;
 
 		mix_offset += mix_increment;
 

@@ -46,6 +46,7 @@ class MeshInstance3D;
 class SphereMesh;
 class SubViewport;
 class SubViewportContainer;
+class Label;
 
 class MaterialEditor : public Control {
 	GDCLASS(MaterialEditor, Control);
@@ -69,6 +70,10 @@ class MaterialEditor : public Control {
 
 	Ref<SphereMesh> sphere_mesh;
 	Ref<BoxMesh> box_mesh;
+
+	VBoxContainer *layout_error = nullptr;
+	Label *error_label = nullptr;
+	bool is_unsupported_shader_mode = false;
 
 	HBoxContainer *layout_3d = nullptr;
 

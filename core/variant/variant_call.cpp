@@ -1724,6 +1724,8 @@ static void _register_variant_builtin_methods_string() {
 	bind_string_method(validate_node_name, sarray(), varray());
 	bind_string_method(validate_filename, sarray(), varray());
 
+	bind_string_method(is_valid_ascii_identifier, sarray(), varray());
+	bind_string_method(is_valid_unicode_identifier, sarray(), varray());
 	bind_string_method(is_valid_identifier, sarray(), varray());
 	bind_string_method(is_valid_int, sarray(), varray());
 	bind_string_method(is_valid_float, sarray(), varray());
@@ -1849,6 +1851,7 @@ static void _register_variant_builtin_methods_math() {
 	bind_method(Rect2, intersection, sarray("b"), varray());
 	bind_method(Rect2, merge, sarray("b"), varray());
 	bind_method(Rect2, expand, sarray("to"), varray());
+	bind_method(Rect2, get_support, sarray("direction"), varray());
 	bind_method(Rect2, grow, sarray("amount"), varray());
 	bind_methodv(Rect2, grow_side, &Rect2::grow_side_bind, sarray("side", "amount"), varray());
 	bind_method(Rect2, grow_individual, sarray("left", "top", "right", "bottom"), varray());
@@ -2185,7 +2188,7 @@ static void _register_variant_builtin_methods_misc() {
 	bind_method(AABB, merge, sarray("with"), varray());
 	bind_method(AABB, expand, sarray("to_point"), varray());
 	bind_method(AABB, grow, sarray("by"), varray());
-	bind_method(AABB, get_support, sarray("dir"), varray());
+	bind_method(AABB, get_support, sarray("direction"), varray());
 	bind_method(AABB, get_longest_axis, sarray(), varray());
 	bind_method(AABB, get_longest_axis_index, sarray(), varray());
 	bind_method(AABB, get_longest_axis_size, sarray(), varray());

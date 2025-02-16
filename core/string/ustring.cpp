@@ -36,7 +36,7 @@
 #include "core/os/memory.h"
 #include "core/string/print_string.h"
 #include "core/string/string_name.h"
-#include "core/string/translation.h"
+#include "core/string/translation_server.h"
 #include "core/string/ucaps.h"
 #include "core/variant/variant.h"
 #include "core/version_generated.gen.h"
@@ -4624,7 +4624,7 @@ bool String::is_absolute_path() const {
 	}
 }
 
-String String::validate_identifier() const {
+String String::validate_ascii_identifier() const {
 	if (is_empty()) {
 		return "_"; // Empty string is not a valid identifier;
 	}
@@ -4647,7 +4647,7 @@ String String::validate_identifier() const {
 	return result;
 }
 
-bool String::is_valid_identifier() const {
+bool String::is_valid_ascii_identifier() const {
 	int len = length();
 
 	if (len == 0) {
@@ -4666,6 +4666,26 @@ bool String::is_valid_identifier() const {
 		}
 	}
 
+	return true;
+}
+
+bool String::is_valid_unicode_identifier() const {
+	const char32_t *str = ptr();
+	int len = length();
+
+	if (len == 0) {
+		return false; // Empty string.
+	}
+
+	if (!is_unicode_identifier_start(str[0])) {
+		return false;
+	}
+
+	for (int i = 1; i < len; i++) {
+		if (!is_unicode_identifier_continue(str[i])) {
+			return false;
+		}
+	}
 	return true;
 }
 

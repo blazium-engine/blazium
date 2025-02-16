@@ -412,6 +412,14 @@
 				[b]Note:[/b] [param count] is unused and can be left unspecified.
 			</description>
 		</method>
+		<method name="canvas_item_attach_skeleton">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="skeleton" type="RID" />
+			<description>
+				Attaches a skeleton to the [CanvasItem]. Removes the previous skeleton.
+			</description>
+		</method>
 		<method name="canvas_item_clear">
 			<return type="void" />
 			<param index="0" name="item" type="RID" />
@@ -2189,6 +2197,13 @@
 			<param index="2" name="uses_sh" type="bool" />
 			<description>
 				Set the textures on the given [param lightmap] GI instance to the texture array pointed to by the [param light] RID. If the lightmap texture was baked with [member LightmapGI.directional] set to [code]true[/code], then [param uses_sh] must also be [code]true[/code].
+			</description>
+		</method>
+		<method name="lightmaps_set_bicubic_filter">
+			<return type="void" />
+			<param index="0" name="enable" type="bool" />
+			<description>
+				Toggles whether a bicubic filter should be used when lightmaps are sampled. This smoothens their appearance at a performance cost.
 			</description>
 		</method>
 		<method name="make_sphere_mesh">

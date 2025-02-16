@@ -55,10 +55,6 @@ void EditorLog::_error_handler(void *p_self, const char *p_func, const char *p_f
 		err_str = String::utf8(p_file) + ":" + itos(p_line) + " - " + String::utf8(p_error);
 	}
 
-	if (p_editor_notify) {
-		err_str += " (User)";
-	}
-
 	MessageType message_type = p_type == ERR_HANDLER_WARNING ? MSG_TYPE_WARNING : MSG_TYPE_ERROR;
 
 	if (!Thread::is_main_thread()) {
@@ -401,7 +397,7 @@ void EditorLog::_add_log_line(LogMessage &p_message, bool p_replace_previous) {
 	if (p_replace_previous) {
 		// Force sync last line update (skip if number of unprocessed log messages is too large to avoid editor lag).
 		if (log->get_pending_paragraphs() < 100) {
-			while (!log->is_ready()) {
+			while (!log->is_finished()) {
 				::OS::get_singleton()->delay_usec(1);
 			}
 		}

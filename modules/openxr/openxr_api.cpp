@@ -54,6 +54,7 @@
 #endif
 
 #include "extensions/openxr_composition_layer_depth_extension.h"
+#include "extensions/openxr_debug_utils_extension.h"
 #include "extensions/openxr_eye_gaze_interaction.h"
 #include "extensions/openxr_fb_display_refresh_rate_extension.h"
 #include "extensions/openxr_fb_foveation_extension.h"
@@ -313,6 +314,46 @@ String OpenXRAPI::get_swapchain_format_name(int64_t p_swapchain_format) const {
 	}
 
 	return String("Swapchain format ") + String::num_int64(int64_t(p_swapchain_format));
+}
+
+void OpenXRAPI::set_object_name(XrObjectType p_object_type, uint64_t p_object_handle, const String &p_object_name) {
+	OpenXRDebugUtilsExtension *debug_utils = OpenXRDebugUtilsExtension::get_singleton();
+	if (!debug_utils || !debug_utils->get_active()) {
+		// Not enabled/active? Ignore.
+		return;
+	}
+
+	debug_utils->set_object_name(p_object_type, p_object_handle, p_object_name.utf8().get_data());
+}
+
+void OpenXRAPI::begin_debug_label_region(const String &p_label_name) {
+	OpenXRDebugUtilsExtension *debug_utils = OpenXRDebugUtilsExtension::get_singleton();
+	if (!debug_utils || !debug_utils->get_active()) {
+		// Not enabled/active? Ignore.
+		return;
+	}
+
+	debug_utils->begin_debug_label_region(p_label_name.utf8().get_data());
+}
+
+void OpenXRAPI::end_debug_label_region() {
+	OpenXRDebugUtilsExtension *debug_utils = OpenXRDebugUtilsExtension::get_singleton();
+	if (!debug_utils || !debug_utils->get_active()) {
+		// Not enabled/active? Ignore.
+		return;
+	}
+
+	debug_utils->end_debug_label_region();
+}
+
+void OpenXRAPI::insert_debug_label(const String &p_label_name) {
+	OpenXRDebugUtilsExtension *debug_utils = OpenXRDebugUtilsExtension::get_singleton();
+	if (!debug_utils || !debug_utils->get_active()) {
+		// Not enabled/active? Ignore.
+		return;
+	}
+
+	debug_utils->insert_debug_label(p_label_name.utf8().get_data());
 }
 
 bool OpenXRAPI::load_layer_properties() {
@@ -826,6 +867,10 @@ bool OpenXRAPI::create_session() {
 		return false;
 	}
 
+	set_object_name(XR_OBJECT_TYPE_SESSION, uint64_t(session), "Main Godot OpenXR Session");
+
+	begin_debug_label_region("Godot session active");
+
 	for (OpenXRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_session_created(session);
 	}
@@ -916,6 +961,8 @@ bool OpenXRAPI::setup_play_space() {
 				print_line("OpenXR: Failed to create LOCAL space in order to emulate LOCAL_FLOOR [", get_error_string(result), "]");
 				will_emulate_local_floor = false;
 			}
+
+			set_object_name(XR_OBJECT_TYPE_SPACE, uint64_t(local_floor_emulation.local_space), "Emulation local space");
 		}
 
 		if (local_floor_emulation.stage_space == XR_NULL_HANDLE) {
@@ -931,6 +978,8 @@ bool OpenXRAPI::setup_play_space() {
 				print_line("OpenXR: Failed to create STAGE space in order to emulate LOCAL_FLOOR [", get_error_string(result), "]");
 				will_emulate_local_floor = false;
 			}
+
+			set_object_name(XR_OBJECT_TYPE_SPACE, uint64_t(local_floor_emulation.stage_space), "Emulation stage space");
 		}
 
 		if (!will_emulate_local_floor) {
@@ -972,6 +1021,8 @@ bool OpenXRAPI::setup_play_space() {
 	play_space = new_play_space;
 	reference_space = new_reference_space;
 
+	set_object_name(XR_OBJECT_TYPE_SPACE, uint64_t(play_space), "Play space");
+
 	local_floor_emulation.enabled = will_emulate_local_floor;
 	local_floor_emulation.should_reset_floor_height = will_emulate_local_floor;
 
@@ -1006,6 +1057,8 @@ bool OpenXRAPI::setup_view_space() {
 		print_line("OpenXR: Failed to create view space [", get_error_string(result), "]");
 		return false;
 	}
+
+	set_object_name(XR_OBJECT_TYPE_SPACE, uint64_t(view_space), "View space");
 
 	return true;
 }
@@ -1181,6 +1234,8 @@ bool OpenXRAPI::create_main_swapchains(Size2i p_size) {
 		if (!render_state.main_swapchains[OPENXR_SWAPCHAIN_COLOR].create(0, XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT | XR_SWAPCHAIN_USAGE_MUTABLE_FORMAT_BIT, color_swapchain_format, render_state.main_swapchain_size.width, render_state.main_swapchain_size.height, sample_count, view_count)) {
 			return false;
 		}
+
+		set_object_name(XR_OBJECT_TYPE_SWAPCHAIN, uint64_t(render_state.main_swapchains[OPENXR_SWAPCHAIN_COLOR].get_swapchain()), "Main color swapchain");
 	}
 
 	// We create our depth swapchain if:
@@ -1191,6 +1246,8 @@ bool OpenXRAPI::create_main_swapchains(Size2i p_size) {
 		if (!render_state.main_swapchains[OPENXR_SWAPCHAIN_DEPTH].create(0, XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, depth_swapchain_format, render_state.main_swapchain_size.width, render_state.main_swapchain_size.height, sample_count, view_count)) {
 			return false;
 		}
+
+		set_object_name(XR_OBJECT_TYPE_SWAPCHAIN, uint64_t(render_state.main_swapchains[OPENXR_SWAPCHAIN_COLOR].get_swapchain()), "Main depth swapchain");
 	}
 
 	// We create our velocity swapchain if:
@@ -1308,6 +1365,8 @@ void OpenXRAPI::destroy_session() {
 		for (OpenXRExtensionWrapper *wrapper : registered_extension_wrappers) {
 			wrapper->on_session_destroyed();
 		}
+
+		end_debug_label_region();
 
 		xrDestroySession(session);
 		session = XR_NULL_HANDLE;
@@ -1457,6 +1516,10 @@ void OpenXRAPI::set_form_factor(XrFormFactor p_form_factor) {
 	ERR_FAIL_COND(is_initialized());
 
 	form_factor = p_form_factor;
+}
+
+uint32_t OpenXRAPI::get_view_count() {
+	return view_count;
 }
 
 void OpenXRAPI::set_view_configuration(XrViewConfigurationType p_view_configuration) {
@@ -1918,15 +1981,6 @@ bool OpenXRAPI::poll_events() {
 				// We probably didn't poll fast enough, just output warning
 				WARN_PRINT("OpenXR EVENT: " + itos(event->lostEventCount) + " event data lost!");
 			} break;
-			case XR_TYPE_EVENT_DATA_VISIBILITY_MASK_CHANGED_KHR: {
-				// XrEventDataVisibilityMaskChangedKHR *event = (XrEventDataVisibilityMaskChangedKHR *)&runtimeEvent;
-
-				// TODO implement this in the future, we should call xrGetVisibilityMaskKHR to obtain a mask,
-				// this will allow us to prevent rendering the part of our view which is never displayed giving us
-				// a decent performance improvement.
-
-				print_verbose("OpenXR EVENT: STUB: visibility mask changed");
-			} break;
 			case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
 				XrEventDataInstanceLossPending *event = (XrEventDataInstanceLossPending *)&runtimeEvent;
 
@@ -2221,6 +2275,9 @@ void OpenXRAPI::pre_render() {
 		}
 	}
 
+	// We should get our frame no from the rendering server, but this will do.
+	begin_debug_label_region(String("Session Frame ") + String::num_uint64(++render_state.frame));
+
 	// let's start our frame..
 	XrFrameBeginInfo frame_begin_info = {
 		XR_TYPE_FRAME_BEGIN_INFO, // type
@@ -2339,6 +2396,8 @@ void OpenXRAPI::end_frame() {
 			return;
 		}
 
+		end_debug_label_region(); // Session frame #
+
 		// neither eye is rendered
 		return;
 	}
@@ -2413,6 +2472,8 @@ void OpenXRAPI::end_frame() {
 		print_line("OpenXR: failed to end frame! [", get_error_string(result), "]");
 		return;
 	}
+
+	end_debug_label_region(); // Session frame #
 }
 
 float OpenXRAPI::get_display_refresh_rate() const {
@@ -2827,6 +2888,8 @@ RID OpenXRAPI::action_set_create(const String p_name, const String p_localized_n
 		return RID();
 	}
 
+	set_object_name(XR_OBJECT_TYPE_ACTION_SET, uint64_t(action_set.handle), p_name);
+
 	return action_set_owner.make_rid(action_set);
 }
 
@@ -3001,6 +3064,8 @@ RID OpenXRAPI::action_create(RID p_action_set, const String p_name, const String
 		print_line("OpenXR: failed to create action ", p_name, "! [", get_error_string(result), "]");
 		return RID();
 	}
+
+	set_object_name(XR_OBJECT_TYPE_ACTION, uint64_t(action.handle), p_name);
 
 	return action_owner.make_rid(action);
 }

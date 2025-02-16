@@ -295,7 +295,7 @@ void EditorHelp::_class_desc_select(const String &p_select) {
 		// Case order is important here to correctly handle edge cases like Variant.Type in @GlobalScope.
 		if (table->has(link)) {
 			// Found in the current page.
-			if (class_desc->is_ready()) {
+			if (class_desc->is_finished()) {
 				emit_signal(SNAME("request_save_history"));
 				class_desc->scroll_to_paragraph((*table)[link]);
 			} else {
@@ -2345,12 +2345,8 @@ void EditorHelp::_help_callback(const String &p_topic) {
 		}
 	}
 
-	if (class_desc->is_ready()) {
-		// call_deferred() is not enough.
-		if (class_desc->is_connected(SceneStringName(draw), callable_mp(class_desc, &RichTextLabel::scroll_to_paragraph))) {
-			class_desc->disconnect(SceneStringName(draw), callable_mp(class_desc, &RichTextLabel::scroll_to_paragraph));
-		}
-		class_desc->connect(SceneStringName(draw), callable_mp(class_desc, &RichTextLabel::scroll_to_paragraph).bind(line), CONNECT_ONE_SHOT | CONNECT_DEFERRED);
+	if (class_desc->is_finished()) {
+		class_desc->scroll_to_paragraph(line);
 	} else {
 		scroll_to = line;
 	}
@@ -3047,7 +3043,7 @@ Vector<Pair<String, int>> EditorHelp::get_sections() {
 void EditorHelp::scroll_to_section(int p_section_index) {
 	_wait_for_thread();
 	int line = section_line[p_section_index].second;
-	if (class_desc->is_ready()) {
+	if (class_desc->is_finished()) {
 		class_desc->scroll_to_paragraph(line);
 	} else {
 		scroll_to = line;

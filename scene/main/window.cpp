@@ -34,7 +34,7 @@
 #include "core/config/project_settings.h"
 #include "core/debugger/engine_debugger.h"
 #include "core/input/shortcut.h"
-#include "core/string/translation.h"
+#include "core/string/translation_server.h"
 #include "core/variant/variant_parser.h"
 #include "scene/gui/control.h"
 #include "scene/theme/theme_db.h"
@@ -1605,7 +1605,7 @@ Size2 Window::_get_contents_minimum_size() const {
 		}
 	}
 
-	return max;
+	return max * content_scale_factor;
 }
 
 void Window::child_controls_changed() {

@@ -1822,9 +1822,9 @@ static String _get_dropped_resource_line(const Ref<Resource> &p_resource, bool p
 	}
 
 	if (is_script) {
-		variable_name = variable_name.to_pascal_case().validate_identifier();
+		variable_name = variable_name.to_pascal_case().validate_ascii_identifier();
 	} else {
-		variable_name = variable_name.to_snake_case().to_upper().validate_identifier();
+		variable_name = variable_name.to_snake_case().to_upper().validate_ascii_identifier();
 	}
 	return vformat("const %s = preload(%s)", variable_name, _quote_drop_data(path));
 }
@@ -1938,13 +1938,13 @@ void ScriptTextEditor::drop_data_fw(const Point2 &p_point, const Variant &p_data
 					path = sn->get_path_to(node);
 				}
 				for (const String &segment : path.split("/")) {
-					if (!segment.is_valid_identifier()) {
+					if (!segment.is_valid_ascii_identifier()) {
 						path = _quote_drop_data(path);
 						break;
 					}
 				}
 
-				String variable_name = String(node->get_name()).to_snake_case().validate_identifier();
+				String variable_name = String(node->get_name()).to_snake_case().validate_ascii_identifier();
 				if (use_type) {
 					StringName class_name = node->get_class_name();
 					Ref<Script> node_script = node->get_script();
@@ -1981,7 +1981,7 @@ void ScriptTextEditor::drop_data_fw(const Point2 &p_point, const Variant &p_data
 				}
 
 				for (const String &segment : path.split("/")) {
-					if (!segment.is_valid_identifier()) {
+					if (!segment.is_valid_ascii_identifier()) {
 						path = _quote_drop_data(path);
 						break;
 					}
@@ -2551,8 +2551,9 @@ void ScriptTextEditor::register_editor() {
 	ED_SHORTCUT_OVERRIDE("script_text_editor/toggle_breakpoint", "macos", KeyModifierMask::META | KeyModifierMask::SHIFT | Key::B);
 
 	ED_SHORTCUT("script_text_editor/remove_all_breakpoints", TTR("Remove All Breakpoints"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::F9);
-	ED_SHORTCUT("script_text_editor/goto_next_breakpoint", TTR("Go to Next Breakpoint"), KeyModifierMask::CMD_OR_CTRL | Key::PERIOD);
-	ED_SHORTCUT("script_text_editor/goto_previous_breakpoint", TTR("Go to Previous Breakpoint"), KeyModifierMask::CMD_OR_CTRL | Key::COMMA);
+	// Using Control for these shortcuts even on macOS because Command+Comma is taken for opening Editor Settings.
+	ED_SHORTCUT("script_text_editor/goto_next_breakpoint", TTR("Go to Next Breakpoint"), KeyModifierMask::CTRL | Key::PERIOD);
+	ED_SHORTCUT("script_text_editor/goto_previous_breakpoint", TTR("Go to Previous Breakpoint"), KeyModifierMask::CTRL | Key::COMMA);
 
 	ScriptEditor::register_create_script_editor_function(create_editor);
 }

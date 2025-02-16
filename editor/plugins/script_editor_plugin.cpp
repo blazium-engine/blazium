@@ -588,8 +588,8 @@ void ScriptEditor::_clear_breakpoints() {
 	script_editor_cache->get_sections(&cached_editors);
 	for (const String &E : cached_editors) {
 		Array breakpoints = _get_cached_breakpoints_for_script(E);
-		for (int i = 0; i < breakpoints.size(); i++) {
-			EditorDebuggerNode::get_singleton()->set_breakpoint(E, (int)breakpoints[i] + 1, false);
+		for (int breakpoint : breakpoints) {
+			EditorDebuggerNode::get_singleton()->set_breakpoint(E, (int)breakpoint + 1, false);
 		}
 
 		if (breakpoints.size() > 0) {
@@ -1826,7 +1826,8 @@ void ScriptEditor::notify_script_changed(const Ref<Script> &p_script) {
 	emit_signal(SNAME("editor_script_changed"), p_script);
 }
 
-void ScriptEditor::get_breakpoints(List<String> *p_breakpoints) {
+Vector<String> ScriptEditor::_get_breakpoints() {
+	Vector<String> ret;
 	HashSet<String> loaded_scripts;
 	for (int i = 0; i < tab_container->get_tab_count(); i++) {
 		ScriptEditorBase *se = Object::cast_to<ScriptEditorBase>(tab_container->get_tab_control(i));
@@ -1835,19 +1836,19 @@ void ScriptEditor::get_breakpoints(List<String> *p_breakpoints) {
 		}
 
 		Ref<Script> scr = se->get_edited_resource();
-		if (scr == nullptr) {
+		if (scr.is_null()) {
 			continue;
 		}
 
 		String base = scr->get_path();
 		loaded_scripts.insert(base);
-		if (base.begins_with("local://") || base.is_empty()) {
+		if (base.is_empty() || base.begins_with("local://")) {
 			continue;
 		}
 
 		PackedInt32Array bpoints = se->get_breakpoints();
-		for (int j = 0; j < bpoints.size(); j++) {
-			p_breakpoints->push_back(base + ":" + itos((int)bpoints[j] + 1));
+		for (int32_t bpoint : bpoints) {
+			ret.push_back(base + ":" + itos((int)bpoint + 1));
 		}
 	}
 
@@ -1860,8 +1861,49 @@ void ScriptEditor::get_breakpoints(List<String> *p_breakpoints) {
 		}
 
 		Array breakpoints = _get_cached_breakpoints_for_script(E);
-		for (int i = 0; i < breakpoints.size(); i++) {
-			p_breakpoints->push_back(E + ":" + itos((int)breakpoints[i] + 1));
+		for (int breakpoint : breakpoints) {
+			ret.push_back(E + ":" + itos((int)breakpoint + 1));
+		}
+	}
+	return ret;
+}
+
+void ScriptEditor::get_breakpoints(List<String> *p_breakpoints) {
+	HashSet<String> loaded_scripts;
+	for (int i = 0; i < tab_container->get_tab_count(); i++) {
+		ScriptEditorBase *se = Object::cast_to<ScriptEditorBase>(tab_container->get_tab_control(i));
+		if (!se) {
+			continue;
+		}
+
+		Ref<Script> scr = se->get_edited_resource();
+		if (scr.is_null()) {
+			continue;
+		}
+
+		String base = scr->get_path();
+		loaded_scripts.insert(base);
+		if (base.is_empty() || base.begins_with("local://")) {
+			continue;
+		}
+
+		PackedInt32Array bpoints = se->get_breakpoints();
+		for (int32_t bpoint : bpoints) {
+			p_breakpoints->push_back(base + ":" + itos((int)bpoint + 1));
+		}
+	}
+
+	// Load breakpoints that are in closed scripts.
+	List<String> cached_editors;
+	script_editor_cache->get_sections(&cached_editors);
+	for (const String &E : cached_editors) {
+		if (loaded_scripts.has(E)) {
+			continue;
+		}
+
+		Array breakpoints = _get_cached_breakpoints_for_script(E);
+		for (int breakpoint : breakpoints) {
+			p_breakpoints->push_back(E + ":" + itos((int)breakpoint + 1));
 		}
 	}
 }
@@ -2954,8 +2996,8 @@ void ScriptEditor::_files_moved(const String &p_old_file, const String &p_new_fi
 
 	// If Script, update breakpoints with debugger.
 	Array breakpoints = _get_cached_breakpoints_for_script(p_new_file);
-	for (int i = 0; i < breakpoints.size(); i++) {
-		int line = (int)breakpoints[i] + 1;
+	for (int breakpoint : breakpoints) {
+		int line = (int)breakpoint + 1;
 		EditorDebuggerNode::get_singleton()->set_breakpoint(p_old_file, line, false);
 		if (!p_new_file.begins_with("local://") && ResourceLoader::exists(p_new_file, "Script")) {
 			EditorDebuggerNode::get_singleton()->set_breakpoint(p_new_file, line, true);
@@ -2979,8 +3021,8 @@ void ScriptEditor::_file_removed(const String &p_removed_file) {
 	// Check closed.
 	if (script_editor_cache->has_section(p_removed_file)) {
 		Array breakpoints = _get_cached_breakpoints_for_script(p_removed_file);
-		for (int i = 0; i < breakpoints.size(); i++) {
-			EditorDebuggerNode::get_singleton()->set_breakpoint(p_removed_file, (int)breakpoints[i] + 1, false);
+		for (int breakpoint : breakpoints) {
+			EditorDebuggerNode::get_singleton()->set_breakpoint(p_removed_file, (int)breakpoint + 1, false);
 		}
 		script_editor_cache->erase_section(p_removed_file);
 	}
@@ -3435,8 +3477,8 @@ void ScriptEditor::set_window_layout(Ref<ConfigFile> p_layout) {
 		}
 
 		Array breakpoints = _get_cached_breakpoints_for_script(E);
-		for (int i = 0; i < breakpoints.size(); i++) {
-			EditorDebuggerNode::get_singleton()->set_breakpoint(E, (int)breakpoints[i] + 1, true);
+		for (int breakpoint : breakpoints) {
+			EditorDebuggerNode::get_singleton()->set_breakpoint(E, (int)breakpoint + 1, true);
 		}
 	}
 
@@ -3537,14 +3579,13 @@ void ScriptEditor::_help_class_goto(const String &p_desc) {
 
 	eh->set_name(cname);
 	tab_container->add_child(eh);
+	_go_to_tab(tab_container->get_tab_count() - 1);
 	eh->go_to_help(p_desc);
 	eh->connect("go_to_help", callable_mp(this, &ScriptEditor::_help_class_goto));
 	_add_recent_script(eh->get_class());
 	_sort_list_on_update = true;
 	_update_script_names();
 	_save_layout();
-
-	callable_mp(this, &ScriptEditor::_help_tab_goto).call_deferred(cname, p_desc);
 }
 
 bool ScriptEditor::_help_tab_goto(const String &p_name, const String &p_desc) {
@@ -3811,7 +3852,10 @@ void ScriptEditor::_on_find_in_files_result_selected(const String &fpath, int li
 			ShaderEditorPlugin *shader_editor = Object::cast_to<ShaderEditorPlugin>(EditorNode::get_editor_data().get_editor_by_name("Shader"));
 			shader_editor->edit(res.ptr());
 			shader_editor->make_visible(true);
-			shader_editor->get_shader_editor(res)->goto_line_selection(line_number - 1, begin, end);
+			TextShaderEditor *text_shader_editor = Object::cast_to<TextShaderEditor>(shader_editor->get_shader_editor(res));
+			if (text_shader_editor) {
+				text_shader_editor->goto_line_selection(line_number - 1, begin, end);
+			}
 			return;
 		} else if (fpath.get_extension() == "tscn") {
 			Ref<FileAccess> f = FileAccess::open(fpath, FileAccess::READ);
@@ -3979,6 +4023,7 @@ void ScriptEditor::_bind_methods() {
 	ClassDB::bind_method("_help_tab_goto", &ScriptEditor::_help_tab_goto);
 	ClassDB::bind_method("get_current_editor", &ScriptEditor::_get_current_editor);
 	ClassDB::bind_method("get_open_script_editors", &ScriptEditor::_get_open_script_editors);
+	ClassDB::bind_method("get_breakpoints", &ScriptEditor::_get_breakpoints);
 
 	ClassDB::bind_method(D_METHOD("register_syntax_highlighter", "syntax_highlighter"), &ScriptEditor::register_syntax_highlighter);
 	ClassDB::bind_method(D_METHOD("unregister_syntax_highlighter", "syntax_highlighter"), &ScriptEditor::unregister_syntax_highlighter);

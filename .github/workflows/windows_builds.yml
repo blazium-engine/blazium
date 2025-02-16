@@ -31,18 +31,19 @@ jobs:
             sconsflags: debug_symbols=no vsproj=yes vsproj_gen_only=no windows_subsystem=console
             bin: "./bin/blazium.windows.editor.x86_64.exe"
             compiler: msvc
+            upload: true
 
           - name: Editor w/ Mono (target=editor)
             cache-name: windows-editor-mono
             target: editor
             sconsflags: module_mono_enabled=yes
             bin: ./bin/blazium.windows.editor.x86_64.mono.exe
-            build-mono: true
             tests: false # Disabled due freeze caused by mix Mono build and CI
             doc-test: true
             proj-conv: true
             api-compat: true
             artifact: true
+            upload: true
 
           - name: Editor w/ clang-cl (target=editor, tests=yes, use_llvm=yes)
             cache-name: windows-editor-clang
@@ -60,6 +61,7 @@ jobs:
             bin: "./bin/blazium.windows.template_release.x86_64.console.exe"
             compiler: msvc
             artifact: true
+            upload: true
 
           - name: Template w/ GCC (target=template_release, tests=yes, use_mingw=yes)
             cache-name: windows-template-gcc
@@ -129,12 +131,12 @@ jobs:
         continue-on-error: true
 
       - name: Prepare artifact
-        if: matrix.compiler == 'msvc'
+        if: matrix.upload
         run: |
           Remove-Item bin/* -Include *.exp,*.lib,*.pdb -Force
 
       - name: Upload artifact
-        if: matrix.compiler == 'msvc'
+        if: matrix.upload
         uses: ./.github/actions/upload-artifact
         with:
           name: ${{ matrix.cache-name }}
