@@ -68,7 +68,7 @@ MeshInstance3D *GLTFDocumentExtensionConvertImporterMesh::convert_importer_mesh_
 
 Error GLTFDocumentExtensionConvertImporterMesh::import_post(Ref<GLTFState> p_state, Node *p_root) {
 	ERR_FAIL_NULL_V(p_root, ERR_INVALID_PARAMETER);
-	ERR_FAIL_NULL_V(p_state, ERR_INVALID_PARAMETER);
+	ERR_FAIL_COND_V(p_state.is_null(), ERR_INVALID_PARAMETER);
 	List<Node *> queue;
 	queue.push_back(p_root);
 	List<Node *> delete_queue;
