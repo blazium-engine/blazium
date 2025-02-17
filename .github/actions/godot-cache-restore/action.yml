@@ -1,5 +1,5 @@
-name: Restore Godot build cache
-description: Restore Godot build cache.
+name: Restore Blazium build cache
+description: Restore Blazium build cache.
 inputs:
   cache-name:
     description: The cache base name (job name by default).
@@ -14,7 +14,7 @@ runs:
       uses: actions/cache/restore@v4
       with:
         path: ${{inputs.scons-cache}}
-        key: ${{inputs.cache-name}}-${{env.GODOT_BASE_BRANCH}}-${{github.ref}}-${{github.sha}}
+        key: ${{inputs.cache-name}}-${{env.BLAZIUM_BASE_BRANCH}}-${{github.ref}}-${{github.sha}}
 
         # We try to match an existing cache to restore from it. Each potential key is checked against
         # all existing caches as a prefix. E.g. 'linux-template-minimal' would match any cache that
@@ -28,7 +28,7 @@ runs:
         #   4. A partial match for the same base branch only (not ideal, matches any PR with the same base branch).
 
         restore-keys: |
-          ${{inputs.cache-name}}-${{env.GODOT_BASE_BRANCH}}-${{github.ref}}-${{github.sha}}
-          ${{inputs.cache-name}}-${{env.GODOT_BASE_BRANCH}}-${{github.ref}}
-          ${{inputs.cache-name}}-${{env.GODOT_BASE_BRANCH}}-refs/heads/${{env.GODOT_BASE_BRANCH}}
-          ${{inputs.cache-name}}-${{env.GODOT_BASE_BRANCH}}
+          ${{inputs.cache-name}}-${{env.BLAZIUM_BASE_BRANCH}}-${{github.ref}}-${{github.sha}}
+          ${{inputs.cache-name}}-${{env.BLAZIUM_BASE_BRANCH}}-${{github.ref}}
+          ${{inputs.cache-name}}-${{env.BLAZIUM_BASE_BRANCH}}-refs/heads/${{env.BLAZIUM_BASE_BRANCH}}
+          ${{inputs.cache-name}}-${{env.BLAZIUM_BASE_BRANCH}}
