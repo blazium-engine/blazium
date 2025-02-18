@@ -1,4 +1,5 @@
-extends SQLite
+# meta-description: Base template showcasing some basic functionality
+extends _BASE_
 
 func execute_and_log(query: SQLiteQuery, params: Array = []):
 	print("Executing query.. ", query.query)

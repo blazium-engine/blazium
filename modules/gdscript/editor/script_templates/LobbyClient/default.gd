@@ -1,4 +1,5 @@
-extends LobbyClient
+# meta-description: Base template showcasing some basic functionality
+extends _BASE_
 
 @export var reconnects = 0
 var config: ConfigFile

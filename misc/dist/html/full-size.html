@@ -3,7 +3,6 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
-		$BLAZIUM_DISCORD_EMBEDDED_HEADERS
 		$BLAZIUM_HEADER_EMBEDS
 		<title>$GODOT_PROJECT_NAME</title>
 		<style>
@@ -105,29 +104,13 @@ body {
 		<noscript>
 			Your browser does not support JavaScript.
 		</noscript>
-		<script>
-const DiscordEmbed = {
-	isDiscordEmbed: () => {
-		// Check for the two meta elements in the head
-		const discordAutodetect = document.querySelector('meta[name="discord_autodetect"]')?.content === 'true';
-		const discordEmbed = document.querySelector('meta[name="discord_embed"]')?.content === 'true';
-
-		if (discordAutodetect) {
-			return DiscordEmbed.isDiscordURL(window.location.hostname);
-		}
-		return discordEmbed;
-	},
-	isDiscordURL: (url) => {
-		const arr = ['discord.com', 'discordapp.com', 'discordsays.com', 'discordapp.net', 'discordsez.com'];
-		return arr.some((substring) => url.toString().includes(substring));
-	},
-};
-		</script>
 		<div id="status">
 			<img id="status-splash" src="$GODOT_SPLASH" alt="">
 			<progress id="status-progress"></progress>
 			<div id="status-notice"></div>
 		</div>
+		$BLAZIUM_YOUTUBE_PLAYABLES_SCRIPT_TAG
+		$BLAZIUM_DISCORD_EMBED_SCRIPT_TAG
 		<script src="$GODOT_URL"></script>
 		<script>
 const GODOT_CONFIG = $GODOT_CONFIG;
@@ -223,6 +206,7 @@ const engine = new Engine(GODOT_CONFIG);
 			},
 		}).then(() => {
 			setStatusMode('hidden');
+			window.YoutubePlayables?.gameReady();
 		}, displayFailureNotice);
 	}
 }());

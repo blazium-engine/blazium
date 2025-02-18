@@ -33,23 +33,25 @@ const Preloader = /** @constructor */ function () { // eslint-disable-line no-un
 			done: false,
 		};
 
-		// Check for the two meta elements in the head
-		const discordAutodetect = document.querySelector('meta[name="discord_autodetect"]')?.content === 'true';
-		const discordEmbed = document.querySelector('meta[name="discord_embed"]')?.content === 'true';
-
-		// Determine the base URL based on the meta elements
-		let baseUrl = '';
-		if (discordAutodetect) {
-			baseUrl = window.location.hostname.includes('discord') ? '.proxy/' : '';
-		} else if (discordEmbed) {
-			baseUrl = '.proxy/';
+		let url = file;
+		// Prepend .proxy/ to the url value if needed
+		if (window.DiscordEmbed?.isDiscordEmbed()) {
+			url = `.proxy/${url}`;
 		}
-
-		return fetch(baseUrl + file).then(function (response) {
+		return fetch(url).then(function (response) {
 			if (!response.ok) {
 				return Promise.reject(new Error(`Failed loading file '${file}'`));
 			}
-			const tr = getTrackedResponse(response, tracker[file]);
+			let tr;
+			// Decompress if it's a gzip archive
+			if (String(url).endsWith('.gz')) {
+				const ds = new DecompressionStream('gzip');
+				const decompressedStream = response.body.pipeThrough(ds);
+				const new_response = new Response(decompressedStream);
+				tr = getTrackedResponse(new_response, tracker[file]);
+			} else {
+				tr = getTrackedResponse(response, tracker[file]);
+			}
 			if (raw) {
 				return Promise.resolve(tr);
 			}
