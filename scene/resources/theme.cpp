@@ -1551,6 +1551,10 @@ void Theme::freeze_change_propagation() {
 	_freeze_change_propagation();
 }
 
+bool Theme::is_frozen() const {
+	return no_change_propagation;
+}
+
 void Theme::unfreeze_and_propagate_changes() {
 	_unfreeze_and_propagate_changes();
 }

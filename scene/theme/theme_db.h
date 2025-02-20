@@ -42,6 +42,7 @@ class Node;
 class StyleBox;
 class Texture2D;
 class ThemeContext;
+class ImageTexture;
 
 // Macros for binding theme items of this class. This information is used for the documentation, theme
 // overrides, etc. This is also the basis for theme cache.
@@ -176,6 +177,20 @@ public:
 	void initialize_theme();
 	void initialize_theme_noproject();
 	void finalize_theme();
+
+#ifndef USE_LEGACY_THEME
+	Error theme_add_user_icon(const String &p_icon_name, const String &p_icon_source);
+	Error theme_remove_user_icon(const String &p_icon_name);
+	bool theme_has_user_icon(const String &p_icon_name);
+	Ref<ImageTexture> theme_get_user_icon(const String &p_icon_name);
+	PackedStringArray theme_get_user_icons_list();
+	bool theme_has_icon(const String &p_icon_name);
+	Ref<ImageTexture> theme_get_icon(const String &p_icon_name);
+	PackedStringArray theme_get_icons_list();
+	void freeze_default_theme();
+	void unfreeze_default_theme();
+	bool is_default_theme_frozen() const;
+#endif // !USE_LEGACY_THEME
 
 	// Global Theme resources.
 

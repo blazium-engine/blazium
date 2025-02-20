@@ -46,6 +46,8 @@
 #include "modules/modules_enabled.gen.h" // For svg.
 
 static Dictionary icons;
+static Dictionary user_icons_sources;
+static Dictionary user_icons;
 
 static Ref<StyleBoxFlat> button_normal_style;
 static Ref<StyleBoxFlat> button_pressed_style;
@@ -119,11 +121,11 @@ static Ref<FontVariation> italics_font;
 static bool using_custom_font_variation = false;
 static bool is_dark_theme = false;
 
-static Ref<Image> generate_icon(int p_index, float p_scale, Color p_font_color, Color p_accent_color) {
+#ifdef MODULE_SVG_ENABLED
+static Ref<Image> generate_icon(const String &p_source, float p_scale, const Color &p_font_color, const Color &p_accent_color) {
 	Ref<Image> img = memnew(Image);
 
-#ifdef MODULE_SVG_ENABLED
-	String svg = default_theme_icons_sources[p_index];
+	String svg = p_source;
 	svg = svg.replace("\"red\"", vformat("\"#%s\"", p_font_color.to_html(false)));
 	svg = svg.replace("\"#0f0\"", vformat("\"#%s\"", p_accent_color.to_html(false)));
 
@@ -131,17 +133,93 @@ static Ref<Image> generate_icon(int p_index, float p_scale, Color p_font_color, 
 	if (err == OK) {
 		img->fix_alpha_edges();
 	}
-	ERR_FAIL_COND_V_MSG(err != OK, Ref<ImageTexture>(), "Failed generating icon, unsupported or invalid SVG data in default theme.");
-#else
-	// If the SVG module is disabled, we can't really display the UI well, but at least we won't crash.
-	// 16 pixels is used as it's the most common base size for Godot icons.
-	img = Image::create_empty(Math::round(16 * p_scale), Math::round(16 * p_scale), false, Image::FORMAT_RGBA8);
-#endif
+	ERR_FAIL_COND_V_MSG(err != OK, Ref<Image>(), "Failed generating icon, unsupported or invalid SVG data in default theme.");
 
 	return img;
 }
+#endif // MODULE_SVG_ENABLED
 
-void update_theme_icons(Ref<Theme> &p_theme, Color p_font_color, Color p_accent_color) {
+static void update_user_icon(const String &p_icon_name, Ref<Image> &p_image) {
+	if (user_icons.has(p_icon_name) && ((Ref<ImageTexture>)user_icons[p_icon_name])->get_size() == (Vector2)p_image->get_size()) {
+		((Ref<ImageTexture>)user_icons[p_icon_name])->update(p_image);
+	} else {
+		user_icons[p_icon_name] = ImageTexture::create_from_image(p_image);
+	}
+}
+
+Error add_user_icon(const String &p_icon_name, const String &p_icon_source, float p_scale, const Color &p_font_color, const Color &p_accent_color) {
+	ERR_FAIL_COND_V_MSG(p_icon_name.is_empty(), ERR_INVALID_PARAMETER, "Icon name cannot be empty.");
+	ERR_FAIL_COND_V_MSG(p_icon_source.is_empty(), ERR_INVALID_PARAMETER, "Icon Source cannot be empty.");
+	ERR_FAIL_COND_V_MSG(user_icons_sources.has(p_icon_name), ERR_ALREADY_EXISTS, vformat("An icon with same name: \"%s\" already exists.", p_icon_name));
+
+#ifdef MODULE_SVG_ENABLED
+	Ref<Image> img = generate_icon(p_icon_source, p_scale, p_font_color, p_accent_color);
+	ERR_FAIL_COND_V_MSG(img.is_null(), ERR_INVALID_DATA, vformat("Icon: \"%s\" has an invalid svg source.", p_icon_name));
+#else
+	Ref<Image> img = Image::create_empty(Math::round(16 * p_scale), Math::round(16 * p_scale), false, Image::FORMAT_RGBA8);
+#endif // MODULE_SVG_ENABLED
+
+	user_icons_sources[p_icon_name] = p_icon_source;
+	update_user_icon(p_icon_name, img);
+	return OK;
+}
+
+Error remove_user_icon(const String &p_icon_name) {
+	ERR_FAIL_COND_V_MSG(p_icon_name.is_empty(), ERR_INVALID_PARAMETER, "Icon name cannot be empty.");
+	ERR_FAIL_COND_V_MSG(!user_icons.has(p_icon_name), ERR_DOES_NOT_EXIST, vformat("Icon: \"%s\" does not exist.", p_icon_name));
+
+	user_icons_sources.erase(p_icon_name);
+	user_icons.erase(p_icon_name);
+	return OK;
+}
+
+bool has_user_icon(const String &p_icon_name) {
+	ERR_FAIL_COND_V_MSG(p_icon_name.is_empty(), false, "Icon name cannot be empty.");
+
+	return user_icons.has(p_icon_name);
+}
+
+Ref<ImageTexture> get_user_icon(const String &p_icon_name) {
+	ERR_FAIL_COND_V_MSG(p_icon_name.is_empty(), Ref<ImageTexture>(), "Icon name cannot be empty.");
+
+	if (user_icons.has(p_icon_name)) {
+		return user_icons[p_icon_name];
+	}
+	return Ref<ImageTexture>();
+}
+
+PackedStringArray get_user_icons_list() {
+	PackedStringArray icons_list;
+	for (const String p_icon_name : user_icons.keys()) {
+		icons_list.push_back(p_icon_name);
+	}
+	return icons_list;
+}
+
+bool has_icon(const String &p_icon_name) {
+	ERR_FAIL_COND_V_MSG(p_icon_name.is_empty(), false, "Icon name cannot be empty.");
+
+	return icons.has(p_icon_name);
+}
+
+Ref<ImageTexture> get_icon(const String &p_icon_name) {
+	ERR_FAIL_COND_V_MSG(p_icon_name.is_empty(), Ref<ImageTexture>(), "Icon name cannot be empty.");
+
+	if (icons.has(p_icon_name)) {
+		return icons[p_icon_name];
+	}
+	return Ref<ImageTexture>();
+}
+
+PackedStringArray get_icons_list() {
+	PackedStringArray icons_list;
+	for (const String p_icon_name : icons.keys()) {
+		icons_list.push_back(p_icon_name);
+	}
+	return icons_list;
+}
+
+void update_theme_icons(Ref<Theme> &p_theme, const Color &p_font_color, const Color &p_accent_color) {
 	if (icons.is_empty()) {
 		Ref<Texture2D> empty_icon = memnew(ImageTexture);
 		p_theme->set_icon("increment", "HScrollBar", empty_icon);
@@ -212,16 +290,29 @@ void update_theme_icons(Ref<Theme> &p_theme, Color p_font_color, Color p_accent_
 	}
 
 	const float scale = p_theme->get_default_base_scale();
+#ifdef MODULE_SVG_ENABLED
 	const Color font_color = p_font_color.clamp();
 	const Color accent_color = p_accent_color.clamp();
+#else
+	Ref<Image> img = Image::create_empty(Math::round(16 * scale), Math::round(16 * scale), false, Image::FORMAT_RGBA8);
+#endif // MODULE_SVG_ENABLED
 
 	for (int i = 0; i < default_theme_icons_count; i++) {
-		Ref<Image> img = generate_icon(i, scale, font_color, accent_color);
+#ifdef MODULE_SVG_ENABLED
+		Ref<Image> img = generate_icon(default_theme_icons_sources[i], scale, font_color, accent_color);
+#endif // MODULE_SVG_ENABLED
 		if (icons.has(default_theme_icons_names[i]) && ((Ref<ImageTexture>)icons[default_theme_icons_names[i]])->get_size() == (Vector2)img->get_size()) {
 			((Ref<ImageTexture>)icons[default_theme_icons_names[i]])->update(img);
 		} else {
 			icons[default_theme_icons_names[i]] = ImageTexture::create_from_image(img);
 		}
+	}
+
+	for (const String icon_name : user_icons_sources.keys()) {
+#ifdef MODULE_SVG_ENABLED
+		Ref<Image> img = generate_icon(user_icons_sources[icon_name], scale, font_color, accent_color);
+#endif // MODULE_SVG_ENABLED
+		update_user_icon(icon_name, img);
 	}
 
 	p_theme->set_icon("checked", "CheckBox", icons["checked"]);
@@ -381,7 +472,7 @@ void update_theme_icons(Ref<Theme> &p_theme, Color p_font_color, Color p_accent_
 	ThemeDB::get_singleton()->set_fallback_icon(icons["error_icon"]);
 }
 
-Color contrast_color(Color p_color, float p_contrast) {
+Color contrast_color(const Color &p_color, float p_contrast) {
 	if (Math::is_zero_approx(p_contrast)) {
 		return p_color;
 	}
@@ -398,15 +489,15 @@ Color contrast_color(Color p_color, float p_contrast) {
 // `Panel` and `PanelContainer` uses the `base_color` by default, another variation `FlatPanel` and `FlatPanelContainer` uses `bg_color`.
 // `TabContainer` and `FoldableContainer` panels uses the `bg_color` by default, another variation `FlatTabContainer` and `FlatFoldableContainer` uses `base_color`.
 // Other panels that doesn't allow having children like `Tree` and `ItemList` uses `style_normal_color` by default.
-void update_theme_colors(Ref<Theme> &p_theme, Color p_base_color, Color p_accent_color, float p_contrast, float p_normal_contrast, float p_hover_contrast, float p_pressed_contrast, float p_bg_contrast) {
+void update_theme_colors(Ref<Theme> &p_theme, const Color &p_base_color, const Color &p_accent_color, float p_contrast, float p_normal_contrast, float p_hover_contrast, float p_pressed_contrast, float p_bg_contrast) {
 	const Color base_color = p_base_color.clamp();
 	const Color accent_color = p_accent_color.clamp();
 
-	const Color contrasted_color = contrast_color(base_color, p_contrast);
-	const Color bg_color = base_color.lerp(contrasted_color, p_bg_contrast).clamp();
-	const Color style_normal_color = base_color.lerp(contrasted_color, p_normal_contrast).clamp();
-	const Color style_pressed_color = base_color.lerp(contrasted_color, p_pressed_contrast).clamp();
-	const Color style_hover_color = base_color.lerp(contrasted_color, p_hover_contrast).clamp();
+	const Color mono_color = contrast_color(base_color, p_contrast);
+	const Color bg_color = base_color.lerp(mono_color, p_bg_contrast).clamp();
+	const Color style_normal_color = base_color.lerp(mono_color, p_normal_contrast).clamp();
+	const Color style_pressed_color = base_color.lerp(mono_color, p_pressed_contrast).clamp();
+	const Color style_hover_color = base_color.lerp(mono_color, p_hover_contrast).clamp();
 	const Color style_disabled_color = Color(style_normal_color.r, style_normal_color.g, style_normal_color.b, 0.4);
 	const Color bg_color2 = Color(bg_color.r, bg_color.g, bg_color.b, 0.6);
 	const Color accent_color2 = Color(accent_color.r, accent_color.g, accent_color.b, 0.6);
@@ -512,9 +603,20 @@ void update_theme_colors(Ref<Theme> &p_theme, Color p_base_color, Color p_accent
 	p_theme->set_color("activity", "GraphEdit", Color(v, v, v));
 	p_theme->set_color("connection_hover_tint_color", "GraphEdit", Color(1.f - v, 1.f - v, 1.f - v, 0.3));
 	p_theme->set_color("connection_valid_target_tint_color", "GraphEdit", Color(v, v, v, 0.4));
+
+	p_theme->set_color("base_color", "Colors", base_color);
+	p_theme->set_color("accent_color", "Colors", accent_color);
+	p_theme->set_color("accent_color2", "Colors", accent_color2);
+	p_theme->set_color("bg_color", "Colors", bg_color);
+	p_theme->set_color("bg_color2", "Colors", bg_color2);
+	p_theme->set_color("normal_color", "Colors", style_normal_color);
+	p_theme->set_color("pressed_color", "Colors", style_pressed_color);
+	p_theme->set_color("hover_color", "Colors", style_hover_color);
+	p_theme->set_color("disabled_color", "Colors", style_disabled_color);
+	p_theme->set_color("mono_color", "Colors", mono_color);
 }
 
-void update_font_color(Ref<Theme> &p_theme, Color p_color) {
+void update_font_color(Ref<Theme> &p_theme, const Color &p_color) {
 	Color font_color = p_color.clamp();
 	is_dark_theme = font_color.get_luminance() > 0.5;
 
@@ -646,9 +748,11 @@ void update_font_color(Ref<Theme> &p_theme, Color p_color) {
 	p_theme->set_color("completion_scroll_hovered_color", "CodeEdit", font_color);
 	p_theme->set_color("completion_scroll_color", "CodeEdit", font_color);
 	p_theme->set_color("button_icon_disabled", "FoldableContainer", font_color);
+
+	p_theme->set_color("font_color", "Colors", p_color);
 }
 
-void update_font_outline_color(Ref<Theme> &p_theme, Color p_color) {
+void update_font_outline_color(Ref<Theme> &p_theme, const Color &p_color) {
 	Color outline_color = p_color.clamp();
 	p_theme->set_color("font_outline_color", "Button", outline_color);
 	p_theme->set_color("font_outline_color", "RichTextLabel", outline_color);
@@ -674,6 +778,8 @@ void update_font_outline_color(Ref<Theme> &p_theme, Color p_color) {
 	p_theme->set_color("font_outline_color", "MenuBar", outline_color);
 	p_theme->set_color("font_separator_outline_color", "PopupMenu", outline_color);
 	p_theme->set_color("title_outline_modulate", "Window", outline_color);
+
+	p_theme->set_color("font_outline_color", "Colors", outline_color);
 }
 
 void update_font_outline_size(Ref<Theme> &p_theme, int p_outline_size) {
@@ -703,6 +809,8 @@ void update_font_outline_size(Ref<Theme> &p_theme, int p_outline_size) {
 	p_theme->set_constant("outline_size", "OptionButton", outline_size);
 	p_theme->set_constant("outline_size", "LinkButton", outline_size);
 	p_theme->set_constant("outline_size", "MenuBar", outline_size);
+
+	p_theme->set_constant("font_outline_size", "Constants", outline_size);
 }
 
 void update_font_size(Ref<Theme> &p_theme, int p_font_size) {
@@ -863,6 +971,8 @@ void update_theme_margins(Ref<Theme> &p_theme, int p_margin) {
 	p_theme->set_constant("icon_margin", "ItemList", margin);
 	p_theme->set_constant("h_separation", "GridContainer", margin);
 	p_theme->set_constant("v_separation", "GridContainer", margin);
+
+	p_theme->set_constant("margin", "Constants", margin);
 }
 
 void update_theme_padding(Ref<Theme> &p_theme, int p_padding) {
@@ -886,6 +996,8 @@ void update_theme_padding(Ref<Theme> &p_theme, int p_padding) {
 	p_theme->set_constant("margin_bottom", "MarginContainer", padding);
 	p_theme->set_constant("item_start_padding", "PopupMenu", padding);
 	p_theme->set_constant("item_end_padding", "PopupMenu", padding);
+
+	p_theme->set_constant("padding", "Constants", padding);
 }
 
 void update_theme_corner_radius(Ref<Theme> &p_theme, int p_corner_radius) {
@@ -923,6 +1035,9 @@ void update_theme_corner_radius(Ref<Theme> &p_theme, int p_corner_radius) {
 	int focus_border = MAX(p_corner_radius - 2, 0) * base_scale;
 	button_focus_style->set_corner_radius_all(focus_border);
 	color_button_focus_style->set_corner_radius_all(focus_border);
+
+	p_theme->set_constant("corner_radius", "Constants", corners);
+	p_theme->set_constant("focus_corners", "Constants", focus_border);
 }
 
 void update_theme_border_width(Ref<Theme> &p_theme, int p_border_width) {
@@ -930,6 +1045,8 @@ void update_theme_border_width(Ref<Theme> &p_theme, int p_border_width) {
 
 	popup_panel_style->set_content_margin_all(MAX(border_width, 1));
 	button_focus_style->set_border_width_all(MAX(border_width, 1));
+
+	p_theme->set_constant("border_width", "Constants", border_width);
 }
 
 void update_theme_border_padding(Ref<Theme> &p_theme, int p_border_padding) {
@@ -953,6 +1070,8 @@ void update_theme_border_padding(Ref<Theme> &p_theme, int p_border_padding) {
 	flat_foldable_panel_style->set_content_margin(SIDE_LEFT, border_padding);
 	flat_foldable_panel_style->set_content_margin(SIDE_RIGHT, border_padding);
 	flat_foldable_panel_style->set_content_margin(SIDE_BOTTOM, border_padding);
+
+	p_theme->set_constant("border_padding", "Constants", border_padding);
 }
 
 void update_theme_scale(Ref<Theme> &p_theme) {
@@ -1074,7 +1193,7 @@ void update_theme_scale(Ref<Theme> &p_theme) {
 	flat_tab_selected_style->set_content_margin_individual(x6_scale, x4_scale, x6_scale, x2_scale);
 }
 
-void make_default_theme(Ref<Font> p_font, float p_scale, TextServer::SubpixelPositioning p_font_subpixel, TextServer::Hinting p_font_hinting, TextServer::FontAntialiasing p_font_antialiasing, TextServer::FontLCDSubpixelLayout p_font_lcd_subpixel_layout, bool p_font_msdf, bool p_font_generate_mipmaps, Color p_base_color, Color p_accent_color, Color p_font_color, Color p_font_outline_color, float p_contrast, float p_normal_contrast, float p_hover_contrast, float p_pressed_contrast, float p_bg_contrast, int p_margin, int p_padding, int p_border_width, int p_corner_radius, int p_font_size, int p_font_outline, float p_font_embolden, int p_font_spacing_glyph, int p_font_spacing_space, int p_font_spacing_top, int p_font_spacing_bottom) {
+void make_default_theme(Ref<Font> p_font, float p_scale, TextServer::SubpixelPositioning p_font_subpixel, TextServer::Hinting p_font_hinting, TextServer::FontAntialiasing p_font_antialiasing, TextServer::FontLCDSubpixelLayout p_font_lcd_subpixel_layout, bool p_font_msdf, bool p_font_generate_mipmaps, const Color &p_base_color, const Color &p_accent_color, const Color &p_font_color, const Color &p_font_outline_color, float p_contrast, float p_normal_contrast, float p_hover_contrast, float p_pressed_contrast, float p_bg_contrast, int p_margin, int p_padding, int p_border_width, int p_corner_radius, int p_font_size, int p_font_outline, float p_font_embolden, int p_font_spacing_glyph, int p_font_spacing_space, int p_font_spacing_top, int p_font_spacing_bottom) {
 	float scale = CLAMP(p_scale, 0.5, 8.0);
 
 	Ref<Theme> t;
@@ -1569,6 +1688,8 @@ void make_default_theme(Ref<Font> p_font, float p_scale, TextServer::SubpixelPos
 
 void finalize_default_theme() {
 	icons.clear();
+	user_icons.clear();
+	user_icons_sources.clear();
 
 	panel_style.unref();
 	flat_panel_style.unref();

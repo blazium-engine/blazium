@@ -220,6 +220,7 @@ public:
 
 #ifndef USE_LEGACY_THEME
 	void freeze_change_propagation();
+	bool is_frozen() const;
 	void unfreeze_and_propagate_changes();
 #endif // !USE_LEGACY_THEME
 
