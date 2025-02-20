@@ -36,6 +36,7 @@
 #include "scene/main/node.h"
 #include "scene/main/window.h"
 #include "scene/resources/font.h"
+#include "scene/resources/image_texture.h"
 #include "scene/resources/style_box.h"
 #include "scene/resources/texture.h"
 #include "servers/text_server.h"
@@ -449,6 +450,18 @@ void ThemeDB::_sort_theme_items() {
 }
 
 #ifndef USE_LEGACY_THEME
+void ThemeDB::freeze_default_theme() {
+	default_theme->freeze_change_propagation();
+}
+
+void ThemeDB::unfreeze_default_theme() {
+	default_theme->unfreeze_and_propagate_changes();
+}
+
+bool ThemeDB::is_default_theme_frozen() const {
+	return default_theme->is_frozen();
+}
+
 void ThemeDB::_update_default_theme() {
 	bool update_icons = false;
 	bool scale_changed = false;
@@ -467,8 +480,9 @@ void ThemeDB::_update_default_theme() {
 			update_colors = true;
 		}
 		font_color = _font_color;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_font_color(default_theme, font_color);
+		emit_signal(SNAME("font_color_changed"));
 		update_icons = true;
 	}
 
@@ -480,7 +494,7 @@ void ThemeDB::_update_default_theme() {
 	}
 
 	if (update_icons || scale_changed) {
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_theme_icons(default_theme, font_color, accent_color);
 		emit_signal(SNAME("icons_changed"));
 	}
@@ -488,57 +502,65 @@ void ThemeDB::_update_default_theme() {
 	Color _font_outline_color = GLOBAL_GET("gui/theme/font_outline_color");
 	if (font_outline_color != _font_outline_color) {
 		font_outline_color = _font_outline_color;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_font_outline_color(default_theme, font_outline_color);
+		emit_signal(SNAME("font_outline_color_changed"));
 	}
 
 	int _margin = GLOBAL_GET("gui/theme/margin");
 	if (margin != _margin || scale_changed) {
 		margin = _margin;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_theme_margins(default_theme, margin);
+		emit_signal(SNAME("margin_changed"));
 	}
 
 	int _padding = GLOBAL_GET("gui/theme/padding");
 	if (padding != _padding || scale_changed) {
 		padding = _padding;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_theme_padding(default_theme, padding);
+		emit_signal(SNAME("padding_changed"));
 		border_padding_changed = true;
 	}
 
 	int _corner_radius = GLOBAL_GET("gui/theme/corner_radius");
 	if (corner_radius != _corner_radius || scale_changed) {
 		corner_radius = _corner_radius;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_theme_corner_radius(default_theme, corner_radius);
+		emit_signal(SNAME("corner_radius_changed"));
 	}
 
 	int _border_width = GLOBAL_GET("gui/theme/border_width");
 	if (border_width != _border_width || scale_changed) {
 		border_width = _border_width;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_theme_border_width(default_theme, border_width);
+		emit_signal(SNAME("border_width_changed"));
 		border_padding_changed = true;
 	}
 
 	int _font_outline_size = GLOBAL_GET("gui/theme/font_outline_size");
 	if (font_outline_size != _font_outline_size || scale_changed) {
 		font_outline_size = _font_outline_size;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_font_outline_size(default_theme, font_outline_size);
+		emit_signal(SNAME("font_outline_size_changed"));
 	}
 
 	int _font_size = GLOBAL_GET("gui/theme/font_size");
 	if (font_size != _font_size) {
 		font_size = _font_size;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_font_size(default_theme, font_size);
+		emit_signal(SNAME("font_size_changed"));
 	}
 
 	if (border_padding_changed || scale_changed) {
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_theme_border_padding(default_theme, border_width + padding);
+		emit_signal(SNAME("border_padding_changed"));
 	}
 
 	Color _base_color = GLOBAL_GET("gui/theme/base_color");
@@ -578,42 +600,43 @@ void ThemeDB::_update_default_theme() {
 	}
 
 	if (update_colors) {
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_theme_colors(default_theme, base_color, accent_color, contrast, normal_contrast, hover_contrast, pressed_contrast, bg_contrast);
+		emit_signal(SNAME("colors_changed"));
 	}
 
 	float _font_embolden = GLOBAL_GET("gui/theme/font_embolden");
 	if (font_embolden != _font_embolden) {
 		font_embolden = _font_embolden;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_font_embolden(font_embolden);
 	}
 
 	int _font_spacing_glyph = GLOBAL_GET("gui/theme/font_spacing_glyph");
 	if (font_spacing_glyph != _font_spacing_glyph || scale_changed) {
 		font_spacing_glyph = _font_spacing_glyph;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_font_spacing_glyph(Math::round(font_spacing_glyph * _scale));
 	}
 
 	int _font_spacing_space = GLOBAL_GET("gui/theme/font_spacing_space");
 	if (font_spacing_space != _font_spacing_space || scale_changed) {
 		font_spacing_space = _font_spacing_space;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_font_spacing_space(Math::round(font_spacing_space * _scale));
 	}
 
 	int _font_spacing_top = GLOBAL_GET("gui/theme/font_spacing_top");
 	if (font_spacing_top != _font_spacing_top || scale_changed) {
 		font_spacing_top = _font_spacing_top;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_font_spacing_top(Math::round(font_spacing_top * _scale));
 	}
 
 	int _font_spacing_bottom = GLOBAL_GET("gui/theme/font_spacing_bottom");
 	if (font_spacing_bottom != _font_spacing_bottom || scale_changed) {
 		font_spacing_bottom = _font_spacing_bottom;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_font_spacing_bottom(Math::round(font_spacing_bottom * _scale));
 	}
 
@@ -626,58 +649,95 @@ void ThemeDB::_update_default_theme() {
 		} else {
 			project_font = Ref<Font>();
 		}
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_theme_font(default_theme, project_font);
+		emit_signal(SNAME("font_changed"));
 	}
 
 	TextServer::SubpixelPositioning _font_subpixel_positioning = (TextServer::SubpixelPositioning)(int)GLOBAL_GET("gui/theme/default_font_subpixel_positioning");
 	if (font_subpixel_positioning != _font_subpixel_positioning) {
 		font_subpixel_positioning = _font_subpixel_positioning;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_font_subpixel_positioning(font_subpixel_positioning);
 	}
 
 	TextServer::FontAntialiasing _font_antialiasing = (TextServer::FontAntialiasing)(int)GLOBAL_GET("gui/theme/default_font_antialiasing");
 	if (font_antialiasing != _font_antialiasing) {
 		font_antialiasing = _font_antialiasing;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_font_antialiasing(font_antialiasing);
 	}
 
 	TextServer::FontLCDSubpixelLayout _font_lcd_subpixel_layout = (TextServer::FontLCDSubpixelLayout)(int)GLOBAL_GET("gui/theme/lcd_subpixel_layout");
 	if (font_lcd_subpixel_layout != _font_lcd_subpixel_layout) {
 		font_lcd_subpixel_layout = _font_lcd_subpixel_layout;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_font_lcd_subpixel_layout(font_lcd_subpixel_layout);
 	}
 
 	TextServer::Hinting _font_hinting = (TextServer::Hinting)(int)GLOBAL_GET("gui/theme/default_font_hinting");
 	if (font_hinting != _font_hinting) {
 		font_hinting = _font_hinting;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_font_hinting(font_hinting);
 	}
 
 	bool _font_msdf = GLOBAL_GET("gui/theme/default_font_multichannel_signed_distance_field");
 	if (font_msdf != _font_msdf) {
 		font_msdf = _font_msdf;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_font_msdf(font_msdf);
 	}
 
 	bool _font_generate_mipmaps = GLOBAL_GET("gui/theme/default_font_generate_mipmaps");
 	if (font_generate_mipmaps != _font_generate_mipmaps) {
 		font_generate_mipmaps = _font_generate_mipmaps;
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_font_generate_mipmaps(font_generate_mipmaps);
 	}
 
 	if (scale_changed) {
-		default_theme->freeze_change_propagation();
+		freeze_default_theme();
 		update_theme_scale(default_theme);
+		emit_signal(SNAME("scale_changed"));
 	}
 
-	default_theme->unfreeze_and_propagate_changes();
+	if (is_default_theme_frozen()) {
+		callable_mp(this, &ThemeDB::unfreeze_default_theme).call_deferred();
+		emit_signal(SNAME("theme_changed"));
+	}
+}
+
+Error ThemeDB::theme_add_user_icon(const String &p_icon_name, const String &p_icon_source) {
+	return add_user_icon(p_icon_name, p_icon_source, scale, font_color, accent_color);
+}
+
+Error ThemeDB::theme_remove_user_icon(const String &p_icon_name) {
+	return remove_user_icon(p_icon_name);
+}
+
+bool ThemeDB::theme_has_user_icon(const String &p_icon_name) {
+	return has_user_icon(p_icon_name);
+}
+
+Ref<ImageTexture> ThemeDB::theme_get_user_icon(const String &p_icon_name) {
+	return get_user_icon(p_icon_name);
+}
+
+PackedStringArray ThemeDB::theme_get_user_icons_list() {
+	return get_user_icons_list();
+}
+
+bool ThemeDB::theme_has_icon(const String &p_icon_name) {
+	return has_icon(p_icon_name);
+}
+
+Ref<ImageTexture> ThemeDB::theme_get_icon(const String &p_icon_name) {
+	return get_icon(p_icon_name);
+}
+
+PackedStringArray ThemeDB::theme_get_icons_list() {
+	return get_icons_list();
 }
 #endif // !USE_LEGACY_THEME
 
@@ -698,6 +758,20 @@ void ThemeDB::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_fallback_stylebox", "stylebox"), &ThemeDB::set_fallback_stylebox);
 	ClassDB::bind_method(D_METHOD("get_fallback_stylebox"), &ThemeDB::get_fallback_stylebox);
 
+#ifndef USE_LEGACY_THEME
+	ClassDB::bind_method(D_METHOD("freeze_default_theme"), &ThemeDB::freeze_default_theme);
+	ClassDB::bind_method(D_METHOD("unfreeze_default_theme"), &ThemeDB::unfreeze_default_theme);
+	ClassDB::bind_method(D_METHOD("is_default_theme_frozen"), &ThemeDB::is_default_theme_frozen);
+	ClassDB::bind_method(D_METHOD("add_user_icon", "icon_name", "icon_source"), &ThemeDB::theme_add_user_icon);
+	ClassDB::bind_method(D_METHOD("remove_user_icon", "icon_name"), &ThemeDB::theme_remove_user_icon);
+	ClassDB::bind_method(D_METHOD("has_user_icon", "icon_name"), &ThemeDB::theme_has_user_icon);
+	ClassDB::bind_method(D_METHOD("get_user_icon", "icon_name"), &ThemeDB::theme_get_user_icon);
+	ClassDB::bind_method(D_METHOD("get_user_icon_list"), &ThemeDB::theme_get_user_icons_list);
+	ClassDB::bind_method(D_METHOD("has_icon", "icon_name"), &ThemeDB::theme_has_icon);
+	ClassDB::bind_method(D_METHOD("get_icon", "icon_name"), &ThemeDB::theme_get_icon);
+	ClassDB::bind_method(D_METHOD("get_icon_list"), &ThemeDB::theme_get_icons_list);
+#endif // !USE_LEGACY_THEME
+
 	ADD_GROUP("Fallback values", "fallback_");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "fallback_base_scale", PROPERTY_HINT_RANGE, "0.0,2.0,0.01,or_greater"), "set_fallback_base_scale", "get_fallback_base_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "fallback_font", PROPERTY_HINT_RESOURCE_TYPE, "Font", PROPERTY_USAGE_NONE), "set_fallback_font", "get_fallback_font");
@@ -707,7 +781,20 @@ void ThemeDB::_bind_methods() {
 
 	ADD_SIGNAL(MethodInfo("fallback_changed"));
 #ifndef USE_LEGACY_THEME
+	ADD_SIGNAL(MethodInfo("theme_changed"));
 	ADD_SIGNAL(MethodInfo("icons_changed"));
+	ADD_SIGNAL(MethodInfo("colors_changed"));
+	ADD_SIGNAL(MethodInfo("scale_changed"));
+	ADD_SIGNAL(MethodInfo("margin_changed"));
+	ADD_SIGNAL(MethodInfo("padding_changed"));
+	ADD_SIGNAL(MethodInfo("corner_radius_changed"));
+	ADD_SIGNAL(MethodInfo("border_width_changed"));
+	ADD_SIGNAL(MethodInfo("border_padding_changed"));
+	ADD_SIGNAL(MethodInfo("font_color_changed"));
+	ADD_SIGNAL(MethodInfo("font_outline_color_changed"));
+	ADD_SIGNAL(MethodInfo("font_outline_size_changed"));
+	ADD_SIGNAL(MethodInfo("font_size_changed"));
+	ADD_SIGNAL(MethodInfo("font_changed"));
 #endif // !USE_LEGACY_THEME
 }
 
