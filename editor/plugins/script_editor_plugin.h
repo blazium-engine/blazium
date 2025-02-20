@@ -133,7 +133,7 @@ class ScriptEditorQuickOpen : public ConfirmationDialog {
 
 	void _update_search();
 
-	void _sbox_input(const Ref<InputEvent> &p_ie);
+	void _sbox_input(const Ref<InputEvent> &p_event);
 	Vector<String> functions;
 
 	void _confirmed();
@@ -172,7 +172,7 @@ public:
 	virtual Variant get_edit_state() = 0;
 	virtual void set_edit_state(const Variant &p_state) = 0;
 	virtual Variant get_navigation_state() = 0;
-	virtual void goto_line(int p_line, bool p_with_error = false) = 0;
+	virtual void goto_line(int p_line, int p_column = 0) = 0;
 	virtual void set_executing_line(int p_line) = 0;
 	virtual void clear_executing_line() = 0;
 	virtual void trim_trailing_whitespace() = 0;

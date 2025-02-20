@@ -652,7 +652,6 @@ class AnimationTrackEditor : public VBoxContainer {
 
 	void _pick_track_filter_text_changed(const String &p_newtext);
 	void _pick_track_select_recursive(TreeItem *p_item, const String &p_filter, Vector<Node *> &p_select_candidates);
-	void _pick_track_filter_input(const Ref<InputEvent> &p_ie);
 
 	double snap_unit;
 	void _update_snap_unit();
@@ -732,6 +731,7 @@ public:
 	bool is_key_clipboard_active() const;
 	bool is_moving_selection() const;
 	bool is_snap_enabled() const;
+	bool is_bezier_editor_active() const;
 	bool can_add_reset_key() const;
 	float get_moving_selection_offset() const;
 	float snap_time(float p_value, bool p_relative = false);

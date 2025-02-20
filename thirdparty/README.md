@@ -560,18 +560,19 @@ in the MSVC debugger.
 ## mbedtls
 
 - Upstream: https://github.com/Mbed-TLS/mbedtls
-- Version: 3.6.0 (2ca6c285a0dd3f33982dd57299012dacab1ff206, 2024)
+- Version: 3.6.1 (71c569d44bf3a8bd53d874c81ee8ac644dd6e9e3, 2024)
 - License: Apache 2.0
 
 File extracted from upstream release tarball:
 
 - All `.h` from `include/mbedtls/` to `thirdparty/mbedtls/include/mbedtls/`
   and all `.h` from `include/psa/` to `thirdparty/mbedtls/include/psa/`
-- All `.c` and `.h` from `library/` to `thirdparty/mbedtls/library/` except
-  for the `psa_*.c` source files
+- All `.c` and `.h` from `library/` to `thirdparty/mbedtls/library/`
+- From `library/` to `thirdparty/mbedtls/library/`:
+  - All `.c` and `.h` files
+  - Except `bignum_mod.c`, `block_cipher.c`, `ecp_curves_new.c`, `lmots.c`,
+  `lms.c`
 - The `LICENSE` file (edited to keep only the Apache 2.0 variant)
-- Applied the patch `no-flexible-arrays.diff` to fix Windows build (see
-  upstream GH-9020)
 - Applied the patch `msvc-redeclaration-bug.diff` to fix a compilation error
   with some MSVC versions
 - Added 2 files `godot_core_mbedtls_platform.c` and `godot_core_mbedtls_config.h`
@@ -1094,7 +1095,7 @@ Files extracted from upstream source:
 
 Files extracted from upstream source:
 
-- All `.c` and `.h` files, minus `infback.c`
+- All `.c` and `.h` files, except `gz*.c` and `infback.c`
 - `LICENSE`
 
 

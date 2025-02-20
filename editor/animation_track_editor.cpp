@@ -1405,12 +1405,26 @@ void AnimationTimelineEdit::_anim_loop_pressed() {
 		undo_redo->add_undo_method(this, "update_values");
 		undo_redo->commit_action();
 	} else {
-		String base_path = animation->get_path();
-		if (FileAccess::exists(base_path + ".import")) {
-			EditorNode::get_singleton()->show_warning(TTR("Can't change loop mode on animation instanced from imported scene."));
-		} else {
-			EditorNode::get_singleton()->show_warning(TTR("Can't change loop mode on animation embedded in another scene."));
+		String base = animation->get_path();
+		int srpos = base.find("::");
+		if (srpos != -1) {
+			base = animation->get_path().substr(0, srpos);
 		}
+
+		if (FileAccess::exists(base + ".import")) {
+			if (ResourceLoader::get_resource_type(base) == "PackedScene") {
+				EditorNode::get_singleton()->show_warning(TTR("Can't change loop mode on animation instanced from an imported scene.\n\nTo change this animation's loop mode, navigate to the scene's Advanced Import settings and select the animation.\nYou can then change the loop mode from the inspector menu."));
+			} else {
+				EditorNode::get_singleton()->show_warning(TTR("Can't change loop mode on animation instanced from an imported resource."));
+			}
+		} else {
+			if (ResourceLoader::get_resource_type(base) == "PackedScene") {
+				EditorNode::get_singleton()->show_warning(TTR("Can't change loop mode on animation embedded in another scene.\n\nYou must open this scene and change the animation's loop mode from there."));
+			} else {
+				EditorNode::get_singleton()->show_warning(TTR("Can't change loop mode on animation embedded in another resource."));
+			}
+		}
+
 		update_values();
 	}
 }
@@ -1580,13 +1594,17 @@ void AnimationTimelineEdit::_notification(int p_what) {
 				max_digit_width = MAX(digit_width, max_digit_width);
 			}
 			const int max_sc = int(Math::ceil(zoomw / scale));
-			const int max_sc_width = String::num(max_sc).length() * max_digit_width;
+			const int max_sc_width = String::num(max_sc).length() * Math::ceil(max_digit_width);
+
+			const int min_margin = MAX(text_secondary_margin, text_primary_margin);
 
 			while (!step_found) {
 				int min = max_sc_width;
 				if (decimals > 0) {
-					min += period_width + max_digit_width * decimals;
+					min += Math::ceil(period_width + max_digit_width * decimals);
 				}
+
+				min += (min_margin * 2);
 
 				static const int _multp[3] = { 1, 2, 5 };
 				for (int i = 0; i < 3; i++) {
@@ -1643,10 +1661,11 @@ void AnimationTimelineEdit::_notification(int p_what) {
 
 					int sc = int(Math::floor(pos * SC_ADJ));
 					int prev_sc = int(Math::floor(prev * SC_ADJ));
-					bool sub = (sc % SC_ADJ);
 
 					if ((sc / step) != (prev_sc / step) || (prev_sc < 0 && sc >= 0)) {
 						int scd = sc < 0 ? prev_sc : sc;
+						bool sub = (((scd - (scd % step)) % (dec * 10)) != 0);
+
 						int line_margin = sub ? v_line_secondary_margin : v_line_primary_margin;
 						int line_width = sub ? v_line_secondary_width : v_line_primary_width;
 						Color line_color = sub ? v_line_secondary_color : v_line_primary_color;
@@ -4574,6 +4593,10 @@ bool AnimationTrackEditor::is_snap_enabled() const {
 	return snap->is_pressed() ^ Input::get_singleton()->is_key_pressed(Key::CMD_OR_CTRL);
 }
 
+bool AnimationTrackEditor::is_bezier_editor_active() const {
+	return bezier_edit->is_visible();
+}
+
 bool AnimationTrackEditor::can_add_reset_key() const {
 	for (const KeyValue<SelectedKey, KeyInfo> &E : selection) {
 		const Animation::TrackType track_type = animation->track_get_type(E.key.track);
@@ -6880,8 +6903,8 @@ void AnimationTrackEditor::_edit_menu_pressed(int p_option) {
 			_redraw_tracks();
 			_update_key_edit();
 			EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-			undo_redo->clear_history(true, undo_redo->get_history_id_for_object(animation.ptr()));
-			undo_redo->clear_history(true, undo_redo->get_history_id_for_object(this));
+			undo_redo->clear_history(undo_redo->get_history_id_for_object(animation.ptr()));
+			undo_redo->clear_history(undo_redo->get_history_id_for_object(this));
 
 		} break;
 		case EDIT_CLEAN_UP_ANIMATION: {
@@ -7023,8 +7046,8 @@ void AnimationTrackEditor::_cleanup_animation(Ref<Animation> p_animation) {
 	}
 
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-	undo_redo->clear_history(true, undo_redo->get_history_id_for_object(animation.ptr()));
-	undo_redo->clear_history(true, undo_redo->get_history_id_for_object(this));
+	undo_redo->clear_history(undo_redo->get_history_id_for_object(animation.ptr()));
+	undo_redo->clear_history(undo_redo->get_history_id_for_object(this));
 	_update_tracks();
 }
 
@@ -7193,24 +7216,6 @@ void AnimationTrackEditor::_pick_track_select_recursive(TreeItem *p_item, const 
 	while (c) {
 		_pick_track_select_recursive(c, p_filter, p_select_candidates);
 		c = c->get_next();
-	}
-}
-
-void AnimationTrackEditor::_pick_track_filter_input(const Ref<InputEvent> &p_ie) {
-	Ref<InputEventKey> k = p_ie;
-
-	if (k.is_valid()) {
-		switch (k->get_keycode()) {
-			case Key::UP:
-			case Key::DOWN:
-			case Key::PAGEUP:
-			case Key::PAGEDOWN: {
-				pick_track->get_scene_tree()->get_scene_tree()->gui_input(k);
-				pick_track->get_filter_line_edit()->accept_event();
-			} break;
-			default:
-				break;
-		}
 	}
 }
 
@@ -7435,11 +7440,9 @@ AnimationTrackEditor::AnimationTrackEditor() {
 
 	pick_track = memnew(SceneTreeDialog);
 	add_child(pick_track);
-	pick_track->register_text_enter(pick_track->get_filter_line_edit());
 	pick_track->set_title(TTR("Pick a node to animate:"));
 	pick_track->connect("selected", callable_mp(this, &AnimationTrackEditor::_new_track_node_selected));
 	pick_track->get_filter_line_edit()->connect(SceneStringName(text_changed), callable_mp(this, &AnimationTrackEditor::_pick_track_filter_text_changed));
-	pick_track->get_filter_line_edit()->connect(SceneStringName(gui_input), callable_mp(this, &AnimationTrackEditor::_pick_track_filter_input));
 
 	prop_selector = memnew(PropertySelector);
 	add_child(prop_selector);

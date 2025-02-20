@@ -196,7 +196,7 @@ private:
 				Ref<DirAccess> da;
 				if (DirAccess::exists(data_dir_root)) {
 					da = DirAccess::open(data_dir_root);
-					ERR_FAIL_NULL(da);
+					ERR_FAIL_COND(da.is_null());
 					ERR_FAIL_COND(da->erase_contents_recursive() != OK);
 				}
 				da = DirAccess::create_for_path(packed_path);

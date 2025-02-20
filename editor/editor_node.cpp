@@ -492,6 +492,9 @@ void EditorNode::_gdextensions_reloaded() {
 	// In case the developer is inspecting an object that will be changed by the reload.
 	InspectorDock::get_inspector_singleton()->update_tree();
 
+	// Reload script editor to revalidate GDScript if classes are added or removed.
+	ScriptEditor::get_singleton()->reload_scripts(true);
+
 	// Regenerate documentation.
 	EditorHelp::generate_doc();
 }
@@ -2925,7 +2928,7 @@ void EditorNode::_menu_option_confirm(int p_option, bool p_confirmed) {
 				ERR_PRINT("Failed to load scene");
 			}
 			editor_data.move_edited_scene_to_index(cur_idx);
-			EditorUndoRedoManager::get_singleton()->clear_history(false, editor_data.get_current_edited_scene_history_id());
+			EditorUndoRedoManager::get_singleton()->clear_history(editor_data.get_current_edited_scene_history_id(), false);
 			scene_tabs->set_current_tab(cur_idx);
 
 		} break;
@@ -3575,7 +3578,9 @@ void EditorNode::set_addon_plugin_enabled(const String &p_addon, bool p_enabled,
 	// Only try to load the script if it has a name. Else, the plugin has no init script.
 	if (script_path.length() > 0) {
 		script_path = addon_path.get_base_dir().path_join(script_path);
-		scr = ResourceLoader::load(script_path, "Script", ResourceFormatLoader::CACHE_MODE_IGNORE);
+		// We should not use the cached version on startup to prevent a script reload
+		// if it is already loaded and potentially running from autoloads. See GH-100750.
+		scr = ResourceLoader::load(script_path, "Script", EditorFileSystem::get_singleton()->doing_first_scan() ? ResourceFormatLoader::CACHE_MODE_REUSE : ResourceFormatLoader::CACHE_MODE_IGNORE);
 
 		if (scr.is_null()) {
 			show_warning(vformat(TTR("Unable to load addon script from path: '%s'."), script_path));
@@ -3795,7 +3800,7 @@ void EditorNode::_set_current_scene_nocheck(int p_idx) {
 			editor_folding.load_scene_folding(editor_data.get_edited_scene_root(p_idx), editor_data.get_scene_path(p_idx));
 		}
 
-		EditorUndoRedoManager::get_singleton()->clear_history(false, editor_data.get_scene_history_id(p_idx));
+		EditorUndoRedoManager::get_singleton()->clear_history(editor_data.get_scene_history_id(p_idx), false);
 	}
 
 	Dictionary state = editor_data.restore_edited_scene_state(editor_selection, &editor_history);
@@ -3906,7 +3911,7 @@ Error EditorNode::load_scene(const String &p_scene, bool p_ignore_broken_deps, b
 			_set_current_scene(idx);
 		}
 	} else {
-		EditorUndoRedoManager::get_singleton()->clear_history(false, editor_data.get_current_edited_scene_history_id());
+		EditorUndoRedoManager::get_singleton()->clear_history(editor_data.get_current_edited_scene_history_id(), false);
 		replacing_empty_scene = true;
 	}
 
@@ -4788,7 +4793,9 @@ bool EditorNode::is_object_of_custom_type(const Object *p_object, const StringNa
 }
 
 void EditorNode::progress_add_task(const String &p_task, const String &p_label, int p_steps, bool p_can_cancel) {
-	if (singleton->cmdline_export_mode) {
+	if (!singleton) {
+		return;
+	} else if (singleton->cmdline_export_mode) {
 		print_line(p_task + ": begin: " + p_label + " steps: " + itos(p_steps));
 	} else if (singleton->progress_dialog) {
 		singleton->progress_dialog->add_task(p_task, p_label, p_steps, p_can_cancel);
@@ -4796,7 +4803,9 @@ void EditorNode::progress_add_task(const String &p_task, const String &p_label, 
 }
 
 bool EditorNode::progress_task_step(const String &p_task, const String &p_state, int p_step, bool p_force_refresh) {
-	if (singleton->cmdline_export_mode) {
+	if (!singleton) {
+		return false;
+	} else if (singleton->cmdline_export_mode) {
 		print_line("\t" + p_task + ": step " + itos(p_step) + ": " + p_state);
 		return false;
 	} else if (singleton->progress_dialog) {
@@ -4807,7 +4816,9 @@ bool EditorNode::progress_task_step(const String &p_task, const String &p_state,
 }
 
 void EditorNode::progress_end_task(const String &p_task) {
-	if (singleton->cmdline_export_mode) {
+	if (!singleton) {
+		return;
+	} else if (singleton->cmdline_export_mode) {
 		print_line(p_task + ": end");
 	} else if (singleton->progress_dialog) {
 		singleton->progress_dialog->end_task(p_task);
@@ -5041,7 +5052,8 @@ void EditorNode::show_accept(const String &p_text, const String &p_title) {
 		_close_save_scene_progress();
 		accept->set_ok_button_text(p_title);
 		accept->set_text(p_text);
-		EditorInterface::get_singleton()->popup_dialog_centered(accept);
+		accept->reset_size();
+		EditorInterface::get_singleton()->popup_dialog_centered_clamped(accept, Size2i(), 0.0);
 	}
 }
 
@@ -5051,7 +5063,8 @@ void EditorNode::show_save_accept(const String &p_text, const String &p_title) {
 		_close_save_scene_progress();
 		save_accept->set_ok_button_text(p_title);
 		save_accept->set_text(p_text);
-		EditorInterface::get_singleton()->popup_dialog_centered(save_accept);
+		save_accept->reset_size();
+		EditorInterface::get_singleton()->popup_dialog_centered_clamped(save_accept, Size2i(), 0.0);
 	}
 }
 
@@ -5060,7 +5073,8 @@ void EditorNode::show_warning(const String &p_text, const String &p_title) {
 		_close_save_scene_progress();
 		warning->set_text(p_text);
 		warning->set_title(p_title);
-		EditorInterface::get_singleton()->popup_dialog_centered(warning);
+		warning->reset_size();
+		EditorInterface::get_singleton()->popup_dialog_centered_clamped(warning, Size2i(), 0.0);
 	} else {
 		WARN_PRINT(p_title + " " + p_text);
 	}
@@ -5772,7 +5786,7 @@ void EditorNode::reload_scene(const String &p_path) {
 			bool is_unsaved = EditorUndoRedoManager::get_singleton()->is_history_unsaved(current_history_id);
 
 			// Scene is not open, so at it might be instantiated. We'll refresh the whole scene later.
-			EditorUndoRedoManager::get_singleton()->clear_history(false, current_history_id);
+			EditorUndoRedoManager::get_singleton()->clear_history(current_history_id, false);
 			if (is_unsaved) {
 				EditorUndoRedoManager::get_singleton()->set_history_as_unsaved(current_history_id);
 			}
@@ -5791,7 +5805,7 @@ void EditorNode::reload_scene(const String &p_path) {
 
 	// Adjust index so tab is back a the previous position.
 	editor_data.move_edited_scene_to_index(scene_idx);
-	EditorUndoRedoManager::get_singleton()->clear_history(false, editor_data.get_scene_history_id(scene_idx));
+	EditorUndoRedoManager::get_singleton()->clear_history(editor_data.get_scene_history_id(scene_idx), false);
 
 	// Recover the tab.
 	scene_tabs->set_current_tab(current_tab);
@@ -5936,7 +5950,7 @@ void EditorNode::reload_instances_with_path_in_edited_scenes() {
 		bool is_unsaved = EditorUndoRedoManager::get_singleton()->is_history_unsaved(current_history_id);
 
 		// Clear the history for this affected tab.
-		EditorUndoRedoManager::get_singleton()->clear_history(false, current_history_id);
+		EditorUndoRedoManager::get_singleton()->clear_history(current_history_id, false);
 
 		// Update the version
 		editor_data.is_scene_changed(current_scene_idx);
@@ -7384,8 +7398,8 @@ EditorNode::EditorNode() {
 		default_layout->set_value(docks_section, "dock_split_" + itos(i + 1), 0);
 	}
 	default_layout->set_value(docks_section, "dock_hsplit_1", 0);
-	default_layout->set_value(docks_section, "dock_hsplit_2", 270 * EDSCALE);
-	default_layout->set_value(docks_section, "dock_hsplit_3", -270 * EDSCALE);
+	default_layout->set_value(docks_section, "dock_hsplit_2", 270);
+	default_layout->set_value(docks_section, "dock_hsplit_3", -270);
 	default_layout->set_value(docks_section, "dock_hsplit_4", 0);
 
 	_update_layouts_menu();

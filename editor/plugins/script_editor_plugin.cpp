@@ -368,12 +368,14 @@ void ScriptEditorQuickOpen::_text_changed(const String &p_newtext) {
 	_update_search();
 }
 
-void ScriptEditorQuickOpen::_sbox_input(const Ref<InputEvent> &p_ie) {
-	Ref<InputEventKey> k = p_ie;
-
-	if (k.is_valid() && (k->get_keycode() == Key::UP || k->get_keycode() == Key::DOWN || k->get_keycode() == Key::PAGEUP || k->get_keycode() == Key::PAGEDOWN)) {
-		search_options->gui_input(k);
-		search_box->accept_event();
+void ScriptEditorQuickOpen::_sbox_input(const Ref<InputEvent> &p_event) {
+	// Redirect navigational key events to the tree.
+	Ref<InputEventKey> key = p_event;
+	if (key.is_valid()) {
+		if (key->is_action("ui_up", true) || key->is_action("ui_down", true) || key->is_action("ui_page_up") || key->is_action("ui_page_down")) {
+			search_options->gui_input(key);
+			search_box->accept_event();
+		}
 	}
 }
 
@@ -503,7 +505,7 @@ void ScriptEditor::_goto_script_line(Ref<RefCounted> p_script, int p_line) {
 			if (ScriptTextEditor *script_text_editor = Object::cast_to<ScriptTextEditor>(current)) {
 				script_text_editor->goto_line_centered(p_line);
 			} else if (current) {
-				current->goto_line(p_line, true);
+				current->goto_line(p_line);
 			}
 
 			_save_history();
@@ -520,7 +522,7 @@ void ScriptEditor::_set_execution(Ref<RefCounted> p_script, int p_line) {
 				continue;
 			}
 
-			if ((scr != nullptr && se->get_edited_resource() == p_script) || se->get_edited_resource()->get_path() == scr->get_path()) {
+			if ((scr.is_valid() && se->get_edited_resource() == p_script) || se->get_edited_resource()->get_path() == scr->get_path()) {
 				se->set_executing_line(p_line);
 			}
 		}
@@ -536,7 +538,7 @@ void ScriptEditor::_clear_execution(Ref<RefCounted> p_script) {
 				continue;
 			}
 
-			if ((scr != nullptr && se->get_edited_resource() == p_script) || se->get_edited_resource()->get_path() == scr->get_path()) {
+			if ((scr.is_valid() && se->get_edited_resource() == p_script) || se->get_edited_resource()->get_path() == scr->get_path()) {
 				se->clear_executing_line();
 			}
 		}
@@ -721,7 +723,7 @@ void ScriptEditor::_go_to_tab(int p_idx) {
 		}
 
 		Ref<Script> scr = Object::cast_to<ScriptEditorBase>(c)->get_edited_resource();
-		if (scr != nullptr) {
+		if (scr.is_valid()) {
 			notify_script_changed(scr);
 		}
 
@@ -1027,7 +1029,7 @@ void ScriptEditor::_resave_scripts(const String &p_str) {
 		}
 
 		Ref<TextFile> text_file = scr;
-		if (text_file != nullptr) {
+		if (text_file.is_valid()) {
 			se->apply_code();
 			_save_text_file(text_file, text_file->get_path());
 			break;
@@ -1234,7 +1236,7 @@ Ref<Script> ScriptEditor::_get_current_script() {
 
 	if (current) {
 		Ref<Script> scr = current->get_edited_resource();
-		return scr != nullptr ? scr : nullptr;
+		return scr.is_valid() ? scr : nullptr;
 	} else {
 		return nullptr;
 	}
@@ -1426,7 +1428,7 @@ void ScriptEditor::_menu_option(int p_option) {
 				Ref<TextFile> text_file = resource;
 				Ref<Script> scr = resource;
 
-				if (text_file != nullptr) {
+				if (text_file.is_valid()) {
 					file_dialog->set_file_mode(EditorFileDialog::FILE_MODE_SAVE_FILE);
 					file_dialog->set_access(EditorFileDialog::ACCESS_FILESYSTEM);
 					file_dialog_option = FILE_SAVE_AS;
@@ -1455,7 +1457,7 @@ void ScriptEditor::_menu_option(int p_option) {
 
 			case FILE_TOOL_RELOAD_SOFT: {
 				Ref<Script> scr = current->get_edited_resource();
-				if (scr == nullptr || scr.is_null()) {
+				if (scr.is_null()) {
 					EditorNode::get_singleton()->show_warning(TTR("Can't obtain the script for reloading."));
 					break;
 				}
@@ -1469,7 +1471,7 @@ void ScriptEditor::_menu_option(int p_option) {
 
 			case FILE_RUN: {
 				Ref<Script> scr = current->get_edited_resource();
-				if (scr == nullptr || scr.is_null()) {
+				if (scr.is_null()) {
 					EditorToaster::get_singleton()->popup_str(TTR("Cannot run the edited file because it's not a script."), EditorToaster::SEVERITY_WARNING);
 					break;
 				}
@@ -1802,7 +1804,7 @@ void ScriptEditor::_close_builtin_scripts_from_scene(const String &p_scene) {
 
 		if (se) {
 			Ref<Script> scr = se->get_edited_resource();
-			if (scr == nullptr || !scr.is_valid()) {
+			if (scr.is_null()) {
 				continue;
 			}
 
@@ -1909,17 +1911,13 @@ void ScriptEditor::get_breakpoints(List<String> *p_breakpoints) {
 }
 
 void ScriptEditor::_members_overview_selected(int p_idx) {
-	ScriptEditorBase *se = _get_current_editor();
-	if (!se) {
-		return;
+	int line = members_overview->get_item_metadata(p_idx);
+	ScriptEditorBase *current = _get_current_editor();
+	if (ScriptTextEditor *script_text_editor = Object::cast_to<ScriptTextEditor>(current)) {
+		script_text_editor->goto_line_centered(line);
+	} else if (current) {
+		current->goto_line(line);
 	}
-	// Go to the member's line and reset the cursor column. We can't change scroll_position
-	// directly until we have gone to the line first, since code might be folded.
-	se->goto_line(members_overview->get_item_metadata(p_idx));
-	Dictionary state = se->get_edit_state();
-	state["column"] = 0;
-	state["scroll_position"] = members_overview->get_item_metadata(p_idx);
-	se->set_edit_state(state);
 }
 
 void ScriptEditor::_help_overview_selected(int p_idx) {
@@ -2510,7 +2508,7 @@ bool ScriptEditor::edit(const Ref<Resource> &p_resource, int p_line, int p_col, 
 			continue;
 		}
 
-		if ((scr != nullptr && se->get_edited_resource() == p_resource) || se->get_edited_resource()->get_path() == p_resource->get_path()) {
+		if ((scr.is_valid() && se->get_edited_resource() == p_resource) || se->get_edited_resource()->get_path() == p_resource->get_path()) {
 			if (should_open) {
 				se->enable_editor(this);
 
@@ -2560,7 +2558,7 @@ bool ScriptEditor::edit(const Ref<Resource> &p_resource, int p_line, int p_col, 
 
 		PackedStringArray languages = highlighter->_get_supported_languages();
 		// If script try language, else use extension.
-		if (scr != nullptr) {
+		if (scr.is_valid()) {
 			if (languages.has(scr->get_language()->get_name())) {
 				se->set_syntax_highlighter(highlighter);
 				highlighter_set = true;
@@ -2670,7 +2668,7 @@ void ScriptEditor::save_current_script() {
 	Ref<TextFile> text_file = resource;
 	Ref<Script> scr = resource;
 
-	if (text_file != nullptr) {
+	if (text_file.is_valid()) {
 		current->apply_code();
 		_save_text_file(text_file, text_file->get_path());
 		return;
@@ -2721,7 +2719,7 @@ void ScriptEditor::save_all_scripts() {
 			Ref<TextFile> text_file = edited_res;
 			Ref<Script> scr = edited_res;
 
-			if (text_file != nullptr) {
+			if (text_file.is_valid()) {
 				_save_text_file(text_file, text_file->get_path());
 				continue;
 			}
@@ -2798,7 +2796,7 @@ void ScriptEditor::_reload_scripts(bool p_refresh_only) {
 			}
 
 			Ref<JSON> json = edited_res;
-			if (json != nullptr) {
+			if (json.is_valid()) {
 				Ref<JSON> rel_json = ResourceLoader::load(json->get_path(), json->get_class(), ResourceFormatLoader::CACHE_MODE_IGNORE);
 				ERR_CONTINUE(!rel_json.is_valid());
 				json->parse(rel_json->get_parsed_text(), true);
@@ -3348,7 +3346,7 @@ void ScriptEditor::_make_script_list_context_menu() {
 	context_menu->add_separator();
 	if (se) {
 		Ref<Script> scr = se->get_edited_resource();
-		if (scr != nullptr) {
+		if (scr.is_valid()) {
 			if (!scr.is_null() && scr->is_tool()) {
 				context_menu->add_shortcut(ED_GET_SHORTCUT("script_editor/reload_script_soft"), FILE_TOOL_RELOAD_SOFT);
 				context_menu->add_shortcut(ED_GET_SHORTCUT("script_editor/run_file"), FILE_RUN);
@@ -3694,7 +3692,7 @@ void ScriptEditor::_update_history_pos(int p_new_pos) {
 		seb->ensure_focus();
 
 		Ref<Script> scr = seb->get_edited_resource();
-		if (scr != nullptr) {
+		if (scr.is_valid()) {
 			notify_script_changed(scr);
 		}
 	}
@@ -3733,7 +3731,7 @@ Vector<Ref<Script>> ScriptEditor::get_open_scripts() const {
 		}
 
 		Ref<Script> scr = se->get_edited_resource();
-		if (scr != nullptr) {
+		if (scr.is_valid()) {
 			out_scripts.push_back(scr);
 		}
 	}
@@ -4115,7 +4113,7 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 	members_overview_alphabeta_sort_button->set_tooltip_text(TTR("Toggle alphabetical sorting of the method list."));
 	members_overview_alphabeta_sort_button->set_toggle_mode(true);
 	members_overview_alphabeta_sort_button->set_pressed(EDITOR_GET("text_editor/script_list/sort_members_outline_alphabetically"));
-	members_overview_alphabeta_sort_button->connect("toggled", callable_mp(this, &ScriptEditor::_toggle_members_overview_alpha_sort));
+	members_overview_alphabeta_sort_button->connect(SceneStringName(toggled), callable_mp(this, &ScriptEditor::_toggle_members_overview_alpha_sort));
 
 	buttons_hbox->add_child(members_overview_alphabeta_sort_button);
 
@@ -4192,8 +4190,14 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 	file_menu->get_popup()->add_shortcut(ED_SHORTCUT("script_editor/show_in_file_system", TTR("Show in FileSystem")), SHOW_IN_FILE_SYSTEM);
 	file_menu->get_popup()->add_separator();
 
-	file_menu->get_popup()->add_shortcut(ED_SHORTCUT("script_editor/history_previous", TTR("History Previous"), KeyModifierMask::ALT | Key::LEFT), WINDOW_PREV);
-	file_menu->get_popup()->add_shortcut(ED_SHORTCUT("script_editor/history_next", TTR("History Next"), KeyModifierMask::ALT | Key::RIGHT), WINDOW_NEXT);
+	file_menu->get_popup()->add_shortcut(
+			ED_SHORTCUT_ARRAY("script_editor/history_previous", TTR("History Previous"),
+					{ int32_t(KeyModifierMask::ALT | Key::LEFT), int32_t(Key::BACK) }),
+			WINDOW_PREV);
+	file_menu->get_popup()->add_shortcut(
+			ED_SHORTCUT_ARRAY("script_editor/history_next", TTR("History Next"),
+					{ int32_t(KeyModifierMask::ALT | Key::RIGHT), int32_t(Key::FORWARD) }),
+			WINDOW_NEXT);
 	ED_SHORTCUT_OVERRIDE("script_editor/history_previous", "macos", KeyModifierMask::ALT | KeyModifierMask::META | Key::LEFT);
 	ED_SHORTCUT_OVERRIDE("script_editor/history_next", "macos", KeyModifierMask::ALT | KeyModifierMask::META | Key::RIGHT);
 

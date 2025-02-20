@@ -735,6 +735,7 @@ class Godot(private val context: Context) {
 
 		runOnUiThread {
 			registerSensorsIfNeeded()
+			enableImmersiveMode(useImmersive.get(), true)
 		}
 
 		for (plugin in pluginRegistry.allPlugins) {
@@ -921,15 +922,10 @@ class Godot(private val context: Context) {
 	}
 
 	fun onBackPressed() {
-		var shouldQuit = true
 		for (plugin in pluginRegistry.allPlugins) {
-			if (plugin.onMainBackPressed()) {
-				shouldQuit = false
-			}
+			plugin.onMainBackPressed()
 		}
-		if (shouldQuit) {
-			renderView?.queueOnRenderThread { GodotLib.back() }
-		}
+		renderView?.queueOnRenderThread { GodotLib.back() }
 	}
 
 	/**

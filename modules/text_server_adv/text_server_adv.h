@@ -74,6 +74,7 @@
 #include <godot_cpp/templates/hash_map.hpp>
 #include <godot_cpp/templates/hash_set.hpp>
 #include <godot_cpp/templates/rid_owner.hpp>
+#include <godot_cpp/templates/safe_refcount.hpp>
 #include <godot_cpp/templates/vector.hpp>
 
 using namespace godot;
@@ -85,6 +86,7 @@ using namespace godot;
 #include "core/object/worker_thread_pool.h"
 #include "core/templates/hash_map.h"
 #include "core/templates/rid_owner.h"
+#include "core/templates/safe_refcount.h"
 #include "scene/resources/image_texture.h"
 #include "servers/text/text_server_extension.h"
 
@@ -328,7 +330,7 @@ class TextServerAdvanced : public TextServerExtension {
 		int extra_spacing[4] = { 0, 0, 0, 0 };
 		double baseline_offset = 0.0;
 
-		HashMap<Vector2i, FontForSizeAdvanced *, VariantHasher, VariantComparator> cache;
+		HashMap<Vector2i, FontForSizeAdvanced *> cache;
 
 		bool face_init = false;
 		HashSet<uint32_t> supported_scripts;
@@ -360,8 +362,8 @@ class TextServerAdvanced : public TextServerExtension {
 #ifdef MODULE_FREETYPE_ENABLED
 	_FORCE_INLINE_ FontGlyph rasterize_bitmap(FontForSizeAdvanced *p_data, int p_rect_margin, FT_Bitmap p_bitmap, int p_yofs, int p_xofs, const Vector2 &p_advance, bool p_bgra) const;
 #endif
-	_FORCE_INLINE_ bool _ensure_glyph(FontAdvanced *p_font_data, const Vector2i &p_size, int32_t p_glyph) const;
-	_FORCE_INLINE_ bool _ensure_cache_for_size(FontAdvanced *p_font_data, const Vector2i &p_size) const;
+	_FORCE_INLINE_ bool _ensure_glyph(FontAdvanced *p_font_data, const Vector2i &p_size, int32_t p_glyph, FontGlyph &r_glyph) const;
+	_FORCE_INLINE_ bool _ensure_cache_for_size(FontAdvanced *p_font_data, const Vector2i &p_size, FontForSizeAdvanced *&r_cache_for_size) const;
 	_FORCE_INLINE_ void _font_clear_cache(FontAdvanced *p_font_data);
 	static void _generateMTSDF_threaded(void *p_td, uint32_t p_y);
 
@@ -488,7 +490,7 @@ class TextServerAdvanced : public TextServerExtension {
 		/* Shaped data */
 		TextServer::Direction para_direction = DIRECTION_LTR; // Detected text direction.
 		int base_para_direction = UBIDI_DEFAULT_LTR;
-		bool valid = false; // String is shaped.
+		SafeFlag valid{ false }; // String is shaped.
 		bool line_breaks_valid = false; // Line and word break flags are populated (and virtual zero width spaces inserted).
 		bool justification_ops_valid = false; // Virtual elongation glyphs are added to the string.
 		bool sort_valid = false;
@@ -875,6 +877,7 @@ public:
 
 	MODBIND2RC(bool, font_has_char, const RID &, int64_t);
 	MODBIND1RC(String, font_get_supported_chars, const RID &);
+	MODBIND1RC(PackedInt32Array, font_get_supported_glyphs, const RID &);
 
 	MODBIND4(font_render_range, const RID &, const Vector2i &, int64_t, int64_t);
 	MODBIND3(font_render_glyph, const RID &, const Vector2i &, int64_t);

@@ -882,7 +882,8 @@ public:
 			argptrs[i] = &args[i];
 		}
 		Callable::CallError cerr;
-		return callp(p_method, sizeof...(p_args) == 0 ? nullptr : (const Variant **)argptrs, sizeof...(p_args), cerr);
+		const Variant ret = callp(p_method, sizeof...(p_args) == 0 ? nullptr : (const Variant **)argptrs, sizeof...(p_args), cerr);
+		return (cerr.error == Callable::CallError::CALL_OK) ? ret : Variant();
 	}
 
 	void notification(int p_notification, bool p_reversed = false);
@@ -909,6 +910,7 @@ public:
 	MTVIRTUAL void remove_meta(const StringName &p_name);
 	MTVIRTUAL Variant get_meta(const StringName &p_name, const Variant &p_default = Variant()) const;
 	MTVIRTUAL void get_meta_list(List<StringName> *p_list) const;
+	MTVIRTUAL void merge_meta_from(const Object *p_src);
 
 #ifdef TOOLS_ENABLED
 	void set_edited(bool p_edited);

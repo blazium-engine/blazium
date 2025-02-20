@@ -5463,7 +5463,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	button_grid_toggle->set_theme_type_variation("FlatButton");
 	button_grid_toggle->set_toggle_mode(true);
 	button_grid_toggle->set_pressed(_is_grid_visible());
-	button_grid_toggle->connect("toggled", callable_mp(this, &CanvasItemEditor::_toggle_grid).unbind(1));
+	button_grid_toggle->connect(SceneStringName(toggled), callable_mp(this, &CanvasItemEditor::_toggle_grid).unbind(1));
 	button_grid_toggle->set_shortcut(ED_SHORTCUT("canvas_item_editor/toggle_grid", TTR("Toggle Grid"), KeyModifierMask::CMD_OR_CTRL | Key::APOSTROPHE));
 	main_menu_hbox->add_child(button_grid_toggle);
 
@@ -5472,7 +5472,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	grid_snap_button->set_flat(true);
 	grid_snap_button->set_theme_type_variation("FlatButton");
 	grid_snap_button->set_toggle_mode(true);
-	grid_snap_button->connect("toggled", callable_mp(this, &CanvasItemEditor::_button_toggle_grid_snap));
+	grid_snap_button->connect(SceneStringName(toggled), callable_mp(this, &CanvasItemEditor::_button_toggle_grid_snap));
 	grid_snap_button->set_tooltip_text(TTR("Toggle grid snapping."));
 	grid_snap_button->set_shortcut(ED_SHORTCUT("canvas_item_editor/use_grid_snap", TTR("Use Grid Snap"), KeyModifierMask::SHIFT | Key::G));
 	main_menu_hbox->add_child(grid_snap_button);
@@ -5482,7 +5482,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	smart_snap_button->set_flat(true);
 	smart_snap_button->set_theme_type_variation("FlatButton");
 	smart_snap_button->set_toggle_mode(true);
-	smart_snap_button->connect("toggled", callable_mp(this, &CanvasItemEditor::_button_toggle_smart_snap));
+	smart_snap_button->connect(SceneStringName(toggled), callable_mp(this, &CanvasItemEditor::_button_toggle_smart_snap));
 	smart_snap_button->set_tooltip_text(TTR("Toggle smart snapping."));
 	smart_snap_button->set_shortcut(ED_SHORTCUT("canvas_item_editor/use_smart_snap", TTR("Use Smart Snap"), KeyModifierMask::SHIFT | Key::S));
 	main_menu_hbox->add_child(smart_snap_button);
@@ -5592,7 +5592,7 @@ CanvasItemEditor::CanvasItemEditor() {
 
 	override_camera_button = memnew(Button);
 	override_camera_button->set_theme_type_variation("FlatButton");
-	override_camera_button->connect("toggled", callable_mp(this, &CanvasItemEditor::_button_override_camera));
+	override_camera_button->connect(SceneStringName(toggled), callable_mp(this, &CanvasItemEditor::_button_override_camera));
 	override_camera_button->set_toggle_mode(true);
 	title_right_hb->add_child(override_camera_button);
 	_update_override_camera_button(false);
