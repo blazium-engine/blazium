@@ -72,6 +72,7 @@ void FreeDesktopScreenSaver::inhibit() {
 	if (dbus_error_is_set(&error)) {
 		dbus_error_free(&error);
 		dbus_connection_unref(bus);
+		bus = nullptr;
 		unsupported = true;
 		return;
 	}
@@ -104,6 +105,7 @@ void FreeDesktopScreenSaver::uninhibit() {
 	if (dbus_error_is_set(&error)) {
 		dbus_error_free(&error);
 		dbus_connection_unref(bus);
+		bus = nullptr;
 		unsupported = true;
 		return;
 	}

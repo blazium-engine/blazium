@@ -40,7 +40,7 @@ struct DBusConnection;
 class FreeDesktopScreenSaver {
 private:
 	uint32_t cookie = 0;
-	DBusConnection *bus;
+	DBusConnection *bus = nullptr;
 	bool unsupported = false;
 
 public:
