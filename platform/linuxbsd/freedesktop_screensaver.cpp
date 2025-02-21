@@ -34,12 +34,18 @@
 
 #include "core/config/project_settings.h"
 
+#ifdef SOWRAP_ENABLED
+#include "dbus-so_wrap.h"
+#else
+#include <dbus/dbus.h>
+#endif
+
 #define BUS_OBJECT_NAME "org.freedesktop.ScreenSaver"
 #define BUS_OBJECT_PATH "/org/freedesktop/ScreenSaver"
 #define BUS_INTERFACE "org.freedesktop.ScreenSaver"
 
 void FreeDesktopScreenSaver::inhibit() {
-	if (unsupported || is_inhibited) {
+	if (unsupported || cookie != 0) {
 		return;
 	}
 
@@ -75,13 +81,11 @@ void FreeDesktopScreenSaver::inhibit() {
 	dbus_message_iter_get_basic(&reply_iter, &cookie);
 	print_verbose("FreeDesktopScreenSaver: Acquired screensaver inhibition cookie: " + uitos(cookie));
 
-	is_inhibited = true;
-
 	dbus_message_unref(reply);
 }
 
 void FreeDesktopScreenSaver::uninhibit() {
-	if (unsupported || !is_inhibited) {
+	if (unsupported || cookie == 0) {
 		return;
 	}
 
@@ -104,9 +108,9 @@ void FreeDesktopScreenSaver::uninhibit() {
 		return;
 	}
 
-	is_inhibited = false;
-
 	print_verbose("FreeDesktopScreenSaver: Released screensaver inhibition cookie: " + uitos(cookie));
+
+	cookie = 0;
 
 	dbus_message_unref(message);
 	dbus_message_unref(reply);
@@ -151,8 +155,7 @@ FreeDesktopScreenSaver::FreeDesktopScreenSaver() {
 }
 
 FreeDesktopScreenSaver::~FreeDesktopScreenSaver() {
-	if (!unsupported) {
-		uninhibit();
+	if (bus) {
 		dbus_connection_unref(bus);
 	}
 }

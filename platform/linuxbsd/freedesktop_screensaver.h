@@ -35,17 +35,12 @@
 
 #include <stdint.h>
 
-#ifdef SOWRAP_ENABLED
-#include "dbus-so_wrap.h"
-#else
-#include <dbus/dbus.h>
-#endif
+struct DBusConnection;
 
 class FreeDesktopScreenSaver {
 private:
 	uint32_t cookie = 0;
 	DBusConnection *bus;
-	bool is_inhibited = false;
 	bool unsupported = false;
 
 public:
