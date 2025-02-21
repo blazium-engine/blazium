@@ -45,19 +45,12 @@
 #define BUS_INTERFACE "org.freedesktop.ScreenSaver"
 
 void FreeDesktopScreenSaver::inhibit() {
-	if (unsupported) {
+	if (unsupported || cookie != 0) {
 		return;
 	}
 
 	DBusError error;
 	dbus_error_init(&error);
-
-	DBusConnection *bus = dbus_bus_get(DBUS_BUS_SESSION, &error);
-	if (dbus_error_is_set(&error)) {
-		dbus_error_free(&error);
-		unsupported = true;
-		return;
-	}
 
 	String app_name_string = GLOBAL_GET("application/config/name");
 	CharString app_name_utf8 = app_name_string.utf8();
@@ -79,7 +72,8 @@ void FreeDesktopScreenSaver::inhibit() {
 	if (dbus_error_is_set(&error)) {
 		dbus_error_free(&error);
 		dbus_connection_unref(bus);
-		unsupported = false;
+		bus = nullptr;
+		unsupported = true;
 		return;
 	}
 
@@ -89,23 +83,15 @@ void FreeDesktopScreenSaver::inhibit() {
 	print_verbose("FreeDesktopScreenSaver: Acquired screensaver inhibition cookie: " + uitos(cookie));
 
 	dbus_message_unref(reply);
-	dbus_connection_unref(bus);
 }
 
 void FreeDesktopScreenSaver::uninhibit() {
-	if (unsupported) {
+	if (unsupported || cookie == 0) {
 		return;
 	}
 
 	DBusError error;
 	dbus_error_init(&error);
-
-	DBusConnection *bus = dbus_bus_get(DBUS_BUS_SESSION, &error);
-	if (dbus_error_is_set(&error)) {
-		dbus_error_free(&error);
-		unsupported = true;
-		return;
-	}
 
 	DBusMessage *message = dbus_message_new_method_call(
 			BUS_OBJECT_NAME, BUS_OBJECT_PATH, BUS_INTERFACE,
@@ -119,15 +105,17 @@ void FreeDesktopScreenSaver::uninhibit() {
 	if (dbus_error_is_set(&error)) {
 		dbus_error_free(&error);
 		dbus_connection_unref(bus);
+		bus = nullptr;
 		unsupported = true;
 		return;
 	}
 
 	print_verbose("FreeDesktopScreenSaver: Released screensaver inhibition cookie: " + uitos(cookie));
 
+	cookie = 0;
+
 	dbus_message_unref(message);
 	dbus_message_unref(reply);
-	dbus_connection_unref(bus);
 }
 
 FreeDesktopScreenSaver::FreeDesktopScreenSaver() {
@@ -156,6 +144,21 @@ FreeDesktopScreenSaver::FreeDesktopScreenSaver() {
 	if (!ver_ok) {
 		print_verbose("ScreenSaver:: Unsupported DBus library version!");
 		unsupported = true;
+	} else {
+		DBusError error;
+		dbus_error_init(&error);
+
+		bus = dbus_bus_get(DBUS_BUS_SESSION, &error);
+		if (dbus_error_is_set(&error)) {
+			dbus_error_free(&error);
+			unsupported = true;
+		}
+	}
+}
+
+FreeDesktopScreenSaver::~FreeDesktopScreenSaver() {
+	if (bus) {
+		dbus_connection_unref(bus);
 	}
 }
 

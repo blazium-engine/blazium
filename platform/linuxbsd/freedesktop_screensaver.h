@@ -35,13 +35,17 @@
 
 #include <stdint.h>
 
+struct DBusConnection;
+
 class FreeDesktopScreenSaver {
 private:
 	uint32_t cookie = 0;
+	DBusConnection *bus = nullptr;
 	bool unsupported = false;
 
 public:
 	FreeDesktopScreenSaver();
+	~FreeDesktopScreenSaver();
 	void inhibit();
 	void uninhibit();
 };
