@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
@@ -11,7 +13,7 @@
 	<key>CFBundleIconFile</key>
 	<string>Blazium.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>app.blazium.blazium</string>
+	<string>app.blazium.editor</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
@@ -50,6 +52,10 @@
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
+			<key>CFBundleTypeName</key>
+			<string>Scene</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSItemContentTypes</key>
@@ -62,6 +68,10 @@
 			</array>
 		</dict>
 		<dict>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
+			<key>CFBundleTypeName</key>
+			<string>Project</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSItemContentTypes</key>

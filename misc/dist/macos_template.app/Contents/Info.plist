@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
@@ -54,6 +56,8 @@ $usage_descriptions
 		<string>arm64</string>
 		<string>x86_64</string>
 	</array>
+	<key>LSMinimumSystemVersion</key>
+	<string>$min_version_x86_64</string>
 	<key>LSMinimumSystemVersionByArchitecture</key>
 	<dict>
 		<key>arm64</key>
