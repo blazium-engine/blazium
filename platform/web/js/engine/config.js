@@ -308,8 +308,8 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 					locatedPath = path;
 				} else if (path.endsWith('.side.wasm')) {
 					locatedPath = `${loadPath}.side.wasm`;
-				} else if (path.endsWith('.wasm.gz')) {
-					locatedPath = `${loadPath}.wasm.gz`;
+				} else if (path.endsWith('.wasm')) {
+					locatedPath = `${loadPath}.wasm`;
 				}
 				// Prepend .proxy/ to the locatedPath value if needed
 				if (window.DiscordEmbed?.isDiscordEmbed()) {
