@@ -38,6 +38,7 @@ class ColorButton : public BaseButton {
 
 	bool flat = false;
 	Color color = Color(1, 1, 1);
+	bool edit_alpha = true;
 
 	struct ThemeCache {
 		Ref<StyleBox> normal;
@@ -54,14 +55,21 @@ class ColorButton : public BaseButton {
 	Ref<StyleBox> _get_current_style() const;
 
 protected:
+	void _validate_property(PropertyInfo &p_property) const;
 	void _notification(int);
 	static void _bind_methods();
 
 public:
 	virtual Size2 get_minimum_size() const override;
+
 	void set_color_no_signal(const Color &p_color);
+
 	void set_color(const Color &p_color);
 	Color get_color() const;
+
+	void set_edit_alpha(bool p_enabled);
+	bool is_editing_alpha() const;
+
 	void set_flat(bool p_enabled);
 	bool is_flat() const;
 
