@@ -39,10 +39,18 @@ namespace TestVector2i {
 
 TEST_CASE("[Vector2i] Constructor methods") {
 	const Vector2i vector_empty = Vector2i();
+	const Vector2i vector_zero_int = Vector2i(0);
+	const Vector2i vector_zero_float = Vector2i(0.0f);
 	const Vector2i vector_zero = Vector2i(0, 0);
 	CHECK_MESSAGE(
 			vector_empty == vector_zero,
 			"Vector2i Constructor with no inputs should return a zero Vector2i.");
+	CHECK_MESSAGE(
+			vector_zero_int == vector_zero,
+			"Vector2i Constructor with single int input should return a zero Vector2i.");
+	CHECK_MESSAGE(
+			vector_zero_float == vector_zero,
+			"Vector2i Constructor with single float input should return a zero Vector2i.");
 }
 
 TEST_CASE("[Vector2i] Axis methods") {
@@ -63,7 +71,7 @@ TEST_CASE("[Vector2i] Axis methods") {
 }
 
 TEST_CASE("[Vector2i] Clamp method") {
-	const Vector2i vector = Vector2i(10, 10);
+	const Vector2i vector = Vector2i(10);
 	CHECK_MESSAGE(
 			Vector2i(-5, 15).clamp(Vector2i(), vector) == Vector2i(0, 10),
 			"Vector2i clamp should work as expected.");
@@ -73,7 +81,7 @@ TEST_CASE("[Vector2i] Clamp method") {
 }
 
 TEST_CASE("[Vector2i] Length methods") {
-	const Vector2i vector1 = Vector2i(10, 10);
+	const Vector2i vector1 = Vector2i(10);
 	const Vector2i vector2 = Vector2i(20, 30);
 	CHECK_MESSAGE(
 			vector1.length_squared() == 200,
@@ -160,7 +168,7 @@ TEST_CASE("[Vector2i] Abs and sign methods") {
 			"Vector2i abs should work as expected.");
 
 	CHECK_MESSAGE(
-			vector1.sign() == Vector2i(1, 1),
+			vector1.sign() == Vector2i(1),
 			"Vector2i sign should work as expected.");
 	CHECK_MESSAGE(
 			vector2.sign() == Vector2i(1, -1),
