@@ -61,6 +61,7 @@ JNIEXPORT void JNICALL Java_app_blazium_godot_GodotLib_gyroscope(JNIEnv *env, jc
 JNIEXPORT void JNICALL Java_app_blazium_godot_GodotLib_focusin(JNIEnv *env, jclass clazz);
 JNIEXPORT void JNICALL Java_app_blazium_godot_GodotLib_focusout(JNIEnv *env, jclass clazz);
 JNIEXPORT jstring JNICALL Java_app_blazium_godot_GodotLib_getGlobal(JNIEnv *env, jclass clazz, jstring path);
+JNIEXPORT jobjectArray JNICALL Java_app_blazium_godot_GodotLib_getRendererInfo(JNIEnv *env, jclass clazz);
 JNIEXPORT jstring JNICALL Java_app_blazium_godot_GodotLib_getEditorSetting(JNIEnv *env, jclass clazz, jstring p_setting_key);
 JNIEXPORT void JNICALL Java_app_blazium_godot_GodotLib_setVirtualKeyboardHeight(JNIEnv *env, jclass clazz, jint p_height);
 JNIEXPORT void JNICALL Java_app_blazium_godot_GodotLib_requestPermissionResult(JNIEnv *env, jclass clazz, jstring p_permission, jboolean p_result);
