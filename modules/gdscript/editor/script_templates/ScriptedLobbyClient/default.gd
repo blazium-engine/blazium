@@ -1,4 +1,5 @@
-extends LoginClient
+# meta-description: Base template showcasing some basic functionality
+extends _BASE_
 
 func _init() -> void:
 	received_jwt.connect(_received_jwt)

@@ -46,6 +46,8 @@
 #include "modules/svg/image_loader_svg.h"
 #endif
 
+#include "core/io/compression.h"
+
 Error EditorExportPlatformWeb::_extract_template(const String &p_template, const String &p_dir, const String &p_name, bool pwa) {
 	Ref<FileAccess> io_fa;
 	zlib_filefunc_def io = zipio_create_io(&io_fa);
@@ -89,13 +91,25 @@ Error EditorExportPlatformWeb::_extract_template(const String &p_template, const
 
 		//write
 		String dst = p_dir.path_join(file.replace("blazium", p_name));
+		if (dst.ends_with(".wasm")) {
+			// Add .gz to archive the engine wasm
+			dst += ".gz";
+		}
 		Ref<FileAccess> f = FileAccess::open(dst, FileAccess::WRITE);
 		if (f.is_null()) {
 			add_message(EXPORT_MESSAGE_ERROR, TTR("Prepare Templates"), vformat(TTR("Could not write file: \"%s\"."), dst));
 			unzClose(pkg);
 			return ERR_FILE_CANT_WRITE;
 		}
-		f->store_buffer(data.ptr(), data.size());
+		if (dst.ends_with(".wasm.gz")) {
+			// Archive the engine wasm
+			PackedByteArray compressedData;
+			compressedData.resize(Compression::get_max_compressed_buffer_size(data.size(), Compression::MODE_GZIP));
+			int size = Compression::compress(compressedData.ptrw(), data.ptr(), data.size(), Compression::MODE_GZIP);
+			f->store_buffer(compressedData.ptr(), size);
+		} else {
+			f->store_buffer(data.ptr(), data.size());
+		}
 
 	} while (unzGoToNextFile(pkg) == UNZ_OK);
 	unzClose(pkg);
@@ -160,14 +174,44 @@ void EditorExportPlatformWeb::_fix_html(Vector<uint8_t> &p_html, const Ref<Edito
 		head_include += "<link rel=\"manifest\" href=\"" + p_name + ".manifest.json\">\n";
 		config["serviceWorker"] = p_name + ".service.worker.js";
 	}
-	String discord_head_include;
-	if (p_preset->get("blazium/discord_embed/enabled")) {
-		discord_head_include += "<meta name=\"discord_embed\" content=\"true\"/>\n";
-		if (p_preset->get("blazium/discord_embed/autodetect")) {
-			discord_head_include += "<meta name=\"discord_autodetect\" content=\"true\"/>\n";
-		}
+	String youtube_script_tag;
+	if (p_preset->get("blazium/youtube_playable/enabled")) {
+		youtube_script_tag += R"(<script src="https://www.youtube.com/game_api/v1"></script>
+		<script>
+			function returnError(c){return (e)=>{c(`{"error":"${e.toString()}"}`)}};
+			function returnEmpty(c){return ()=>{c("{}")}};
+			window.YoutubePlayables = {
+				isYoutubePlayables: ()=>{return ytgame?.IN_PLAYABLES_ENV ?? false},
+				getSdkVersion: ()=>{return ytgame?.SDK_VERSION ?? "unloaded"},
+				sendScore: (v,c)=>{ytgame.engagement.sendScore({value:v}).then(returnEmpty(c),returnError(c))},
+				openYTContent: (v,c)=>{ytgame.engagement.openYTContent({id:v}).then(returnEmpty(c),returnError(c))},
+				loadData: (c)=>{ytgame.game.loadData().then((d)=>{c(`{"data":${d}}`)},returnError(c))},
+				saveData: (v,c)=>{ytgame.game.saveData(v).then(returnEmpty(c),returnError(c))},
+				logWarning: ()=>{ytgame.health.logWarning()},
+				logError: ()=>{ytgame.health.logError()},
+				onAudioEnabledChange: (c)=>{ytgame.system.onAudioEnabledChange(c)},
+				onPause: (c)=>{ytgame.system.onPause(c)},
+				onResume: (c)=>{ytgame.system.onResume(c)},
+				getLanguage: (c)=>{ytgame.system.getLanguage().then((l)=>{c(`{"data":"${l}"}`)},returnError(c))},
+				gameReady: ()=>{ytgame.game.gameReady()},
+			};
+			ytgame.game.firstFrameReady();
+		</script>)";
 	}
-
+	String discord_script_tag;
+	if (p_preset->get("blazium/discord_embed/enabled")) {
+		// Define DiscordEmbed
+		discord_script_tag += "<script>window.DiscordEmbed={isDiscordEmbed:()=>{";
+		if (p_preset->get("blazium/discord_embed/autodetect")) {
+			// Check if hostname is one of discord's domains
+			discord_script_tag += "return ['discord.com','discordapp.com','discordsays.com','discordapp.net','discordsez.com']";
+			discord_script_tag += ".some((s)=>window.location.hostname.includes(s))";
+		} else {
+			// Always return true
+			discord_script_tag += "return true";
+		}
+		discord_script_tag += "}};</script>";
+	}
 	String blazium_header_embeds;
 	if (p_preset->get("blazium/web_headers/enabled")) {
 		if (p_preset->has("blazium/web_headers/title")) {
@@ -215,8 +259,11 @@ void EditorExportPlatformWeb::_fix_html(Vector<uint8_t> &p_html, const Ref<Edito
 	const String str_config = Variant(config).to_json_string();
 	const String custom_head_include = p_preset->get("html/head_include");
 	HashMap<String, String> replaces;
-	replaces["$BLAZIUM_DISCORD_EMBEDDED_HEADERS"] = discord_head_include;
+
+	replaces["$BLAZIUM_YOUTUBE_PLAYABLES_SCRIPT_TAG"] = youtube_script_tag;
+	replaces["$BLAZIUM_DISCORD_EMBED_SCRIPT_TAG"] = discord_script_tag;
 	replaces["$BLAZIUM_HEADER_EMBEDS"] = blazium_header_embeds;
+
 	replaces["$GODOT_URL"] = p_name + ".js";
 	replaces["$GODOT_PROJECT_NAME"] = GLOBAL_GET("application/config/name");
 	replaces["$GODOT_HEAD_INCLUDE"] = head_include + custom_head_include;
@@ -298,7 +345,7 @@ Error EditorExportPlatformWeb::_build_pwa(const Ref<EditorExportPreset> &p_prese
 
 	// Heavy files that are cached on demand.
 	Array opt_cache_files;
-	opt_cache_files.push_back(name + ".wasm");
+	opt_cache_files.push_back(name + ".wasm.gz");
 	opt_cache_files.push_back(name + ".pck");
 	if (extensions) {
 		opt_cache_files.push_back(name + ".side.wasm");
@@ -440,6 +487,8 @@ void EditorExportPlatformWeb::get_export_options(List<ExportOption> *r_options) 
 
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "blazium/discord_embed/enabled"), false, true));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "blazium/discord_embed/autodetect"), false));
+
+	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "blazium/youtube_playable/enabled"), false));
 }
 
 bool EditorExportPlatformWeb::get_export_option_visibility(const EditorExportPreset *p_preset, const String &p_option) const {
@@ -599,9 +648,9 @@ Error EditorExportPlatformWeb::export_project(const Ref<EditorExportPreset> &p_p
 	if (f.is_valid()) {
 		file_sizes[pck_path.get_file()] = (uint64_t)f->get_length();
 	}
-	f = FileAccess::open(base_path + ".wasm", FileAccess::READ);
+	f = FileAccess::open(base_path + ".wasm.gz", FileAccess::READ);
 	if (f.is_valid()) {
-		file_sizes[base_name + ".wasm"] = (uint64_t)f->get_length();
+		file_sizes[base_name + ".wasm.gz"] = (uint64_t)f->get_length();
 	}
 
 	// Read the HTML shell file (custom or from template).
@@ -924,7 +973,7 @@ Error EditorExportPlatformWeb::_export_project(const Ref<EditorExportPreset> &p_
 		DirAccess::remove_file_or_error(basepath + ".pck");
 		DirAccess::remove_file_or_error(basepath + ".png");
 		DirAccess::remove_file_or_error(basepath + ".side.wasm");
-		DirAccess::remove_file_or_error(basepath + ".wasm");
+		DirAccess::remove_file_or_error(basepath + ".wasm.gz");
 		DirAccess::remove_file_or_error(basepath + ".icon.png");
 		DirAccess::remove_file_or_error(basepath + ".apple-touch-icon.png");
 	}
