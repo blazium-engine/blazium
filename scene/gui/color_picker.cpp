@@ -59,6 +59,12 @@
 List<Color> ColorPicker::preset_cache;
 List<Color> ColorPicker::recent_preset_cache;
 
+void ColorPicker::_validate_property(PropertyInfo &p_property) const {
+	if (p_property.name == "color") {
+		p_property.hint = edit_alpha ? PROPERTY_HINT_NONE : PROPERTY_HINT_COLOR_NO_ALPHA;
+	}
+}
+
 void ColorPicker::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE: {
@@ -2044,6 +2050,12 @@ void ColorPickerButton::pressed() {
 	popup->set_position(get_screen_position() + Vector2(h_offset, v_offset));
 	popup->popup();
 	picker->set_focus_on_line_edit();
+}
+
+void ColorPickerButton::_validate_property(PropertyInfo &p_property) const {
+	if (p_property.name == "color") {
+		p_property.hint = edit_alpha ? PROPERTY_HINT_NONE : PROPERTY_HINT_COLOR_NO_ALPHA;
+	}
 }
 
 void ColorPickerButton::_notification(int p_what) {
