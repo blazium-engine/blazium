@@ -46,6 +46,7 @@
 #include "scene/gui/file_dialog.h"
 #include "scene/gui/label.h"
 #include "scene/gui/line_edit.h"
+#include "scene/gui/link_button.h"
 #include "scene/gui/menu_button.h"
 #include "scene/gui/option_button.h"
 #include "scene/gui/popup_menu.h"
@@ -62,9 +63,6 @@ enum DownloadsAvailability {
 
 static DownloadsAvailability _get_downloads_availability() {
 	const int network_mode = EDITOR_GET("network/connection/network_mode");
-	if (network_mode == EditorSettings::NETWORK_OFFLINE) {
-		return DOWNLOADS_NOT_AVAILABLE_IN_OFFLINE_MODE;
-	}
 
 	// Downloadable export templates are only available for stable and official alpha/beta/RC builds
 	// (which always have a number following their status, e.g. "alpha1").
@@ -75,6 +73,10 @@ static DownloadsAvailability _get_downloads_availability() {
 			String(VERSION_STATUS) == String("beta") ||
 			String(VERSION_STATUS) == String("rc")) {
 		return DOWNLOADS_NOT_AVAILABLE_FOR_DEV_BUILDS;
+	}
+
+	if (network_mode == EditorSettings::NETWORK_OFFLINE) {
+		return DOWNLOADS_NOT_AVAILABLE_IN_OFFLINE_MODE;
 	}
 
 	return DOWNLOADS_AVAILABLE;
@@ -358,6 +360,14 @@ void ExportTemplateManager::_refresh_mirrors_completed(int p_status, int p_code,
 
 		_download_template(mirror_url, true);
 	}
+}
+
+void ExportTemplateManager::_force_online_mode() {
+	EditorSettings::get_singleton()->set_setting("network/connection/network_mode", EditorSettings::NETWORK_ONLINE);
+	EditorSettings::get_singleton()->notify_changes();
+	EditorSettings::get_singleton()->save();
+
+	popup_manager();
 }
 
 bool ExportTemplateManager::_humanize_http_status(HTTPRequest *p_request, String *r_status, int *r_downloaded_bytes, int *r_total_bytes) {
@@ -723,6 +733,8 @@ void ExportTemplateManager::popup_manager() {
 			if (!is_downloading_templates) {
 				_refresh_mirrors();
 			}
+
+			enable_online_hb->hide();
 		} break;
 
 		case DOWNLOADS_NOT_AVAILABLE_IN_OFFLINE_MODE: {
@@ -737,6 +749,8 @@ void ExportTemplateManager::popup_manager() {
 
 			download_current_button->set_disabled(true);
 			download_current_button->set_tooltip_text(TTR("Template downloading is disabled in offline mode."));
+
+			enable_online_hb->show();
 		} break;
 
 		case DOWNLOADS_NOT_AVAILABLE_FOR_DEV_BUILDS: {
@@ -751,6 +765,8 @@ void ExportTemplateManager::popup_manager() {
 
 			download_current_button->set_disabled(true);
 			download_current_button->set_tooltip_text(TTR("Official export templates aren't available for development builds."));
+
+			enable_online_hb->hide();
 		} break;
 	}
 
@@ -1095,6 +1111,19 @@ ExportTemplateManager::ExportTemplateManager() {
 	install_file_button->set_tooltip_text(TTR("Install templates from a local file."));
 	install_file_hb->add_child(install_file_button);
 	install_file_button->connect(SceneStringName(pressed), callable_mp(this, &ExportTemplateManager::_install_file));
+
+	enable_online_hb = memnew(HBoxContainer);
+	install_options_vb->add_child(enable_online_hb);
+
+	Label *enable_online_label = memnew(Label);
+	enable_online_label->set_text(TTR("Online mode is needed to download the templates."));
+	enable_online_hb->add_child(enable_online_label);
+
+	LinkButton *enable_online_button = memnew(LinkButton);
+	enable_online_button->set_v_size_flags(Control::SIZE_SHRINK_CENTER);
+	enable_online_button->set_text(TTR("Go Online"));
+	enable_online_hb->add_child(enable_online_button);
+	enable_online_button->connect(SceneStringName(pressed), callable_mp(this, &ExportTemplateManager::_force_online_mode));
 
 	// Templates are being downloaded; buttons unavailable.
 	download_progress_hb = memnew(HBoxContainer);
