@@ -420,6 +420,9 @@ void update_theme_icons(Ref<Theme> &p_theme, const Color &p_font_color, const Co
 	p_theme->set_icon("hex_icon", "ColorPicker", icons["color_picker_hex"]);
 	p_theme->set_icon("hex_code_icon", "ColorPicker", icons["color_picker_hex_code"]);
 
+	p_theme->set_icon("bg", "ColorPickerButton", icons["mini_checkerboard"]);
+	p_theme->set_icon("overbright_indicator", "ColorPickerButton", icons["color_picker_overbright"]);
+
 	p_theme->set_icon("bg", "ColorButton", icons["mini_checkerboard"]);
 	p_theme->set_icon("overbright_indicator", "ColorButton", icons["color_picker_overbright"]);
 
