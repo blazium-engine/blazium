@@ -21,6 +21,9 @@
 		<member name="color" type="Color" setter="set_color_no_signal" getter="get_color" default="Color(1, 1, 1, 1)">
 			The button's display color.
 		</member>
+		<member name="edit_alpha" type="bool" setter="set_edit_alpha" getter="is_editing_alpha" default="true">
+			If [code]true[/code], shows an alpha channel slider (opacity).
+		</member>
 		<member name="flat" type="bool" setter="set_flat" getter="is_flat" default="false">
 			Draws the buttons without the styles.
 		</member>

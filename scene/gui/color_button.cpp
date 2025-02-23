@@ -66,6 +66,19 @@ bool ColorButton::is_flat() const {
 	return flat;
 }
 
+void ColorButton::set_edit_alpha(bool p_enabled) {
+	if (edit_alpha == p_enabled) {
+		return;
+	}
+
+	edit_alpha = p_enabled;
+	notify_property_list_changed();
+}
+
+bool ColorButton::is_editing_alpha() const {
+	return edit_alpha;
+}
+
 Ref<StyleBox> ColorButton::_get_current_style() const {
 	BaseButton::DrawMode mode = get_draw_mode();
 	if (mode == DRAW_NORMAL) {
@@ -78,6 +91,12 @@ Ref<StyleBox> ColorButton::_get_current_style() const {
 		return theme_cache.hover;
 	} else {
 		return theme_cache.disabled;
+	}
+}
+
+void ColorButton::_validate_property(PropertyInfo &p_property) const {
+	if (p_property.name == "color") {
+		p_property.hint = edit_alpha ? PROPERTY_HINT_NONE : PROPERTY_HINT_COLOR_NO_ALPHA;
 	}
 }
 
@@ -119,8 +138,11 @@ void ColorButton::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_color"), &ColorButton::get_color);
 	ClassDB::bind_method(D_METHOD("set_flat", "enabled"), &ColorButton::set_flat);
 	ClassDB::bind_method(D_METHOD("is_flat"), &ColorButton::is_flat);
+	ClassDB::bind_method(D_METHOD("set_edit_alpha", "enabled"), &ColorButton::set_edit_alpha);
+	ClassDB::bind_method(D_METHOD("is_editing_alpha"), &ColorButton::is_editing_alpha);
 
 	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "color"), "set_color_no_signal", "get_color");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "edit_alpha"), "set_edit_alpha", "is_editing_alpha");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "flat"), "set_flat", "is_flat");
 
 	ADD_SIGNAL(MethodInfo("color_changed", PropertyInfo(Variant::COLOR, "color")));
