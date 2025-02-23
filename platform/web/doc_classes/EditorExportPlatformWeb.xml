@@ -18,6 +18,14 @@
 		<member name="blazium/discord_embed/enabled" type="bool" setter="" getter="">
 			Enable if you want to use discord embedded app feature.
 		</member>
+		<member name="blazium/export_gzip_compressed_wasm/enabled" type="bool" setter="" getter="">
+			Enable if you want to export the WASM file as a GZIP. Recommended when exporting for Youtube Playables.
+			[b]Note:[/b] Your web server will have to serve the [code]index.wasm.gz[/code] file when the client request for [code]index.wasm[/code].
+		</member>
+		<member name="blazium/export_gzip_compressed_wasm/keep_uncompressed_wasm" type="bool" setter="" getter="">
+			Enable if you want to keep the uncompressed base WASM file.
+			[b]Note:[/b] If you plan to serve either the compressed or uncompressed WASM file, the game loading progress bar may not accurately reflect actual loading times.
+		</member>
 		<member name="blazium/social_headers/card" type="String" setter="" getter="">
 			The card meta property of the web page.
 		</member>

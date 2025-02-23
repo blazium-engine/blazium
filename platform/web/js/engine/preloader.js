@@ -42,16 +42,7 @@ const Preloader = /** @constructor */ function () { // eslint-disable-line no-un
 			if (!response.ok) {
 				return Promise.reject(new Error(`Failed loading file '${file}'`));
 			}
-			let tr;
-			// Decompress if it's a gzip archive
-			if (String(url).endsWith('.gz')) {
-				const ds = new DecompressionStream('gzip');
-				const decompressedStream = response.body.pipeThrough(ds);
-				const new_response = new Response(decompressedStream);
-				tr = getTrackedResponse(new_response, tracker[file]);
-			} else {
-				tr = getTrackedResponse(response, tracker[file]);
-			}
+			const tr = getTrackedResponse(response, tracker[file]);
 			if (raw) {
 				return Promise.resolve(tr);
 			}
