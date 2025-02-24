@@ -546,7 +546,6 @@ void EditorDockManager::load_docks_from_config(Ref<ConfigFile> p_layout, const S
 				continue;
 			}
 			Control *dock = dock_map[name];
-			dock->call(SNAME("_load_layout_from_config"), p_layout, p_section);
 
 			if (!all_docks[dock].enabled) {
 				// Don't open disabled docks.
