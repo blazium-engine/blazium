@@ -2558,7 +2558,9 @@ int64_t TextServerAdvanced::_font_get_spacing(const RID &p_font_rid, SpacingType
 		return fdv->extra_spacing[p_spacing];
 	} else {
 		FontAdvanced *fd = font_owner.get_or_null(p_font_rid);
-		ERR_FAIL_NULL_V(fd, 0);
+		if (!fd) {
+			return 0;
+		}
 
 		MutexLock lock(fd->mutex);
 		return fd->extra_spacing[p_spacing];
@@ -2703,7 +2705,9 @@ void TextServerAdvanced::_font_set_ascent(const RID &p_font_rid, int64_t p_size,
 
 double TextServerAdvanced::_font_get_ascent(const RID &p_font_rid, int64_t p_size) const {
 	FontAdvanced *fd = _get_font_data(p_font_rid);
-	ERR_FAIL_NULL_V(fd, 0.0);
+	if (!fd) {
+		return 0.0;
+	}
 
 	MutexLock lock(fd->mutex);
 	Vector2i size = _get_size(fd, p_size);
@@ -2737,7 +2741,9 @@ void TextServerAdvanced::_font_set_descent(const RID &p_font_rid, int64_t p_size
 
 double TextServerAdvanced::_font_get_descent(const RID &p_font_rid, int64_t p_size) const {
 	FontAdvanced *fd = _get_font_data(p_font_rid);
-	ERR_FAIL_NULL_V(fd, 0.0);
+	if (!fd) {
+		return 0.0;
+	}
 
 	MutexLock lock(fd->mutex);
 	Vector2i size = _get_size(fd, p_size);
@@ -3766,7 +3772,9 @@ void TextServerAdvanced::_font_draw_glyph(const RID &p_font_rid, const RID &p_ca
 		return; // Non visual character, skip.
 	}
 	FontAdvanced *fd = _get_font_data(p_font_rid);
-	ERR_FAIL_NULL(fd);
+	if (!fd) {
+		return;
+	}
 
 	MutexLock lock(fd->mutex);
 	Vector2i size = _get_size(fd, p_size);
