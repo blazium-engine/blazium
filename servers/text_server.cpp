@@ -196,6 +196,7 @@ void TextServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_support_data_filename"), &TextServer::get_support_data_filename);
 	ClassDB::bind_method(D_METHOD("get_support_data_info"), &TextServer::get_support_data_info);
 	ClassDB::bind_method(D_METHOD("save_support_data", "filename"), &TextServer::save_support_data);
+	ClassDB::bind_method(D_METHOD("get_support_data"), &TextServer::get_support_data);
 
 	ClassDB::bind_method(D_METHOD("is_locale_right_to_left", "locale"), &TextServer::is_locale_right_to_left);
 
@@ -271,6 +272,9 @@ void TextServer::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("font_set_subpixel_positioning", "font_rid", "subpixel_positioning"), &TextServer::font_set_subpixel_positioning);
 	ClassDB::bind_method(D_METHOD("font_get_subpixel_positioning", "font_rid"), &TextServer::font_get_subpixel_positioning);
+
+	ClassDB::bind_method(D_METHOD("font_set_keep_rounding_remainders", "font_rid", "keep_rounding_remainders"), &TextServer::font_set_keep_rounding_remainders);
+	ClassDB::bind_method(D_METHOD("font_get_keep_rounding_remainders", "font_rid"), &TextServer::font_get_keep_rounding_remainders);
 
 	ClassDB::bind_method(D_METHOD("font_set_embolden", "font_rid", "strength"), &TextServer::font_set_embolden);
 	ClassDB::bind_method(D_METHOD("font_get_embolden", "font_rid"), &TextServer::font_get_embolden);

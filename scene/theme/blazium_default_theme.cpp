@@ -112,13 +112,12 @@ static Ref<StyleBoxFlat> v_scroll_style;
 static Ref<StyleBoxLine> h_separator_style;
 static Ref<StyleBoxLine> v_separator_style;
 
-static Ref<FontVariation> fallback_font;
-static Ref<FontVariation> custom_font;
+static Ref<FontVariation> font_variation;
+static Ref<FontVariation> custom_font_variation;
 static Ref<FontVariation> bold_font;
 static Ref<FontVariation> bold_italics_font;
 static Ref<FontVariation> italics_font;
 
-static bool using_custom_font_variation = false;
 static bool is_dark_theme = false;
 
 #ifdef MODULE_SVG_ENABLED
@@ -826,117 +825,134 @@ void update_font_size(Ref<Theme> &p_theme, int p_font_size) {
 }
 
 void update_font_embolden(float p_embolden) {
-	if (custom_font.is_valid() && !using_custom_font_variation) {
-		custom_font->set_variation_embolden(p_embolden);
+	font_variation->set_variation_embolden(p_embolden);
+	if (custom_font_variation.is_valid()) {
+		return;
 	}
-	fallback_font->set_variation_embolden(p_embolden);
+
 	bold_font->set_variation_embolden(p_embolden + 0.2);
 	bold_italics_font->set_variation_embolden(p_embolden + 0.2);
 	italics_font->set_variation_embolden(p_embolden);
 }
 
 void update_font_spacing_glyph(int p_spacing) {
-	if (custom_font.is_valid() && !using_custom_font_variation) {
-		custom_font->set_spacing(TextServer::SPACING_GLYPH, p_spacing);
+	font_variation->set_spacing(TextServer::SPACING_GLYPH, p_spacing);
+	if (custom_font_variation.is_valid()) {
+		return;
 	}
-	fallback_font->set_spacing(TextServer::SPACING_GLYPH, p_spacing);
+
 	bold_font->set_spacing(TextServer::SPACING_GLYPH, p_spacing);
 	bold_italics_font->set_spacing(TextServer::SPACING_GLYPH, p_spacing);
 	italics_font->set_spacing(TextServer::SPACING_GLYPH, p_spacing);
 }
 
 void update_font_spacing_space(int p_spacing) {
-	if (custom_font.is_valid() && !using_custom_font_variation) {
-		custom_font->set_spacing(TextServer::SPACING_SPACE, p_spacing);
+	font_variation->set_spacing(TextServer::SPACING_SPACE, p_spacing);
+	if (custom_font_variation.is_valid()) {
+		return;
 	}
-	fallback_font->set_spacing(TextServer::SPACING_SPACE, p_spacing);
+
 	bold_font->set_spacing(TextServer::SPACING_SPACE, p_spacing);
 	bold_italics_font->set_spacing(TextServer::SPACING_SPACE, p_spacing);
 	italics_font->set_spacing(TextServer::SPACING_SPACE, p_spacing);
 }
 
 void update_font_spacing_top(int p_spacing) {
-	if (custom_font.is_valid() && !using_custom_font_variation) {
-		custom_font->set_spacing(TextServer::SPACING_TOP, p_spacing);
+	font_variation->set_spacing(TextServer::SPACING_TOP, p_spacing);
+	if (custom_font_variation.is_valid()) {
+		return;
 	}
-	fallback_font->set_spacing(TextServer::SPACING_TOP, p_spacing);
+
 	bold_italics_font->set_spacing(TextServer::SPACING_TOP, p_spacing);
 	bold_font->set_spacing(TextServer::SPACING_TOP, p_spacing);
 	italics_font->set_spacing(TextServer::SPACING_TOP, p_spacing);
 }
 
 void update_font_spacing_bottom(int p_spacing) {
-	if (custom_font.is_valid() && !using_custom_font_variation) {
-		custom_font->set_spacing(TextServer::SPACING_BOTTOM, p_spacing);
+	font_variation->set_spacing(TextServer::SPACING_BOTTOM, p_spacing);
+	if (custom_font_variation.is_valid()) {
+		return;
 	}
-	fallback_font->set_spacing(TextServer::SPACING_BOTTOM, p_spacing);
+
 	bold_font->set_spacing(TextServer::SPACING_BOTTOM, p_spacing);
 	bold_italics_font->set_spacing(TextServer::SPACING_BOTTOM, p_spacing);
 	italics_font->set_spacing(TextServer::SPACING_BOTTOM, p_spacing);
 }
 
 void update_theme_font(Ref<Theme> &p_theme, Ref<Font> p_font) {
-	if (p_font.is_valid()) {
-		if (p_font->is_class("FontVariation")) {
-			custom_font = p_font;
-			using_custom_font_variation = true;
+	if (p_font.is_valid() && p_font->is_class("FontVariation")) {
+		custom_font_variation = p_font;
 
-			Ref<Font> base_font = custom_font->get_base_font();
-			bold_font->set_base_font(base_font);
-			bold_italics_font->set_base_font(base_font);
-			italics_font->set_base_font(base_font);
-		} else {
-			custom_font = ThemeDB::get_singleton()->get_fallback_font()->duplicate();
-			custom_font->set_base_font(p_font);
-			using_custom_font_variation = false;
-
-			bold_font->set_base_font(p_font);
-			bold_italics_font->set_base_font(p_font);
-			italics_font->set_base_font(p_font);
-		}
-		p_theme->set_default_font(custom_font);
+		bold_font = custom_font_variation->duplicate();
+		bold_font->set_variation_embolden(custom_font_variation->get_variation_embolden() + 0.2);
+		bold_italics_font = custom_font_variation->duplicate();
+		bold_italics_font->set_variation_embolden(custom_font_variation->get_variation_embolden() + 0.2);
+		bold_italics_font->set_variation_transform(Transform2D(1.0, 0.2, 0.0, 1.0, 0.0, 0.0));
+		italics_font = custom_font_variation->duplicate();
+		italics_font->set_variation_transform(Transform2D(1.0, 0.2, 0.0, 1.0, 0.0, 0.0));
+		p_theme->set_font("bold_font", "RichTextLabel", bold_font);
+		p_theme->set_font("italics_font", "RichTextLabel", italics_font);
+		p_theme->set_font("bold_italics_font", "RichTextLabel", bold_italics_font);
+		p_theme->set_default_font(custom_font_variation);
 
 	} else {
-		if (custom_font.is_valid()) {
-			custom_font = Ref<FontVariation>();
-			using_custom_font_variation = false;
-
-			Ref<Font> base_font = fallback_font->get_base_font();
-			bold_font->set_base_font(base_font);
-			bold_italics_font->set_base_font(base_font);
-			italics_font->set_base_font(base_font);
+		Ref<FontFile> base_font = p_font.is_valid() ? p_font : ThemeDB::get_singleton()->get_fallback_font();
+		if (base_font != font_variation->get_base_font()) {
+			Ref<FontFile> cur_font = font_variation->get_base_font();
+			base_font->set_subpixel_positioning(cur_font->get_subpixel_positioning());
+			base_font->set_antialiasing(cur_font->get_antialiasing());
+			base_font->set_lcd_subpixel_layout(cur_font->get_lcd_subpixel_layout());
+			base_font->set_hinting(cur_font->get_hinting());
+			base_font->set_multichannel_signed_distance_field(cur_font->is_multichannel_signed_distance_field());
+			base_font->set_generate_mipmaps(cur_font->get_generate_mipmaps());
+			font_variation->set_base_font(base_font);
 		}
-		p_theme->set_default_font(Ref<Font>());
+
+		if (custom_font_variation.is_valid()) {
+			custom_font_variation = Ref<FontVariation>();
+
+			bold_font = font_variation->duplicate();
+			bold_font->set_variation_embolden(font_variation->get_variation_embolden() + 0.2);
+			bold_italics_font = font_variation->duplicate();
+			bold_italics_font->set_variation_embolden(font_variation->get_variation_embolden() + 0.2);
+			bold_italics_font->set_variation_transform(Transform2D(1.0, 0.2, 0.0, 1.0, 0.0, 0.0));
+			italics_font = font_variation->duplicate();
+			italics_font->set_variation_transform(Transform2D(1.0, 0.2, 0.0, 1.0, 0.0, 0.0));
+			p_theme->set_font("bold_font", "RichTextLabel", bold_font);
+			p_theme->set_font("italics_font", "RichTextLabel", italics_font);
+			p_theme->set_font("bold_italics_font", "RichTextLabel", bold_italics_font);
+			p_theme->set_default_font(font_variation);
+		}
 	}
 }
 
 void update_font_subpixel_positioning(TextServer::SubpixelPositioning p_font_subpixel_positioning) {
-	Ref<FontFile> base_font = fallback_font->get_base_font();
+	Ref<FontFile> base_font = font_variation->get_base_font();
 	base_font->set_subpixel_positioning(p_font_subpixel_positioning);
 }
 
 void update_font_antialiasing(TextServer::FontAntialiasing p_font_antialiasing) {
-	Ref<FontFile> base_font = fallback_font->get_base_font();
+	Ref<FontFile> base_font = font_variation->get_base_font();
 	base_font->set_antialiasing(p_font_antialiasing);
 }
 
 void update_font_lcd_subpixel_layout(TextServer::FontLCDSubpixelLayout p_font_lcd_subpixel_layout) {
-	Ref<FontFile> base_font = fallback_font->get_base_font();
+	Ref<FontFile> base_font = font_variation->get_base_font();
 	base_font->set_lcd_subpixel_layout(p_font_lcd_subpixel_layout);
 }
 
 void update_font_hinting(TextServer::Hinting p_font_hinting) {
-	Ref<FontFile> base_font = fallback_font->get_base_font();
+	Ref<FontFile> base_font = font_variation->get_base_font();
 	base_font->set_hinting(p_font_hinting);
 }
 
 void update_font_msdf(bool p_font_msdf) {
-	Ref<FontFile> base_font = fallback_font->get_base_font();
+	Ref<FontFile> base_font = font_variation->get_base_font();
 	base_font->set_multichannel_signed_distance_field(p_font_msdf);
 }
 
 void update_font_generate_mipmaps(bool p_font_generate_mipmaps) {
-	Ref<FontFile> base_font = fallback_font->get_base_font();
+	Ref<FontFile> base_font = font_variation->get_base_font();
 	base_font->set_generate_mipmaps(p_font_generate_mipmaps);
 }
 
@@ -1206,17 +1222,15 @@ void make_default_theme(Ref<Font> p_font, float p_scale, TextServer::SubpixelPos
 	base_font.instantiate();
 	base_font->set_data_ptr(_font_OpenSans_SemiBold, _font_OpenSans_SemiBold_size);
 
-	fallback_font.instantiate();
-	fallback_font->set_base_font(base_font);
+	font_variation.instantiate();
+	font_variation->set_base_font(base_font);
 
-	ThemeDB::get_singleton()->set_fallback_font(fallback_font);
+	ThemeDB::get_singleton()->set_fallback_font(base_font);
+	t->set_default_font(font_variation);
 
 	bold_font.instantiate();
 	bold_italics_font.instantiate();
 	italics_font.instantiate();
-
-	bold_italics_font->set_variation_transform(Transform2D(1.0, 0.2, 0.0, 1.0, 0.0, 0.0));
-	italics_font->set_variation_transform(Transform2D(1.0, 0.2, 0.0, 1.0, 0.0, 0.0));
 
 	t->set_default_base_scale(scale);
 
@@ -1298,9 +1312,9 @@ void make_default_theme(Ref<Font> p_font, float p_scale, TextServer::SubpixelPos
 	update_theme_border_padding(t, p_border_width + p_padding);
 	update_theme_scale(t);
 	update_font_color(t, p_font_color); // Update font color before icons and theme colors.
+	update_font_outline_color(t, p_font_outline_color);
 	update_theme_icons(t, p_font_color, p_accent_color);
 	update_theme_colors(t, p_base_color, p_accent_color, p_contrast, p_normal_contrast, p_hover_contrast, p_pressed_contrast, p_bg_contrast);
-	update_font_outline_color(t, p_font_outline_color);
 	update_font_outline_size(t, p_font_outline);
 	update_font_size(t, p_font_size);
 	update_font_embolden(p_font_embolden);
@@ -1654,9 +1668,6 @@ void make_default_theme(Ref<Font> p_font, float p_scale, TextServer::SubpixelPos
 	embedded_style->set_expand_margin_individual(8, 32, 8, 6);
 	embedded_unfocused_style->set_expand_margin_individual(8, 32, 8, 6);
 
-	t->set_font("bold_font", "RichTextLabel", bold_font);
-	t->set_font("italics_font", "RichTextLabel", italics_font);
-	t->set_font("bold_italics_font", "RichTextLabel", bold_italics_font);
 	t->set_font(SceneStringName(font), "Button", Ref<Font>());
 	t->set_font(SceneStringName(font), "TabBar", Ref<Font>());
 	t->set_font(SceneStringName(font), "ItemList", Ref<Font>());
@@ -1744,11 +1755,11 @@ void finalize_default_theme() {
 	h_split_bar_background.unref();
 	v_split_bar_background.unref();
 
-	if (custom_font.is_valid()) {
-		custom_font.unref();
+	if (custom_font_variation.is_valid()) {
+		custom_font_variation.unref();
 	}
 
-	fallback_font.unref();
+	font_variation.unref();
 	bold_font.unref();
 	bold_italics_font.unref();
 	italics_font.unref();
