@@ -1263,6 +1263,9 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_color("button_icon_hovered", "FoldableContainer", control_font_hover_color);
 	theme->set_color("button_icon_pressed", "FoldableContainer", control_font_pressed_color);
 	theme->set_color("button_icon_disabled", "FoldableContainer", control_font_disabled_color);
+	theme->set_color("arrow_normal_color", "FoldableContainer", control_font_color);
+	theme->set_color("arrow_hover_color", "FoldableContainer", control_font_hover_color);
+	theme->set_color("arrow_collapsed_color", "FoldableContainer", control_font_pressed_color);
 
 	theme->set_icon("expanded_arrow", "FoldableContainer", icons["expanded_arrow"]);
 	theme->set_icon("expanded_arrow_mirrored", "FoldableContainer", icons["expanded_arrow_mirrored"]);

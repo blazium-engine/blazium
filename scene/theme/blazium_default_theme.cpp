@@ -556,7 +556,9 @@ void update_theme_colors(Ref<Theme> &p_theme, const Color &p_base_color, const C
 	p_theme->set_color("down_pressed_icon_modulate", "SpinBox", accent_color);
 	p_theme->set_color("up_pressed_icon_modulate", "SpinBox", accent_color);
 	p_theme->set_color("selection_stroke", "GraphEdit", accent_color);
+	p_theme->set_color("collapsed_font_color", "FoldableContainer", accent_color);
 	p_theme->set_color("button_icon_pressed", "FoldableContainer", accent_color);
+	p_theme->set_color("arrow_collapsed_color", "FoldableContainer", accent_color);
 
 	p_theme->set_color("search_result_color", "TextEdit", accent_color2);
 	p_theme->set_color("search_result_color", "CodeEdit", accent_color2);
@@ -660,6 +662,7 @@ void update_font_color(Ref<Theme> &p_theme, const Color &p_color) {
 	p_theme->set_color("connection_rim_color", "GraphEdit", font_color);
 	p_theme->set_color("hover_font_color", "FoldableContainer", font_color);
 	p_theme->set_color("button_icon_hovered", "FoldableContainer", font_color);
+	p_theme->set_color("arrow_hover_color", "FoldableContainer", font_color);
 	font_color.a = 0.9;
 	p_theme->set_color("icon_focus_color", "Button", font_color);
 	p_theme->set_color("font_focus_color", "Button", font_color);
@@ -708,8 +711,8 @@ void update_font_color(Ref<Theme> &p_theme, const Color &p_color) {
 	p_theme->set_color("default_color", "RichTextLabel", font_color);
 	p_theme->set_color("up_icon_modulate", "SpinBox", font_color);
 	p_theme->set_color("down_icon_modulate", "SpinBox", font_color);
-	p_theme->set_color("collapsed_font_color", "FoldableContainer", font_color);
 	p_theme->set_color("button_icon_normal", "FoldableContainer", font_color);
+	p_theme->set_color("arrow_normal_color", "FoldableContainer", font_color);
 	font_color.a = 0.6;
 	grabber_style->set_bg_color(font_color);
 	p_theme->set_color("font_separator_color", "PopupMenu", font_color);

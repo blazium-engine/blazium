@@ -584,7 +584,14 @@ void FoldableContainer::_notification(int p_what) {
 			} else {
 				title_pos.x = title_style->get_margin(SIDE_LEFT) + icon->get_width() + h_separation;
 			}
-			icon->draw(ci, title_ofs + icon_pos);
+
+			Color arrow_color;
+			if (is_hovering) {
+				arrow_color = theme_cache.arrow_hover_color;
+			} else {
+				arrow_color = folded ? theme_cache.arrow_collapsed_color : theme_cache.arrow_normal_color;
+			}
+			icon->draw(ci, title_ofs + icon_pos, arrow_color);
 
 			Size2 button_ms = theme_cache.button_normal_style->get_minimum_size();
 			int offset = 0;
@@ -909,6 +916,10 @@ void FoldableContainer::_bind_methods() {
 	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, FoldableContainer, button_icon_hovered);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, FoldableContainer, button_icon_pressed);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, FoldableContainer, button_icon_disabled);
+
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, FoldableContainer, arrow_normal_color);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, FoldableContainer, arrow_hover_color);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, FoldableContainer, arrow_collapsed_color);
 
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, FoldableContainer, expanded_arrow);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_ICON, FoldableContainer, expanded_arrow_mirrored);

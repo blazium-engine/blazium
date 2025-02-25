@@ -105,6 +105,10 @@ private:
 		Color title_collapsed_font_color;
 		Color title_font_outline_color;
 
+		Color arrow_normal_color;
+		Color arrow_hover_color;
+		Color arrow_collapsed_color;
+
 		Ref<Font> title_font;
 		int title_font_size = 0;
 		int title_font_outline_size = 0;
