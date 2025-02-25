@@ -1312,6 +1312,9 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 		p_theme->set_color("button_icon_hovered", "FoldableContainer", p_config.icon_hover_color);
 		p_theme->set_color("button_icon_pressed", "FoldableContainer", p_config.icon_pressed_color);
 		p_theme->set_color("button_icon_disabled", "FoldableContainer", p_config.icon_disabled_color);
+		p_theme->set_color("arrow_normal_color", "FoldableContainer", p_config.icon_normal_color);
+		p_theme->set_color("arrow_hover_color", "FoldableContainer", p_config.icon_hover_color);
+		p_theme->set_color("arrow_collapsed_color", "FoldableContainer", p_config.icon_pressed_color);
 
 		p_theme->set_icon("expanded_arrow", "FoldableContainer", p_theme->get_icon(SNAME("GuiTreeArrowDown"), EditorStringName(EditorIcons)));
 		p_theme->set_icon("expanded_arrow_mirrored", "FoldableContainer", p_theme->get_icon(SNAME("GuiArrowUp"), EditorStringName(EditorIcons)));
