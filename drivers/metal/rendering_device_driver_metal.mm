@@ -1987,8 +1987,9 @@ Vector<uint8_t> RenderingDeviceDriverMetal::shader_compile_binary_from_spirv(Vec
 	msl_options.platform = CompilerMSL::Options::iOS;
 #endif
 
-#if TARGET_OS_IOS
+#if TARGET_OS_IPHONE
 	msl_options.ios_use_simdgroup_functions = (*metal_device_properties).features.simdPermute;
+	msl_options.ios_support_base_vertex_instance = true;
 #endif
 
 	msl_options.argument_buffers = true;
