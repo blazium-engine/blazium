@@ -77,12 +77,13 @@ public:
 
 private:
 	int split_offset = 0;
-	int middle_sep = 0;
+	int middle_sep = -1;
 	bool vertical = false;
 	bool collapsed = false;
 	bool child_collapsed = false;
 	bool dragging_enabled = true;
 	bool show_drag_area = false;
+	bool dirty = false;
 
 	DraggerVisibility dragger_visibility = DRAGGER_VISIBLE;
 	CollapseMode collapse_mode = COLLAPSE_NONE;
