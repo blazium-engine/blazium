@@ -86,11 +86,6 @@ __declspec(dllexport) void NoHotPatch() {} // Disable Nahimic code injection.
 #define DWRITE_FONT_WEIGHT_SEMI_LIGHT (DWRITE_FONT_WEIGHT)350
 #endif
 
-#if defined(__GNUC__)
-// Workaround GCC warning from -Wcast-function-type.
-#define GetProcAddress (void *)GetProcAddress
-#endif
-
 static String fix_path(const String &p_path) {
 	String path = p_path;
 	if (p_path.is_relative_path()) {
@@ -433,8 +428,8 @@ Error OS_Windows::open_dynamic_library(const String &p_path, void *&p_library_ha
 	typedef DLL_DIRECTORY_COOKIE(WINAPI * PAddDllDirectory)(PCWSTR);
 	typedef BOOL(WINAPI * PRemoveDllDirectory)(DLL_DIRECTORY_COOKIE);
 
-	PAddDllDirectory add_dll_directory = (PAddDllDirectory)GetProcAddress(GetModuleHandle("kernel32.dll"), "AddDllDirectory");
-	PRemoveDllDirectory remove_dll_directory = (PRemoveDllDirectory)GetProcAddress(GetModuleHandle("kernel32.dll"), "RemoveDllDirectory");
+	PAddDllDirectory add_dll_directory = (PAddDllDirectory)(void *)GetProcAddress(GetModuleHandle("kernel32.dll"), "AddDllDirectory");
+	PRemoveDllDirectory remove_dll_directory = (PRemoveDllDirectory)(void *)GetProcAddress(GetModuleHandle("kernel32.dll"), "RemoveDllDirectory");
 
 	bool has_dll_directory_api = ((add_dll_directory != nullptr) && (remove_dll_directory != nullptr));
 	DLL_DIRECTORY_COOKIE cookie = nullptr;
@@ -533,15 +528,73 @@ String OS_Windows::get_distribution_name() const {
 }
 
 String OS_Windows::get_version() const {
-	RtlGetVersionPtr version_ptr = (RtlGetVersionPtr)GetProcAddress(GetModuleHandle("ntdll.dll"), "RtlGetVersion");
+	RtlGetVersionPtr version_ptr = (RtlGetVersionPtr)(void *)GetProcAddress(GetModuleHandle("ntdll.dll"), "RtlGetVersion");
 	if (version_ptr != nullptr) {
-		RTL_OSVERSIONINFOW fow;
+		RTL_OSVERSIONINFOEXW fow;
 		ZeroMemory(&fow, sizeof(fow));
 		fow.dwOSVersionInfoSize = sizeof(fow);
 		if (version_ptr(&fow) == 0x00000000) {
 			return vformat("%d.%d.%d", (int64_t)fow.dwMajorVersion, (int64_t)fow.dwMinorVersion, (int64_t)fow.dwBuildNumber);
 		}
 	}
+	return "";
+}
+
+String OS_Windows::get_version_alias() const {
+	RtlGetVersionPtr version_ptr = (RtlGetVersionPtr)(void *)GetProcAddress(GetModuleHandle("ntdll.dll"), "RtlGetVersion");
+	if (version_ptr != nullptr) {
+		RTL_OSVERSIONINFOEXW fow;
+		ZeroMemory(&fow, sizeof(fow));
+		fow.dwOSVersionInfoSize = sizeof(fow);
+		if (version_ptr(&fow) == 0x00000000) {
+			String windows_string;
+			if (fow.wProductType != VER_NT_WORKSTATION && fow.dwMajorVersion == 10 && fow.dwBuildNumber >= 26100) {
+				windows_string = "Server 2025";
+			} else if (fow.dwMajorVersion == 10 && fow.dwBuildNumber >= 20348) {
+				// Builds above 20348 correspond to Windows 11 / Windows Server 2022.
+				// Their major version numbers are still 10 though, not 11.
+				if (fow.wProductType != VER_NT_WORKSTATION) {
+					windows_string += "Server 2022";
+				} else {
+					windows_string += "11";
+				}
+			} else if (fow.dwMajorVersion == 10) {
+				if (fow.wProductType != VER_NT_WORKSTATION && fow.dwBuildNumber >= 17763) {
+					windows_string += "Server 2019";
+				} else {
+					if (fow.wProductType != VER_NT_WORKSTATION) {
+						windows_string += "Server 2016";
+					} else {
+						windows_string += "10";
+					}
+				}
+			} else if (fow.dwMajorVersion == 6 && fow.dwMinorVersion == 3) {
+				if (fow.wProductType != VER_NT_WORKSTATION) {
+					windows_string = "Server 2012 R2";
+				} else {
+					windows_string += "8.1";
+				}
+			} else if (fow.dwMajorVersion == 6 && fow.dwMinorVersion == 2) {
+				if (fow.wProductType != VER_NT_WORKSTATION) {
+					windows_string += "Server 2012";
+				} else {
+					windows_string += "8";
+				}
+			} else if (fow.dwMajorVersion == 6 && fow.dwMinorVersion == 1) {
+				if (fow.wProductType != VER_NT_WORKSTATION) {
+					windows_string = "Server 2008 R2";
+				} else {
+					windows_string += "7";
+				}
+			} else {
+				windows_string += "Unknown";
+			}
+			// Windows versions older than 7 cannot run Godot.
+
+			return vformat("%s (build %d)", windows_string, (int64_t)fow.dwBuildNumber);
+		}
+	}
+
 	return "";
 }
 
@@ -642,6 +695,72 @@ Vector<String> OS_Windows::get_video_adapter_driver_info() const {
 	info.push_back(driver_version);
 
 	return info;
+}
+
+bool OS_Windows::get_user_prefers_integrated_gpu() const {
+	// On Windows 10, the preferred GPU configured in Windows Settings is
+	// stored in the registry under the key
+	// `HKEY_CURRENT_USER\SOFTWARE\Microsoft\DirectX\UserGpuPreferences`
+	// with the name being the app ID or EXE path. The value is in the form of
+	// `GpuPreference=1;`, with the value being 1 for integrated GPU and 2
+	// for discrete GPU. On Windows 11, there may be more flags, separated
+	// by semicolons.
+
+	// If this is a packaged app, use the "application user model ID".
+	// Otherwise, use the EXE path.
+	WCHAR value_name[32768];
+	bool is_packaged = false;
+	{
+		HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll");
+		if (kernel32) {
+			using GetCurrentApplicationUserModelIdPtr = LONG(WINAPI *)(UINT32 * length, PWSTR id);
+			GetCurrentApplicationUserModelIdPtr GetCurrentApplicationUserModelId = (GetCurrentApplicationUserModelIdPtr)(void *)GetProcAddress(kernel32, "GetCurrentApplicationUserModelId");
+
+			if (GetCurrentApplicationUserModelId) {
+				UINT32 length = sizeof(value_name) / sizeof(value_name[0]);
+				LONG result = GetCurrentApplicationUserModelId(&length, value_name);
+				if (result == ERROR_SUCCESS) {
+					is_packaged = true;
+				}
+			}
+		}
+	}
+	if (!is_packaged && GetModuleFileNameW(nullptr, value_name, sizeof(value_name) / sizeof(value_name[0])) >= sizeof(value_name) / sizeof(value_name[0])) {
+		// Paths should never be longer than 32767, but just in case.
+		return false;
+	}
+
+	LPCWSTR subkey = L"SOFTWARE\\Microsoft\\DirectX\\UserGpuPreferences";
+	HKEY hkey = nullptr;
+	LSTATUS result = RegOpenKeyExW(HKEY_CURRENT_USER, subkey, 0, KEY_READ, &hkey);
+	if (result != ERROR_SUCCESS) {
+		return false;
+	}
+
+	DWORD size = 0;
+	result = RegGetValueW(hkey, nullptr, value_name, RRF_RT_REG_SZ, nullptr, nullptr, &size);
+	if (result != ERROR_SUCCESS || size == 0) {
+		RegCloseKey(hkey);
+		return false;
+	}
+
+	Vector<WCHAR> buffer;
+	buffer.resize(size / sizeof(WCHAR));
+	result = RegGetValueW(hkey, nullptr, value_name, RRF_RT_REG_SZ, nullptr, (LPBYTE)buffer.ptrw(), &size);
+	if (result != ERROR_SUCCESS) {
+		RegCloseKey(hkey);
+		return false;
+	}
+
+	RegCloseKey(hkey);
+	const String flags = String::utf16((const char16_t *)buffer.ptr(), size / sizeof(WCHAR));
+
+	for (const String &flag : flags.split(";", false)) {
+		if (flag == "GpuPreference=1") {
+			return true;
+		}
+	}
+	return false;
 }
 
 OS::DateTime OS_Windows::get_datetime(bool p_utc) const {
@@ -797,7 +916,7 @@ Dictionary OS_Windows::get_memory_info() const {
 	GetPerformanceInfo(&pref_info, sizeof(pref_info));
 
 	typedef void(WINAPI * PGetCurrentThreadStackLimits)(PULONG_PTR, PULONG_PTR);
-	PGetCurrentThreadStackLimits GetCurrentThreadStackLimits = (PGetCurrentThreadStackLimits)GetProcAddress(GetModuleHandleA("kernel32.dll"), "GetCurrentThreadStackLimits");
+	PGetCurrentThreadStackLimits GetCurrentThreadStackLimits = (PGetCurrentThreadStackLimits)(void *)GetProcAddress(GetModuleHandleA("kernel32.dll"), "GetCurrentThreadStackLimits");
 
 	ULONG_PTR LowLimit = 0;
 	ULONG_PTR HighLimit = 0;
