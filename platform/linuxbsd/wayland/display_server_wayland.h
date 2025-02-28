@@ -101,8 +101,14 @@ class DisplayServerWayland : public DisplayServer {
 	};
 
 	struct CustomCursor {
-		RID rid;
+		Ref<Resource> resource;
 		Point2i hotspot;
+	};
+
+	enum class SuspendState {
+		NONE, // Unsuspended.
+		TIMEOUT, // Legacy fallback.
+		CAPABILITY, // New "suspended" wm_capability flag.
 	};
 
 	CursorShape cursor_shape = CURSOR_ARROW;
@@ -118,7 +124,7 @@ class DisplayServerWayland : public DisplayServer {
 	String ime_text;
 	Vector2i ime_selection;
 
-	bool suspended = false;
+	SuspendState suspend_state = SuspendState::NONE;
 	bool emulate_vsync = false;
 
 	String rendering_driver;
@@ -180,6 +186,8 @@ public:
 	virtual Error file_dialog_show(const String &p_title, const String &p_current_directory, const String &p_filename, bool p_show_hidden, FileDialogMode p_mode, const Vector<String> &p_filters, const Callable &p_callback) override;
 	virtual Error file_dialog_with_options_show(const String &p_title, const String &p_current_directory, const String &p_root, const String &p_filename, bool p_show_hidden, FileDialogMode p_mode, const Vector<String> &p_filters, const TypedArray<Dictionary> &p_options, const Callable &p_callback) override;
 #endif
+
+	virtual void beep() const override;
 
 	virtual void mouse_set_mode(MouseMode p_mode) override;
 	virtual MouseMode mouse_get_mode() const override;

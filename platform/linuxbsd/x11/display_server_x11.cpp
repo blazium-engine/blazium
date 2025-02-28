@@ -399,6 +399,10 @@ Error DisplayServerX11::file_dialog_with_options_show(const String &p_title, con
 
 #endif
 
+void DisplayServerX11::beep() const {
+	XBell(x11_display, 0);
+}
+
 void DisplayServerX11::mouse_set_mode(MouseMode p_mode) {
 	_THREAD_SAFE_METHOD_
 
@@ -1787,12 +1791,6 @@ void DisplayServerX11::delete_sub_window(WindowID p_id) {
 		_send_window_event(windows[p_id], WINDOW_EVENT_MOUSE_EXIT);
 	}
 
-	window_set_rect_changed_callback(Callable(), p_id);
-	window_set_window_event_callback(Callable(), p_id);
-	window_set_input_event_callback(Callable(), p_id);
-	window_set_input_text_callback(Callable(), p_id);
-	window_set_drop_files_callback(Callable(), p_id);
-
 	while (wd.transient_children.size()) {
 		window_set_transient(*wd.transient_children.begin(), INVALID_WINDOW_ID);
 	}
@@ -1836,7 +1834,17 @@ void DisplayServerX11::delete_sub_window(WindowID p_id) {
 	XUnmapWindow(x11_display, wd.x11_window);
 	XDestroyWindow(x11_display, wd.x11_window);
 
+	window_set_rect_changed_callback(Callable(), p_id);
+	window_set_window_event_callback(Callable(), p_id);
+	window_set_input_event_callback(Callable(), p_id);
+	window_set_input_text_callback(Callable(), p_id);
+	window_set_drop_files_callback(Callable(), p_id);
+
 	windows.erase(p_id);
+
+	if (last_focused_window == p_id) {
+		last_focused_window = INVALID_WINDOW_ID;
+	}
 }
 
 int64_t DisplayServerX11::window_get_native_handle(HandleType p_handle_type, WindowID p_window) const {

@@ -128,10 +128,16 @@ def configure(env: "SConsEnvironment"):
                         found_wrapper = True
                         break
                 if not found_wrapper:
-                    print_error(
-                        "Couldn't locate mold installation path. Make sure it's installed in /usr or /usr/local."
-                    )
-                    sys.exit(255)
+                    for path in os.environ["PATH"].split(os.pathsep):
+                        if os.path.isfile(path + "/ld.mold"):
+                            env.Append(LINKFLAGS=["-B" + path])
+                            found_wrapper = True
+                            break
+                    if not found_wrapper:
+                        print_error(
+                            "Couldn't locate mold installation path. Make sure it's installed in /usr, /usr/local or in PATH environment variable."
+                        )
+                        sys.exit(255)
             else:
                 env.Append(LINKFLAGS=["-fuse-ld=mold"])
         else:
@@ -468,11 +474,14 @@ def configure(env: "SConsEnvironment"):
                 print_error("Wayland EGL library not found. Aborting.")
                 sys.exit(255)
             env.ParseConfig("pkg-config wayland-egl --cflags --libs")
+        else:
+            env.Prepend(CPPPATH=["#thirdparty/linuxbsd_headers/wayland/"])
+            if env["libdecor"]:
+                env.Prepend(CPPPATH=["#thirdparty/linuxbsd_headers/libdecor-0/"])
 
         if env["libdecor"]:
             env.Append(CPPDEFINES=["LIBDECOR_ENABLED"])
 
-        env.Prepend(CPPPATH=["#platform/linuxbsd", "#thirdparty/linuxbsd_headers/wayland/"])
         env.Append(CPPDEFINES=["WAYLAND_ENABLED"])
         env.Append(LIBS=["rt"])  # Needed by glibc, used by _allocate_shm_file
 

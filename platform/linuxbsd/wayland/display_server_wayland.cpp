@@ -318,6 +318,10 @@ Error DisplayServerWayland::file_dialog_with_options_show(const String &p_title,
 
 #endif
 
+void DisplayServerWayland::beep() const {
+	wayland_thread.beep();
+}
+
 void DisplayServerWayland::mouse_set_mode(MouseMode p_mode) {
 	if (p_mode == mouse_mode) {
 		return;
@@ -327,15 +331,7 @@ void DisplayServerWayland::mouse_set_mode(MouseMode p_mode) {
 
 	bool show_cursor = (p_mode == MOUSE_MODE_VISIBLE || p_mode == MOUSE_MODE_CONFINED);
 
-	if (show_cursor) {
-		if (custom_cursors.has(cursor_shape)) {
-			wayland_thread.cursor_set_custom_shape(cursor_shape);
-		} else {
-			wayland_thread.cursor_set_shape(cursor_shape);
-		}
-	} else {
-		wayland_thread.cursor_hide();
-	}
+	wayland_thread.cursor_set_visible(show_cursor);
 
 	WaylandThread::PointerConstraint constraint = WaylandThread::PointerConstraint::NONE;
 
@@ -480,7 +476,7 @@ String DisplayServerWayland::clipboard_get_primary() const {
 	for (String mime : text_mimes) {
 		if (wayland_thread.primary_has_mime(mime)) {
 			print_verbose(vformat("Selecting media type \"%s\" from offered types.", mime));
-			wayland_thread.primary_get_mime(mime);
+			data = wayland_thread.primary_get_mime(mime);
 			break;
 		}
 	}
@@ -896,11 +892,11 @@ bool DisplayServerWayland::window_is_focused(WindowID p_window_id) const {
 }
 
 bool DisplayServerWayland::window_can_draw(DisplayServer::WindowID p_window_id) const {
-	return !suspended;
+	return suspend_state == SuspendState::NONE;
 }
 
 bool DisplayServerWayland::can_any_window_draw() const {
-	return !suspended;
+	return suspend_state == SuspendState::NONE;
 }
 
 void DisplayServerWayland::window_set_ime_active(const bool p_active, DisplayServer::WindowID p_window_id) {
@@ -993,11 +989,7 @@ void DisplayServerWayland::cursor_set_shape(CursorShape p_shape) {
 		return;
 	}
 
-	if (custom_cursors.has(p_shape)) {
-		wayland_thread.cursor_set_custom_shape(p_shape);
-	} else {
-		wayland_thread.cursor_set_shape(p_shape);
-	}
+	wayland_thread.cursor_set_shape(p_shape);
 }
 
 DisplayServerWayland::CursorShape DisplayServerWayland::cursor_get_shape() const {
@@ -1009,18 +1001,13 @@ DisplayServerWayland::CursorShape DisplayServerWayland::cursor_get_shape() const
 void DisplayServerWayland::cursor_set_custom_image(const Ref<Resource> &p_cursor, CursorShape p_shape, const Vector2 &p_hotspot) {
 	MutexLock mutex_lock(wayland_thread.mutex);
 
-	bool visible = (mouse_mode == MOUSE_MODE_VISIBLE || mouse_mode == MOUSE_MODE_CONFINED);
-
 	if (p_cursor.is_valid()) {
 		HashMap<CursorShape, CustomCursor>::Iterator cursor_c = custom_cursors.find(p_shape);
 
 		if (cursor_c) {
-			if (cursor_c->value.rid == p_cursor->get_rid() && cursor_c->value.hotspot == p_hotspot) {
+			if (cursor_c->value.resource == p_cursor && cursor_c->value.hotspot == p_hotspot) {
 				// We have a cached cursor. Nice.
-				if (visible) {
-					wayland_thread.cursor_set_custom_shape(p_shape);
-				}
-
+				wayland_thread.cursor_set_shape(p_shape);
 				return;
 			}
 
@@ -1034,25 +1021,23 @@ void DisplayServerWayland::cursor_set_custom_image(const Ref<Resource> &p_cursor
 
 		CustomCursor &cursor = custom_cursors[p_shape];
 
-		cursor.rid = p_cursor->get_rid();
+		cursor.resource = p_cursor;
 		cursor.hotspot = p_hotspot;
 
 		wayland_thread.cursor_shape_set_custom_image(p_shape, image, p_hotspot);
 
-		if (visible) {
-			wayland_thread.cursor_set_custom_shape(p_shape);
-		}
+		wayland_thread.cursor_set_shape(p_shape);
 	} else {
 		// Clear cache and reset to default system cursor.
-		if (cursor_shape == p_shape && visible) {
+		wayland_thread.cursor_shape_clear_custom_image(p_shape);
+
+		if (cursor_shape == p_shape) {
 			wayland_thread.cursor_set_shape(p_shape);
 		}
 
 		if (custom_cursors.has(p_shape)) {
 			custom_cursors.erase(p_shape);
 		}
-
-		wayland_thread.cursor_shape_clear_custom_image(p_shape);
 	}
 }
 
@@ -1120,16 +1105,21 @@ void DisplayServerWayland::try_suspend() {
 	if (emulate_vsync) {
 		bool frame = wayland_thread.wait_frame_suspend_ms(1000);
 		if (!frame) {
-			suspended = true;
-		}
-	} else {
-		if (wayland_thread.is_suspended()) {
-			suspended = true;
+			suspend_state = SuspendState::TIMEOUT;
 		}
 	}
 
-	if (suspended) {
-		DEBUG_LOG_WAYLAND("Window suspended.");
+	// If we suspended by capability, we'll know with this check. We must do this
+	// after `wait_frame_suspend_ms` as it progressively dispatches the event queue
+	// during the "timeout".
+	if (wayland_thread.is_suspended()) {
+		suspend_state = SuspendState::CAPABILITY;
+	}
+
+	if (suspend_state == SuspendState::TIMEOUT) {
+		DEBUG_LOG_WAYLAND("Suspending. Reason: timeout.");
+	} else if (suspend_state == SuspendState::CAPABILITY) {
+		DEBUG_LOG_WAYLAND("Suspending. Reason: capability.");
 	}
 }
 
@@ -1156,6 +1146,7 @@ void DisplayServerWayland::process_events() {
 				if (OS::get_singleton()->get_main_loop()) {
 					OS::get_singleton()->get_main_loop()->notification(MainLoop::NOTIFICATION_APPLICATION_FOCUS_OUT);
 				}
+				Input::get_singleton()->release_pressed_events();
 			}
 		}
 
@@ -1205,16 +1196,18 @@ void DisplayServerWayland::process_events() {
 
 		Ref<WaylandThread::IMEUpdateEventMessage> ime_update_msg = msg;
 		if (ime_update_msg.is_valid()) {
-			ime_text = ime_update_msg->text;
-			ime_selection = ime_update_msg->selection;
+			if (ime_text != ime_update_msg->text || ime_selection != ime_update_msg->selection) {
+				ime_text = ime_update_msg->text;
+				ime_selection = ime_update_msg->selection;
 
-			OS::get_singleton()->get_main_loop()->notification(MainLoop::NOTIFICATION_OS_IME_UPDATE);
+				OS::get_singleton()->get_main_loop()->notification(MainLoop::NOTIFICATION_OS_IME_UPDATE);
+			}
 		}
 	}
 
 	wayland_thread.keyboard_echo_keys();
 
-	if (!suspended) {
+	if (suspend_state == SuspendState::NONE) {
 		// Due to the way legacy suspension works, we have to treat low processor
 		// usage mode very differently than the regular one.
 		if (OS::get_singleton()->is_in_low_processor_usage_mode()) {
@@ -1238,9 +1231,27 @@ void DisplayServerWayland::process_events() {
 		} else {
 			try_suspend();
 		}
-	} else if (!wayland_thread.is_suspended() || wayland_thread.get_reset_frame()) {
-		// At last, a sign of life! We're no longer suspended.
-		suspended = false;
+	} else {
+		if (suspend_state == SuspendState::CAPABILITY) {
+			// If we suspended by capability we can assume that it will be reset when
+			// the compositor wants us to repaint.
+			if (!wayland_thread.is_suspended()) {
+				suspend_state = SuspendState::NONE;
+				DEBUG_LOG_WAYLAND("Unsuspending from capability.");
+			}
+		} else if (suspend_state == SuspendState::TIMEOUT) {
+			// Certain compositors might not report the "suspended" wm_capability flag.
+			// Because of this we'll wake up at the next frame event, indicating the
+			// desire for the compositor to let us repaint.
+			if (wayland_thread.get_reset_frame()) {
+				suspend_state = SuspendState::NONE;
+				DEBUG_LOG_WAYLAND("Unsuspending from timeout.");
+			}
+		}
+
+		// Since we're not rendering, nothing is committing the windows'
+		// surfaces. We have to do it ourselves.
+		wayland_thread.commit_surfaces();
 	}
 
 #ifdef DBUS_ENABLED

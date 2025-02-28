@@ -716,6 +716,10 @@ void DisplayServerMacOS::window_destroy(WindowID p_window) {
 	}
 #endif
 	windows.erase(p_window);
+
+	if (last_focused_window == p_window) {
+		last_focused_window = INVALID_WINDOW_ID;
+	}
 	update_presentation_mode();
 }
 
@@ -1196,6 +1200,10 @@ Error DisplayServerMacOS::_file_dialog_with_options_show(const String &p_title, 
 	}
 
 	return OK;
+}
+
+void DisplayServerMacOS::beep() const {
+	NSBeep();
 }
 
 Error DisplayServerMacOS::dialog_input_text(String p_title, String p_description, String p_partial, const Callable &p_callback) {

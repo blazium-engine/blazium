@@ -273,6 +273,13 @@ void Window::_validate_property(PropertyInfo &p_property) const {
 
 //
 
+Window *Window::get_from_id(DisplayServer::WindowID p_window_id) {
+	if (p_window_id == DisplayServer::INVALID_WINDOW_ID) {
+		return nullptr;
+	}
+	return Object::cast_to<Window>(ObjectDB::get_instance(DisplayServer::get_singleton()->window_get_attached_instance_id(p_window_id)));
+}
+
 void Window::set_title(const String &p_title) {
 	ERR_MAIN_THREAD_GUARD;
 
@@ -306,6 +313,11 @@ void Window::set_title(const String &p_title) {
 String Window::get_title() const {
 	ERR_READ_THREAD_GUARD_V(String());
 	return title;
+}
+
+String Window::get_translated_title() const {
+	ERR_READ_THREAD_GUARD_V(String());
+	return tr_title;
 }
 
 void Window::_settings_changed() {
@@ -912,7 +924,7 @@ void Window::_make_transient() {
 	if (!is_embedded() && transient_to_focused) {
 		DisplayServer::WindowID focused_window_id = DisplayServer::get_singleton()->get_focused_window();
 		if (focused_window_id != DisplayServer::INVALID_WINDOW_ID) {
-			window = Object::cast_to<Window>(ObjectDB::get_instance(DisplayServer::get_singleton()->window_get_attached_instance_id(focused_window_id)));
+			window = Window::get_from_id(focused_window_id);
 		}
 	}
 
@@ -2758,12 +2770,16 @@ Transform2D Window::get_popup_base_transform() const {
 	return popup_base_transform;
 }
 
-bool Window::is_directly_attached_to_screen() const {
+Viewport *Window::get_section_root_viewport() const {
 	if (get_embedder()) {
-		return get_embedder()->is_directly_attached_to_screen();
+		return get_embedder()->get_section_root_viewport();
 	}
-	// Distinguish between the case that this is a native Window and not inside the tree.
-	return is_inside_tree();
+	if (is_inside_tree()) {
+		// Native window.
+		return SceneTree::get_singleton()->get_root();
+	}
+	Window *vp = const_cast<Window *>(this);
+	return vp;
 }
 
 bool Window::is_attached_in_viewport() const {

@@ -269,9 +269,11 @@ public:
 	};
 
 	static void set_root_layout_direction(int p_root_dir);
+	static Window *get_from_id(DisplayServer::WindowID p_window_id);
 
 	void set_title(const String &p_title);
 	String get_title() const;
+	String get_translated_title() const;
 
 	void set_initial_position(WindowInitialPosition p_initial_position);
 	WindowInitialPosition get_initial_position() const;
@@ -473,7 +475,7 @@ public:
 	virtual Transform2D get_final_transform() const override;
 	virtual Transform2D get_screen_transform_internal(bool p_absolute_position = false) const override;
 	virtual Transform2D get_popup_base_transform() const override;
-	virtual bool is_directly_attached_to_screen() const override;
+	virtual Viewport *get_section_root_viewport() const override;
 	virtual bool is_attached_in_viewport() const override;
 
 	Rect2i get_parent_rect() const;
