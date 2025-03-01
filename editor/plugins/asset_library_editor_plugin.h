@@ -38,7 +38,7 @@
 #include "scene/gui/panel_container.h"
 
 class EditorFileDialog;
-class GridContainer;
+class HFlowContainer;
 class HBoxContainer;
 class HTTPRequest;
 class LineEdit;
@@ -79,8 +79,6 @@ protected:
 
 public:
 	void configure(const String &p_title, int p_asset_id, const String &p_category, int p_category_id, const String &p_author, int p_author_id, const String &p_cost);
-
-	void clamp_width(int p_max_width);
 
 	EditorAssetLibraryItem(bool p_clickable = false);
 };
@@ -209,11 +207,17 @@ class EditorAssetLibrary : public PanelContainer {
 	TextureRect *error_tr = nullptr;
 	Label *error_label = nullptr;
 	MenuButton *support = nullptr;
+	Button *first_button = nullptr;
+	Button *prev_button = nullptr;
+	Button *next_button = nullptr;
+	Button *last_button = nullptr;
+	Button *plugins_button = nullptr;
+	Button *open_asset_button = nullptr;
 
 	HBoxContainer *contents = nullptr;
 
 	HBoxContainer *asset_top_page = nullptr;
-	GridContainer *asset_items = nullptr;
+	HFlowContainer *asset_items = nullptr;
 	HBoxContainer *asset_bottom_page = nullptr;
 
 	HTTPRequest *request = nullptr;
@@ -315,10 +319,6 @@ class EditorAssetLibrary : public PanelContainer {
 	void _support_toggled(int p_support);
 
 	void _install_external_asset(String p_zip_path, String p_title);
-
-	int asset_items_column_width = 0;
-
-	void _update_asset_items_columns();
 
 	friend class EditorAssetLibraryItemDescription;
 	friend class EditorAssetLibraryItem;

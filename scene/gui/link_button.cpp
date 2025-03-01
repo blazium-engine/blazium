@@ -36,15 +36,37 @@
 void LinkButton::_shape() {
 	Ref<Font> font = theme_cache.font;
 	int font_size = theme_cache.font_size;
+	if (font.is_null() || font_size == 0) {
+		return;
+	}
 
 	text_buf->clear();
+	text_buf->set_width(-1);
+
 	if (text_direction == Control::TEXT_DIRECTION_INHERITED) {
 		text_buf->set_direction(is_layout_rtl() ? TextServer::DIRECTION_RTL : TextServer::DIRECTION_LTR);
 	} else {
 		text_buf->set_direction((TextServer::Direction)text_direction);
 	}
+
+	text_buf->set_horizontal_alignment(_get_actual_alignment());
+
+	text_buf->set_text_overrun_behavior(overrun_behavior);
+
 	TS->shaped_text_set_bidi_override(text_buf->get_rid(), structured_text_parser(st_parser, st_args, xl_text));
+
 	text_buf->add_string(xl_text, font, font_size, language);
+}
+
+HorizontalAlignment LinkButton::_get_actual_alignment() const {
+	if (is_layout_rtl()) {
+		if (text_alignment == HORIZONTAL_ALIGNMENT_RIGHT) {
+			return HORIZONTAL_ALIGNMENT_LEFT;
+		} else if (text_alignment == HORIZONTAL_ALIGNMENT_LEFT) {
+			return HORIZONTAL_ALIGNMENT_RIGHT;
+		}
+	}
+	return text_alignment;
 }
 
 void LinkButton::set_text(const String &p_text) {
@@ -60,6 +82,35 @@ void LinkButton::set_text(const String &p_text) {
 
 String LinkButton::get_text() const {
 	return text;
+}
+
+void LinkButton::set_text_alignment(HorizontalAlignment p_alignment) {
+	ERR_FAIL_INDEX((int)p_alignment, 3);
+	text_alignment = p_alignment;
+
+	if (_get_actual_alignment() != text_buf->get_horizontal_alignment()) {
+		_shape();
+		queue_redraw();
+	}
+}
+
+HorizontalAlignment LinkButton::get_text_alignment() const {
+	return text_alignment;
+}
+
+void LinkButton::set_text_overrun_behavior(TextServer::OverrunBehavior p_behavior) {
+	if (overrun_behavior == p_behavior) {
+		return;
+	}
+	overrun_behavior = p_behavior;
+
+	_shape();
+	update_minimum_size();
+	queue_redraw();
+}
+
+TextServer::OverrunBehavior LinkButton::get_text_overrun_behavior() const {
+	return overrun_behavior;
 }
 
 void LinkButton::set_structured_text_bidi_override(TextServer::StructuredTextParser p_parser) {
@@ -143,7 +194,15 @@ void LinkButton::pressed() {
 }
 
 Size2 LinkButton::get_minimum_size() const {
-	return _get_final_minimum_size(text_buf->get_size());
+	Size2 min_size = Size2();
+	Size2 text_size = text_buf->get_size();
+
+	min_size.height += text_size.height;
+	if (overrun_behavior == TextServer::OverrunBehavior::OVERRUN_NO_TRIMMING) {
+		min_size.width += text_size.width;
+	}
+
+	return min_size;
 }
 
 void LinkButton::_notification(int p_what) {
@@ -208,8 +267,14 @@ void LinkButton::_notification(int p_what) {
 				Ref<StyleBox> style = theme_cache.focus;
 				style->draw(ci, Rect2(Point2(), size));
 			}
+			int width = 0;
+			if (overrun_behavior == TextServer::OVERRUN_NO_TRIMMING) {
+				width = text_buf->get_line_width();
+			} else {
+				width = get_size().width;
+			}
 
-			int width = text_buf->get_line_width();
+			text_buf->set_width(width);
 
 			Color font_outline_color = theme_cache.font_outline_color;
 			int outline_size = theme_cache.outline_size;
@@ -243,6 +308,10 @@ void LinkButton::_notification(int p_what) {
 void LinkButton::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_text", "text"), &LinkButton::set_text);
 	ClassDB::bind_method(D_METHOD("get_text"), &LinkButton::get_text);
+	ClassDB::bind_method(D_METHOD("set_text_overrun_behavior", "overrun_behavior"), &LinkButton::set_text_overrun_behavior);
+	ClassDB::bind_method(D_METHOD("get_text_overrun_behavior"), &LinkButton::get_text_overrun_behavior);
+	ClassDB::bind_method(D_METHOD("set_text_alignment", "alignment"), &LinkButton::set_text_alignment);
+	ClassDB::bind_method(D_METHOD("get_text_alignment"), &LinkButton::get_text_alignment);
 	ClassDB::bind_method(D_METHOD("set_text_direction", "direction"), &LinkButton::set_text_direction);
 	ClassDB::bind_method(D_METHOD("get_text_direction"), &LinkButton::get_text_direction);
 	ClassDB::bind_method(D_METHOD("set_language", "language"), &LinkButton::set_language);
@@ -263,6 +332,8 @@ void LinkButton::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "text"), "set_text", "get_text");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "underline", PROPERTY_HINT_ENUM, "Always,On Hover,Never"), "set_underline_mode", "get_underline_mode");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "uri"), "set_uri", "get_uri");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "text_overrun_behavior", PROPERTY_HINT_ENUM, "Trim Nothing,Trim Characters,Trim Words,Ellipsis,Word Ellipsis"), "set_text_overrun_behavior", "get_text_overrun_behavior");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "text_alignment", PROPERTY_HINT_ENUM, "Left,Center,Right"), "set_text_alignment", "get_text_alignment");
 
 	ADD_GROUP("BiDi", "");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "text_direction", PROPERTY_HINT_ENUM, "Auto,Left-to-Right,Right-to-Left,Inherited"), "set_text_direction", "get_text_direction");
@@ -289,8 +360,7 @@ void LinkButton::_bind_methods() {
 
 LinkButton::LinkButton(const String &p_text) {
 	text_buf.instantiate();
+	set_text(p_text);
 	set_focus_mode(FOCUS_NONE);
 	set_default_cursor_shape(CURSOR_POINTING_HAND);
-
-	set_text(p_text);
 }
