@@ -1890,6 +1890,7 @@ ScriptEditorDebugger::ScriptEditorDebugger() {
 		threads->connect(SceneStringName(item_selected), callable_mp(this, &ScriptEditorDebugger::_select_thread));
 
 		stack_dump = memnew(Tree);
+		stack_dump->set_custom_minimum_size(Size2(100 * EDSCALE, 0));
 		stack_dump->set_allow_reselect(true);
 		stack_dump->set_columns(1);
 		stack_dump->set_column_titles_visible(true);
@@ -1925,6 +1926,7 @@ ScriptEditorDebugger::ScriptEditorDebugger() {
 		inspector_vbox->add_child(inspector);
 
 		breakpoints_tree = memnew(Tree);
+		breakpoints_tree->set_custom_minimum_size(Size2(100 * EDSCALE, 0));
 		breakpoints_tree->set_h_size_flags(SIZE_EXPAND_FILL);
 		breakpoints_tree->set_column_titles_visible(true);
 		breakpoints_tree->set_column_title(0, TTR("Breakpoints"));
@@ -2026,9 +2028,9 @@ ScriptEditorDebugger::ScriptEditorDebugger() {
 	{ //vmem inspect
 		VBoxContainer *vmem_vb = memnew(VBoxContainer);
 		HBoxContainer *vmem_hb = memnew(HBoxContainer);
-		Label *vmlb = memnew(Label(TTR("List of Video Memory Usage by Resource:") + " "));
+		Label *vmlb = memnew(Label(TTR("List of Video Memory Usage by Resource")));
+		vmlb->set_text_overrun_behavior(TextServer::OVERRUN_TRIM_ELLIPSIS);
 		vmlb->set_theme_type_variation("HeaderSmall");
-
 		vmlb->set_h_size_flags(SIZE_EXPAND_FILL);
 		vmem_hb->add_child(vmlb);
 		vmem_hb->add_child(memnew(Label(TTR("Total:") + " ")));
@@ -2037,9 +2039,13 @@ ScriptEditorDebugger::ScriptEditorDebugger() {
 		vmem_total->set_custom_minimum_size(Size2(100, 0) * EDSCALE);
 		vmem_hb->add_child(vmem_total);
 		vmem_refresh = memnew(Button);
+		vmem_refresh->set_size_mode(BaseButton::SIZE_MODE_FIT_HEIGHT);
+		vmem_refresh->set_icon_alignment(HORIZONTAL_ALIGNMENT_CENTER);
 		vmem_refresh->set_theme_type_variation("FlatButton");
 		vmem_hb->add_child(vmem_refresh);
 		vmem_export = memnew(Button);
+		vmem_export->set_size_mode(BaseButton::SIZE_MODE_FIT_HEIGHT);
+		vmem_export->set_icon_alignment(HORIZONTAL_ALIGNMENT_CENTER);
 		vmem_export->set_theme_type_variation("FlatButton");
 		vmem_export->set_tooltip_text(TTR("Export list to a CSV file"));
 		vmem_hb->add_child(vmem_export);

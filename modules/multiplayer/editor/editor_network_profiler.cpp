@@ -35,6 +35,7 @@
 #include "editor/editor_string_names.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/button.h"
+#include "scene/gui/flow_container.h"
 #include "scene/gui/label.h"
 #include "scene/gui/line_edit.h"
 #include "scene/gui/split_container.h"
@@ -259,48 +260,54 @@ bool EditorNetworkProfiler::is_profiling() {
 }
 
 EditorNetworkProfiler::EditorNetworkProfiler() {
-	HBoxContainer *hb = memnew(HBoxContainer);
-	hb->add_theme_constant_override("separation", 8 * EDSCALE);
-	add_child(hb);
+	HFlowContainer *main_flow = memnew(HFlowContainer);
+	main_flow->set_h_size_flags(SIZE_EXPAND_FILL);
+	add_child(main_flow);
+
+	HBoxContainer *left_hb = memnew(HBoxContainer);
+	left_hb->add_theme_constant_override("separation", 8 * EDSCALE);
+	main_flow->add_child(left_hb);
 
 	activate = memnew(Button);
 	activate->set_toggle_mode(true);
 	activate->set_text(TTR("Start"));
 	activate->connect(SceneStringName(pressed), callable_mp(this, &EditorNetworkProfiler::_activate_pressed));
-	hb->add_child(activate);
+	left_hb->add_child(activate);
 
 	clear_button = memnew(Button);
 	clear_button->set_text(TTR("Clear"));
 	clear_button->connect(SceneStringName(pressed), callable_mp(this, &EditorNetworkProfiler::_clear_pressed));
-	hb->add_child(clear_button);
+	left_hb->add_child(clear_button);
 
-	hb->add_spacer();
+	HBoxContainer *right_hbox = memnew(HBoxContainer);
+	right_hbox->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
+	main_flow->add_child(right_hbox);
 
 	Label *lb = memnew(Label);
 	// TRANSLATORS: This is the label for the network profiler's incoming bandwidth.
 	lb->set_text(TTR("Down", "Network"));
-	hb->add_child(lb);
+	right_hbox->add_child(lb);
 
 	incoming_bandwidth_text = memnew(LineEdit);
 	incoming_bandwidth_text->set_editable(false);
 	incoming_bandwidth_text->set_custom_minimum_size(Size2(120, 0) * EDSCALE);
 	incoming_bandwidth_text->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_RIGHT);
-	hb->add_child(incoming_bandwidth_text);
+	right_hbox->add_child(incoming_bandwidth_text);
 
 	Control *down_up_spacer = memnew(Control);
 	down_up_spacer->set_custom_minimum_size(Size2(30, 0) * EDSCALE);
-	hb->add_child(down_up_spacer);
+	right_hbox->add_child(down_up_spacer);
 
 	lb = memnew(Label);
 	// TRANSLATORS: This is the label for the network profiler's outgoing bandwidth.
 	lb->set_text(TTR("Up", "Network"));
-	hb->add_child(lb);
+	right_hbox->add_child(lb);
 
 	outgoing_bandwidth_text = memnew(LineEdit);
 	outgoing_bandwidth_text->set_editable(false);
 	outgoing_bandwidth_text->set_custom_minimum_size(Size2(120, 0) * EDSCALE);
 	outgoing_bandwidth_text->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_RIGHT);
-	hb->add_child(outgoing_bandwidth_text);
+	right_hbox->add_child(outgoing_bandwidth_text);
 
 	// Set initial texts in the incoming/outgoing bandwidth labels
 	set_bandwidth(0, 0);

@@ -83,6 +83,7 @@ class EditorMainScreen;
 class EditorNativeShaderSourceVisualizer;
 class EditorPluginList;
 class EditorQuickOpen;
+class EditorHScrollBox;
 class EditorResourcePreview;
 class EditorResourceConversionPlugin;
 class EditorRunBar;
@@ -321,6 +322,8 @@ private:
 	Control *left_menu_spacer = nullptr;
 	Control *right_menu_spacer = nullptr;
 	EditorTitleBar *title_bar = nullptr;
+	EditorHScrollBox *menu_scroll_box = nullptr;
+	EditorHScrollBox *main_scroll_box = nullptr;
 	EditorRunBar *project_run_bar = nullptr;
 	MenuBar *main_menu = nullptr;
 	PopupMenu *apple_menu = nullptr;

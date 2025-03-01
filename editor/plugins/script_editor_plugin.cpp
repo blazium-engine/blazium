@@ -55,6 +55,7 @@
 #include "editor/gui/editor_bottom_panel.h"
 #include "editor/gui/editor_file_dialog.h"
 #include "editor/gui/editor_run_bar.h"
+#include "editor/gui/editor_scroll_box.h"
 #include "editor/gui/editor_toaster.h"
 #include "editor/inspector_dock.h"
 #include "editor/node_dock.h"
@@ -4056,8 +4057,16 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 	VBoxContainer *main_container = memnew(VBoxContainer);
 	add_child(main_container);
 
+	HBoxContainer *main_hb = memnew(HBoxContainer);
+	main_hb->set_h_size_flags(SIZE_EXPAND_FILL);
+	main_container->add_child(main_hb);
+
+	EditorHScrollBox *menu_scroll_box = memnew(EditorHScrollBox);
+	menu_scroll_box->set_h_size_flags(SIZE_EXPAND_FILL);
+	main_hb->add_child(menu_scroll_box);
+
 	menu_hb = memnew(HBoxContainer);
-	main_container->add_child(menu_hb);
+	menu_scroll_box->set_control(menu_hb);
 
 	script_split = memnew(HSplitContainer);
 	main_container->add_child(script_split);
@@ -4248,47 +4257,42 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 	debugger->connect("breakpoint_set_in_tree", callable_mp(this, &ScriptEditor::_set_breakpoint));
 	debugger->connect("breakpoints_cleared_in_tree", callable_mp(this, &ScriptEditor::_clear_breakpoints));
 
-	menu_hb->add_spacer();
-
 	script_icon = memnew(TextureRect);
-	menu_hb->add_child(script_icon);
+	main_hb->add_child(script_icon);
 	script_name_label = memnew(Label);
-	menu_hb->add_child(script_name_label);
+	main_hb->add_child(script_name_label);
 
 	script_icon->hide();
 	script_name_label->hide();
 
-	menu_hb->add_spacer();
-
 	site_search = memnew(Button);
 	site_search->set_flat(true);
 	site_search->connect(SceneStringName(pressed), callable_mp(this, &ScriptEditor::_menu_option).bind(SEARCH_WEBSITE));
-	menu_hb->add_child(site_search);
+	main_hb->add_child(site_search);
 
 	help_search = memnew(Button);
 	help_search->set_flat(true);
-	help_search->set_text(TTR("Search Help"));
 	help_search->connect(SceneStringName(pressed), callable_mp(this, &ScriptEditor::_menu_option).bind(SEARCH_HELP));
-	menu_hb->add_child(help_search);
+	main_hb->add_child(help_search);
 	help_search->set_tooltip_text(TTR("Search the reference documentation."));
 
-	menu_hb->add_child(memnew(VSeparator));
+	main_hb->add_child(memnew(VSeparator));
 
 	script_back = memnew(Button);
 	script_back->set_flat(true);
 	script_back->connect(SceneStringName(pressed), callable_mp(this, &ScriptEditor::_history_back));
-	menu_hb->add_child(script_back);
+	main_hb->add_child(script_back);
 	script_back->set_disabled(true);
 	script_back->set_tooltip_text(TTR("Go to previous edited document."));
 
 	script_forward = memnew(Button);
 	script_forward->set_flat(true);
 	script_forward->connect(SceneStringName(pressed), callable_mp(this, &ScriptEditor::_history_forward));
-	menu_hb->add_child(script_forward);
+	main_hb->add_child(script_forward);
 	script_forward->set_disabled(true);
 	script_forward->set_tooltip_text(TTR("Go to next edited document."));
 
-	menu_hb->add_child(memnew(VSeparator));
+	main_hb->add_child(memnew(VSeparator));
 
 	make_floating = memnew(ScreenSelect);
 	make_floating->set_flat(true);
@@ -4298,7 +4302,7 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 		make_floating->set_tooltip_text(TTR("Make the script editor floating."));
 	}
 
-	menu_hb->add_child(make_floating);
+	main_hb->add_child(make_floating);
 	p_wrapper->connect("window_visibility_changed", callable_mp(this, &ScriptEditor::_window_changed));
 
 	tab_container->connect("tab_changed", callable_mp(this, &ScriptEditor::_tab_changed));

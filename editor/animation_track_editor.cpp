@@ -49,6 +49,7 @@
 #include "scene/animation/animation_player.h"
 #include "scene/animation/tween.h"
 #include "scene/gui/check_box.h"
+#include "scene/gui/flow_container.h"
 #include "scene/gui/grid_container.h"
 #include "scene/gui/label.h"
 #include "scene/gui/line_edit.h"
@@ -4930,7 +4931,7 @@ void AnimationTrackEditor::_notification(int p_what) {
 		case NOTIFICATION_THEME_CHANGED: {
 			zoom_icon->set_texture(get_editor_theme_icon(SNAME("Zoom")));
 			bezier_edit_icon->set_icon(get_editor_theme_icon(SNAME("EditBezier")));
-			snap->set_icon(get_editor_theme_icon(SNAME("Snap")));
+			snap->set_icon(get_editor_theme_icon(SNAME("SnapEnable")));
 			view_group->set_icon(get_editor_theme_icon(view_group->is_pressed() ? SNAME("AnimationTrackList") : SNAME("AnimationTrackGroup")));
 			selected_filter->set_icon(get_editor_theme_icon(SNAME("AnimationFilter")));
 			imported_anim_warning->set_icon(get_editor_theme_icon(SNAME("NodeWarning")));
@@ -7285,8 +7286,12 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	track_vbox->set_h_size_flags(SIZE_EXPAND_FILL);
 	scroll->set_horizontal_scroll_mode(ScrollContainer::SCROLL_MODE_DISABLED);
 
-	HBoxContainer *bottom_hb = memnew(HBoxContainer);
-	add_child(bottom_hb);
+	HFlowContainer *bottom_flow = memnew(HFlowContainer);
+	bottom_flow->set_h_size_flags(SIZE_EXPAND_FILL);
+	add_child(bottom_flow);
+
+	HBoxContainer *left_hb = memnew(HBoxContainer);
+	bottom_flow->add_child(left_hb);
 
 	imported_anim_warning = memnew(Button);
 	imported_anim_warning->set_theme_type_variation("FlatButton");
@@ -7294,7 +7299,7 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	imported_anim_warning->set_text(TTR("Imported Scene"));
 	imported_anim_warning->set_tooltip_text(TTR("Warning: Editing imported animation"));
 	imported_anim_warning->connect(SceneStringName(pressed), callable_mp(this, &AnimationTrackEditor::_show_imported_anim_warning));
-	bottom_hb->add_child(imported_anim_warning);
+	left_hb->add_child(imported_anim_warning);
 
 	dummy_player_warning = memnew(Button);
 	dummy_player_warning->set_theme_type_variation("FlatButton");
@@ -7302,7 +7307,7 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	dummy_player_warning->set_text(TTR("Dummy Player"));
 	dummy_player_warning->set_tooltip_text(TTR("Warning: Editing dummy AnimationPlayer"));
 	dummy_player_warning->connect(SceneStringName(pressed), callable_mp(this, &AnimationTrackEditor::_show_dummy_player_warning));
-	bottom_hb->add_child(dummy_player_warning);
+	left_hb->add_child(dummy_player_warning);
 
 	inactive_player_warning = memnew(Button);
 	inactive_player_warning->set_theme_type_variation("FlatButton");
@@ -7310,9 +7315,11 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	inactive_player_warning->set_text(TTR("Inactive Player"));
 	inactive_player_warning->set_tooltip_text(TTR("Warning: AnimationPlayer is inactive"));
 	inactive_player_warning->connect(SceneStringName(pressed), callable_mp(this, &AnimationTrackEditor::_show_inactive_player_warning));
-	bottom_hb->add_child(inactive_player_warning);
+	left_hb->add_child(inactive_player_warning);
 
-	bottom_hb->add_spacer();
+	VSeparator *left_separator = memnew(VSeparator);
+	left_hb->add_child(left_separator);
+	// left_hb->;
 
 	bezier_edit_icon = memnew(Button);
 	bezier_edit_icon->set_theme_type_variation("FlatButton");
@@ -7321,7 +7328,7 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	bezier_edit_icon->connect(SceneStringName(pressed), callable_mp(this, &AnimationTrackEditor::_toggle_bezier_edit));
 	bezier_edit_icon->set_tooltip_text(TTR("Toggle between the bezier curve editor and track editor."));
 
-	bottom_hb->add_child(bezier_edit_icon);
+	left_hb->add_child(bezier_edit_icon);
 
 	selected_filter = memnew(Button);
 	selected_filter->set_theme_type_variation("FlatButton");
@@ -7329,7 +7336,7 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	selected_filter->set_toggle_mode(true);
 	selected_filter->set_tooltip_text(TTR("Only show tracks from nodes selected in tree."));
 
-	bottom_hb->add_child(selected_filter);
+	left_hb->add_child(selected_filter);
 
 	view_group = memnew(Button);
 	view_group->set_theme_type_variation("FlatButton");
@@ -7337,13 +7344,16 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	view_group->set_toggle_mode(true);
 	view_group->set_tooltip_text(TTR("Group tracks by node or display them as plain list."));
 
-	bottom_hb->add_child(view_group);
-	bottom_hb->add_child(memnew(VSeparator));
+	left_hb->add_child(view_group);
+
+	HBoxContainer *right_hbox = memnew(HBoxContainer);
+	right_hbox->set_h_size_flags(SIZE_EXPAND_FILL);
+	bottom_flow->add_child(right_hbox);
 
 	snap = memnew(Button);
 	snap->set_theme_type_variation("FlatButton");
-	snap->set_text(TTR("Snap:") + " ");
-	bottom_hb->add_child(snap);
+	snap->set_tooltip_text(TTR("Snap"));
+	right_hbox->add_child(snap);
 	snap->set_disabled(true);
 	snap->set_toggle_mode(true);
 	snap->set_pressed(true);
@@ -7355,22 +7365,22 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	step->set_hide_slider(true);
 	step->set_custom_minimum_size(Size2(100, 0) * EDSCALE);
 	step->set_tooltip_text(TTR("Animation step value."));
-	bottom_hb->add_child(step);
+	right_hbox->add_child(step);
 	step->connect(SceneStringName(value_changed), callable_mp(this, &AnimationTrackEditor::_update_step));
 	step->set_read_only(true);
 
 	snap_mode = memnew(OptionButton);
-	snap_mode->add_item(TTR("Seconds"));
+	snap_mode->add_item(TTR("Sec"));
 	snap_mode->add_item(TTR("FPS"));
-	bottom_hb->add_child(snap_mode);
+	right_hbox->add_child(snap_mode);
 	snap_mode->connect(SceneStringName(item_selected), callable_mp(this, &AnimationTrackEditor::_snap_mode_changed));
 	snap_mode->set_disabled(true);
 
-	bottom_hb->add_child(memnew(VSeparator));
+	right_hbox->add_child(memnew(VSeparator));
 
 	zoom_icon = memnew(TextureRect);
 	zoom_icon->set_v_size_flags(SIZE_SHRINK_CENTER);
-	bottom_hb->add_child(zoom_icon);
+	right_hbox->add_child(zoom_icon);
 	zoom = memnew(HSlider);
 	zoom->set_step(0.01);
 	zoom->set_min(0.0);
@@ -7378,7 +7388,8 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	zoom->set_value(1.0);
 	zoom->set_custom_minimum_size(Size2(128 * EDSCALE, 0));
 	zoom->set_v_size_flags(SIZE_SHRINK_CENTER);
-	bottom_hb->add_child(zoom);
+	zoom->set_h_size_flags(SIZE_EXPAND_FILL);
+	right_hbox->add_child(zoom);
 	timeline->set_zoom(zoom);
 
 	ED_SHORTCUT("animation_editor/auto_fit", TTR("Fit to panel"), KeyModifierMask::ALT | Key::F);
@@ -7387,14 +7398,14 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	auto_fit->set_theme_type_variation("FlatButton");
 	auto_fit->connect(SceneStringName(pressed), callable_mp(this, &AnimationTrackEditor::_auto_fit));
 	auto_fit->set_shortcut(ED_GET_SHORTCUT("animation_editor/auto_fit"));
-	bottom_hb->add_child(auto_fit);
+	right_hbox->add_child(auto_fit);
 
 	auto_fit_bezier = memnew(Button);
 	auto_fit_bezier->set_theme_type_variation("FlatButton");
 	auto_fit_bezier->set_visible(false);
 	auto_fit_bezier->connect(SceneStringName(pressed), callable_mp(this, &AnimationTrackEditor::_auto_fit_bezier));
 	auto_fit_bezier->set_shortcut(ED_GET_SHORTCUT("animation_editor/auto_fit"));
-	bottom_hb->add_child(auto_fit_bezier);
+	right_hbox->add_child(auto_fit_bezier);
 
 	edit = memnew(MenuButton);
 	edit->set_shortcut_context(this);

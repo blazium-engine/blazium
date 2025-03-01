@@ -115,6 +115,7 @@
 #include "editor/gui/editor_file_dialog.h"
 #include "editor/gui/editor_run_bar.h"
 #include "editor/gui/editor_scene_tabs.h"
+#include "editor/gui/editor_scroll_box.h"
 #include "editor/gui/editor_title_bar.h"
 #include "editor/gui/editor_toaster.h"
 #include "editor/history_dock.h"
@@ -6382,13 +6383,16 @@ Vector<Ref<EditorResourceConversionPlugin>> EditorNode::find_resource_conversion
 void EditorNode::_update_renderer_color() {
 	String rendering_method = renderer->get_selected_metadata();
 
+	Color render_color;
 	if (rendering_method == "forward_plus") {
-		renderer->add_theme_color_override(SceneStringName(font_color), theme->get_color(SNAME("forward_plus_color"), EditorStringName(Editor)));
+		render_color = theme->get_color(SNAME("forward_plus_color"), EditorStringName(Editor));
 	} else if (rendering_method == "mobile") {
-		renderer->add_theme_color_override(SceneStringName(font_color), theme->get_color(SNAME("mobile_color"), EditorStringName(Editor)));
+		render_color = theme->get_color(SNAME("mobile_color"), EditorStringName(Editor));
 	} else if (rendering_method == "gl_compatibility") {
-		renderer->add_theme_color_override(SceneStringName(font_color), theme->get_color(SNAME("gl_compatibility_color"), EditorStringName(Editor)));
+		render_color = theme->get_color(SNAME("gl_compatibility_color"), EditorStringName(Editor));
 	}
+	renderer->add_theme_color_override(SceneStringName(font_color), render_color);
+	renderer->add_theme_color_override(SNAME("icon_normal_color"), render_color);
 }
 
 void EditorNode::_renderer_selected(int p_which) {
@@ -6411,19 +6415,23 @@ void EditorNode::_renderer_selected(int p_which) {
 
 void EditorNode::_add_renderer_entry(const String &p_renderer_name, bool p_mark_overridden) {
 	String item_text;
+	Ref<Texture2D> item_icon;
 	if (p_renderer_name == "forward_plus") {
 		item_text = TTR("Forward+");
+		item_icon = theme->get_icon(SNAME("ForwardRender"), EditorStringName(EditorIcons));
 	}
 	if (p_renderer_name == "mobile") {
 		item_text = TTR("Mobile");
+		item_icon = theme->get_icon(SNAME("MobileRender"), EditorStringName(EditorIcons));
 	}
 	if (p_renderer_name == "gl_compatibility") {
 		item_text = TTR("Compatibility");
+		item_icon = theme->get_icon(SNAME("CompatibilityRender"), EditorStringName(EditorIcons));
 	}
 	if (p_mark_overridden) {
 		item_text += " " + TTR("(Overridden)");
 	}
-	renderer->add_item(item_text);
+	renderer->add_icon_item(item_icon, item_text);
 }
 
 void EditorNode::_resource_saved(Ref<Resource> p_resource, const String &p_path) {
@@ -6687,7 +6695,7 @@ EditorNode::EditorNode() {
 	// Define a minimum window size to prevent UI elements from overlapping or being cut off.
 	Window *w = Object::cast_to<Window>(SceneTree::get_singleton()->get_root());
 	if (w) {
-		const Size2 minimum_size = Size2(1024, 600) * EDSCALE;
+		const Size2 minimum_size = Size2(640, 480) * EDSCALE;
 		w->set_min_size(minimum_size); // Calling it this early doesn't sync the property with DS.
 		DisplayServer::get_singleton()->window_set_min_size(minimum_size);
 	}
@@ -7024,8 +7032,13 @@ EditorNode::EditorNode() {
 		title_bar->add_child(left_menu_spacer);
 	}
 
+	menu_scroll_box = memnew(EditorHScrollBox);
+	menu_scroll_box->set_h_size_flags(Control::SIZE_EXPAND_FILL);
+	title_bar->add_child(menu_scroll_box);
+
 	main_menu = memnew(MenuBar);
-	title_bar->add_child(main_menu);
+	main_menu->set_v_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_CENTER);
+	menu_scroll_box->set_control(main_menu);
 	main_menu->set_theme_type_variation("MainMenuBar");
 	main_menu->set_start_index(0); // Main menu, add to the start of global menu.
 	main_menu->set_prefer_global_menu(global_menu);
@@ -7188,10 +7201,8 @@ EditorNode::EditorNode() {
 	ED_SHORTCUT_OVERRIDE("editor/quit_to_project_list", "macos", KeyModifierMask::META + KeyModifierMask::CTRL + KeyModifierMask::ALT + Key::Q);
 	project_menu->add_shortcut(ED_GET_SHORTCUT("editor/quit_to_project_list"), RUN_PROJECT_MANAGER, true);
 
-	// Spacer to center 2D / 3D / Script buttons.
 	HBoxContainer *left_spacer = memnew(HBoxContainer);
 	left_spacer->set_mouse_filter(Control::MOUSE_FILTER_PASS);
-	left_spacer->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	title_bar->add_child(left_spacer);
 
 	if (can_expand && global_menu) {
@@ -7206,10 +7217,14 @@ EditorNode::EditorNode() {
 		left_spacer->add_child(project_title);
 	}
 
+	main_scroll_box = memnew(EditorHScrollBox);
+	main_scroll_box->set_h_size_flags(Control::SIZE_EXPAND_FILL);
+	title_bar->add_child(main_scroll_box);
+
 	HBoxContainer *main_editor_button_hb = memnew(HBoxContainer);
 	main_editor_button_hb->set_mouse_filter(Control::MOUSE_FILTER_STOP);
 	editor_main_screen->set_button_container(main_editor_button_hb);
-	title_bar->add_child(main_editor_button_hb);
+	main_scroll_box->set_control(main_editor_button_hb);
 
 	// Options are added and handled by DebuggerEditorPlugin.
 	debug_menu = memnew(PopupMenu);
@@ -7296,12 +7311,6 @@ EditorNode::EditorNode() {
 	}
 	help_menu->add_icon_shortcut(theme->get_icon(SNAME("Heart"), EditorStringName(EditorIcons)), ED_SHORTCUT_AND_COMMAND("editor/support_development", TTR("Join the Blazium Discord")), HELP_SUPPORT_GODOT_DEVELOPMENT);
 
-	// Spacer to center 2D / 3D / Script buttons.
-	Control *right_spacer = memnew(Control);
-	right_spacer->set_mouse_filter(Control::MOUSE_FILTER_PASS);
-	right_spacer->set_h_size_flags(Control::SIZE_EXPAND_FILL);
-	title_bar->add_child(right_spacer);
-
 	project_run_bar = memnew(EditorRunBar);
 	title_bar->add_child(project_run_bar);
 	project_run_bar->connect("play_pressed", callable_mp(this, &EditorNode::_project_run_started));
@@ -7311,10 +7320,10 @@ EditorNode::EditorNode() {
 	title_bar->add_child(right_menu_hb);
 
 	renderer = memnew(OptionButton);
+	renderer->set_clip_text(true);
 	renderer->set_visible(true);
 	renderer->set_flat(true);
 	renderer->set_theme_type_variation("TopBarOptionButton");
-	renderer->set_fit_to_longest_item(false);
 	renderer->set_focus_mode(Control::FOCUS_NONE);
 	renderer->set_tooltip_text(TTR("Choose a rendering method.\n\nNotes:\n- On mobile platforms, the Mobile rendering method is used if Forward+ is selected here.\n- On the web platform, the Compatibility rendering method is always used."));
 
@@ -7789,11 +7798,6 @@ EditorNode::EditorNode() {
 	screenshot_timer->connect("timeout", callable_mp(this, &EditorNode::_request_screenshot));
 	add_child(screenshot_timer);
 	screenshot_timer->set_owner(get_owner());
-
-	// Adjust spacers to center 2D / 3D / Script buttons.
-	int max_w = MAX(project_run_bar->get_minimum_size().x + right_menu_hb->get_minimum_size().x, main_menu->get_minimum_size().x);
-	left_spacer->set_custom_minimum_size(Size2(MAX(0, max_w - main_menu->get_minimum_size().x), 0));
-	right_spacer->set_custom_minimum_size(Size2(MAX(0, max_w - project_run_bar->get_minimum_size().x - right_menu_hb->get_minimum_size().x), 0));
 
 	// Extend menu bar to window title.
 	if (can_expand) {

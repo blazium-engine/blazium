@@ -35,6 +35,8 @@
 #include "editor/editor_string_names.h"
 #include "editor/themes/editor_scale.h"
 #include "editor/themes/editor_theme_manager.h"
+#include "scene/gui/flow_container.h"
+#include "scene/gui/label.h"
 #include "scene/main/timer.h"
 #include "scene/resources/image_texture.h"
 
@@ -619,22 +621,27 @@ Vector<Vector<String>> EditorProfiler::get_data_as_csv() const {
 }
 
 EditorProfiler::EditorProfiler() {
-	HBoxContainer *hb = memnew(HBoxContainer);
-	add_child(hb);
+	HFlowContainer *main_flow = memnew(HFlowContainer);
+	main_flow->set_h_size_flags(SIZE_EXPAND_FILL);
+	add_child(main_flow);
+
+	HBoxContainer *left_hb = memnew(HBoxContainer);
+	main_flow->add_child(left_hb);
+
 	activate = memnew(Button);
 	activate->set_toggle_mode(true);
 	activate->set_disabled(true);
 	activate->set_text(TTR("Start"));
 	activate->connect(SceneStringName(pressed), callable_mp(this, &EditorProfiler::_activate_pressed));
-	hb->add_child(activate);
+	left_hb->add_child(activate);
 
 	clear_button = memnew(Button);
 	clear_button->set_text(TTR("Clear"));
 	clear_button->connect(SceneStringName(pressed), callable_mp(this, &EditorProfiler::_clear_pressed));
 	clear_button->set_disabled(true);
-	hb->add_child(clear_button);
+	left_hb->add_child(clear_button);
 
-	hb->add_child(memnew(Label(TTR("Measure:"))));
+	left_hb->add_child(memnew(Label(TTR("Measure:"))));
 
 	display_mode = memnew(OptionButton);
 	display_mode->add_item(TTR("Frame Time (ms)"));
@@ -643,9 +650,13 @@ EditorProfiler::EditorProfiler() {
 	display_mode->add_item(TTR("Physics Frame %"));
 	display_mode->connect(SceneStringName(item_selected), callable_mp(this, &EditorProfiler::_combo_changed));
 
-	hb->add_child(display_mode);
+	left_hb->add_child(display_mode);
 
-	hb->add_child(memnew(Label(TTR("Time:"))));
+	HBoxContainer *right_hb = memnew(HBoxContainer);
+	right_hb->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
+	main_flow->add_child(right_hb);
+
+	right_hb->add_child(memnew(Label(TTR("Time:"))));
 
 	display_time = memnew(OptionButton);
 	// TRANSLATORS: This is an option in the profiler to display the time spent in a function, including the time spent in other functions called by that function.
@@ -655,26 +666,24 @@ EditorProfiler::EditorProfiler() {
 	display_time->set_tooltip_text(TTR("Inclusive: Includes time from other functions called by this function.\nUse this to spot bottlenecks.\n\nSelf: Only count the time spent in the function itself, not in other functions called by that function.\nUse this to find individual functions to optimize."));
 	display_time->connect(SceneStringName(item_selected), callable_mp(this, &EditorProfiler::_combo_changed));
 
-	hb->add_child(display_time);
+	right_hb->add_child(display_time);
 
 	display_internal_profiles = memnew(CheckButton(TTR("Display internal functions")));
 	display_internal_profiles->set_visible(EDITOR_GET("debugger/profile_native_calls"));
 	display_internal_profiles->set_pressed(false);
 	display_internal_profiles->connect(SceneStringName(pressed), callable_mp(this, &EditorProfiler::_internal_profiles_pressed));
-	hb->add_child(display_internal_profiles);
+	right_hb->add_child(display_internal_profiles);
 
-	hb->add_spacer();
-
-	hb->add_child(memnew(Label(TTR("Frame #:"))));
+	right_hb->add_child(memnew(Label(TTR("Frame #:"))));
 
 	cursor_metric_edit = memnew(SpinBox);
 	cursor_metric_edit->set_h_size_flags(SIZE_FILL);
 	cursor_metric_edit->set_value(0);
 	cursor_metric_edit->set_editable(false);
-	hb->add_child(cursor_metric_edit);
+	right_hb->add_child(cursor_metric_edit);
 	cursor_metric_edit->connect(SceneStringName(value_changed), callable_mp(this, &EditorProfiler::_cursor_metric_changed));
 
-	hb->add_theme_constant_override("separation", 8 * EDSCALE);
+	right_hb->add_theme_constant_override("separation", 8 * EDSCALE);
 
 	h_split = memnew(HSplitContainer);
 	add_child(h_split);
