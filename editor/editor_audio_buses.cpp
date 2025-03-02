@@ -1087,6 +1087,9 @@ void EditorAudioBuses::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE:
 		case NOTIFICATION_THEME_CHANGED: {
+			add->set_icon(get_editor_theme_icon(SNAME("Add")));
+			load->set_icon(get_editor_theme_icon(SNAME("Load")));
+			save_as->set_icon(get_editor_theme_icon(SNAME("Save")));
 			bus_scroll->add_theme_style_override(SceneStringName(panel), get_theme_stylebox(SceneStringName(panel), SNAME("Tree")));
 		} break;
 
@@ -1335,22 +1338,22 @@ EditorAudioBuses::EditorAudioBuses() {
 	top_hb->add_child(file);
 
 	add = memnew(Button);
-	top_hb->add_child(add);
-	add->set_text(TTR("Add Bus"));
+	add->set_vertical_icon_alignment(VerticalAlignment::VERTICAL_ALIGNMENT_CENTER);
 	add->set_tooltip_text(TTR("Add a new Audio Bus to this layout."));
+	top_hb->add_child(add);
 	add->connect(SceneStringName(pressed), callable_mp(this, &EditorAudioBuses::_add_bus));
 
 	VSeparator *separator = memnew(VSeparator);
 	top_hb->add_child(separator);
 
 	load = memnew(Button);
-	load->set_text(TTR("Load"));
+	load->set_vertical_icon_alignment(VerticalAlignment::VERTICAL_ALIGNMENT_CENTER);
 	load->set_tooltip_text(TTR("Load an existing Bus Layout."));
 	top_hb->add_child(load);
 	load->connect(SceneStringName(pressed), callable_mp(this, &EditorAudioBuses::_load_layout));
 
 	save_as = memnew(Button);
-	save_as->set_text(TTR("Save As"));
+	save_as->set_vertical_icon_alignment(VerticalAlignment::VERTICAL_ALIGNMENT_CENTER);
 	save_as->set_tooltip_text(TTR("Save this Bus Layout to a file."));
 	top_hb->add_child(save_as);
 	save_as->connect(SceneStringName(pressed), callable_mp(this, &EditorAudioBuses::_save_as_layout));
@@ -1369,7 +1372,6 @@ EditorAudioBuses::EditorAudioBuses() {
 
 	bus_scroll = memnew(ScrollContainer);
 	bus_scroll->set_v_size_flags(SIZE_EXPAND_FILL);
-	bus_scroll->set_vertical_scroll_mode(ScrollContainer::SCROLL_MODE_DISABLED);
 	add_child(bus_scroll);
 	bus_hb = memnew(HBoxContainer);
 	bus_hb->set_v_size_flags(SIZE_EXPAND_FILL);

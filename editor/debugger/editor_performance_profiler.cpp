@@ -393,6 +393,7 @@ EditorPerformanceProfiler::EditorPerformanceProfiler() {
 	set_split_offset(340 * EDSCALE);
 
 	monitor_tree = memnew(Tree);
+	monitor_tree->set_h_scroll_enabled(false);
 	monitor_tree->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 	monitor_tree->set_columns(2);
 	monitor_tree->set_column_title(0, TTR("Monitor"));

@@ -34,6 +34,7 @@
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
 #include "editor/themes/editor_scale.h"
+#include "scene/gui/flow_container.h"
 #include "scene/main/timer.h"
 #include "scene/resources/image_texture.h"
 
@@ -731,49 +732,58 @@ Vector<Vector<String>> EditorVisualProfiler::get_data_as_csv() const {
 }
 
 EditorVisualProfiler::EditorVisualProfiler() {
-	HBoxContainer *hb = memnew(HBoxContainer);
-	add_child(hb);
+	HFlowContainer *main_flow = memnew(HFlowContainer);
+	main_flow->set_h_size_flags(SIZE_EXPAND_FILL);
+	add_child(main_flow);
+
+	HBoxContainer *left_hb = memnew(HBoxContainer);
+	main_flow->add_child(left_hb);
+
 	activate = memnew(Button);
 	activate->set_toggle_mode(true);
 	activate->set_disabled(true);
 	activate->set_text(TTR("Start"));
 	activate->connect(SceneStringName(pressed), callable_mp(this, &EditorVisualProfiler::_activate_pressed));
-	hb->add_child(activate);
+	left_hb->add_child(activate);
 
 	clear_button = memnew(Button);
 	clear_button->set_text(TTR("Clear"));
 	clear_button->set_disabled(true);
 	clear_button->connect(SceneStringName(pressed), callable_mp(this, &EditorVisualProfiler::_clear_pressed));
-	hb->add_child(clear_button);
+	left_hb->add_child(clear_button);
 
-	hb->add_child(memnew(Label(TTR("Measure:"))));
+	left_hb->add_child(memnew(Label(TTR("Measure:"))));
 
 	display_mode = memnew(OptionButton);
 	display_mode->add_item(TTR("Frame Time (ms)"));
 	display_mode->add_item(TTR("Frame %"));
 	display_mode->connect(SceneStringName(item_selected), callable_mp(this, &EditorVisualProfiler::_combo_changed));
 
-	hb->add_child(display_mode);
+	left_hb->add_child(display_mode);
+
+	HBoxContainer *right_hb = memnew(HBoxContainer);
+	right_hb->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
+	main_flow->add_child(right_hb);
 
 	frame_relative = memnew(CheckBox(TTR("Fit to Frame")));
 	frame_relative->set_pressed(true);
-	hb->add_child(frame_relative);
+	right_hb->add_child(frame_relative);
 	frame_relative->connect(SceneStringName(pressed), callable_mp(this, &EditorVisualProfiler::_update_plot));
 	linked = memnew(CheckBox(TTR("Linked")));
 	linked->set_pressed(true);
-	hb->add_child(linked);
+	right_hb->add_child(linked);
 	linked->connect(SceneStringName(pressed), callable_mp(this, &EditorVisualProfiler::_update_plot));
 
-	hb->add_spacer();
+	right_hb->add_spacer();
 
-	hb->add_child(memnew(Label(TTR("Frame #:"))));
+	right_hb->add_child(memnew(Label(TTR("Frame #:"))));
 
 	cursor_metric_edit = memnew(SpinBox);
 	cursor_metric_edit->set_h_size_flags(SIZE_FILL);
-	hb->add_child(cursor_metric_edit);
+	right_hb->add_child(cursor_metric_edit);
 	cursor_metric_edit->connect(SceneStringName(value_changed), callable_mp(this, &EditorVisualProfiler::_cursor_metric_changed));
 
-	hb->add_theme_constant_override("separation", 8 * EDSCALE);
+	right_hb->add_theme_constant_override("separation", 8 * EDSCALE);
 
 	h_split = memnew(HSplitContainer);
 	add_child(h_split);

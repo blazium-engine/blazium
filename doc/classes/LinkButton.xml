@@ -24,8 +24,14 @@
 		<member name="text" type="String" setter="set_text" getter="get_text" default="&quot;&quot;">
 			The button's text that will be displayed inside the button's area.
 		</member>
+		<member name="text_alignment" type="int" setter="set_text_alignment" getter="get_text_alignment" enum="HorizontalAlignment" default="0">
+			Horizontal text alignment as defined in the [enum HorizontalAlignment] enum.
+		</member>
 		<member name="text_direction" type="int" setter="set_text_direction" getter="get_text_direction" enum="Control.TextDirection" default="0">
 			Base text writing direction.
+		</member>
+		<member name="text_overrun_behavior" type="int" setter="set_text_overrun_behavior" getter="get_text_overrun_behavior" enum="TextServer.OverrunBehavior" default="0">
+			Defines the behavior of the [LinkButton] when the text is longer than the available space.
 		</member>
 		<member name="underline" type="int" setter="set_underline_mode" getter="get_underline_mode" enum="LinkButton.UnderlineMode" default="0">
 			The underline mode to use for the text. See [enum LinkButton.UnderlineMode] for the available modes.

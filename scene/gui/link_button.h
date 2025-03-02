@@ -48,11 +48,13 @@ private:
 	String text;
 	String xl_text;
 	Ref<TextLine> text_buf;
+	TextDirection text_direction = TEXT_DIRECTION_AUTO;
+	HorizontalAlignment text_alignment = HORIZONTAL_ALIGNMENT_LEFT;
+	TextServer::OverrunBehavior overrun_behavior = TextServer::OVERRUN_NO_TRIMMING;
 	UnderlineMode underline_mode = UNDERLINE_MODE_ALWAYS;
 	String uri;
 
 	String language;
-	TextDirection text_direction = TEXT_DIRECTION_AUTO;
 	TextServer::StructuredTextParser st_parser = TextServer::STRUCTURED_TEXT_DEFAULT;
 	Array st_args;
 
@@ -75,6 +77,7 @@ private:
 	} theme_cache;
 
 	void _shape();
+	HorizontalAlignment _get_actual_alignment() const;
 
 protected:
 	virtual void pressed() override;
@@ -86,8 +89,15 @@ protected:
 public:
 	void set_text(const String &p_text);
 	String get_text() const;
+
 	void set_uri(const String &p_uri);
 	String get_uri() const;
+
+	void set_text_alignment(HorizontalAlignment p_alignment);
+	HorizontalAlignment get_text_alignment() const;
+
+	void set_text_overrun_behavior(TextServer::OverrunBehavior p_behavior);
+	TextServer::OverrunBehavior get_text_overrun_behavior() const;
 
 	void set_structured_text_bidi_override(TextServer::StructuredTextParser p_parser);
 	TextServer::StructuredTextParser get_structured_text_bidi_override() const;

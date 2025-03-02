@@ -51,6 +51,7 @@
 #include "editor/export/editor_export_plugin.h"
 #include "editor/filesystem_dock.h"
 #include "editor/gui/editor_file_dialog.h"
+#include "editor/gui/editor_scroll_box.h"
 #include "editor/gui/editor_spin_slider.h"
 #include "editor/import/3d/resource_importer_obj.h"
 #include "editor/import/3d/resource_importer_scene.h"
@@ -179,6 +180,10 @@ void register_editor_types() {
 	GDREGISTER_CLASS(EditorResourcePicker);
 	GDREGISTER_CLASS(EditorScriptPicker);
 	GDREGISTER_ABSTRACT_CLASS(EditorUndoRedoManager);
+
+	GDREGISTER_CLASS(EditorScrollBox);
+	GDREGISTER_CLASS(EditorHScrollBox);
+	GDREGISTER_CLASS(EditorVScrollBox);
 
 	GDREGISTER_ABSTRACT_CLASS(FileSystemDock);
 	GDREGISTER_VIRTUAL_CLASS(EditorFileSystemImportFormatSupportQuery);
