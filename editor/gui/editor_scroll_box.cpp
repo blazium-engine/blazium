@@ -140,7 +140,7 @@ void EditorScrollBox::_update_buttons_icon_and_tooltip() {
 			second_button->set_icon(theme_cache.arrow_left);
 			second_button->set_tooltip_text(TTR("Scroll Left\nHold Ctrl to scroll to the begin.\nHold Shift to scroll one page."));
 			first_button->set_icon(theme_cache.arrow_right);
-			first_button->set_tooltip_text(TTR("Scroll Right\nHold Ctrl to scroll to the End.\nHold Shift to scroll one page."));
+			first_button->set_tooltip_text(TTR("Scroll Right\nHold Ctrl to scroll to the end.\nHold Shift to scroll one page."));
 		} else {
 			first_button->set_icon(theme_cache.arrow_left);
 			first_button->set_tooltip_text(TTR("Scroll Left\nHold Ctrl to scroll to the begin.\nHold Shift to scroll one page."));
