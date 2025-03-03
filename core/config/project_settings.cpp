@@ -1450,6 +1450,9 @@ ProjectSettings::ProjectSettings() {
 	GLOBAL_DEF("application/config/auto_accept_quit", true);
 	GLOBAL_DEF("application/config/quit_on_go_back", true);
 
+	GLOBAL_DEF_BASIC(PropertyInfo(Variant::STRING, "application/export/global_include_filter"), "");
+	GLOBAL_DEF_BASIC(PropertyInfo(Variant::STRING, "application/export/global_exclude_filter"), "");
+
 	// The default window size is tuned to:
 	// - Have a 16:9 aspect ratio,
 	// - Have both dimensions divisible by 8 to better play along with video recording,
