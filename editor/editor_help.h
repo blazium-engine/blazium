@@ -32,6 +32,7 @@
 #define EDITOR_HELP_H
 
 #include "core/os/thread.h"
+#include "core/templates/safe_refcount.h"
 #include "editor/code_editor.h"
 #include "editor/doc_tools.h"
 #include "editor/plugins/editor_plugin.h"
@@ -278,6 +279,8 @@ class EditorHelpBit : public VBoxContainer {
 	inline static HashMap<StringName, HashMap<StringName, HelpData>> doc_signal_cache;
 	inline static HashMap<StringName, HashMap<StringName, HelpData>> doc_theme_item_cache;
 
+	static SafeNumeric<int> instance_counter;
+
 	RichTextLabel *title = nullptr;
 	RichTextLabel *content = nullptr;
 
@@ -316,6 +319,7 @@ public:
 	void update_content_height();
 
 	EditorHelpBit(const String &p_symbol = String());
+	~EditorHelpBit();
 };
 
 // Standard tooltips do not allow you to hover over them.
