@@ -900,16 +900,19 @@ void update_theme_font(Ref<Theme> &p_theme, Ref<Font> p_font) {
 
 	} else {
 		Ref<FontFile> base_font = p_font.is_valid() ? p_font : ThemeDB::get_singleton()->get_fallback_font();
-		if (base_font != font_variation->get_base_font()) {
-			Ref<FontFile> cur_font = font_variation->get_base_font();
-			base_font->set_subpixel_positioning(cur_font->get_subpixel_positioning());
-			base_font->set_antialiasing(cur_font->get_antialiasing());
-			base_font->set_lcd_subpixel_layout(cur_font->get_lcd_subpixel_layout());
-			base_font->set_hinting(cur_font->get_hinting());
-			base_font->set_multichannel_signed_distance_field(cur_font->is_multichannel_signed_distance_field());
-			base_font->set_generate_mipmaps(cur_font->get_generate_mipmaps());
-			font_variation->set_base_font(base_font);
+		Ref<FontFile> cur_font = font_variation->get_base_font();
+		if (cur_font.is_valid()) {
+			if (base_font != cur_font) {
+				base_font->set_subpixel_positioning(cur_font->get_subpixel_positioning());
+				base_font->set_antialiasing(cur_font->get_antialiasing());
+				base_font->set_lcd_subpixel_layout(cur_font->get_lcd_subpixel_layout());
+				base_font->set_hinting(cur_font->get_hinting());
+				base_font->set_multichannel_signed_distance_field(cur_font->is_multichannel_signed_distance_field());
+				base_font->set_generate_mipmaps(cur_font->get_generate_mipmaps());
+			}
 		}
+
+		font_variation->set_base_font(base_font);
 
 		if (custom_font_variation.is_valid()) {
 			custom_font_variation = Ref<FontVariation>();
