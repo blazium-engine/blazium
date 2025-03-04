@@ -1026,8 +1026,6 @@ if env["vsproj"]:
 
 if env["compiledb"]:
     if env.scons_version < (4, 0, 0):
-
-
         # Generating the compilation DB (`compile_commands.json`) requires SCons 4.0.0 or later.
         print_error(
             "The `compiledb=yes` option requires SCons 4.0 or later, but your version is %s." % scons_raw_version
