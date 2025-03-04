@@ -100,7 +100,7 @@ void ThemeDB::initialize_theme() {
 
 	if (RenderingServer::get_singleton()) {
 		Ref<Font> project_font;
-		if (!custom_font.is_empty() && FileAccess::exists(custom_font)) {
+		if (!custom_font.is_empty() && ResourceLoader::exists(custom_font)) {
 			project_font = ResourceLoader::load(custom_font);
 			if (project_font.is_null()) {
 				ERR_PRINT("Error loading custom project font '" + custom_font + "'");
