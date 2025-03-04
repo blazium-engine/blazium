@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build-linux:
-    runs-on: "ubuntu-22.04"
+    runs-on: "ubuntu-20.04"
     name: ${{ matrix.name }}
     strategy:
       fail-fast: false
@@ -138,8 +138,8 @@ jobs:
         uses: ./.github/actions/godot-deps
         with:
           # Sync with Ensure*Version in SConstruct.
-          python-version: 3.8
-          scons-version: 4.0
+          python-version: 3.6
+          scons-version: 3.1.2
 
       - name: Setup GCC problem matcher
         uses: ammaraskar/gcc-problem-matcher@master

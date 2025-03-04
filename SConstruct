@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-EnsureSConsVersion(4, 0)
-EnsurePythonVersion(3, 8)
+EnsureSConsVersion(3, 1, 2)
+EnsurePythonVersion(3, 6)
 
 # System
 import atexit
@@ -1025,6 +1025,14 @@ if env["vsproj"]:
     env.vs_srcs = []
 
 if env["compiledb"]:
+    if env.scons_version < (4, 0, 0):
+
+
+        # Generating the compilation DB (`compile_commands.json`) requires SCons 4.0.0 or later.
+        print_error(
+            "The `compiledb=yes` option requires SCons 4.0 or later, but your version is %s." % scons_raw_version
+        )
+        Exit(255)
     env.Tool("compilation_db")
     env.Alias("compiledb", env.CompilationDatabase())
 
