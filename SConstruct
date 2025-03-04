@@ -1031,7 +1031,6 @@ if env["compiledb"]:
             "The `compiledb=yes` option requires SCons 4.0 or later, but your version is %s." % scons_raw_version
         )
         Exit(255)
-
     env.Tool("compilation_db")
     env.Alias("compiledb", env.CompilationDatabase())
 
