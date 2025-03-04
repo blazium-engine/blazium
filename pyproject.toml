@@ -15,7 +15,7 @@ exclude = ["thirdparty/"]
 extend-exclude = ["thirdparty"]
 extend-include = ["SConstruct", "SCsub"]
 line-length = 120
-target-version = "py37"
+target-version = "py38"
 
 [tool.ruff.lint]
 extend-select = [

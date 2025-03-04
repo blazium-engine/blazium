@@ -47,6 +47,7 @@
 #include <mach/host_info.h>
 #include <mach/mach_host.h>
 #include <mach/mach_time.h>
+#include <spawn.h>
 #include <sys/sysctl.h>
 #endif
 
@@ -677,6 +678,42 @@ Error OS_Unix::create_process(const String &p_path, const List<String> &p_argume
 	// Don't compile this code at all to avoid undefined references.
 	// Actual virtual call goes to OS_Web.
 	ERR_FAIL_V(ERR_BUG);
+#elif defined(MACOS_ENABLED)
+	Vector<CharString> cs;
+	cs.push_back(p_path.utf8());
+	for (const String &arg : p_arguments) {
+		cs.push_back(arg.utf8());
+	}
+
+	Vector<char *> args;
+	args.push_back((char *)"/usr/bin/open");
+	args.push_back((char *)"-n");
+	args.push_back((char *)"-a");
+	args.push_back((char *)cs[0].get_data());
+	args.push_back((char *)"--args");
+	for (int i = 1; i < cs.size(); i++) {
+		args.push_back((char *)cs[i].get_data());
+	}
+	args.push_back(0);
+
+	pid_t pid;
+	char *const envp[] = { NULL };
+	int status = posix_spawn(&pid, "/usr/bin/open", NULL, NULL, &args[0], envp);
+
+	if (status == 0) {
+		ProcessInfo pi;
+		process_map_mutex.lock();
+		process_map->insert(pid, pi);
+		process_map_mutex.unlock();
+		if (r_child_id) {
+			*r_child_id = pid;
+		}
+	} else {
+		// The posix_spawn() function errored
+		ERR_PRINT("Could not create child process: " + p_path);
+		raise(SIGKILL);
+	}
+	return OK;
 #else
 	pid_t pid = fork();
 	ERR_FAIL_COND_V(pid < 0, ERR_CANT_FORK);
