@@ -59,7 +59,8 @@ repos:
         exclude: |
           (?x)^(
             platform/android/java/editor/src/main/java/com/android/.*|
-            platform/android/java/lib/src/com/.*
+            platform/android/java/lib/src/com/.*|
+            modules/godotsteam/godotsteam.cpp$
           )
         additional_dependencies: [tomli]
 
@@ -145,6 +146,7 @@ repos:
             platform/android/java/editor/src/main/java/com/android/.*|
             platform/android/java/lib/src/com/.*|
             modules/blazium_sdk/.*|
+            modules/godotsteam/.*|
             scene/theme/blazium_default_theme.cpp|
             scene/theme/blazium_default_theme.h|
             platform/android/java/lib/src/org/godotengine/godot/gl/GLSurfaceView\.java$|
