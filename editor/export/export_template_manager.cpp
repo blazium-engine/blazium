@@ -791,7 +791,7 @@ String ExportTemplateManager::get_android_template_identifier(const Ref<EditorEx
 			return android_source_zip + String(" [") + FileAccess::get_md5(android_source_zip) + String("]");
 		}
 	}
-	return VERSION_FULL_CONFIG;
+	return EXTERNAL_VERSION_FULL_CONFIG;
 }
 
 bool ExportTemplateManager::is_android_template_installed(const Ref<EditorExportPreset> &p_preset) {
