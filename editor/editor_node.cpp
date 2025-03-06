@@ -1877,6 +1877,7 @@ int EditorNode::_save_external_resources(bool p_also_save_external_data) {
 		res->set_edited(false);
 	}
 
+	bool script_was_saved = false;
 	for (const String &E : edited_resources) {
 		Ref<Resource> res = ResourceCache::get_ref(E);
 		if (res.is_null()) {
@@ -1886,8 +1887,16 @@ int EditorNode::_save_external_resources(bool p_also_save_external_data) {
 		if (ps.is_valid()) {
 			continue; // Do not save PackedScenes, this will mess up the editor.
 		}
+		if (!script_was_saved) {
+			Ref<Script> scr = res;
+			script_was_saved = scr.is_valid();
+		}
 		ResourceSaver::save(res, res->get_path(), flg);
 		saved++;
+	}
+
+	if (script_was_saved) {
+		ScriptEditor::get_singleton()->update_script_times();
 	}
 
 	if (p_also_save_external_data) {
