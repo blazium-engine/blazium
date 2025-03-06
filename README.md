@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://blazium.app">
-    <img src="logo_outlined.svg" width="400" alt="Godot Engine logo">
+    <img src="logo_outlined.svg" width="400" alt="Blazium Engine logo">
   </a>
 </p>
 
@@ -12,7 +12,7 @@
 
 **[Blazium Engine](https://blazium.app) is a feature-packed, cross-platform
 game engine to create 2D and 3D games from a unified interface.** It provides a
-comprehensive set of [common tools](), so that
+comprehensive set of common tools, so that
 users can focus on making games without having to reinvent the wheel. Games can
 be exported with one click to a number of platforms, including the major desktop
 platforms (Linux, macOS, Windows), mobile platforms (Android, iOS), as well as
@@ -29,13 +29,19 @@ expectations.
 Before being open sourced in [February 2014](https://github.com/godotengine/godot/commit/0b806ee0fc9097fa7bda7ac0109191c9c5e0a1ac),
 Godot had been developed by [Juan Linietsky](https://github.com/reduz) and
 [Ariel Manzur](https://github.com/punto-) for several years as an in-house engine, used to publish several work-for-hire
-titles. in October 2024, the project was forked due to community dissatisfaction with project direction and politics being expressed by official Godot accounts.
+titles.
+In October 2024, the project was forked due to community dissatisfaction with project direction and politics being expressed by official Godot accounts.
 
 Blazium was forked from Godot in [October 2024](https://github.com/blazium-engine/blazium/commit/e86a91030a60be7d37e99c7a6069d75181d5138c),
 intending to improve upon Godot in order to fulfill its potential and contribute to the shared
-codebase of both through a more genuinely community-driven model than Godot.
+codebase of both through a more genuinely community-driven model.
 
-Blazium is a soft-fork, meaning we stay close to Godot, and regularly merge all the good stuff they are developing back in Blazium.
+## Migrating from Godot
+
+Blazium strives to maintain a high level of compatibility with projects made using Godot.
+Switching should be rather straightforward, as even GDExtensions are compatible.
+Opening a project made with Godot 4.3 using a Blazium build based on Godot 4.3 should work with no additional steps.
+Blazium's fallback theme differs slightly from Godot's, but this has not been found to interfere with any projects so far.
 
 ## Getting the engine
 
