@@ -144,27 +144,7 @@ void EditorExportPlatformWeb::_replace_strings(const HashMap<String, String> &p_
 	}
 }
 
-void EditorExportPlatformWeb::_fix_html(Vector<uint8_t> &p_html, const Ref<EditorExportPreset> &p_preset, const String &p_name, bool p_debug, BitField<EditorExportPlatform::DebugFlags> p_flags, const Vector<SharedObject> p_shared_objects, const Dictionary &p_file_sizes) {
-	// Engine.js config
-	Dictionary config;
-	Array libs;
-	for (int i = 0; i < p_shared_objects.size(); i++) {
-		libs.push_back(p_shared_objects[i].path.get_file());
-	}
-	Vector<String> flags = gen_export_flags(p_flags & (~DEBUG_FLAG_DUMB_CLIENT));
-	Array args;
-	for (int i = 0; i < flags.size(); i++) {
-		args.push_back(flags[i]);
-	}
-	config["canvasResizePolicy"] = p_preset->get("html/canvas_resize_policy");
-	config["experimentalVK"] = p_preset->get("html/experimental_virtual_keyboard");
-	config["focusCanvas"] = p_preset->get("html/focus_canvas_on_start");
-	config["gdextensionLibs"] = libs;
-	config["executable"] = p_name;
-	config["args"] = args;
-	config["fileSizes"] = p_file_sizes;
-	config["ensureCrossOriginIsolationHeaders"] = (bool)p_preset->get("progressive_web_app/ensure_cross_origin_isolation_headers");
-
+void EditorExportPlatformWeb::_fix_html(Vector<uint8_t> &p_html, const Ref<EditorExportPreset> &p_preset, const String &p_name) {
 	String head_include;
 	if (p_preset->get("html/export_icon")) {
 		head_include += "<link id=\"-gd-engine-icon\" rel=\"icon\" type=\"image/png\" href=\"" + p_name + ".icon.png\" />\n";
@@ -172,45 +152,10 @@ void EditorExportPlatformWeb::_fix_html(Vector<uint8_t> &p_html, const Ref<Edito
 	}
 	if (p_preset->get("progressive_web_app/enabled")) {
 		head_include += "<link rel=\"manifest\" href=\"" + p_name + ".manifest.json\">\n";
-		config["serviceWorker"] = p_name + ".service.worker.js";
 	}
-	String youtube_script_tag;
+	String youtube_playables_sdk;
 	if (p_preset->get("blazium/youtube_playable/enabled")) {
-		youtube_script_tag += R"(<script src="https://www.youtube.com/game_api/v1"></script>
-		<script>
-			function returnError(c){return (e)=>{c(`{"error":"${e.toString()}"}`)}};
-			function returnEmpty(c){return ()=>{c("{}")}};
-			window.YoutubePlayables = {
-				isYoutubePlayables: ()=>{return ytgame?.IN_PLAYABLES_ENV ?? false},
-				getSdkVersion: ()=>{return ytgame?.SDK_VERSION ?? "unloaded"},
-				sendScore: (v,c)=>{ytgame.engagement.sendScore({value:v}).then(returnEmpty(c),returnError(c))},
-				openYTContent: (v,c)=>{ytgame.engagement.openYTContent({id:v}).then(returnEmpty(c),returnError(c))},
-				loadData: (c)=>{ytgame.game.loadData().then((d)=>{c(`{"data":${d}}`)},returnError(c))},
-				saveData: (v,c)=>{ytgame.game.saveData(v).then(returnEmpty(c),returnError(c))},
-				logWarning: ()=>{ytgame.health.logWarning()},
-				logError: ()=>{ytgame.health.logError()},
-				onAudioEnabledChange: (c)=>{ytgame.system.onAudioEnabledChange(c)},
-				onPause: (c)=>{ytgame.system.onPause(c)},
-				onResume: (c)=>{ytgame.system.onResume(c)},
-				getLanguage: (c)=>{ytgame.system.getLanguage().then((l)=>{c(`{"data":"${l}"}`)},returnError(c))},
-				gameReady: ()=>{ytgame.game.gameReady()},
-			};
-			ytgame.game.firstFrameReady();
-		</script>)";
-	}
-	String discord_script_tag;
-	if (p_preset->get("blazium/discord_embed/enabled")) {
-		// Define DiscordEmbed
-		discord_script_tag += "<script>window.DiscordEmbed={isDiscordEmbed:()=>{";
-		if (p_preset->get("blazium/discord_embed/autodetect")) {
-			// Check if hostname is one of discord's domains
-			discord_script_tag += "return ['discord.com','discordapp.com','discordsays.com','discordapp.net','discordsez.com']";
-			discord_script_tag += ".some((s)=>window.location.hostname.includes(s))";
-		} else {
-			// Always return true
-			discord_script_tag += "return true";
-		}
-		discord_script_tag += "}};</script>";
+		youtube_playables_sdk = R"(<script src="https://www.youtube.com/game_api/v1"></script>)";
 	}
 	String blazium_header_embeds;
 	if (p_preset->get("blazium/web_headers/enabled")) {
@@ -256,25 +201,16 @@ void EditorExportPlatformWeb::_fix_html(Vector<uint8_t> &p_html, const Ref<Edito
 	}
 
 	// Replaces HTML string
-	const String str_config = Variant(config).to_json_string();
 	const String custom_head_include = p_preset->get("html/head_include");
 	HashMap<String, String> replaces;
 
-	replaces["$BLAZIUM_YOUTUBE_PLAYABLES_SCRIPT_TAG"] = youtube_script_tag;
-	replaces["$BLAZIUM_DISCORD_EMBED_SCRIPT_TAG"] = discord_script_tag;
+	replaces["$BLAZIUM_YOUTUBE_PLAYABLES_SDK"] = youtube_playables_sdk;
 	replaces["$BLAZIUM_HEADER_EMBEDS"] = blazium_header_embeds;
 
 	replaces["$GODOT_URL"] = p_name + ".js";
 	replaces["$GODOT_PROJECT_NAME"] = GLOBAL_GET("application/config/name");
 	replaces["$GODOT_HEAD_INCLUDE"] = head_include + custom_head_include;
-	replaces["$GODOT_CONFIG"] = str_config;
 	replaces["$GODOT_SPLASH"] = p_name + ".png";
-
-	if (p_preset->get("variant/thread_support")) {
-		replaces["$GODOT_THREADS_ENABLED"] = "true";
-	} else {
-		replaces["$GODOT_THREADS_ENABLED"] = "false";
-	}
 
 	_replace_strings(replaces, p_html);
 }
@@ -310,6 +246,117 @@ Error EditorExportPlatformWeb::_add_manifest_icon(const String &p_path, const St
 	icon_dict["src"] = icon_name;
 	r_arr.push_back(icon_dict);
 	return err;
+}
+
+Error EditorExportPlatformWeb::_build_main_js(const Ref<EditorExportPreset> &p_preset, const String &p_path, BitField<EditorExportPlatform::DebugFlags> p_flags, const Vector<SharedObject> p_shared_objects, const Dictionary &p_file_sizes) {
+	Vector<uint8_t> main_js;
+	const String dir = p_path.get_base_dir();
+	const String name = p_path.get_file().get_basename();
+
+	// Get discord.embed.js file contents
+	String discord_embed_path = dir.path_join(name + ".discord.embed.js");
+	if (p_preset->get("blazium/discord_embed/enabled")) {
+		Vector<uint8_t> discord_embed_js;
+		Ref<FileAccess> f = FileAccess::open(discord_embed_path, FileAccess::READ);
+		if (f.is_null()) {
+			add_message(EXPORT_MESSAGE_ERROR, TTR("BUILD_MAIN_JS"), vformat(TTR("Could not read file: \"%s\"."), discord_embed_path));
+			return ERR_FILE_CANT_READ;
+		}
+		discord_embed_js.resize(f->get_length());
+		f->get_buffer(discord_embed_js.ptrw(), discord_embed_js.size());
+
+		HashMap<String, String> replaces;
+		replaces["$BLAZIUM_DISCORD_AUTODETECT"] = "true" ? p_preset->get("blazium/discord_embed/autodetect") : "false";
+		_replace_strings(replaces, discord_embed_js);
+		main_js.append_array(discord_embed_js);
+	}
+	DirAccess::remove_file_or_error(discord_embed_path);
+
+	// Get youtube.playables.js file contents
+	String youtube_playables_path = dir.path_join(name + ".youtube.playables.js");
+	if (p_preset->get("blazium/youtube_playable/enabled")) {
+		Vector<uint8_t> youtube_playables_js;
+		Ref<FileAccess> f = FileAccess::open(youtube_playables_path, FileAccess::READ);
+		if (f.is_null()) {
+			add_message(EXPORT_MESSAGE_ERROR, TTR("BUILD_MAIN_JS"), vformat(TTR("Could not read file: \"%s\"."), youtube_playables_path));
+			return ERR_FILE_CANT_READ;
+		}
+		youtube_playables_js.resize(f->get_length());
+		f->get_buffer(youtube_playables_js.ptrw(), youtube_playables_js.size());
+
+		main_js.append_array(youtube_playables_js);
+	}
+	DirAccess::remove_file_or_error(youtube_playables_path);
+
+	// Get engine.js file contents
+	String main_js_path = dir.path_join(name + ".js");
+	Vector<uint8_t> engine_js;
+	{
+		Ref<FileAccess> f = FileAccess::open(main_js_path, FileAccess::READ);
+		if (f.is_null()) {
+			add_message(EXPORT_MESSAGE_ERROR, TTR("BUILD_MAIN_JS"), vformat(TTR("Could not read file: \"%s\"."), main_js_path));
+			return ERR_FILE_CANT_READ;
+		}
+		engine_js.resize(f->get_length());
+		f->get_buffer(engine_js.ptrw(), engine_js.size());
+	}
+	main_js.append_array(engine_js);
+
+	// Get engine.starter.js file contents
+	String engine_starter_path = dir.path_join(name + ".engine.starter.js");
+	Vector<uint8_t> engine_starter_js;
+	{
+		Ref<FileAccess> f = FileAccess::open(engine_starter_path, FileAccess::READ);
+		if (f.is_null()) {
+			add_message(EXPORT_MESSAGE_ERROR, TTR("BUILD_MAIN_JS"), vformat(TTR("Could not read file: \"%s\"."), engine_starter_path));
+			return ERR_FILE_CANT_READ;
+		}
+		engine_starter_js.resize(f->get_length());
+		f->get_buffer(engine_starter_js.ptrw(), engine_starter_js.size());
+	}
+	DirAccess::remove_file_or_error(engine_starter_path);
+
+	Dictionary engine_config;
+	engine_config["canvasResizePolicy"] = p_preset->get("html/canvas_resize_policy");
+	engine_config["experimentalVK"] = p_preset->get("html/experimental_virtual_keyboard");
+	engine_config["focusCanvas"] = p_preset->get("html/focus_canvas_on_start");
+	engine_config["executable"] = name;
+	engine_config["fileSizes"] = p_file_sizes;
+	engine_config["ensureCrossOriginIsolationHeaders"] = (bool)p_preset->get("progressive_web_app/ensure_cross_origin_isolation_headers");
+
+	Array libs;
+	for (int i = 0; i < p_shared_objects.size(); i++) {
+		libs.push_back(p_shared_objects[i].path.get_file());
+	}
+	engine_config["gdextensionLibs"] = libs;
+
+	Array args;
+	Vector<String> flags = gen_export_flags(p_flags & (~DEBUG_FLAG_DUMB_CLIENT));
+	for (int i = 0; i < flags.size(); i++) {
+		args.push_back(flags[i]);
+	}
+	engine_config["args"] = args;
+
+	if (p_preset->get("progressive_web_app/enabled")) {
+		engine_config["serviceWorker"] = name + ".service.worker.js";
+	}
+
+	HashMap<String, String> replaces;
+	replaces["$GODOT_CONFIG"] = Variant(engine_config).to_json_string();
+	if (p_preset->get("variant/thread_support")) {
+		replaces["$GODOT_THREADS_ENABLED"] = "true";
+	} else {
+		replaces["$GODOT_THREADS_ENABLED"] = "false";
+	}
+	_replace_strings(replaces, engine_starter_js);
+	main_js.append_array(engine_starter_js);
+
+	// Write main js file
+	Error err = _write_or_error(main_js.ptr(), main_js.size(), main_js_path, "Export", false);
+	if (err != OK) {
+		return err;
+	}
+	return OK;
 }
 
 Error EditorExportPlatformWeb::_build_pwa(const Ref<EditorExportPreset> &p_preset, const String p_path, const Vector<SharedObject> &p_shared_objects) {
@@ -367,7 +414,7 @@ Error EditorExportPlatformWeb::_build_pwa(const Ref<EditorExportPreset> &p_prese
 		f->get_buffer(sw.ptrw(), sw.size());
 	}
 	_replace_strings(replaces, sw);
-	Error err = _write_or_error(sw.ptr(), sw.size(), dir.path_join(name + ".service.worker.js"), "Export", false);
+	Error err = _write_or_error(sw.ptr(), sw.size(), sw_path, "Export", false);
 	if (err != OK) {
 		// Message is supplied by the subroutine method.
 		return err;
@@ -659,13 +706,11 @@ Error EditorExportPlatformWeb::export_project(const Ref<EditorExportPreset> &p_p
 	if (f.is_valid()) {
 		file_sizes[pck_path.get_file()] = (uint64_t)f->get_length();
 	}
-	String wasm_path;
-	// Don't count compressed wasm when keeping uncopressed wasm to skew the
+	String wasm_path = base_path + ".wasm";
+	// Don't count compressed wasm when keeping uncompressed wasm to skew the
 	// game loading bar to finish only when loading the uncompressed wasm.
 	if (compress_base_wasm && !keep_uncompressed_wasm) {
-		wasm_path = base_path + ".wasm.gz";
-	} else {
-		wasm_path = base_path + ".wasm";
+		wasm_path += ".gz";
 	}
 	f = FileAccess::open(wasm_path, FileAccess::READ);
 	if (f.is_valid()) {
@@ -685,13 +730,19 @@ Error EditorExportPlatformWeb::export_project(const Ref<EditorExportPreset> &p_p
 	f.unref(); // close file.
 
 	// Generate HTML file with replaced strings.
-	_fix_html(html, p_preset, base_name, p_debug, p_flags, shared_objects, file_sizes);
+	_fix_html(html, p_preset, base_name);
 	Error err = _write_or_error(html.ptr(), html.size(), p_path, "Export", false);
 	if (err != OK) {
 		// Message is supplied by the subroutine method.
 		return err;
 	}
 	html.resize(0);
+
+	// Build main JavaScript file.
+	err = _build_main_js(p_preset, p_path, p_flags, shared_objects, file_sizes);
+	if (err != OK) {
+		return err;
+	}
 
 	// Export splash (why?)
 	Ref<Image> splash = _get_project_splash();
@@ -994,6 +1045,9 @@ Error EditorExportPlatformWeb::_export_project(const Ref<EditorExportPreset> &p_
 		DirAccess::remove_file_or_error(basepath + ".side.wasm");
 		DirAccess::remove_file_or_error(basepath + ".icon.png");
 		DirAccess::remove_file_or_error(basepath + ".apple-touch-icon.png");
+		DirAccess::remove_file_or_error(basepath + ".engine.starter.js");
+		DirAccess::remove_file_or_error(basepath + ".discord.embed.js");
+		DirAccess::remove_file_or_error(basepath + ".youtube.playables.js");
 
 		if (p_preset->get("blazium/export_gzip_compressed_wasm/enabled")) {
 			DirAccess::remove_file_or_error(basepath + ".wasm.gz");
