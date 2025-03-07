@@ -1,28 +1,40 @@
 # meta-description: Base template showcasing some basic functionality
 extends _BASE_
 
-func _init() -> void:
-	received_jwt.connect(_received_jwt)
+@export var reconnects = 0
+var config: ConfigFile
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	config = ConfigFile.new()
+	config.load("user://blazium.cfg")
+
+	reconnection_token = config.get_value("ScriptedLobbyClient", "reconnection_token", "")
+
+	disconnected_from_server.connect(_disconnected_from_server)
 	log_updated.connect(_log_updated)
+	connected_to_server.connect(_connected_to_server)
 
-	# Connect to the server
-	var result = await connect_to_server().finished
-	if result.has_error():
-		push_error(result.error)
-
-func request_login_and_open() -> void:
-	# Get Login URL
-	var login_result :LoginResult = await request_login_info("discord").finished
-	if login_result.has_error():
-		push_error(login_result.error)
-
-	# Open Login URL and wait for received_jwt signal
-	var error := OS.shell_open(login_result.login_url)
-	if error != OK:
-		push_error(error)
+	connect_to_server()
 
 func _log_updated(command: String, message: String):
-	print("LoginClient: ", command, ": ", message)
+	print("ScriptedLobbyClient: ", command, ": ", message)
 
-func _received_jwt(jwt: String, type: String, access_token: String):
-	print("Godt jwt and access_token", jwt, " ", type, " ", access_token)
+func _connected_to_server(_peer: LobbyPeer, new_reconnection_token: String):
+	reconnects = 0
+	config.set_value("ScriptedLobbyClient", "reconnection_token", new_reconnection_token)
+	var err = config.save("user://blazium.cfg")
+	if err != OK:
+		push_error(error_string(err))
+
+func _disconnected_from_server(reason: String):
+	if reason == "Reconnect Close":
+		reconnection_token = ""
+	print("Disconnected. ", reason)
+	if reconnects > 10:
+		push_error("Cannot connect")
+		return
+	reconnects += 1
+	if is_inside_tree():
+		await get_tree().create_timer(0.5 * reconnects).timeout
+	connect_to_server()
