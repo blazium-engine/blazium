@@ -710,12 +710,16 @@ Error VariantParser::parse_value(Token &token, Variant &value, Stream *p_stream,
 				return err;
 			}
 
-			if (args.size() != 2) {
-				r_err_str = "Expected 2 arguments for constructor";
+			if (args.size() == 0) {
+				value = Vector2();
+			} else if (args.size() == 1) {
+				value = Vector2(args[0], args[0]);
+			} else if (args.size() == 2) {
+				value = Vector2(args[0], args[1]);
+			} else {
+				r_err_str = "Expected at most 2 arguments for constructor";
 				return ERR_PARSE_ERROR;
 			}
-
-			value = Vector2(args[0], args[1]);
 		} else if (id == "Vector2i") {
 			Vector<int32_t> args;
 			Error err = _parse_construct<int32_t>(p_stream, args, line, r_err_str);
@@ -723,12 +727,16 @@ Error VariantParser::parse_value(Token &token, Variant &value, Stream *p_stream,
 				return err;
 			}
 
-			if (args.size() != 2) {
-				r_err_str = "Expected 2 arguments for constructor";
+			if (args.size() == 0) {
+				value = Vector2i();
+			} else if (args.size() == 1) {
+				value = Vector2i(args[0], args[0]);
+			} else if (args.size() == 2) {
+				value = Vector2i(args[0], args[1]);
+			} else {
+				r_err_str = "Expected at most 2 arguments for constructor";
 				return ERR_PARSE_ERROR;
 			}
-
-			value = Vector2i(args[0], args[1]);
 		} else if (id == "Rect2") {
 			Vector<real_t> args;
 			Error err = _parse_construct<real_t>(p_stream, args, line, r_err_str);
