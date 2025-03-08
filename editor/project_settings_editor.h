@@ -44,6 +44,8 @@
 
 class FileSystemDock;
 class TabContainer;
+class TextureRect;
+class PanelContainer;
 
 class ProjectSettingsEditor : public AcceptDialog {
 	GDCLASS(ProjectSettingsEditor, AcceptDialog);
