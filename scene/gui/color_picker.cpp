@@ -1533,7 +1533,7 @@ void ColorPicker::_pick_button_pressed_legacy() {
 
 		picker_preview_label = memnew(Label);
 		picker_preview->set_anchors_preset(Control::PRESET_CENTER_TOP);
-		picker_preview_label->set_text("Color Picking active");
+		picker_preview_label->set_text(ETR("Color Picking active"));
 		picker_preview->add_child(picker_preview_label);
 
 		picker_preview_style_box = (Ref<StyleBoxFlat>)memnew(StyleBoxFlat);
@@ -1941,7 +1941,7 @@ ColorPicker::ColorPicker() {
 	updating = false;
 
 	preset_foldable = memnew(FoldableContainer);
-	preset_foldable->set_text("Swatches");
+	preset_foldable->set_text(ETR("Swatches"));
 	preset_foldable->add_button();
 	preset_foldable->set_button_tooltip(0, ETR("Add current color as a preset."));
 	preset_foldable->set_button_visible(0, can_add_swatches);
@@ -1962,7 +1962,7 @@ ColorPicker::ColorPicker() {
 	preset_group.instantiate();
 
 	recent_preset_foldable = memnew(FoldableContainer);
-	recent_preset_foldable->set_text("Recent Colors");
+	recent_preset_foldable->set_text(ETR("Recent Colors"));
 
 	ScrollContainer *recent_preset_scroll = memnew(ScrollContainer);
 	recent_preset_scroll->add_theme_constant_override("h_scroll_bar_separation", 4);
