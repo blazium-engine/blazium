@@ -509,10 +509,10 @@
 		<theme_item name="font_disabled_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.4)">
 			Text [Color] for a [constant TreeItem.CELL_MODE_CHECK] mode cell when it's non-editable (see [method TreeItem.set_editable]).
 		</theme_item>
-		<theme_item name="font_hovered_color" data_type="color" type="Color" default="Color(0.95, 0.95, 0.95, 1)">
+		<theme_item name="font_hovered_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			Text [Color] used when the item is hovered.
 		</theme_item>
-		<theme_item name="font_hovered_dimmed_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
+		<theme_item name="font_hovered_dimmed_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.6)">
 			Text [Color] used when the item is hovered, while a button of the same item is hovered as the same time.
 		</theme_item>
 		<theme_item name="font_outline_color" data_type="color" type="Color" default="Color(0, 0, 0, 1)">
