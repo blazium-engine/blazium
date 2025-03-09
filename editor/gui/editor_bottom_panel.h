@@ -37,7 +37,6 @@ class Button;
 class ConfigFile;
 class EditorToaster;
 class HBoxContainer;
-class LinkButton;
 class VBoxContainer;
 class EditorHScrollBox;
 
@@ -57,14 +56,12 @@ class EditorBottomPanel : public PanelContainer {
 	EditorHScrollBox *scroll_box = nullptr;
 	HBoxContainer *button_hbox = nullptr;
 	EditorToaster *editor_toaster = nullptr;
-	LinkButton *version_btn = nullptr;
 	Button *expand_button = nullptr;
 	Control *last_opened_control = nullptr;
 
 	void _switch_by_control(bool p_visible, Control *p_control);
 	void _switch_to_item(bool p_visible, int p_idx);
 	void _expand_button_toggled(bool p_pressed);
-	void _version_button_pressed();
 	void _scroll(bool p_right);
 	void _update_scroll_buttons();
 	void _update_disabled_buttons();

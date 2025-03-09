@@ -49,8 +49,11 @@
 #include "tests/core/io/test_ip.h"
 #include "tests/core/io/test_json.h"
 #include "tests/core/io/test_marshalls.h"
+#include "tests/core/io/test_packet_peer.h"
 #include "tests/core/io/test_pck_packer.h"
 #include "tests/core/io/test_resource.h"
+#include "tests/core/io/test_stream_peer.h"
+#include "tests/core/io/test_stream_peer_buffer.h"
 #include "tests/core/io/test_xml_parser.h"
 #include "tests/core/math/test_aabb.h"
 #include "tests/core/math/test_astar.h"
@@ -79,6 +82,7 @@
 #include "tests/core/object/test_object.h"
 #include "tests/core/object/test_undo_redo.h"
 #include "tests/core/os/test_os.h"
+#include "tests/core/string/test_fuzzy_search.h"
 #include "tests/core/string/test_node_path.h"
 #include "tests/core/string/test_string.h"
 #include "tests/core/string/test_translation.h"
@@ -119,8 +123,10 @@
 #include "tests/scene/test_node.h"
 #include "tests/scene/test_node_2d.h"
 #include "tests/scene/test_packed_scene.h"
+#include "tests/scene/test_parallax_2d.h"
 #include "tests/scene/test_path_2d.h"
 #include "tests/scene/test_path_follow_2d.h"
+#include "tests/scene/test_physics_material.h"
 #include "tests/scene/test_sprite_frames.h"
 #include "tests/scene/test_theme.h"
 #include "tests/scene/test_timer.h"
@@ -135,6 +141,9 @@
 #include "tests/scene/test_code_edit.h"
 #include "tests/scene/test_color_picker.h"
 #include "tests/scene/test_graph_node.h"
+#include "tests/scene/test_option_button.h"
+#include "tests/scene/test_tab_bar.h"
+#include "tests/scene/test_tab_container.h"
 #include "tests/scene/test_text_edit.h"
 #include "tests/scene/test_tree.h"
 #endif // ADVANCED_GUI_DISABLED
@@ -153,9 +162,12 @@
 
 #include "tests/scene/test_arraymesh.h"
 #include "tests/scene/test_camera_3d.h"
+#include "tests/scene/test_height_map_shape_3d.h"
 #include "tests/scene/test_path_3d.h"
 #include "tests/scene/test_path_follow_3d.h"
 #include "tests/scene/test_primitives.h"
+#include "tests/scene/test_skeleton_3d.h"
+#include "tests/scene/test_sky.h"
 #endif // _3D_DISABLED
 
 #include "modules/modules_tests.gen.h"
@@ -326,7 +338,7 @@ struct GodotTestCaseListener : public doctest::IReporter {
 			return;
 		}
 
-		if (name.contains("Audio")) {
+		if (name.contains("[Audio]")) {
 			// The last driver index should always be the dummy driver.
 			int dummy_idx = AudioDriverManager::get_driver_count() - 1;
 			AudioDriverManager::initialize(dummy_idx);
@@ -350,6 +362,9 @@ struct GodotTestCaseListener : public doctest::IReporter {
 #ifdef TOOLS_ENABLED
 		if (EditorSettings::get_singleton()) {
 			EditorSettings::destroy();
+
+			// Instantiating the EditorSettings singleton sets the locale to the editor's language.
+			TranslationServer::get_singleton()->set_locale("en");
 		}
 #endif // TOOLS_ENABLED
 

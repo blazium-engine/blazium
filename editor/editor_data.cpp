@@ -36,11 +36,12 @@
 #include "core/io/image_loader.h"
 #include "core/io/resource_loader.h"
 #include "editor/editor_node.h"
+#include "editor/editor_string_names.h"
 #include "editor/editor_undo_redo_manager.h"
 #include "editor/multi_node_edit.h"
+#include "editor/plugins/editor_context_menu_plugin.h"
 #include "editor/plugins/editor_plugin.h"
-#include "editor/plugins/script_editor_plugin.h"
-#include "editor/themes/editor_scale.h"
+#include "scene/property_utils.h"
 #include "scene/resources/packed_scene.h"
 
 void EditorSelectionHistory::cleanup_history() {
@@ -538,14 +539,18 @@ Variant EditorData::instantiate_custom_type(const String &p_type, const String &
 			if (get_custom_types()[p_inherits][i].name == p_type) {
 				Ref<Script> script = get_custom_types()[p_inherits][i].script;
 
-				Variant ob = ClassDB::instantiate(p_inherits);
-				ERR_FAIL_COND_V(!ob, Variant());
+				// Store in a variant to initialize the refcount if needed.
+				Variant v = ClassDB::instantiate(p_inherits);
+				ERR_FAIL_COND_V(!v, Variant());
+				Object *ob = v;
+
 				Node *n = Object::cast_to<Node>(ob);
 				if (n) {
 					n->set_name(p_type);
 				}
-				((Object *)ob)->set_script(script);
-				return ob;
+				PropertyUtils::assign_custom_type_script(ob, script);
+				ob->set_script(script);
+				return v;
 			}
 		}
 	}
@@ -1003,11 +1008,13 @@ Variant EditorData::script_class_instance(const String &p_class) {
 		Ref<Script> script = script_class_load_script(p_class);
 		if (script.is_valid()) {
 			// Store in a variant to initialize the refcount if needed.
-			Variant obj = ClassDB::instantiate(script->get_instance_base_type());
-			if (obj) {
-				obj.operator Object *()->set_script(script);
+			Variant v = ClassDB::instantiate(script->get_instance_base_type());
+			if (v) {
+				Object *obj = v;
+				PropertyUtils::assign_custom_type_script(obj, script);
+				obj->set_script(script);
 			}
-			return obj;
+			return v;
 		}
 	}
 	return Variant();

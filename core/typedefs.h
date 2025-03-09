@@ -45,6 +45,9 @@
 #include <cstdint>
 #include <utility>
 
+// Ensure that C++ standard is at least C++17. If on MSVC, also ensures that the `Zc:__cplusplus` flag is present.
+static_assert(__cplusplus >= 201703L);
+
 // Turn argument to string constant:
 // https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html#Stringizing
 #ifndef _STR
@@ -306,5 +309,7 @@ struct BuildIndexSequence<0, Is...> : IndexSequence<Is...> {};
 #define ____gd_is_defined(arg1_or_junk) __gd_take_second_arg(arg1_or_junk true, false)
 #define ___gd_is_defined(val) ____gd_is_defined(__GDARG_PLACEHOLDER_##val)
 #define GD_IS_DEFINED(x) ___gd_is_defined(x)
+
+#define FORCE_SEMICOLON ;
 
 #endif // TYPEDEFS_H

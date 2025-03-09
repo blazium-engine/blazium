@@ -32,6 +32,7 @@
 #include "editor_inspector.compat.inc"
 
 #include "core/os/keyboard.h"
+#include "editor/add_metadata_dialog.h"
 #include "editor/doc_tools.h"
 #include "editor/editor_feature_profile.h"
 #include "editor/editor_main_screen.h"
@@ -52,6 +53,7 @@
 #include "scene/gui/option_button.h"
 #include "scene/gui/popup_menu.h"
 #include "scene/gui/scroll_bar.h"
+#include "scene/gui/separator.h"
 #include "scene/gui/spin_box.h"
 #include "scene/gui/texture_rect.h"
 #include "scene/main/timer.h"
@@ -898,6 +900,7 @@ Variant EditorProperty::get_drag_data(const Point2 &p_point) {
 
 	Label *drag_label = memnew(Label);
 	drag_label->set_text(property);
+	drag_label->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED); // Don't translate raw property name.
 	set_drag_preview(drag_label);
 	return dp;
 }
@@ -935,10 +938,19 @@ float EditorProperty::get_name_split_ratio() const {
 	return split_ratio;
 }
 
+void EditorProperty::set_favoritable(bool p_favoritable) {
+	can_favorite = p_favoritable;
+}
+
+bool EditorProperty::is_favoritable() const {
+	return can_favorite;
+}
+
 void EditorProperty::set_object_and_property(Object *p_object, const StringName &p_property) {
 	object = p_object;
 	property = p_property;
-	_update_pin_flags();
+
+	_update_flags();
 }
 
 static bool _is_value_potential_override(Node *p_node, const String &p_property) {
@@ -957,12 +969,14 @@ static bool _is_value_potential_override(Node *p_node, const String &p_property)
 	}
 }
 
-void EditorProperty::_update_pin_flags() {
+void EditorProperty::_update_flags() {
 	can_pin = false;
 	pin_hidden = true;
+
 	if (read_only) {
 		return;
 	}
+
 	if (Node *node = Object::cast_to<Node>(object)) {
 		// Avoid errors down the road by ignoring nodes which are not part of a scene
 		if (!node->get_owner()) {
@@ -1038,6 +1052,10 @@ void EditorProperty::menu_option(int p_option) {
 		case MENU_COPY_PROPERTY_PATH: {
 			DisplayServer::get_singleton()->clipboard_set(property_path);
 		} break;
+		case MENU_FAVORITE_PROPERTY: {
+			emit_signal(SNAME("property_favorited"), property, !favorited);
+			queue_redraw();
+		} break;
 		case MENU_PIN_VALUE: {
 			emit_signal(SNAME("property_pinned"), property, !pinned);
 			queue_redraw();
@@ -1095,6 +1113,7 @@ void EditorProperty::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("property_deleted", PropertyInfo(Variant::STRING_NAME, "property")));
 	ADD_SIGNAL(MethodInfo("property_keyed_with_value", PropertyInfo(Variant::STRING_NAME, "property"), PropertyInfo(Variant::NIL, "value", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NIL_IS_VARIANT)));
 	ADD_SIGNAL(MethodInfo("property_checked", PropertyInfo(Variant::STRING_NAME, "property"), PropertyInfo(Variant::BOOL, "checked")));
+	ADD_SIGNAL(MethodInfo("property_favorited", PropertyInfo(Variant::STRING_NAME, "property"), PropertyInfo(Variant::BOOL, "favorited")));
 	ADD_SIGNAL(MethodInfo("property_pinned", PropertyInfo(Variant::STRING_NAME, "property"), PropertyInfo(Variant::BOOL, "pinned")));
 	ADD_SIGNAL(MethodInfo("property_can_revert_changed", PropertyInfo(Variant::STRING_NAME, "property"), PropertyInfo(Variant::BOOL, "can_revert")));
 	ADD_SIGNAL(MethodInfo("resource_selected", PropertyInfo(Variant::STRING, "path"), PropertyInfo(Variant::OBJECT, "resource", PROPERTY_HINT_RESOURCE_TYPE, "Resource")));
@@ -1133,8 +1152,21 @@ void EditorProperty::_update_popup() {
 	menu->set_item_disabled(MENU_PASTE_VALUE, is_read_only());
 	menu->set_item_disabled(MENU_COPY_PROPERTY_PATH, internal);
 
-	if (!pin_hidden) {
+	if (can_favorite || !pin_hidden) {
 		menu->add_separator();
+	}
+
+	if (can_favorite) {
+		if (favorited) {
+			menu->add_icon_item(get_editor_theme_icon(SNAME("Unfavorite")), TTR("Unfavorite Property"), MENU_FAVORITE_PROPERTY);
+			menu->set_item_tooltip(menu->get_item_index(MENU_FAVORITE_PROPERTY), TTR("Make this property be put back at its original place."));
+		} else {
+			menu->add_icon_item(get_editor_theme_icon(SNAME("Favorites")), TTR("Favorite Property"), MENU_FAVORITE_PROPERTY);
+			menu->set_item_tooltip(menu->get_item_index(MENU_FAVORITE_PROPERTY), TTR("Make this property be placed at the top for all objects of this class."));
+		}
+	}
+
+	if (!pin_hidden) {
 		if (can_pin) {
 			menu->add_icon_check_item(get_editor_theme_icon(SNAME("Pin")), TTR("Pin Value"), MENU_PIN_VALUE);
 			menu->set_item_checked(menu->get_item_index(MENU_PIN_VALUE), pinned);
@@ -1223,9 +1255,14 @@ void EditorInspectorPlugin::_bind_methods() {
 
 void EditorInspectorCategory::_notification(int p_what) {
 	switch (p_what) {
-		case NOTIFICATION_ENTER_TREE:
 		case NOTIFICATION_THEME_CHANGED: {
-			menu->set_item_icon(menu->get_item_index(MENU_OPEN_DOCS), get_editor_theme_icon(SNAME("Help")));
+			if (menu) {
+				if (is_favorite) {
+					menu->set_item_icon(menu->get_item_index(EditorInspector::MENU_UNFAVORITE_ALL), get_editor_theme_icon(SNAME("Unfavorite")));
+				} else {
+					menu->set_item_icon(menu->get_item_index(MENU_OPEN_DOCS), get_editor_theme_icon(SNAME("Help")));
+				}
+			}
 		} break;
 		case NOTIFICATION_DRAW: {
 			Ref<StyleBox> sb = get_theme_stylebox(SNAME("bg"));
@@ -1282,6 +1319,15 @@ Control *EditorInspectorCategory::make_custom_tooltip(const String &p_text) cons
 	return memnew(Control); // Make the standard tooltip invisible.
 }
 
+void EditorInspectorCategory::set_as_favorite(EditorInspector *p_for_inspector) {
+	is_favorite = true;
+
+	menu = memnew(PopupMenu);
+	menu->add_item(TTR("Unfavorite All"), EditorInspector::MENU_UNFAVORITE_ALL);
+	add_child(menu);
+	menu->connect(SceneStringName(id_pressed), callable_mp(p_for_inspector, &EditorInspector::_handle_menu_option));
+}
+
 Size2 EditorInspectorCategory::get_minimum_size() const {
 	Ref<Font> font = get_theme_font(SNAME("bold"), EditorStringName(EditorFonts));
 	int font_size = get_theme_font_size(SNAME("bold_size"), EditorStringName(EditorFonts));
@@ -1310,7 +1356,7 @@ void EditorInspectorCategory::_handle_menu_option(int p_option) {
 }
 
 void EditorInspectorCategory::gui_input(const Ref<InputEvent> &p_event) {
-	if (doc_class_name.is_empty()) {
+	if (!is_favorite && doc_class_name.is_empty()) {
 		return;
 	}
 
@@ -1319,18 +1365,19 @@ void EditorInspectorCategory::gui_input(const Ref<InputEvent> &p_event) {
 		return;
 	}
 
-	menu->set_item_disabled(menu->get_item_index(MENU_OPEN_DOCS), !EditorHelp::get_doc_data()->class_list.has(doc_class_name));
+	if (!is_favorite) {
+		if (!menu) {
+			menu = memnew(PopupMenu);
+			menu->add_icon_item(get_editor_theme_icon(SNAME("Help")), TTR("Open Documentation"), MENU_OPEN_DOCS);
+			add_child(menu);
+			menu->connect(SceneStringName(id_pressed), callable_mp(this, &EditorInspectorCategory::_handle_menu_option));
+		}
+		menu->set_item_disabled(menu->get_item_index(MENU_OPEN_DOCS), !EditorHelp::get_doc_data()->class_list.has(doc_class_name));
+	}
 
 	menu->set_position(get_screen_position() + mb_event->get_position());
 	menu->reset_size();
 	menu->popup();
-}
-
-EditorInspectorCategory::EditorInspectorCategory() {
-	menu = memnew(PopupMenu);
-	menu->connect(SceneStringName(id_pressed), callable_mp(this, &EditorInspectorCategory::_handle_menu_option));
-	menu->add_item(TTR("Open Documentation"), MENU_OPEN_DOCS);
-	add_child(menu);
 }
 
 ////////////////////////////////////////////////
@@ -1630,6 +1677,10 @@ void EditorInspectorSection::gui_input(const Ref<InputEvent> &p_event) {
 	} else if (mb.is_valid() && !mb->is_pressed()) {
 		queue_redraw();
 	}
+}
+
+String EditorInspectorSection::get_section() const {
+	return section;
 }
 
 VBoxContainer *EditorInspectorSection::get_vbox() {
@@ -2258,7 +2309,7 @@ void EditorInspectorArray::_setup() {
 			}
 			move_vbox->add_child(ae.move_texture_rect);
 
-			if (element_position < _get_array_count() - 1) {
+			if (element_position < count - 1) {
 				ae.move_down = memnew(Button);
 				ae.move_down->set_icon(get_editor_theme_icon(SNAME("MoveDown")));
 				ae.move_down->connect(SceneStringName(pressed), callable_mp(this, &EditorInspectorArray::_move_element).bind(element_position, element_position + 2));
@@ -2685,7 +2736,13 @@ String EditorInspector::get_selected_path() const {
 void EditorInspector::_parse_added_editors(VBoxContainer *current_vbox, EditorInspectorSection *p_section, Ref<EditorInspectorPlugin> ped) {
 	for (const EditorInspectorPlugin::AddedEditor &F : ped->added_editors) {
 		EditorProperty *ep = Object::cast_to<EditorProperty>(F.property_editor);
-		current_vbox->add_child(F.property_editor);
+
+		if (ep && current_favorites.has(F.properties[0])) {
+			ep->favorited = true;
+			favorites_vbox->add_child(F.property_editor);
+		} else {
+			current_vbox->add_child(F.property_editor);
+		}
 
 		if (ep) {
 			ep->object = object;
@@ -2694,6 +2751,7 @@ void EditorInspector::_parse_added_editors(VBoxContainer *current_vbox, EditorIn
 			ep->connect("property_deleted", callable_mp(this, &EditorInspector::_property_deleted), CONNECT_DEFERRED);
 			ep->connect("property_keyed_with_value", callable_mp(this, &EditorInspector::_property_keyed_with_value));
 			ep->connect("property_checked", callable_mp(this, &EditorInspector::_property_checked));
+			ep->connect("property_favorited", callable_mp(this, &EditorInspector::_set_property_favorited), CONNECT_DEFERRED);
 			ep->connect("property_pinned", callable_mp(this, &EditorInspector::_property_pinned));
 			ep->connect("selected", callable_mp(this, &EditorInspector::_property_selected));
 			ep->connect("multiple_properties_changed", callable_mp(this, &EditorInspector::_multiple_properties_changed));
@@ -2737,7 +2795,7 @@ void EditorInspector::_parse_added_editors(VBoxContainer *current_vbox, EditorIn
 
 			ep->set_read_only(read_only);
 			ep->update_property();
-			ep->_update_pin_flags();
+			ep->_update_flags();
 			ep->update_editor_property_status();
 			ep->set_deletable(deletable_properties);
 			ep->update_cache();
@@ -2773,8 +2831,9 @@ void EditorInspector::update_tree() {
 	// TODO: Can be useful to store more context for the focusable, such as the caret position in LineEdit.
 	StringName current_selected = property_selected;
 	int current_focusable = -1;
-	// Temporarily disable focus following to avoid jumping while the inspector is updating.
-	set_follow_focus(false);
+
+	// Temporarily disable focus following on the root inspector to avoid jumping while the inspector is updating.
+	get_root_inspector()->set_follow_focus(false);
 
 	if (property_focusable != -1) {
 		// Check that focusable is actually focusable.
@@ -2802,6 +2861,7 @@ void EditorInspector::update_tree() {
 	_clear(!object);
 
 	if (!object) {
+		get_root_inspector()->set_follow_focus(true);
 		return;
 	}
 
@@ -2845,6 +2905,7 @@ void EditorInspector::update_tree() {
 	String subgroup;
 	String subgroup_base;
 	int section_depth = 0;
+	bool disable_favorite = false;
 	VBoxContainer *category_vbox = nullptr;
 
 	List<PropertyInfo> plist;
@@ -2852,13 +2913,17 @@ void EditorInspector::update_tree() {
 
 	HashMap<VBoxContainer *, HashMap<String, VBoxContainer *>> vbox_per_path;
 	HashMap<String, EditorInspectorArray *> editor_inspector_array_per_prefix;
+	HashMap<String, HashMap<String, LocalVector<EditorProperty *>>> favorites_to_add;
 
 	Color sscolor = get_theme_color(SNAME("prop_subsection"), EditorStringName(Editor));
 
 	// Get the lists of editors to add the beginning.
 	for (Ref<EditorInspectorPlugin> &ped : valid_plugins) {
 		ped->parse_begin(object);
-		_parse_added_editors(main_vbox, nullptr, ped);
+		_parse_added_editors(begin_vbox, nullptr, ped);
+	}
+	if (begin_vbox->get_child_count()) {
+		begin_vbox->show();
 	}
 
 	StringName doc_name;
@@ -2905,6 +2970,7 @@ void EditorInspector::update_tree() {
 			subgroup = "";
 			subgroup_base = "";
 			section_depth = 0;
+			disable_favorite = false;
 
 			vbox_per_path.clear();
 			editor_inspector_array_per_prefix.clear();
@@ -2967,6 +3033,11 @@ void EditorInspector::update_tree() {
 							category_icon = EditorNode::get_singleton()->get_class_icon(script_name);
 						} else {
 							category_icon = EditorNode::get_singleton()->get_object_icon(scr.ptr(), "Object");
+						}
+
+						// Property favorites aren't compatible with built-in scripts.
+						if (scr->is_built_in()) {
+							disable_favorite = true;
 						}
 					}
 				}
@@ -3064,6 +3135,11 @@ void EditorInspector::update_tree() {
 			} else {
 				array_prefix = "";
 			}
+		}
+
+		// Don't allow to favorite array items.
+		if (!disable_favorite) {
+			disable_favorite = !array_prefix.is_empty();
 		}
 
 		if (!array_prefix.is_empty()) {
@@ -3409,6 +3485,14 @@ void EditorInspector::update_tree() {
 
 		editors.append_array(late_editors);
 
+		const Node *node = Object::cast_to<Node>(object);
+
+		Vector<SceneState::PackState> sstack;
+		if (node != nullptr) {
+			const Node *es = EditorNode::get_singleton()->get_edited_scene();
+			sstack = PropertyUtils::get_node_states_stack(node, es);
+		}
+
 		for (int i = 0; i < editors.size(); i++) {
 			EditorProperty *ep = Object::cast_to<EditorProperty>(editors[i].property_editor);
 			const Vector<String> &properties = editors[i].properties;
@@ -3457,14 +3541,28 @@ void EditorInspector::update_tree() {
 
 				ep->set_draw_warning(draw_warning);
 				ep->set_use_folding(use_folding);
+				ep->set_favoritable(can_favorite && !disable_favorite);
 				ep->set_checkable(checkable);
 				ep->set_checked(checked);
 				ep->set_keying(keying);
 				ep->set_read_only(property_read_only || all_read_only);
-				ep->set_deletable(deletable_properties || p.name.begins_with("metadata/"));
+				if (p.name.begins_with("metadata/")) {
+					Variant _default = Variant();
+					if (node != nullptr) {
+						_default = PropertyUtils::get_property_default_value(node, p.name, nullptr, &sstack, false, nullptr, nullptr);
+					}
+					ep->set_deletable(_default == Variant());
+				} else {
+					ep->set_deletable(deletable_properties);
+				}
 			}
 
-			current_vbox->add_child(editors[i].property_editor);
+			if (ep && ep->is_favoritable() && current_favorites.has(p.name)) {
+				ep->favorited = true;
+				favorites_to_add[group][subgroup].push_back(ep);
+			} else {
+				current_vbox->add_child(editors[i].property_editor);
+			}
 
 			if (ep) {
 				// Eventually, set other properties/signals after the property editor got added to the tree.
@@ -3473,6 +3571,7 @@ void EditorInspector::update_tree() {
 				ep->connect("property_keyed", callable_mp(this, &EditorInspector::_property_keyed));
 				ep->connect("property_deleted", callable_mp(this, &EditorInspector::_property_deleted), CONNECT_DEFERRED);
 				ep->connect("property_keyed_with_value", callable_mp(this, &EditorInspector::_property_keyed_with_value));
+				ep->connect("property_favorited", callable_mp(this, &EditorInspector::_set_property_favorited), CONNECT_DEFERRED);
 				ep->connect("property_checked", callable_mp(this, &EditorInspector::_property_checked));
 				ep->connect("property_pinned", callable_mp(this, &EditorInspector::_property_pinned));
 				ep->connect("selected", callable_mp(this, &EditorInspector::_property_selected));
@@ -3503,13 +3602,86 @@ void EditorInspector::update_tree() {
 				ep->set_internal(p.usage & PROPERTY_USAGE_INTERNAL);
 
 				ep->update_property();
-				ep->_update_pin_flags();
+				ep->_update_flags();
 				ep->update_editor_property_status();
 				ep->update_cache();
 
 				if (current_selected && ep->property == current_selected) {
 					ep->select(current_focusable);
 				}
+			}
+		}
+	}
+
+	if (!current_favorites.is_empty()) {
+		favorites_section->show();
+
+		// Organize the favorited properties in their sections, to keep context and differentiate from others with the same name.
+		bool is_localized = property_name_style == EditorPropertyNameProcessor::STYLE_LOCALIZED;
+		for (const KeyValue<String, HashMap<String, LocalVector<EditorProperty *>>> &KV : favorites_to_add) {
+			String section_name = KV.key;
+			String label;
+			String tooltip;
+			VBoxContainer *parent_vbox = favorites_vbox;
+			if (!section_name.is_empty()) {
+				if (is_localized) {
+					label = EditorPropertyNameProcessor::get_singleton()->translate_group_name(section_name);
+					tooltip = section_name;
+				} else {
+					label = section_name;
+					tooltip = EditorPropertyNameProcessor::get_singleton()->translate_group_name(section_name);
+				}
+
+				EditorInspectorSection *section = memnew(EditorInspectorSection);
+				favorites_groups_vbox->add_child(section);
+				parent_vbox = section->get_vbox();
+				section->setup("", section_name, object, sscolor, false);
+				section->set_tooltip_text(tooltip);
+			}
+
+			for (const KeyValue<String, LocalVector<EditorProperty *>> &KV2 : KV.value) {
+				section_name = KV2.key;
+				VBoxContainer *vbox = parent_vbox;
+				if (!section_name.is_empty()) {
+					if (is_localized) {
+						label = EditorPropertyNameProcessor::get_singleton()->translate_group_name(section_name);
+						tooltip = section_name;
+					} else {
+						label = section_name;
+						tooltip = EditorPropertyNameProcessor::get_singleton()->translate_group_name(section_name);
+					}
+
+					EditorInspectorSection *section = memnew(EditorInspectorSection);
+					vbox->add_child(section);
+					vbox = section->get_vbox();
+					section->setup("", section_name, object, sscolor, false);
+					section->set_tooltip_text(tooltip);
+				}
+
+				for (EditorProperty *ep : KV2.value) {
+					vbox->add_child(ep);
+				}
+			}
+		}
+
+		// Show a separator if there's no category to clearly divide the properties.
+		favorites_separator->hide();
+		if (main_vbox->get_child_count() > 0) {
+			EditorInspectorCategory *category = Object::cast_to<EditorInspectorCategory>(main_vbox->get_child(0));
+			if (!category) {
+				favorites_separator->show();
+			}
+		}
+
+		// Clean up empty sections.
+		for (List<EditorInspectorSection *>::Element *I = sections.back(); I; I = I->prev()) {
+			EditorInspectorSection *section = I->get();
+			if (section->get_vbox()->get_child_count() == 0) {
+				I = I->prev();
+
+				sections.erase(section);
+				vbox_per_path[main_vbox].erase(section->get_section());
+				memdelete(section);
 			}
 		}
 	}
@@ -3539,7 +3711,8 @@ void EditorInspector::update_tree() {
 		// Updating inspector might invalidate some editing owners.
 		EditorNode::get_singleton()->hide_unused_editors();
 	}
-	set_follow_focus(true);
+
+	get_root_inspector()->set_follow_focus(true);
 }
 
 void EditorInspector::update_property(const String &p_prop) {
@@ -3555,6 +3728,19 @@ void EditorInspector::update_property(const String &p_prop) {
 }
 
 void EditorInspector::_clear(bool p_hide_plugins) {
+	begin_vbox->hide();
+	while (begin_vbox->get_child_count()) {
+		memdelete(begin_vbox->get_child(0));
+	}
+
+	favorites_section->hide();
+	while (favorites_vbox->get_child_count()) {
+		memdelete(favorites_vbox->get_child(0));
+	}
+	while (favorites_groups_vbox->get_child_count()) {
+		memdelete(favorites_groups_vbox->get_child(0));
+	}
+
 	while (main_vbox->get_child_count()) {
 		memdelete(main_vbox->get_child(0));
 	}
@@ -3601,6 +3787,10 @@ void EditorInspector::edit(Object *p_object) {
 			update_scroll_request = scroll_cache[object->get_instance_id()]; //done this way because wait until full size is accommodated
 		}
 		object->connect(CoreStringName(property_list_changed), callable_mp(this, &EditorInspector::_changed_callback));
+
+		can_favorite = Object::cast_to<Node>(object) || Object::cast_to<Resource>(object);
+		_update_current_favorites();
+
 		update_tree();
 	}
 
@@ -3784,11 +3974,10 @@ void EditorInspector::set_use_wide_editors(bool p_enable) {
 	wide_editors = p_enable;
 }
 
-void EditorInspector::set_sub_inspector(bool p_enable) {
-	sub_inspector = p_enable;
-	if (!is_inside_tree()) {
-		return;
-	}
+void EditorInspector::set_root_inspector(EditorInspector *p_root_inspector) {
+	root_inspector = p_root_inspector;
+	// Only the root inspector should follow focus.
+	set_follow_focus(false);
 }
 
 void EditorInspector::set_use_deletable_properties(bool p_enabled) {
@@ -4096,23 +4285,177 @@ void EditorInspector::_node_removed(Node *p_node) {
 	}
 }
 
+void EditorInspector::_update_current_favorites() {
+	current_favorites.clear();
+	if (!can_favorite) {
+		return;
+	}
+
+	HashMap<String, PackedStringArray> favorites = EditorSettings::get_singleton()->get_favorite_properties();
+
+	// Fetch script properties.
+	Ref<Script> scr = object->get_script();
+	if (scr.is_valid()) {
+		List<PropertyInfo> plist;
+		// FIXME: Only properties from a saved script will be available, unsaved ones will be ignored.
+		// Can cause a little wonkiness, while nothing serious, would be nice to find a way to get
+		// unsaved ones without needing to get the entire property list of an object.
+		scr->get_script_property_list(&plist);
+
+		String path;
+		HashMap<String, LocalVector<String>> props;
+
+		for (PropertyInfo &p : plist) {
+			if (p.usage & PROPERTY_USAGE_CATEGORY) {
+				path = favorites.has(p.hint_string) ? p.hint_string : String();
+			} else if (p.usage & PROPERTY_USAGE_SCRIPT_VARIABLE && !path.is_empty()) {
+				props[path].push_back(p.name);
+			}
+		}
+
+		// Add favorited properties while removing invalid ones.
+		bool invalid_props = false;
+		for (const KeyValue<String, LocalVector<String>> &KV : props) {
+			path = KV.key;
+			for (int i = 0; i < favorites[path].size(); i++) {
+				String prop = favorites[path][i];
+				if (KV.value.has(prop)) {
+					current_favorites.append(prop);
+				} else {
+					invalid_props = true;
+					favorites[path].erase(prop);
+					i--;
+				}
+			}
+
+			if (favorites[path].is_empty()) {
+				favorites.erase(path);
+			}
+		}
+
+		if (invalid_props) {
+			EditorSettings::get_singleton()->set_favorite_properties(favorites);
+		}
+	}
+
+	// Fetch built-in properties.
+	StringName class_name = object->get_class_name();
+	for (const KeyValue<String, PackedStringArray> &KV : favorites) {
+		if (ClassDB::is_parent_class(class_name, KV.key)) {
+			current_favorites.append_array(KV.value);
+		}
+	}
+}
+
+void EditorInspector::_set_property_favorited(const String &p_path, bool p_favorited) {
+	if (!object) {
+		return;
+	}
+
+	StringName class_name = object->get_class_name();
+	while (!class_name.is_empty()) {
+		bool has_prop = ClassDB::has_property(class_name, p_path, true);
+		if (has_prop) {
+			break;
+		}
+
+		class_name = ClassDB::get_parent_class_nocheck(class_name);
+	}
+
+	if (class_name.is_empty()) {
+		Ref<Script> scr = object->get_script();
+		if (scr.is_valid()) {
+			List<PropertyInfo> plist;
+			scr->get_script_property_list(&plist);
+
+			String path;
+			for (PropertyInfo &p : plist) {
+				if (p.usage & PROPERTY_USAGE_CATEGORY) {
+					path = p.hint_string;
+				} else if (p.usage & PROPERTY_USAGE_SCRIPT_VARIABLE && p.name == p_path) {
+					class_name = path;
+					break;
+				}
+			}
+		}
+
+		ERR_FAIL_COND_MSG(class_name.is_empty(), "Can't favorite invalid property. If said property was from a script and recently renamed, try saving it first.");
+	}
+
+	HashMap<String, PackedStringArray> favorites = EditorSettings::get_singleton()->get_favorite_properties();
+	if (p_favorited) {
+		current_favorites.append(p_path);
+		favorites[class_name].append(p_path);
+	} else {
+		current_favorites.erase(p_path);
+
+		if (favorites.has(class_name) && favorites[class_name].has(p_path)) {
+			if (favorites[class_name].size() > 1) {
+				favorites[class_name].erase(p_path);
+			} else {
+				favorites.erase(class_name);
+			}
+		}
+	}
+	EditorSettings::get_singleton()->set_favorite_properties(favorites);
+
+	update_tree();
+}
+
+void EditorInspector::_clear_current_favorites() {
+	current_favorites.clear();
+
+	HashMap<String, PackedStringArray> favorites = EditorSettings::get_singleton()->get_favorite_properties();
+
+	Ref<Script> scr = object->get_script();
+	if (scr.is_valid()) {
+		List<PropertyInfo> plist;
+		scr->get_script_property_list(&plist);
+
+		for (PropertyInfo &p : plist) {
+			if (p.usage & PROPERTY_USAGE_CATEGORY && favorites.has(p.hint_string)) {
+				favorites.erase(p.hint_string);
+			}
+		}
+	}
+
+	StringName class_name = object->get_class_name();
+	while (class_name) {
+		if (favorites.has(class_name)) {
+			favorites.erase(class_name);
+		}
+
+		class_name = ClassDB::get_parent_class(class_name);
+	}
+
+	EditorSettings::get_singleton()->set_favorite_properties(favorites);
+	update_tree();
+}
+
 void EditorInspector::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_THEME_CHANGED: {
-			main_vbox->add_theme_constant_override("separation", get_theme_constant(SNAME("v_separation"), SNAME("EditorInspector")));
+			favorites_category->icon = get_editor_theme_icon(SNAME("Favorites"));
+
+			int separation = get_theme_constant(SNAME("v_separation"), SNAME("EditorInspector"));
+			base_vbox->add_theme_constant_override("separation", separation);
+			begin_vbox->add_theme_constant_override("separation", separation);
+			favorites_section->add_theme_constant_override("separation", separation);
+			favorites_groups_vbox->add_theme_constant_override("separation", separation);
+			main_vbox->add_theme_constant_override("separation", separation);
 		} break;
 
 		case NOTIFICATION_READY: {
 			EditorFeatureProfileManager::get_singleton()->connect("current_feature_profile_changed", callable_mp(this, &EditorInspector::_feature_profile_changed));
 			set_process(is_visible_in_tree());
 			add_theme_style_override(SceneStringName(panel), get_theme_stylebox(SceneStringName(panel), SNAME("Tree")));
-			if (!sub_inspector) {
+			if (!is_sub_inspector()) {
 				get_tree()->connect("node_removed", callable_mp(this, &EditorInspector::_node_removed));
 			}
 		} break;
 
 		case NOTIFICATION_PREDELETE: {
-			if (!sub_inspector && is_inside_tree()) {
+			if (!is_sub_inspector() && is_inside_tree()) {
 				get_tree()->disconnect("node_removed", callable_mp(this, &EditorInspector::_node_removed));
 			}
 			edit(nullptr);
@@ -4171,7 +4514,7 @@ void EditorInspector::_notification(int p_what) {
 
 		case EditorSettings::NOTIFICATION_EDITOR_SETTINGS_CHANGED: {
 			bool needs_update = false;
-			if (EditorThemeManager::is_generated_theme_outdated() && !sub_inspector) {
+			if (!is_sub_inspector() && EditorThemeManager::is_generated_theme_outdated()) {
 				add_theme_style_override(SceneStringName(panel), get_theme_stylebox(SceneStringName(panel), SNAME("Tree")));
 			}
 
@@ -4197,6 +4540,7 @@ void EditorInspector::_notification(int p_what) {
 void EditorInspector::_changed_callback() {
 	//this is called when property change is notified via notify_property_list_changed()
 	if (object != nullptr) {
+		_update_current_favorites();
 		_edit_request_change(object, String());
 	}
 }
@@ -4257,92 +4601,41 @@ Variant EditorInspector::get_property_clipboard() const {
 	return property_clipboard;
 }
 
+void EditorInspector::_show_add_meta_dialog() {
+	if (!add_meta_dialog) {
+		add_meta_dialog = memnew(AddMetadataDialog());
+		add_meta_dialog->connect(SceneStringName(confirmed), callable_mp(this, &EditorInspector::_add_meta_confirm));
+		add_child(add_meta_dialog);
+	}
+
+	StringName dialog_title;
+	Node *node = Object::cast_to<Node>(object);
+	// If object is derived from Node use node name, if derived from Resource use classname.
+	dialog_title = node ? node->get_name() : StringName(object->get_class());
+
+	List<StringName> existing_meta_keys;
+	object->get_meta_list(&existing_meta_keys);
+	add_meta_dialog->open(dialog_title, existing_meta_keys);
+}
+
 void EditorInspector::_add_meta_confirm() {
-	String name = add_meta_name->get_text();
+	// Ensure metadata is unfolded when adding a new metadata.
+	object->editor_set_section_unfold("metadata", true);
 
-	object->editor_set_section_unfold("metadata", true); // Ensure metadata is unfolded when adding a new metadata.
-
-	Variant defval;
-	Callable::CallError ce;
-	Variant::construct(Variant::Type(add_meta_type->get_selected_id()), defval, nullptr, 0, ce);
+	String name = add_meta_dialog->get_meta_name();
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
 	undo_redo->create_action(vformat(TTR("Add metadata %s"), name));
-	undo_redo->add_do_method(object, "set_meta", name, defval);
+	undo_redo->add_do_method(object, "set_meta", name, add_meta_dialog->get_meta_defval());
 	undo_redo->add_undo_method(object, "remove_meta", name);
 	undo_redo->commit_action();
 }
 
-void EditorInspector::_check_meta_name() {
-	const String meta_name = add_meta_name->get_text();
-
-	if (meta_name.is_empty()) {
-		validation_panel->set_message(EditorValidationPanel::MSG_ID_DEFAULT, TTR("Metadata name can't be empty."), EditorValidationPanel::MSG_ERROR);
-	} else if (!meta_name.is_valid_ascii_identifier()) {
-		validation_panel->set_message(EditorValidationPanel::MSG_ID_DEFAULT, TTR("Metadata name must be a valid identifier."), EditorValidationPanel::MSG_ERROR);
-	} else if (object->has_meta(meta_name)) {
-		validation_panel->set_message(EditorValidationPanel::MSG_ID_DEFAULT, vformat(TTR("Metadata with name \"%s\" already exists."), meta_name), EditorValidationPanel::MSG_ERROR);
-	} else if (meta_name[0] == '_') {
-		validation_panel->set_message(EditorValidationPanel::MSG_ID_DEFAULT, TTR("Names starting with _ are reserved for editor-only metadata."), EditorValidationPanel::MSG_ERROR);
+void EditorInspector::_handle_menu_option(int p_option) {
+	switch (p_option) {
+		case MENU_UNFAVORITE_ALL:
+			_clear_current_favorites();
+			break;
 	}
-}
-
-void EditorInspector::_show_add_meta_dialog() {
-	if (!add_meta_dialog) {
-		add_meta_dialog = memnew(ConfirmationDialog);
-
-		VBoxContainer *vbc = memnew(VBoxContainer);
-		add_meta_dialog->add_child(vbc);
-
-		HBoxContainer *hbc = memnew(HBoxContainer);
-		vbc->add_child(hbc);
-		hbc->add_child(memnew(Label(TTR("Name:"))));
-
-		add_meta_name = memnew(LineEdit);
-		add_meta_name->set_custom_minimum_size(Size2(200 * EDSCALE, 1));
-		hbc->add_child(add_meta_name);
-		hbc->add_child(memnew(Label(TTR("Type:"))));
-
-		add_meta_type = memnew(OptionButton);
-		for (int i = 0; i < Variant::VARIANT_MAX; i++) {
-			if (i == Variant::NIL || i == Variant::RID || i == Variant::CALLABLE || i == Variant::SIGNAL) {
-				continue; //not editable by inspector.
-			}
-			String type = i == Variant::OBJECT ? String("Resource") : Variant::get_type_name(Variant::Type(i));
-
-			add_meta_type->add_icon_item(get_editor_theme_icon(type), type, i);
-		}
-		hbc->add_child(add_meta_type);
-
-		Control *spacing = memnew(Control);
-		vbc->add_child(spacing);
-		spacing->set_custom_minimum_size(Size2(0, 10 * EDSCALE));
-
-		add_meta_dialog->set_ok_button_text(TTR("Add"));
-		add_child(add_meta_dialog);
-		add_meta_dialog->register_text_enter(add_meta_name);
-		add_meta_dialog->connect(SceneStringName(confirmed), callable_mp(this, &EditorInspector::_add_meta_confirm));
-
-		validation_panel = memnew(EditorValidationPanel);
-		vbc->add_child(validation_panel);
-		validation_panel->add_line(EditorValidationPanel::MSG_ID_DEFAULT, TTR("Metadata name is valid."));
-		validation_panel->set_update_callback(callable_mp(this, &EditorInspector::_check_meta_name));
-		validation_panel->set_accept_button(add_meta_dialog->get_ok_button());
-
-		add_meta_name->connect(SceneStringName(text_changed), callable_mp(validation_panel, &EditorValidationPanel::update).unbind(1));
-	}
-
-	Node *node = Object::cast_to<Node>(object);
-	if (node) {
-		add_meta_dialog->set_title(vformat(TTR("Add Metadata Property for \"%s\""), node->get_name()));
-	} else {
-		// This should normally be reached when the object is derived from Resource.
-		add_meta_dialog->set_title(vformat(TTR("Add Metadata Property for \"%s\""), object->get_class()));
-	}
-
-	add_meta_dialog->popup_centered();
-	add_meta_name->grab_focus();
-	add_meta_name->set_text("");
-	validation_panel->update();
 }
 
 void EditorInspector::_bind_methods() {
@@ -4363,10 +4656,38 @@ void EditorInspector::_bind_methods() {
 
 EditorInspector::EditorInspector() {
 	object = nullptr;
+
+	base_vbox = memnew(VBoxContainer);
+	base_vbox->set_h_size_flags(SIZE_EXPAND_FILL);
+	add_child(base_vbox);
+
+	begin_vbox = memnew(VBoxContainer);
+	base_vbox->add_child(begin_vbox);
+	begin_vbox->hide();
+
+	favorites_section = memnew(VBoxContainer);
+	base_vbox->add_child(favorites_section);
+	favorites_section->hide();
+
+	favorites_category = memnew(EditorInspectorCategory);
+	favorites_category->set_as_favorite(this);
+	favorites_section->add_child(favorites_category);
+	favorites_category->label = TTR("Favorites");
+
+	favorites_vbox = memnew(VBoxContainer);
+	favorites_section->add_child(favorites_vbox);
+	favorites_groups_vbox = memnew(VBoxContainer);
+	favorites_section->add_child(favorites_groups_vbox);
+
+	favorites_separator = memnew(HSeparator);
+	favorites_section->add_child(favorites_separator);
+	favorites_separator->hide();
+
 	main_vbox = memnew(VBoxContainer);
 	main_vbox->set_h_size_flags(SIZE_EXPAND_FILL);
 	set_custom_minimum_size(Size2(220 * EDSCALE, 0));
-	add_child(main_vbox);
+	base_vbox->add_child(main_vbox);
+
 	set_horizontal_scroll_mode(SCROLL_MODE_DISABLED);
 	set_follow_focus(true);
 

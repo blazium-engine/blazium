@@ -59,12 +59,13 @@ Files extracted from upstream source:
 ## basis_universal
 
 - Upstream: https://github.com/BinomialLLC/basis_universal
-- Version: 1.16.4 (900e40fb5d2502927360fe2f31762bdbb624455f, 2023)
+- Version: 1.50.0 (051ad6d8a64bb95a79e8601c317055fd1782ad3e, 2024)
 - License: Apache 2.0
 
 Files extracted from upstream source:
 
-- `encoder/` and `transcoder/` folders, minus `jpgd.{cpp,h}`
+- `encoder/` and `transcoder/` folders, with the following files removed from `encoder`:
+  `jpgd.{cpp,h}`, `3rdparty/{qoi.h,tinydds.h,tinyexr.cpp,tinyexr.h}`
 - `LICENSE`
 
 Applied upstream PR https://github.com/BinomialLLC/basis_universal/pull/344 to
@@ -78,7 +79,7 @@ fix build with our own copy of zstd (patch in `patches`).
 
 Files extracted from upstream source:
 
-- `bc6h.glsl`, `CrossPlatformSettings_piece_all.glsl` and `UavCrossPlatform_piece_all.glsl`.
+- `bc6h.glsl`, `bc1.glsl`, `bc4.glsl`, `CrossPlatformSettings_piece_all.glsl` and `UavCrossPlatform_piece_all.glsl`.
 - `LICENSE.md`
 
 
@@ -584,7 +585,7 @@ File extracted from upstream release tarball:
 ## meshoptimizer
 
 - Upstream: https://github.com/zeux/meshoptimizer
-- Version: 0.20 (c21d3be6ddf627f8ca852ba4b6db9903b0557858, 2023)
+- Version: 0.22 (4affad044571506a5724c9a6f15424f43e86f731, 2024)
 - License: MIT
 
 Files extracted from upstream repository:
@@ -670,6 +671,10 @@ comments and a patch is provided in the `patches` folder.
 
 Collection of single-file libraries used in Godot components.
 
+- `bcdec.h`
+  * Upstream: https://github.com/iOrange/bcdec
+  * Version: git (3b29f8f44466c7d59852670f82f53905cf627d48, 2024)
+  * License: MIT
 - `clipper.{cpp,hpp}`
   * Upstream: https://sourceforge.net/projects/polyclipping
   * Version: 6.4.2 (2017) + Godot changes (added optional exceptions handling)
@@ -777,7 +782,7 @@ with the provided patch.
 ## openxr
 
 - Upstream: https://github.com/KhronosGroup/OpenXR-SDK
-- Version: 1.1.38 (f90488c4fb1537f4256d09d4a4d3ad5543ebaf24, 2024)
+- Version: 1.1.41 (7d1c0961351bac61fd7bb72d402649d5ac3f2935, 2024)
 - License: Apache 2.0
 
 Files extracted from upstream source:
@@ -891,23 +896,6 @@ Some downstream changes have been made and are identified by
 `// -- GODOT begin --` and `// -- GODOT end --` comments.
 They can be reapplied using the patches included in the `patches`
 folder, in order.
-
-
-## squish
-
-- Upstream: https://sourceforge.net/projects/libsquish
-- Version: 1.15 (r104, 2017)
-- License: MIT
-
-Files extracted from upstream source:
-
-- `LICENSE.txt`
-- All `.cpp`, `.h` and `.inl` files
-
-Some downstream changes have been made and are identified by
-`// -- GODOT begin --` and `// -- GODOT end --` comments.
-They can be reapplied using the patches included in the `patches`
-folder.
 
 
 ## tinyexr

@@ -323,11 +323,11 @@
 		</member>
 		<member name="application/run/disable_stderr" type="bool" setter="" getter="" default="false">
 			If [code]true[/code], disables printing to standard error. If [code]true[/code], this also hides error and warning messages printed by [method @GlobalScope.push_error] and [method @GlobalScope.push_warning]. See also [member application/run/disable_stdout].
-			Changes to this setting will only be applied upon restarting the application.
+			Changes to this setting will only be applied upon restarting the application. To control this at runtime, use [member Engine.print_error_messages].
 		</member>
 		<member name="application/run/disable_stdout" type="bool" setter="" getter="" default="false">
 			If [code]true[/code], disables printing to standard output. This is equivalent to starting the editor or project with the [code]--quiet[/code] [url=$DOCS_URL/tutorials/editor/command_line_tutorial.html]command line argument[/url]. See also [member application/run/disable_stderr].
-			Changes to this setting will only be applied upon restarting the application.
+			Changes to this setting will only be applied upon restarting the application. To control this at runtime, use [member Engine.print_to_stdout].
 		</member>
 		<member name="application/run/enable_alt_space_menu" type="bool" setter="" getter="" default="false">
 			If [code]true[/code], allows the [kbd]Alt + Space[/kbd] keys to display the window menu. This menu allows the user to perform various window management operations such as moving, resizing, or minimizing the window.
@@ -385,6 +385,7 @@
 		<member name="audio/driver/driver" type="String" setter="" getter="">
 			Specifies the audio driver to use. This setting is platform-dependent as each platform supports different audio drivers. If left empty, the default audio driver will be used.
 			The [code]Dummy[/code] audio driver disables all audio playback and recording, which is useful for non-game applications as it reduces CPU usage. It also prevents the engine from appearing as an application playing audio in the OS' audio mixer.
+			To query the value that is being used at run-time (which may be overridden by command-line arguments or headless mode), use [method AudioServer.get_driver_name].
 			[b]Note:[/b] The driver in use can be overridden at runtime via the [code]--audio-driver[/code] [url=$DOCS_URL/tutorials/editor/command_line_tutorial.html]command line argument[/url].
 		</member>
 		<member name="audio/driver/enable_input" type="bool" setter="" getter="" default="false">
@@ -392,7 +393,9 @@
 			[b]Note:[/b] If the operating system blocks access to audio input devices (due to the user's privacy settings), audio capture will only return silence. On Windows 10 and later, make sure that apps are allowed to access the microphone in the OS' privacy settings.
 		</member>
 		<member name="audio/driver/mix_rate" type="int" setter="" getter="" default="44100">
-			The mixing rate used for audio (in Hz). In general, it's better to not touch this and leave it to the host operating system.
+			Target mixing rate used for audio (in Hz). In general, it's better to not touch this and leave it to the host operating system.
+			[b]Note:[/b] On iOS and macOS, mixing rate is determined by audio driver, this value is ignored.
+			[b]Note:[/b] Input and output mixing rates might be different. Use [method AudioServer.get_mix_rate] and [method AudioServer.get_input_mix_rate] to get actual values.
 		</member>
 		<member name="audio/driver/mix_rate.web" type="int" setter="" getter="" default="0">
 			Safer override for [member audio/driver/mix_rate] in the Web platform. Here [code]0[/code] means "let the browser choose" (since some browsers do not like forcing the mix rate).
@@ -818,6 +821,17 @@
 		<member name="display/window/energy_saving/keep_screen_on" type="bool" setter="" getter="" default="true">
 			If [code]true[/code], keeps the screen on (even in case of inactivity), so the screensaver does not take over. Works on desktop and mobile platforms.
 		</member>
+		<member name="display/window/frame_pacing/android/enable_frame_pacing" type="bool" setter="" getter="" default="true">
+			Enable Swappy for stable frame pacing on Android. Highly recommended.
+			[b]Note:[/b] This option will be forced off when using OpenXR.
+		</member>
+		<member name="display/window/frame_pacing/android/swappy_mode" type="int" setter="" getter="" default="2">
+			Swappy mode to use. The options are:
+			- pipeline_forced_on: Try to honor [member Engine.max_fps]. Pipelining is always on. This is the same behavior as Desktop PC.
+			- auto_fps_pipeline_forced_on: Autocalculate max fps. Actual max_fps will be between 0 and [member Engine.max_fps]. While this sounds convenient, beware that Swappy will often downgrade max fps until it finds something that can be met and sustained. That means if your game runs between 40fps and 60fps on a 60hz screen, after some time Swappy will downgrade max fps so that the game renders at perfect 30fps.
+			- auto_fps_auto_pipeline: Same as auto_fps_pipeline_forced_on, but if Swappy detects that rendering is very fast (e.g. it takes &lt; 8ms to render on a 60hz screen) Swappy will disable pipelining to minimize input latency. This is the default.
+			[b]Note:[/b] If [member Engine.max_fps] is 0, actual max_fps will considered as to be the screen's refresh rate (often 60hz, 90hz or 120hz depending on device model and OS settings).
+		</member>
 		<member name="display/window/handheld/orientation" type="int" setter="" getter="" default="0">
 			The default screen orientation to use on mobile devices. See [enum DisplayServer.ScreenOrientation] for possible values.
 			[b]Note:[/b] When set to a portrait orientation, this project setting does not flip the project resolution's width and height automatically. Instead, you have to set [member display/window/size/viewport_width] and [member display/window/size/viewport_height] accordingly.
@@ -876,6 +890,10 @@
 			[b]Note:[/b] This property is only read when the project starts. To change whether the window is resizable at runtime, set [member Window.unresizable] instead on the root Window, which can be retrieved using [code]get_viewport().get_window()[/code]. [member Window.unresizable] takes the opposite value of this setting.
 			[b]Note:[/b] Certain window managers can be configured to ignore the non-resizable status of a window. Do not rely on this setting as a guarantee that the window will [i]never[/i] be resizable.
 			[b]Note:[/b] This setting is ignored on iOS.
+		</member>
+		<member name="display/window/size/sharp_corners" type="bool" setter="" getter="" default="false">
+			If [code]true[/code], the main window uses sharp corners by default.
+			[b]Note:[/b] This property is implemented only on Windows (11).
 		</member>
 		<member name="display/window/size/transparent" type="bool" setter="" getter="" default="false">
 			If [code]true[/code], enables a window manager hint that the main window background [i]can[/i] be transparent. This does not make the background actually transparent. For the background to be transparent, the root viewport must also be made transparent by enabling [member rendering/viewport/transparent_background].
@@ -1432,7 +1450,7 @@
 			macOS specific override for the shortcut to select the word currently under the caret.
 		</member>
 		<member name="input/ui_text_skip_selection_for_next_occurrence" type="Dictionary" setter="" getter="">
-			If no selection is currently active with the last caret in text fields, searches for the next occurrence of the the word currently under the caret and moves the caret to the next occurrence. The action can be performed sequentially for other occurrences of the word under the last caret.
+			If no selection is currently active with the last caret in text fields, searches for the next occurrence of the word currently under the caret and moves the caret to the next occurrence. The action can be performed sequentially for other occurrences of the word under the last caret.
 			If a selection is currently active with the last caret in text fields, searches for the next occurrence of the selection, adds a caret, selects the next occurrence then deselects the previous selection and its associated caret. The action can be performed sequentially for other occurrences of the selection of the last caret.
 			The viewport is adjusted to the latest newly added caret.
 			[b]Note:[/b] Default [code]ui_*[/code] actions cannot be removed as they are necessary for the internal logic of several [Control]s. The events assigned to the action can however be modified.
@@ -2409,6 +2427,9 @@
 			[b]Note:[/b] This property is only read when the project starts. To change the physics FPS at runtime, set [member Engine.physics_ticks_per_second] instead.
 			[b]Note:[/b] Only [member physics/common/max_physics_steps_per_frame] physics ticks may be simulated per rendered frame at most. If more physics ticks have to be simulated per rendered frame to keep up with rendering, the project will appear to slow down (even if [code]delta[/code] is used consistently in physics calculations). Therefore, it is recommended to also increase [member physics/common/max_physics_steps_per_frame] if increasing [member physics/common/physics_ticks_per_second] significantly above its default value.
 		</member>
+		<member name="rendering/2d/batching/item_buffer_size" type="int" setter="" getter="" default="16384">
+			Maximum number of canvas item commands that can be batched into a single draw call.
+		</member>
 		<member name="rendering/2d/sdf/oversize" type="int" setter="" getter="" default="1">
 			Controls how much of the original viewport size should be covered by the 2D signed distance field. This SDF can be sampled in [CanvasItem] shaders and is used for [GPUParticles2D] collision. Higher values allow portions of occluders located outside the viewport to still be taken into account in the generated signed distance field, at the cost of performance. If you notice particles falling through [LightOccluder2D]s as the occluders leave the viewport, increase this setting.
 			The percentage specified is added on each axis and on both sides. For example, with the default setting of 120%, the signed distance field will cover 20% of the viewport's size outside the viewport on each side (top, right, bottom, left).
@@ -2816,6 +2837,8 @@
 			[b]Forward Plus[/b]: High-end renderer designed for Desktop devices. Has a higher base overhead, but scales well with complex scenes. Not suitable for older devices or mobile.
 			[b]Mobile[/b]: Modern renderer designed for mobile devices. Has a lower base overhead than Forward Plus, but does not scale as well to large scenes with many elements.
 			[b]GL Compatibility[/b]: Low-end renderer designed for older devices. Based on the limitations of the OpenGL 3.3/ OpenGL ES 3.0 / WebGL 2 APIs.
+			This can be overridden using the [code]--rendering-method &lt;method&gt;[/code] command line argument.
+			[b]Note:[/b] The actual rendering method may be automatically changed by the engine as a result of a fallback, or a user-specified command line argument. To get the actual rendering method that is used at runtime, use [method RenderingServer.get_current_rendering_method] instead of reading this project setting's value.
 		</member>
 		<member name="rendering/renderer/rendering_method.mobile" type="String" setter="" getter="" default="&quot;mobile&quot;">
 			Override for [member rendering/renderer/rendering_method] on mobile devices.
@@ -2839,7 +2862,8 @@
 			Depending on the complexity of scenes, this value may be lowered or may need to be raised.
 		</member>
 		<member name="rendering/rendering_device/driver" type="String" setter="" getter="">
-			Sets the driver to be used by the renderer when using a RenderingDevice-based renderer like the clustered renderer or the mobile renderer. This property can not be edited directly, instead, set the driver using the platform-specific overrides.
+			Sets the driver to be used by the renderer when using a RenderingDevice-based renderer like the clustered renderer or the mobile renderer. This property can't be edited directly. Instead, set the driver using the platform-specific overrides. This can be overridden using the [code]--rendering-driver &lt;driver&gt;[/code] command line argument.
+			[b]Note:[/b] The actual rendering driver may be automatically changed by the engine as a result of a fallback, or a user-specified command line argument. To get the actual rendering driver that is used at runtime, use [method RenderingServer.get_current_rendering_driver_name] instead of reading this project setting's value.
 		</member>
 		<member name="rendering/rendering_device/driver.android" type="String" setter="" getter="">
 			Android override for [member rendering/rendering_device/driver].
@@ -2926,11 +2950,6 @@
 		</member>
 		<member name="rendering/shading/overrides/force_vertex_shading" type="bool" setter="" getter="" default="false">
 			If [code]true[/code], forces vertex shading for all rendering. This can increase performance a lot, but also reduces quality immensely. Can be used to optimize performance on low-end mobile devices.
-			[b]Note:[/b] This setting currently has no effect, as vertex shading is not implemented yet.
-		</member>
-		<member name="rendering/shading/overrides/force_vertex_shading.mobile" type="bool" setter="" getter="" default="true">
-			Lower-end override for [member rendering/shading/overrides/force_vertex_shading] on mobile devices, due to performance concerns or driver support.
-			[b]Note:[/b] This setting currently has no effect, as vertex shading is not implemented yet.
 		</member>
 		<member name="rendering/textures/canvas_textures/default_texture_filter" type="int" setter="" getter="" default="1">
 			The default texture filtering mode to use for [CanvasItem]s built-in texture. In shaders, this texture is accessed as [code]TEXTURE[/code].
@@ -2964,10 +2983,13 @@
 		<member name="rendering/textures/lossless_compression/force_png" type="bool" setter="" getter="" default="false">
 			If [code]true[/code], the texture importer will import lossless textures using the PNG format. Otherwise, it will default to using WebP.
 		</member>
+		<member name="rendering/textures/vram_compression/cache_gpu_compressor" type="bool" setter="" getter="" default="true">
+			If [code]true[/code], the GPU texture compressor will cache the local RenderingDevice and its resources (shaders and pipelines), allowing for faster subsequent imports at a memory cost.
+		</member>
 		<member name="rendering/textures/vram_compression/compress_with_gpu" type="bool" setter="" getter="" default="true">
-			If [code]true[/code], the texture importer will utilize the GPU for compressing textures, which makes large textures import significantly faster.
-			[b]Note:[/b] This setting requires either Vulkan or D3D12 available as a rendering backend.
-			[b]Note:[/b] Currently this only affects BC6H compression, which is used on Desktop and Console for HDR images.
+			If [code]true[/code], the texture importer will utilize the GPU for compressing textures, improving the import time of large images.
+			[b]Note:[/b] This only functions on a device which supports either Vulkan, D3D12, or Metal available as a rendering backend.
+			[b]Note:[/b] Currently this only affects certain compressed formats (BC1, BC4, and BC6), all of which are exclusive to desktop platforms and consoles.
 		</member>
 		<member name="rendering/textures/vram_compression/import_etc2_astc" type="bool" setter="" getter="" default="false">
 			If [code]true[/code], the texture importer will import VRAM-compressed textures using the Ericsson Texture Compression 2 algorithm for lower quality textures and normal maps and Adaptable Scalable Texture Compression algorithm for high quality textures (in 4×4 block size).

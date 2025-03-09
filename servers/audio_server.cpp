@@ -1248,6 +1248,8 @@ void AudioServer::stop_playback_stream(Ref<AudioStreamPlayback> p_playback) {
 		return;
 	}
 
+	p_playback->stop();
+
 	AudioStreamPlaybackListNode *playback_node = _find_playback_list_node(p_playback);
 	if (!playback_node) {
 		return;
@@ -1438,6 +1440,10 @@ uint64_t AudioServer::get_mixed_frames() const {
 	return mix_frames;
 }
 
+String AudioServer::get_driver_name() const {
+	return AudioDriver::get_singleton()->get_name();
+}
+
 void AudioServer::notify_listener_changed() {
 	for (CallbackItem *ci : listener_changed_callback_list) {
 		ci->callback(ci->userdata);
@@ -1487,7 +1493,7 @@ void AudioServer::init() {
 
 void AudioServer::update() {
 #ifdef DEBUG_ENABLED
-	if (EngineDebugger::is_profiling("servers")) {
+	if (EngineDebugger::is_profiling(SNAME("servers"))) {
 		// Driver time includes server time + effects times
 		// Server time includes effects times
 		uint64_t driver_time = AudioDriver::get_singleton()->get_profiling_time();
@@ -1610,6 +1616,10 @@ AudioServer::SpeakerMode AudioServer::get_speaker_mode() const {
 
 float AudioServer::get_mix_rate() const {
 	return AudioDriver::get_singleton()->get_mix_rate();
+}
+
+float AudioServer::get_input_mix_rate() const {
+	return AudioDriver::get_singleton()->get_input_mix_rate();
 }
 
 float AudioServer::read_output_peak_db() const {
@@ -1944,6 +1954,9 @@ void AudioServer::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("get_speaker_mode"), &AudioServer::get_speaker_mode);
 	ClassDB::bind_method(D_METHOD("get_mix_rate"), &AudioServer::get_mix_rate);
+	ClassDB::bind_method(D_METHOD("get_input_mix_rate"), &AudioServer::get_input_mix_rate);
+
+	ClassDB::bind_method(D_METHOD("get_driver_name"), &AudioServer::get_driver_name);
 
 	ClassDB::bind_method(D_METHOD("get_output_device_list"), &AudioServer::get_output_device_list);
 	ClassDB::bind_method(D_METHOD("get_output_device"), &AudioServer::get_output_device);

@@ -90,7 +90,7 @@ public:
 
 	TerrainConstraint(Ref<TileSet> p_tile_set, const Vector2i &p_position, int p_terrain); // For the center terrain bit
 	TerrainConstraint(Ref<TileSet> p_tile_set, const Vector2i &p_position, const TileSet::CellNeighbor &p_bit, int p_terrain); // For peering bits
-	TerrainConstraint(){};
+	TerrainConstraint() {}
 };
 
 #ifdef DEBUG_ENABLED
@@ -108,7 +108,7 @@ struct CellData {
 	// Rendering.
 	Ref<RenderingQuadrant> rendering_quadrant;
 	SelfList<CellData> rendering_quadrant_list_element;
-	LocalVector<RID> occluders;
+	LocalVector<LocalVector<RID>> occluders;
 
 	// Physics.
 	LocalVector<RID> bodies;
