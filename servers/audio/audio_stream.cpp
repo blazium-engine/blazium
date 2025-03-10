@@ -72,7 +72,7 @@ void AudioStreamPlayback::seek(double p_time) {
 
 int AudioStreamPlayback::mix(AudioFrame *p_buffer, float p_rate_scale, int p_frames) {
 	int ret = 0;
-	GDVIRTUAL_REQUIRED_CALL(_mix, p_buffer, p_rate_scale, p_frames, ret);
+	GDVIRTUAL_CALL(_mix, p_buffer, p_rate_scale, p_frames, ret);
 	return ret;
 }
 
@@ -175,12 +175,12 @@ void AudioStreamPlaybackResampled::begin_resample() {
 
 int AudioStreamPlaybackResampled::_mix_internal(AudioFrame *p_buffer, int p_frames) {
 	int ret = 0;
-	GDVIRTUAL_REQUIRED_CALL(_mix_resampled, p_buffer, p_frames, ret);
+	GDVIRTUAL_CALL(_mix_resampled, p_buffer, p_frames, ret);
 	return ret;
 }
 float AudioStreamPlaybackResampled::get_stream_sampling_rate() {
 	float ret = 0;
-	GDVIRTUAL_REQUIRED_CALL(_get_stream_sampling_rate, ret);
+	GDVIRTUAL_CALL(_get_stream_sampling_rate, ret);
 	return ret;
 }
 
@@ -390,7 +390,7 @@ int AudioStreamPlaybackMicrophone::_mix_internal(AudioFrame *p_buffer, int p_fra
 
 	Vector<int32_t> buf = AudioDriver::get_singleton()->get_input_buffer();
 	unsigned int input_size = AudioDriver::get_singleton()->get_input_size();
-	int mix_rate = AudioDriver::get_singleton()->get_mix_rate();
+	int mix_rate = AudioDriver::get_singleton()->get_input_mix_rate();
 	unsigned int playback_delay = MIN(((50 * mix_rate) / 1000) * 2, buf.size() >> 1);
 #ifdef DEBUG_ENABLED
 	unsigned int input_position = AudioDriver::get_singleton()->get_input_position();
@@ -441,7 +441,7 @@ int AudioStreamPlaybackMicrophone::mix(AudioFrame *p_buffer, float p_rate_scale,
 }
 
 float AudioStreamPlaybackMicrophone::get_stream_sampling_rate() {
-	return AudioDriver::get_singleton()->get_mix_rate();
+	return AudioDriver::get_singleton()->get_input_mix_rate();
 }
 
 void AudioStreamPlaybackMicrophone::start(double p_from_pos) {

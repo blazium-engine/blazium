@@ -63,6 +63,7 @@ private:
 		Ref<TextParagraph> text_buf;
 		String language;
 		TextDirection text_direction = TEXT_DIRECTION_AUTO;
+		AutoTranslateMode auto_translate_mode = AUTO_TRANSLATE_MODE_INHERIT;
 
 		bool selectable = true;
 		bool selected = false;
@@ -99,6 +100,9 @@ private:
 	bool ensure_selected_visible = false;
 	bool same_column_width = false;
 	bool allow_search = true;
+
+	bool auto_width = false;
+	float auto_width_value = 0.0;
 
 	bool auto_height = false;
 	float auto_height_value = 0.0;
@@ -160,6 +164,8 @@ private:
 	void _shape_text(int p_idx);
 	void _mouse_exited();
 
+	String _atr(int p_idx, const String &p_text) const;
+
 protected:
 	void _notification(int p_what);
 	bool _set(const StringName &p_name, const Variant &p_value);
@@ -183,6 +189,9 @@ public:
 
 	void set_item_language(int p_idx, const String &p_language);
 	String get_item_language(int p_idx) const;
+
+	void set_item_auto_translate_mode(int p_idx, AutoTranslateMode p_mode);
+	AutoTranslateMode get_item_auto_translate_mode(int p_idx) const;
 
 	void set_item_icon(int p_idx, const Ref<Texture2D> &p_icon);
 	Ref<Texture2D> get_item_icon(int p_idx) const;
@@ -285,6 +294,9 @@ public:
 
 	void set_icon_scale(real_t p_scale);
 	real_t get_icon_scale() const;
+
+	void set_auto_width(bool p_enable);
+	bool has_auto_width() const;
 
 	void set_auto_height(bool p_enable);
 	bool has_auto_height() const;

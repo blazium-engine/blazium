@@ -218,15 +218,18 @@ void MenuBar::bind_global_menu() {
 	int global_start_idx = -1;
 	int count = nmenu->get_item_count(main_menu);
 	String prev_tag;
-	for (int i = 0; i < count; i++) {
-		String tag = nmenu->get_item_tag(main_menu, i).operator String().get_slice("#", 1);
-		if (!tag.is_empty() && tag != prev_tag) {
-			if (i >= start_index) {
-				global_start_idx = i;
-				break;
+	if (start_index >= 0) {
+		for (int i = 0; i < count; i++) {
+			String tag = nmenu->get_item_tag(main_menu, i).operator String().get_slice("#", 1);
+			if (!tag.is_empty() && tag != prev_tag) {
+				MenuBar *mb = Object::cast_to<MenuBar>(ObjectDB::get_instance(ObjectID(static_cast<uint64_t>(tag.to_int()))));
+				if (mb && mb->get_start_index() >= start_index) {
+					global_start_idx = i;
+					break;
+				}
 			}
+			prev_tag = tag;
 		}
-		prev_tag = tag;
 	}
 	if (global_start_idx == -1) {
 		global_start_idx = count;
@@ -507,6 +510,7 @@ void MenuBar::_refresh_menu_names() {
 		if (!popups[i]->has_meta("_menu_name") && String(popups[i]->get_name()) != get_menu_title(i)) {
 			menu_cache.write[i].name = popups[i]->get_name();
 			shape(menu_cache.write[i]);
+			queue_redraw();
 			if (is_global && menu_cache[i].submenu_rid.is_valid()) {
 				int item_idx = nmenu->find_item_index_with_submenu(main_menu, menu_cache[i].submenu_rid);
 				if (item_idx >= 0) {

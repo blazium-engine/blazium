@@ -68,6 +68,7 @@ static const char *android_perms[] = {
 	"ACCESS_COARSE_LOCATION",
 	"ACCESS_FINE_LOCATION",
 	"ACCESS_LOCATION_EXTRA_COMMANDS",
+	"ACCESS_MEDIA_LOCATION",
 	"ACCESS_MOCK_LOCATION",
 	"ACCESS_NETWORK_STATE",
 	"ACCESS_SURFACE_FLINGER",
@@ -155,6 +156,10 @@ static const char *android_perms[] = {
 	"READ_HISTORY_BOOKMARKS",
 	"READ_INPUT_STATE",
 	"READ_LOGS",
+	"READ_MEDIA_AUDIO",
+	"READ_MEDIA_IMAGES",
+	"READ_MEDIA_VIDEO",
+	"READ_MEDIA_VISUAL_USER_SELECTED",
 	"READ_PHONE_STATE",
 	"READ_PROFILE",
 	"READ_SMS",
@@ -2905,6 +2910,14 @@ Error EditorExportPlatformAndroid::sign_apk(const Ref<EditorExportPreset> &p_pre
 #endif
 
 	print_verbose("Successfully completed signing build.");
+
+#ifdef ANDROID_ENABLED
+	bool prompt_apk_install = EDITOR_GET("export/android/install_exported_apk");
+	if (prompt_apk_install) {
+		OS_Android::get_singleton()->shell_open(apk_path);
+	}
+#endif
+
 	return OK;
 }
 
@@ -3281,8 +3294,11 @@ Error EditorExportPlatformAndroid::export_project_helper(const Ref<EditorExportP
 			cmdline.push_back(apk_build_command);
 		}
 
+		String addons_directory = ProjectSettings::get_singleton()->globalize_path("res://addons");
+
 		cmdline.push_back("-p"); // argument to specify the start directory.
 		cmdline.push_back(build_path); // start directory.
+		cmdline.push_back("-Paddons_directory=" + addons_directory); // path to the addon directory as it may contain jar or aar dependencies
 		cmdline.push_back("-Pexport_package_name=" + package_name); // argument to specify the package name.
 		cmdline.push_back("-Pexport_version_code=" + version_code); // argument to specify the version code.
 		cmdline.push_back("-Pexport_version_name=" + version_name); // argument to specify the version name.

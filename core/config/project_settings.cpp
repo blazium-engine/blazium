@@ -495,6 +495,7 @@ bool ProjectSettings::_load_resource_pack(const String &p_pack, bool p_replace_f
 }
 
 void ProjectSettings::_convert_to_last_version(int p_from_version) {
+#ifndef DISABLE_DEPRECATED
 	if (p_from_version <= 3) {
 		// Converts the actions from array to dictionary (array of events to dictionary with deadzone + events)
 		for (KeyValue<StringName, ProjectSettings::VariantContainer> &E : props) {
@@ -508,6 +509,22 @@ void ProjectSettings::_convert_to_last_version(int p_from_version) {
 			}
 		}
 	}
+	if (p_from_version <= 5) {
+		// Converts the device in events from -1 (emulated events) to -3 (all events).
+		for (KeyValue<StringName, ProjectSettings::VariantContainer> &E : props) {
+			if (String(E.key).begins_with("input/")) {
+				Dictionary action = E.value.variant;
+				Array events = action["events"];
+				for (int i = 0; i < events.size(); i++) {
+					Ref<InputEvent> ev = events[i];
+					if (ev.is_valid() && ev->get_device() == -1) { // -1 was the previous value (GH-97707).
+						ev->set_device(InputEvent::DEVICE_ID_ALL_DEVICES);
+					}
+				}
+			}
+		}
+	}
+#endif // DISABLE_DEPRECATED
 }
 
 /*
@@ -1016,7 +1033,7 @@ Error ProjectSettings::save_custom(const String &p_path, const CustomMap &p_cust
 		}
 	}
 	// Check for the existence of a csproj file.
-	if (_csproj_exists(p_path.get_base_dir())) {
+	if (_csproj_exists(get_resource_path())) {
 		// If there is a csproj file, add the C# feature if it doesn't already exist.
 		if (!project_features.has("C#")) {
 			project_features.append("C#");
@@ -1171,22 +1188,16 @@ bool ProjectSettings::is_project_loaded() const {
 }
 
 bool ProjectSettings::_property_can_revert(const StringName &p_name) const {
-	if (!props.has(p_name)) {
-		return false;
-	}
-
-	return props[p_name].initial != props[p_name].variant;
+	return props.has(p_name);
 }
 
 bool ProjectSettings::_property_get_revert(const StringName &p_name, Variant &r_property) const {
-	if (!props.has(p_name)) {
-		return false;
+	const RBMap<StringName, ProjectSettings::VariantContainer>::Element *value = props.find(p_name);
+	if (value) {
+		r_property = value->value().initial.duplicate();
+		return true;
 	}
-
-	// Duplicate so that if value is array or dictionary, changing the setting will not change the stored initial value.
-	r_property = props[p_name].initial.duplicate();
-
-	return true;
+	return false;
 }
 
 void ProjectSettings::set_setting(const String &p_setting, const Variant &p_value) {
@@ -1473,6 +1484,7 @@ ProjectSettings::ProjectSettings() {
 	GLOBAL_DEF("display/window/size/transparent", false);
 	GLOBAL_DEF("display/window/size/extend_to_title", false);
 	GLOBAL_DEF("display/window/size/no_focus", false);
+	GLOBAL_DEF("display/window/size/sharp_corners", false);
 
 	GLOBAL_DEF(PropertyInfo(Variant::INT, "display/window/size/window_width_override", PROPERTY_HINT_RANGE, "0,7680,1,or_greater"), 0); // 8K resolution
 	GLOBAL_DEF(PropertyInfo(Variant::INT, "display/window/size/window_height_override", PROPERTY_HINT_RANGE, "0,4320,1,or_greater"), 0); // 8K resolution
@@ -1498,6 +1510,10 @@ ProjectSettings::ProjectSettings() {
 	GLOBAL_DEF("display/window/subwindows/embed_subwindows", true);
 	// Keep the enum values in sync with the `DisplayServer::VSyncMode` enum.
 	custom_prop_info["display/window/vsync/vsync_mode"] = PropertyInfo(Variant::INT, "display/window/vsync/vsync_mode", PROPERTY_HINT_ENUM, "Disabled,Enabled,Adaptive,Mailbox");
+
+	GLOBAL_DEF("display/window/frame_pacing/android/enable_frame_pacing", true);
+	GLOBAL_DEF(PropertyInfo(Variant::INT, "display/window/frame_pacing/android/swappy_mode", PROPERTY_HINT_ENUM, "pipeline_forced_on,auto_fps_pipeline_forced_on,auto_fps_auto_pipeline"), 2);
+
 	custom_prop_info["rendering/driver/threads/thread_model"] = PropertyInfo(Variant::INT, "rendering/driver/threads/thread_model", PROPERTY_HINT_ENUM, "Single-Unsafe,Single-Safe,Multi-Threaded");
 	GLOBAL_DEF("physics/2d/run_on_separate_thread", false);
 	GLOBAL_DEF("physics/3d/run_on_separate_thread", false);
@@ -1580,6 +1596,7 @@ ProjectSettings::ProjectSettings() {
 
 ProjectSettings::ProjectSettings(const String &p_path) {
 	if (load_custom(p_path) == OK) {
+		resource_path = p_path.get_base_dir();
 		project_loaded = true;
 	}
 }

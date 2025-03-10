@@ -35,16 +35,11 @@
 #include "core/io/missing_resource.h"
 #include "core/object/script_language.h"
 
-// Version 2: Changed names for Basis, AABB, Vectors, etc.
-// Version 3: New string ID for ext/subresources, breaks forward compat.
-// Version 4: PackedByteArray can be base64 encoded, and PackedVector4Array was added.
-#define FORMAT_VERSION 4
-// For compat, save as version 3 if not using PackedVector4Array or no big PackedByteArray.
-#define FORMAT_VERSION_COMPAT 3
-
-#define _printerr() ERR_PRINT(String(res_path + ":" + itos(lines) + " - Parse Error: " + error_text).utf8().get_data());
-
 ///
+
+void ResourceLoaderText::_printerr() {
+	ERR_PRINT(String(res_path + ":" + itos(lines) + " - Parse Error: " + error_text).utf8().get_data());
+}
 
 Ref<Resource> ResourceLoaderText::get_resource() {
 	return resource;
@@ -1681,6 +1676,8 @@ static String _resource_get_class(Ref<Resource> p_resource) {
 }
 
 Error ResourceFormatSaverTextInstance::save(const String &p_path, const Ref<Resource> &p_resource, uint32_t p_flags) {
+	Resource::seed_scene_unique_id(p_path.hash()); // Seeding for save path should make it deterministic for importers.
+
 	if (p_path.ends_with(".tscn")) {
 		packed_scene = p_resource;
 	}
@@ -1734,7 +1731,7 @@ Error ResourceFormatSaverTextInstance::save(const String &p_path, const Ref<Reso
 		if (load_steps > 1) {
 			title += "load_steps=" + itos(load_steps) + " ";
 		}
-		title += "format=" + itos(use_compat ? FORMAT_VERSION_COMPAT : FORMAT_VERSION) + "";
+		title += "format=" + itos(use_compat ? ResourceLoaderText::FORMAT_VERSION_COMPAT : ResourceLoaderText::FORMAT_VERSION) + "";
 
 		ResourceUID::ID uid = ResourceSaver::get_resource_id_for_path(local_path, true);
 

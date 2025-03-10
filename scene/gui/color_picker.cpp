@@ -1490,6 +1490,7 @@ void ColorPicker::_pick_button_pressed() {
 		picker_window->set_size(Vector2i(1, 1));
 		picker_window->connect(SceneStringName(visibility_changed), callable_mp(this, &ColorPicker::_pick_finished));
 		add_child(picker_window, false, INTERNAL_MODE_FRONT);
+		picker_window->force_parent_owned();
 	}
 	picker_window->popup();
 }
@@ -1518,26 +1519,25 @@ void ColorPicker::_pick_button_pressed_legacy() {
 		picker_window->hide();
 		picker_window->set_transient(true);
 		add_child(picker_window, false, INTERNAL_MODE_FRONT);
+		picker_window->force_parent_owned();
 
 		picker_texture_rect = memnew(TextureRect);
 		picker_texture_rect->set_anchors_preset(Control::PRESET_FULL_RECT);
+		picker_texture_rect->set_expand_mode(TextureRect::EXPAND_IGNORE_SIZE);
 		picker_window->add_child(picker_texture_rect);
 		picker_texture_rect->set_default_cursor_shape(CURSOR_POINTING_HAND);
 		picker_texture_rect->connect(SceneStringName(gui_input), callable_mp(this, &ColorPicker::_picker_texture_input));
 
-		picker_preview = memnew(Panel);
-		picker_preview->set_anchors_preset(Control::PRESET_CENTER_TOP);
-		picker_preview->set_mouse_filter(MOUSE_FILTER_IGNORE);
-		picker_window->add_child(picker_preview);
-
 		picker_preview_label = memnew(Label);
-		picker_preview->set_anchors_preset(Control::PRESET_CENTER_TOP);
-		picker_preview_label->set_text("Color Picking active");
-		picker_preview->add_child(picker_preview_label);
+		picker_preview_label->set_anchors_preset(Control::PRESET_CENTER_TOP);
+		picker_preview_label->set_text(ETR("Color Picking active"));
 
-		picker_preview_style_box = (Ref<StyleBoxFlat>)memnew(StyleBoxFlat);
+		picker_preview_style_box.instantiate();
 		picker_preview_style_box->set_bg_color(Color(1.0, 1.0, 1.0));
-		picker_preview->add_theme_style_override(SceneStringName(panel), picker_preview_style_box);
+		picker_preview_style_box->set_content_margin_all(4.0);
+		picker_preview_label->add_theme_style_override(CoreStringName(normal), picker_preview_style_box);
+
+		picker_window->add_child(picker_preview_label);
 	}
 
 	Rect2i screen_rect;
@@ -1573,7 +1573,7 @@ void ColorPicker::_pick_button_pressed_legacy() {
 	}
 
 	picker_window->set_size(screen_rect.size);
-	picker_preview->set_size(screen_rect.size / 10.0); // 10% of size in each axis.
+	picker_preview_label->set_custom_minimum_size(screen_rect.size / 10); // 10% of size in each axis.
 	picker_window->popup();
 }
 
@@ -1596,7 +1596,7 @@ void ColorPicker::_picker_texture_input(const Ref<InputEvent> &p_event) {
 			Vector2 ofs = mev->get_position();
 			picker_color = img->get_pixel(ofs.x, ofs.y);
 			picker_preview_style_box->set_bg_color(picker_color);
-			picker_preview_label->set_self_modulate(picker_color.get_luminance() < 0.5 ? Color(1.0f, 1.0f, 1.0f) : Color(0.0f, 0.0f, 0.0f));
+			picker_preview_label->add_theme_color_override(SceneStringName(font_color), picker_color.get_luminance() < 0.5 ? Color(1.0f, 1.0f, 1.0f) : Color(0.0f, 0.0f, 0.0f));
 		}
 	}
 }
@@ -1940,7 +1940,7 @@ ColorPicker::ColorPicker() {
 	updating = false;
 
 	preset_foldable = memnew(FoldableContainer);
-	preset_foldable->set_text("Swatches");
+	preset_foldable->set_text(ETR("Swatches"));
 	preset_foldable->add_button();
 	preset_foldable->set_button_tooltip(0, ETR("Add current color as a preset."));
 	preset_foldable->set_button_visible(0, can_add_swatches);
@@ -1961,7 +1961,7 @@ ColorPicker::ColorPicker() {
 	preset_group.instantiate();
 
 	recent_preset_foldable = memnew(FoldableContainer);
-	recent_preset_foldable->set_text("Recent Colors");
+	recent_preset_foldable->set_text(ETR("Recent Colors"));
 
 	ScrollContainer *recent_preset_scroll = memnew(ScrollContainer);
 	recent_preset_scroll->add_theme_constant_override("h_scroll_bar_separation", 4);
@@ -2043,7 +2043,9 @@ void ColorPickerButton::pressed() {
 	float v_offset = show_above ? -minsize.y : get_size().y;
 	popup->set_position(get_screen_position() + Vector2(h_offset, v_offset));
 	popup->popup();
-	picker->set_focus_on_line_edit();
+	if (DisplayServer::get_singleton()->has_hardware_keyboard()) {
+		picker->set_focus_on_line_edit();
+	}
 }
 
 void ColorPickerButton::_validate_property(PropertyInfo &p_property) const {
@@ -2127,6 +2129,7 @@ void ColorPickerButton::_update_picker() {
 		picker->set_anchors_and_offsets_preset(PRESET_FULL_RECT);
 		popup->add_child(picker);
 		add_child(popup, false, INTERNAL_MODE_FRONT);
+		popup->force_parent_owned();
 		picker->connect("color_changed", callable_mp(this, &ColorPickerButton::_color_changed));
 		popup->connect("about_to_popup", callable_mp(this, &ColorPickerButton::_about_to_popup));
 		popup->connect("popup_hide", callable_mp(this, &ColorPickerButton::_modal_closed));

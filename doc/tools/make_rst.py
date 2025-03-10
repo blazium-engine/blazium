@@ -949,13 +949,17 @@ def make_rst_class(class_def: ClassDef, state: State, dry_run: bool, output_dir:
             inherits = class_def.inherits.strip()
             f.write(f'**{translate("Inherits:")}** ')
             first = True
-            while inherits in state.classes:
+            while inherits is not None:
                 if not first:
                     f.write(" **<** ")
                 else:
                     first = False
 
                 f.write(make_type(inherits, state))
+
+                if inherits not in state.classes:
+                    break  # Parent unknown.
+
                 inode = state.classes[inherits].inherits
                 if inode:
                     inherits = inode.strip()
@@ -1311,9 +1315,6 @@ def make_rst_class(class_def: ClassDef, state: State, dry_run: bool, output_dir:
 
                 if property_def.text is not None and property_def.text.strip() != "":
                     f.write(f"{format_text_block(property_def.text.strip(), property_def, state)}\n\n")
-                    if property_def.type_name.type_name in PACKED_ARRAY_TYPES:
-                        tmp = f"[b]Note:[/b] The returned array is [i]copied[/i] and any changes to it will not update the original property value. See [{property_def.type_name.type_name}] for more details."
-                        f.write(f"{format_text_block(tmp, property_def, state)}\n\n")
                 elif property_def.deprecated is None and property_def.experimental is None:
                     f.write(".. container:: contribute\n\n\t")
                     f.write(
@@ -1322,6 +1323,11 @@ def make_rst_class(class_def: ClassDef, state: State, dry_run: bool, output_dir:
                         )
                         + "\n\n"
                     )
+
+                # Add copy note to built-in properties returning `Packed*Array`.
+                if property_def.type_name.type_name in PACKED_ARRAY_TYPES:
+                    copy_note = f"[b]Note:[/b] The returned array is [i]copied[/i] and any changes to it will not update the original property value. See [{property_def.type_name.type_name}] for more details."
+                    f.write(f"{format_text_block(copy_note, property_def, state)}\n\n")
 
                 index += 1
 

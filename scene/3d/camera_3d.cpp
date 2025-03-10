@@ -250,7 +250,7 @@ void Camera3D::set_projection(ProjectionType p_mode) {
 
 RID Camera3D::get_camera() const {
 	return camera;
-};
+}
 
 void Camera3D::make_current() {
 	current = true;
@@ -296,7 +296,7 @@ bool Camera3D::is_current() const {
 Vector3 Camera3D::project_ray_normal(const Point2 &p_pos) const {
 	Vector3 ray = project_local_ray_normal(p_pos);
 	return get_camera_transform().basis.xform(ray).normalized();
-};
+}
 
 Vector3 Camera3D::project_local_ray_normal(const Point2 &p_pos) const {
 	ERR_FAIL_COND_V_MSG(!is_inside_tree(), Vector3(), "Camera is not inside scene.");
@@ -314,7 +314,7 @@ Vector3 Camera3D::project_local_ray_normal(const Point2 &p_pos) const {
 	}
 
 	return ray;
-};
+}
 
 Vector3 Camera3D::project_ray_origin(const Point2 &p_pos) const {
 	ERR_FAIL_COND_V_MSG(!is_inside_tree(), Vector3(), "Camera is not inside scene.");
@@ -343,7 +343,7 @@ Vector3 Camera3D::project_ray_origin(const Point2 &p_pos) const {
 	} else {
 		return get_camera_transform().origin;
 	};
-};
+}
 
 bool Camera3D::is_position_behind(const Vector3 &p_pos) const {
 	Transform3D t = get_global_transform();
@@ -396,9 +396,12 @@ Vector3 Camera3D::project_position(const Point2 &p_point, real_t p_z_depth) cons
 	}
 	Size2 viewport_size = get_viewport()->get_visible_rect().size;
 
-	Projection cm = _get_camera_projection(p_z_depth);
+	Projection cm = _get_camera_projection(_near);
 
-	Vector2 vp_he = cm.get_viewport_half_extents();
+	Plane z_slice(Vector3(0, 0, 1), -p_z_depth);
+	Vector3 res;
+	z_slice.intersect_3(cm.get_projection_plane(Projection::Planes::PLANE_RIGHT), cm.get_projection_plane(Projection::Planes::PLANE_TOP), &res);
+	Vector2 vp_he(res.x, res.y);
 
 	Vector2 point;
 	point.x = (p_point.x / viewport_size.x) * 2.0 - 1.0;

@@ -411,10 +411,6 @@ def convert_custom_modules_path(path):
     return path
 
 
-def disable_module(self):
-    self.disabled_modules.append(self.current_module)
-
-
 def module_add_dependencies(self, module, dependencies, optional=False):
     """
     Adds dependencies for a given module.
@@ -435,19 +431,21 @@ def module_check_dependencies(self, module):
     Meant to be used in module `can_build` methods.
     Returns a boolean (True if dependencies are satisfied).
     """
-    missing_deps = []
+    missing_deps = set()
     required_deps = self.module_dependencies[module][0] if module in self.module_dependencies else []
     for dep in required_deps:
         opt = "module_{}_enabled".format(dep)
-        if opt not in self or not self[opt]:
-            missing_deps.append(dep)
+        if opt not in self or not self[opt] or not module_check_dependencies(self, dep):
+            missing_deps.add(dep)
 
-    if missing_deps != []:
-        print_warning(
-            "Disabling '{}' module as the following dependencies are not satisfied: {}".format(
-                module, ", ".join(missing_deps)
+    if missing_deps:
+        if module not in self.disabled_modules:
+            print_warning(
+                "Disabling '{}' module as the following dependencies are not satisfied: {}".format(
+                    module, ", ".join(missing_deps)
+                )
             )
-        )
+            self.disabled_modules.add(module)
         return False
     else:
         return True
@@ -802,9 +800,9 @@ def get_compiler_version(env):
         "major": -1,
         "minor": -1,
         "patch": -1,
-        "metadata1": None,
-        "metadata2": None,
-        "date": None,
+        "metadata1": "",
+        "metadata2": "",
+        "date": "",
         "apple_major": -1,
         "apple_minor": -1,
         "apple_patch1": -1,
@@ -813,7 +811,35 @@ def get_compiler_version(env):
     }
 
     if env.msvc and not using_clang(env):
-        # TODO: Implement for MSVC
+        try:
+            # FIXME: `-latest` works for most cases, but there are edge-cases where this would
+            # benefit from a more nuanced search.
+            # https://github.com/godotengine/godot/pull/91069#issuecomment-2358956731
+            # https://github.com/godotengine/godot/pull/91069#issuecomment-2380836341
+            args = [
+                env["VSWHERE"],
+                "-latest",
+                "-prerelease",
+                "-products",
+                "*",
+                "-requires",
+                "Microsoft.Component.MSBuild",
+                "-utf8",
+            ]
+            version = subprocess.check_output(args, encoding="utf-8").strip()
+            for line in version.splitlines():
+                split = line.split(":", 1)
+                if split[0] == "catalog_productDisplayVersion":
+                    sem_ver = split[1].split(".")
+                    ret["major"] = int(sem_ver[0])
+                    ret["minor"] = int(sem_ver[1])
+                    ret["patch"] = int(sem_ver[2].split()[0])
+                # Could potentially add section for determining preview version, but
+                # that can wait until metadata is actually used for something.
+                if split[0] == "catalog_buildVersion":
+                    ret["metadata1"] = split[1]
+        except (subprocess.CalledProcessError, OSError):
+            print_warning("Couldn't find vswhere to determine compiler version.")
         return ret
 
     # Not using -dumpversion as some GCC distros only return major, and

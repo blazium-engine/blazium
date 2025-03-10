@@ -85,7 +85,7 @@ static String get_property_info_type_name(const PropertyInfo &p_info) {
 }
 
 static String get_type_meta_name(const GodotTypeInfo::Metadata metadata) {
-	static const char *argmeta[11] = { "none", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "float", "double" };
+	static const char *argmeta[13] = { "none", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "float", "double", "char16", "char32" };
 	return argmeta[metadata];
 }
 
@@ -1014,6 +1014,7 @@ Dictionary GDExtensionAPIDump::generate_extension_api(bool p_include_docs) {
 						d2["name"] = String(method_name);
 						d2["is_const"] = (F.flags & METHOD_FLAG_CONST) ? true : false;
 						d2["is_static"] = (F.flags & METHOD_FLAG_STATIC) ? true : false;
+						d2["is_required"] = (F.flags & METHOD_FLAG_VIRTUAL_REQUIRED) ? true : false;
 						d2["is_vararg"] = false;
 						d2["is_virtual"] = true;
 						// virtual functions have no hash since no MethodBind is involved
@@ -1367,6 +1368,9 @@ static bool compare_dict_array(const Dictionary &p_old_api, const Dictionary &p_
 		Dictionary elem = var;
 		ERR_FAIL_COND_V_MSG(!elem.has(p_name_field), false, vformat("Validate extension JSON: Element of base_array '%s' is missing field '%s'. This is a bug.", base_array, p_name_field));
 		String name = elem[p_name_field];
+		if (name.is_valid_float()) {
+			name = name.trim_suffix(".0"); // Make "integers" stringified as integers.
+		}
 		if (p_compare_operators && elem.has("right_type")) {
 			name += " " + String(elem["right_type"]);
 		}
@@ -1382,6 +1386,9 @@ static bool compare_dict_array(const Dictionary &p_old_api, const Dictionary &p_
 			continue;
 		}
 		String name = old_elem[p_name_field];
+		if (name.is_valid_float()) {
+			name = name.trim_suffix(".0"); // Make "integers" stringified as integers.
+		}
 		if (p_compare_operators && old_elem.has("right_type")) {
 			name += " " + String(old_elem["right_type"]);
 		}

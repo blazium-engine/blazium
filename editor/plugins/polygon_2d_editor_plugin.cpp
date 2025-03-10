@@ -278,7 +278,11 @@ void Polygon2DEditor::_uv_edit_mode_select(int p_mode) {
 		uv_button[UV_MODE_REMOVE_POLYGON]->hide();
 		uv_button[UV_MODE_PAINT_WEIGHT]->hide();
 		uv_button[UV_MODE_CLEAR_WEIGHT]->hide();
-		_uv_mode(UV_MODE_EDIT_POINT);
+		if (node->get_polygon().is_empty()) {
+			_uv_mode(UV_MODE_CREATE);
+		} else {
+			_uv_mode(UV_MODE_EDIT_POINT);
+		}
 
 		bone_scroll_main_vb->hide();
 		bone_paint_strength->hide();
@@ -320,21 +324,22 @@ void Polygon2DEditor::_uv_edit_mode_select(int p_mode) {
 	uv_edit_draw->queue_redraw();
 }
 
+void Polygon2DEditor::_uv_edit_popup_show() {
+	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
+	undo_redo->connect("version_changed", callable_mp(this, &Polygon2DEditor::_update_available_modes));
+}
+
 void Polygon2DEditor::_uv_edit_popup_hide() {
 	EditorSettings::get_singleton()->set_project_metadata("dialog_bounds", "uv_editor", Rect2(uv_edit->get_position(), uv_edit->get_size()));
 	_cancel_editing();
+	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
+	undo_redo->disconnect("version_changed", callable_mp(this, &Polygon2DEditor::_update_available_modes));
 }
 
 void Polygon2DEditor::_menu_option(int p_option) {
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
 	switch (p_option) {
 		case MODE_EDIT_UV: {
-			if (node->get_texture().is_null()) {
-				error->set_text(TTR("No texture in this polygon.\nSet a texture to be able to edit UV."));
-				error->popup_centered();
-				return;
-			}
-
 			uv_edit_draw->set_texture_filter(node->get_texture_filter_in_tree());
 
 			Vector<Vector2> points = node->get_polygon();
@@ -355,6 +360,7 @@ void Polygon2DEditor::_menu_option(int p_option) {
 				uv_edit->popup_centered_ratio(0.85);
 			}
 			_update_bone_list();
+			_update_available_modes();
 			get_tree()->connect("process_frame", callable_mp(this, &Polygon2DEditor::_center_view), CONNECT_ONE_SHOT);
 		} break;
 		case UVEDIT_POLYGON_TO_UV: {
@@ -417,6 +423,7 @@ void Polygon2DEditor::_cancel_editing() {
 		node->set_polygons(polygons_prev);
 
 		_update_polygon_editing_state();
+		_update_available_modes();
 	} else if (uv_drag) {
 		uv_drag = false;
 		if (uv_edit_mode[0]->is_pressed()) { // Edit UV.
@@ -575,6 +582,7 @@ void Polygon2DEditor::_uv_input(const Ref<InputEvent> &p_input) {
 							uv_drag = false;
 							uv_create = false;
 
+							_update_available_modes();
 							_uv_mode(UV_MODE_EDIT_POINT);
 							_menu_option(MODE_EDIT);
 						} else {
@@ -982,6 +990,23 @@ void Polygon2DEditor::_uv_input(const Ref<InputEvent> &p_input) {
 	}
 }
 
+void Polygon2DEditor::_update_available_modes() {
+	// Force point editing mode if there's no polygon yet.
+	if (node->get_polygon().is_empty()) {
+		if (!uv_edit_mode[1]->is_pressed()) {
+			uv_edit_mode[1]->set_pressed(true);
+			_uv_edit_mode_select(1);
+		}
+		uv_edit_mode[0]->set_disabled(true);
+		uv_edit_mode[2]->set_disabled(true);
+		uv_edit_mode[3]->set_disabled(true);
+	} else {
+		uv_edit_mode[0]->set_disabled(false);
+		uv_edit_mode[2]->set_disabled(false);
+		uv_edit_mode[3]->set_disabled(false);
+	}
+}
+
 void Polygon2DEditor::_center_view() {
 	Size2 texture_size;
 	if (node->get_texture().is_valid()) {
@@ -1062,9 +1087,6 @@ void Polygon2DEditor::_uv_draw() {
 	}
 
 	Ref<Texture2D> base_tex = node->get_texture();
-	if (base_tex.is_null()) {
-		return;
-	}
 
 	String warning;
 
@@ -1074,12 +1096,14 @@ void Polygon2DEditor::_uv_draw() {
 
 	// Draw texture as a background if editing uvs or no uv mapping exist.
 	if (uv_edit_mode[0]->is_pressed() || uv_mode == UV_MODE_CREATE || node->get_polygon().is_empty() || node->get_uv().size() != node->get_polygon().size()) {
-		Transform2D texture_transform = Transform2D(node->get_texture_rotation(), node->get_texture_offset());
-		texture_transform.scale(node->get_texture_scale());
-		texture_transform.affine_invert();
-		RS::get_singleton()->canvas_item_add_set_transform(uv_edit_draw->get_canvas_item(), mtx * texture_transform);
-		uv_edit_draw->draw_texture(base_tex, Point2());
-		RS::get_singleton()->canvas_item_add_set_transform(uv_edit_draw->get_canvas_item(), Transform2D());
+		if (base_tex.is_valid()) {
+			Transform2D texture_transform = Transform2D(node->get_texture_rotation(), node->get_texture_offset());
+			texture_transform.scale(node->get_texture_scale());
+			texture_transform.affine_invert();
+			RS::get_singleton()->canvas_item_add_set_transform(uv_edit_draw->get_canvas_item(), mtx * texture_transform);
+			uv_edit_draw->draw_texture(base_tex, Point2());
+			RS::get_singleton()->canvas_item_add_set_transform(uv_edit_draw->get_canvas_item(), Transform2D());
+		}
 		preview_polygon->hide();
 	} else {
 		preview_polygon->set_transform(mtx);
@@ -1335,6 +1359,7 @@ Polygon2DEditor::Polygon2DEditor() {
 	add_child(uv_edit);
 	uv_edit->connect(SceneStringName(confirmed), callable_mp(this, &Polygon2DEditor::_uv_edit_popup_hide));
 	uv_edit->connect("canceled", callable_mp(this, &Polygon2DEditor::_uv_edit_popup_hide));
+	uv_edit->connect("about_to_popup", callable_mp(this, &Polygon2DEditor::_uv_edit_popup_show));
 
 	VBoxContainer *uv_main_vb = memnew(VBoxContainer);
 	uv_edit->add_child(uv_main_vb);

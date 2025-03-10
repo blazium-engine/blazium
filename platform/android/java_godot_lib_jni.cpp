@@ -32,7 +32,6 @@
 
 #include "android_input_handler.h"
 #include "api/java_class_wrapper.h"
-#include "api/jni_singleton.h"
 #include "dir_access_jandroid.h"
 #include "display_server_android.h"
 #include "file_access_android.h"
@@ -209,8 +208,7 @@ JNIEXPORT jboolean JNICALL Java_app_blazium_godot_GodotLib_setup(JNIEnv *env, jc
 
 	TTS_Android::setup(p_godot_tts);
 
-	java_class_wrapper = memnew(JavaClassWrapper(godot_java->get_activity()));
-	GDREGISTER_CLASS(JNISingleton);
+	java_class_wrapper = memnew(JavaClassWrapper);
 	return true;
 }
 
@@ -472,19 +470,22 @@ JNIEXPORT void JNICALL Java_app_blazium_godot_GodotLib_focusout(JNIEnv *env, jcl
 JNIEXPORT jstring JNICALL Java_app_blazium_godot_GodotLib_getGlobal(JNIEnv *env, jclass clazz, jstring path) {
 	String js = jstring_to_string(path, env);
 
-	return env->NewStringUTF(GLOBAL_GET(js).operator String().utf8().get_data());
+	Variant setting_with_override = GLOBAL_GET(js);
+	String setting_value = (setting_with_override.get_type() == Variant::NIL) ? "" : setting_with_override;
+	return env->NewStringUTF(setting_value.utf8().get_data());
 }
 
 JNIEXPORT jstring JNICALL Java_app_blazium_godot_GodotLib_getEditorSetting(JNIEnv *env, jclass clazz, jstring p_setting_key) {
-	String editor_setting = "";
+	String editor_setting_value = "";
 #ifdef TOOLS_ENABLED
 	String godot_setting_key = jstring_to_string(p_setting_key, env);
-	editor_setting = EDITOR_GET(godot_setting_key).operator String();
+	Variant editor_setting = EDITOR_GET(godot_setting_key);
+	editor_setting_value = (editor_setting.get_type() == Variant::NIL) ? "" : editor_setting;
 #else
 	WARN_PRINT("Access to the Editor Settings in only available on Editor builds");
 #endif
 
-	return env->NewStringUTF(editor_setting.utf8().get_data());
+	return env->NewStringUTF(editor_setting_value.utf8().get_data());
 }
 
 JNIEXPORT void JNICALL Java_app_blazium_godot_GodotLib_callobject(JNIEnv *env, jclass clazz, jlong ID, jstring method, jobjectArray params) {
@@ -536,6 +537,14 @@ JNIEXPORT void JNICALL Java_app_blazium_godot_GodotLib_onNightModeChanged(JNIEnv
 	DisplayServerAndroid *ds = (DisplayServerAndroid *)DisplayServer::get_singleton();
 	if (ds) {
 		ds->emit_system_theme_changed();
+	}
+}
+
+JNIEXPORT void JNICALL Java_app_blazium_godot_GodotLib_inputDialogCallback(JNIEnv *env, jclass clazz, jstring p_text) {
+	DisplayServerAndroid *ds = (DisplayServerAndroid *)DisplayServer::get_singleton();
+	if (ds) {
+		String text = jstring_to_string(p_text, env);
+		ds->emit_input_dialog_callback(text);
 	}
 }
 
