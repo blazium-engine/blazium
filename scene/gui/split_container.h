@@ -77,13 +77,12 @@ public:
 
 private:
 	int split_offset = 0;
-	int middle_sep = -1;
+	int middle_sep = 0;
 	bool vertical = false;
 	bool collapsed = false;
 	bool child_collapsed = false;
 	bool dragging_enabled = true;
 	bool show_drag_area = false;
-	bool dirty = false;
 
 	DraggerVisibility dragger_visibility = DRAGGER_VISIBLE;
 	CollapseMode collapse_mode = COLLAPSE_NONE;
@@ -113,7 +112,7 @@ private:
 	int _get_separation() const;
 	Ref<Texture2D> _get_grabber_icon() const;
 	Ref<StyleBox> _get_split_bar_background() const;
-	void _compute_middle_sep(Control *p_first, Control *p_second, int p_sep);
+	void _compute_middle_sep(bool p_clamp);
 	Control *_get_child(int p_idx) const;
 	void _resort_children();
 
@@ -146,9 +145,7 @@ public:
 	void set_show_drag_area(bool p_enabled);
 	bool is_showing_drag_area() const;
 
-#ifndef DISABLE_DEPRECATED
-	void clamp_split_offset() {}
-#endif // !DISABLE_DEPRECATED
+	void clamp_split_offset();
 
 	virtual Size2 get_minimum_size() const override;
 
