@@ -23,7 +23,7 @@ IncludeCategories:
 IndentCaseLabels: true
 IndentWidth: 4
 JavaImportGroups:
-  - org.godotengine
+  - app.blazium
   - android
   - androidx
   - com.android
