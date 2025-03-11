@@ -7037,6 +7037,7 @@ EditorNode::EditorNode() {
 	title_bar->add_child(menu_scroll_box);
 
 	main_menu = memnew(MenuBar);
+	main_menu->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	main_menu->set_v_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_CENTER);
 	menu_scroll_box->set_control(main_menu);
 	main_menu->set_theme_type_variation("MainMenuBar");
@@ -7222,6 +7223,7 @@ EditorNode::EditorNode() {
 	title_bar->add_child(main_scroll_box);
 
 	HBoxContainer *main_editor_button_hb = memnew(HBoxContainer);
+	main_editor_button_hb->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	main_editor_button_hb->set_mouse_filter(Control::MOUSE_FILTER_STOP);
 	editor_main_screen->set_button_container(main_editor_button_hb);
 	main_scroll_box->set_control(main_editor_button_hb);
