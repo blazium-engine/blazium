@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="SQLiteAccess" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Wrapper class for SQLite databases.
+	</brief_description>
+	<description>
+		A wrapper class that lets you perform SQL statements on an SQLite database file.
+		For queries that involve arbitrary user input, you should use methods that end in [code]*_with_args[/code], as these protect against SQL injection.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="backup">
+			<return type="bool" />
+			<param index="0" name="path" type="String" />
+			<description>
+				Creates a backup of the database at the given path.
+			</description>
+		</method>
+		<method name="close">
+			<return type="bool" />
+			<description>
+				Closes the database handle.
+			</description>
+		</method>
+		<method name="create_query">
+			<return type="SQLiteQuery" />
+			<param index="0" name="statement" type="String" />
+			<param index="1" name="arguments" type="Array" default="[]" />
+			<description>
+				Creates a new query object.
+			</description>
+		</method>
+		<method name="get_last_error_code" qualifiers="const">
+			<return type="int" />
+			<description>
+				Gets the last error code.
+			</description>
+		</method>
+		<method name="get_last_error_message" qualifiers="const">
+			<return type="String" />
+			<description>
+				Gets the last error message.
+			</description>
+		</method>
+		<method name="open">
+			<return type="bool" />
+			<param index="0" name="database" type="String" />
+			<description>
+				Opens the database file at the given path. Returns [code]true[/code] if the database was successfully opened, [code]false[/code] otherwise.
+				If the path starts with "res://", it will use [method open_buffered] implicitly.
+			</description>
+		</method>
+		<method name="open_buffered">
+			<return type="bool" />
+			<param index="0" name="path" type="String" />
+			<param index="1" name="buffers" type="PackedByteArray" />
+			<param index="2" name="size" type="int" />
+			<description>
+				Opens a temporary database with the data in [code]buffer[/code]. Used for opening databases stored in res:// or compressed databases. Returns [code]true[/code] if the database was opened successfully.
+				Can be written to, but the changes are NOT saved!
+			</description>
+		</method>
+		<method name="open_in_memory">
+			<return type="bool" />
+			<description>
+				Opens an in-memory database.
+			</description>
+		</method>
+	</methods>
+</class>

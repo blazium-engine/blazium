@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="SQLiteQueryResult" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A result from a [SQLiteQuery] run.
+	</brief_description>
+	<description>
+		A result from a [SQLiteQuery] run.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="arguments" type="Array" setter="" getter="get_arguments" default="[]">
+			The arguments of the query.
+		</member>
+		<member name="error" type="String" setter="" getter="get_error" default="&quot;&quot;">
+			Present if there is an error.
+		</member>
+		<member name="error_code" type="int" setter="" getter="get_error_code" default="0">
+			Present if there is an error.
+		</member>
+		<member name="query" type="String" setter="" getter="get_query" default="&quot;&quot;">
+			The query that was run.
+		</member>
+		<member name="result" type="Array[]" setter="" getter="get_result" default="[]">
+			The result of the query.
+		</member>
+	</members>
+</class>

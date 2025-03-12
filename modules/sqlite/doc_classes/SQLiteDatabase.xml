@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="SQLiteDatabase" inherits="Resource" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		A SQLite database resource. Can be either in-memory or load a database from a file.
+	</brief_description>
+	<description>
+		A SQLite database resource.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="create_query">
+			<return type="SQLiteQuery" />
+			<param index="0" name="query" type="String" />
+			<param index="1" name="arguments" type="Array" />
+			<description>
+				Creates a new query object.
+			</description>
+		</method>
+		<method name="create_table">
+			<return type="SQLiteQuery" />
+			<param index="0" name="table_name" type="String" />
+			<param index="1" name="columns" type="SQLiteColumnSchema[]" />
+			<description>
+				Creates a new table.
+			</description>
+		</method>
+		<method name="delete_rows">
+			<return type="SQLiteQuery" />
+			<param index="0" name="table_name" type="String" />
+			<param index="1" name="condition" type="String" default="&quot;&quot;" />
+			<description>
+				Deletes rows from a table.
+			</description>
+		</method>
+		<method name="drop_table">
+			<return type="SQLiteQuery" />
+			<param index="0" name="table_name" type="String" />
+			<description>
+				Drops a table.
+			</description>
+		</method>
+		<method name="execute_query">
+			<return type="SQLiteQueryResult" />
+			<param index="0" name="query" type="String" />
+			<param index="1" name="arguments" type="Array" />
+			<description>
+				Create and execute a query directly.
+			</description>
+		</method>
+		<method name="get_columns" qualifiers="const">
+			<return type="SQLiteColumnSchema[]" />
+			<param index="0" name="table_name" type="String" />
+			<description>
+				Returns the columns of a table.
+			</description>
+		</method>
+		<method name="get_sqlite">
+			<return type="SQLiteAccess" />
+			<description>
+				Returns the underlying [SQLite] object.
+			</description>
+		</method>
+		<method name="insert_row">
+			<return type="SQLiteQuery" />
+			<param index="0" name="table_name" type="String" />
+			<param index="1" name="value" type="Dictionary" />
+			<description>
+				Inserts a row into a table.
+			</description>
+		</method>
+		<method name="insert_rows">
+			<return type="SQLiteQuery" />
+			<param index="0" name="table_name" type="String" />
+			<param index="1" name="values" type="Dictionary[]" />
+			<description>
+				Inserts multiple rows into a table.
+			</description>
+		</method>
+		<method name="select_rows">
+			<return type="SQLiteQuery" />
+			<param index="0" name="table_name" type="String" />
+			<param index="1" name="condition" type="String" default="&quot;&quot;" />
+			<description>
+				Selects rows from a table.
+			</description>
+		</method>
+		<method name="set_data">
+			<return type="void" />
+			<param index="0" name="data" type="PackedByteArray" />
+			<description>
+				Sets the data of the database.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="tables" type="Dictionary" setter="" getter="get_tables" default="{}">
+		</member>
+	</members>
+</class>
