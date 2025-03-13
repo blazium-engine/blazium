@@ -14,7 +14,7 @@
 		<method name="clamp_split_offset">
 			<return type="void" />
 			<description>
-				Deprecated.
+				Clamps the [member split_offset] value to not go outside the currently possible minimal and maximum values.
 			</description>
 		</method>
 		<method name="get_drag_area_control" qualifiers="const">

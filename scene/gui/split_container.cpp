@@ -44,6 +44,7 @@ void SplitContainerDragger::gui_input(const Ref<InputEvent> &p_event) {
 
 	if (mb.is_valid() && mb->get_button_index() == MouseButton::LEFT) {
 		if (mb->is_pressed()) {
+			sc->_compute_middle_sep(true);
 			dragging = true;
 			sc->emit_signal(SNAME("drag_started"));
 			drag_ofs = sc->split_offset;
@@ -108,6 +109,8 @@ void SplitContainerDragger::gui_input(const Ref<InputEvent> &p_event) {
 			if (target) {
 				target->set_visible(target_visible);
 				sc->child_collapsed = !target_visible;
+				int ms = target->get_combined_minimum_size()[axis];
+				drag_ofs += target_visible ? (target == second ? ms : -ms) : (target == second ? -ms : ms);
 			}
 		}
 
@@ -288,7 +291,6 @@ void SplitContainer::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_SORT_CHILDREN: {
-			dirty = true;
 			_resort_children();
 		} break;
 
@@ -308,8 +310,6 @@ void SplitContainer::_resort_children() {
 	Control *first = _get_child(0);
 	if (!first) {
 		dragger_control->hide();
-		middle_sep = -1;
-		dirty = false;
 		return;
 	}
 	bool first_visible = first && first->is_visible();
@@ -320,16 +320,12 @@ void SplitContainer::_resort_children() {
 			first->set_rect(Rect2(Point2(), get_size()));
 		}
 		dragger_control->hide();
-		middle_sep = -1;
-		dirty = false;
 		return;
 	}
 	bool second_visible = second && second->is_visible();
 
 	if (!first_visible && !second_visible) {
 		dragger_control->hide();
-		middle_sep = -1;
-		dirty = false;
 		return;
 	}
 
@@ -350,9 +346,8 @@ void SplitContainer::_resort_children() {
 		if (!dragger_visible) {
 			target->set_rect(Rect2(Point2(), size));
 		} else {
+			_compute_middle_sep(false);
 			int sep = _get_separation();
-			dirty = false;
-			_compute_middle_sep(first, second, sep);
 			int dragger_thickness = MAX(sep, theme_cache.minimum_grab_thickness);
 			int dragger_ofs = Math::round((dragger_thickness - sep) * 0.5);
 			Point2 dragger_begin;
@@ -382,15 +377,12 @@ void SplitContainer::_resort_children() {
 
 	dragger_control->set_visible(dragger_visible);
 
-	int sep = _get_separation();
-	_compute_middle_sep(first, second, sep);
+	_compute_middle_sep(false);
 
+	int sep = _get_separation();
 	int dragger_thickness = MAX(sep, theme_cache.minimum_grab_thickness);
 	int dragger_ofs = Math::round((dragger_thickness - sep) * 0.5);
 	int dragger_pos = middle_sep;
-	if (!collapsed) {
-		dragger_pos += split_offset;
-	}
 
 	if (vertical) {
 		first->set_rect(Rect2(Point2(), Size2(size.width, dragger_pos)));
@@ -398,7 +390,7 @@ void SplitContainer::_resort_children() {
 		dragger_control->set_rect(Rect2(Point2(0, dragger_pos - dragger_ofs), Size2(size.width, dragger_thickness)));
 	} else {
 		if (rtl) {
-			dragger_pos = size.width - dragger_pos;
+			dragger_pos = size.width - dragger_pos - sep;
 			second->set_rect(Rect2(Point2(), Size2(dragger_pos, size.height)));
 			first->set_rect(Rect2(Point2(dragger_pos + sep, 0), Size2(size.width - dragger_pos - sep, size.height)));
 		} else {
@@ -410,53 +402,47 @@ void SplitContainer::_resort_children() {
 	dragger_control->queue_redraw();
 }
 
-void SplitContainer::_compute_middle_sep(Control *p_first, Control *p_second, int p_sep) {
-	bool first_visible = p_first && p_first->is_visible();
-	bool second_visible = p_second && p_second->is_visible();
+void SplitContainer::_compute_middle_sep(bool p_clamp) {
+	Control *first = _get_child(0);
+	Control *second = _get_child(1);
+	bool first_visible = first && first->is_visible();
+	bool second_visible = second && second->is_visible();
 
 	if (!first_visible && !second_visible) {
 		return;
 	}
 
-	bool first_expanded = (vertical ? p_first->get_v_size_flags() : p_first->get_h_size_flags()) & SIZE_EXPAND;
-	bool second_expanded = (vertical ? p_second->get_v_size_flags() : p_second->get_h_size_flags()) & SIZE_EXPAND;
+	bool first_expanded = (vertical ? first->get_v_size_flags() : first->get_h_size_flags()) & SIZE_EXPAND;
+	bool second_expanded = (vertical ? second->get_v_size_flags() : second->get_h_size_flags()) & SIZE_EXPAND;
 
+	// A hack to fix split offset after resizing the container when a child is collapsed.
+	if (p_clamp && child_collapsed) {
+		split_offset = first_visible ? 1e6 : -1e6;
+	}
+
+	int wished_size = 0;
+	int split_offset_with_collapse = 0;
+	if (!collapsed) {
+		split_offset_with_collapse = split_offset;
+	}
 	int axis = vertical ? 1 : 0;
-	int first_ms = p_first->get_combined_minimum_size()[axis];
-	int second_ms = p_second->get_combined_minimum_size()[axis];
-	bool rtl = !vertical && is_layout_rtl();
-
+	int first_ms = first->get_combined_minimum_size()[axis];
+	int second_ms = second->get_combined_minimum_size()[axis];
+	int sep = _get_separation();
 	int size = get_size()[axis];
 
-	int prev_middle_sep = middle_sep;
 	if (first_expanded && second_expanded) {
-		float ratio = p_first->get_stretch_ratio() / (p_first->get_stretch_ratio() + p_second->get_stretch_ratio());
-		middle_sep = size * ratio + (rtl ? Math::round(p_sep * 0.5) : -Math::round(p_sep * 0.5));
+		float ratio = first->get_stretch_ratio() / (first->get_stretch_ratio() + second->get_stretch_ratio());
+		wished_size = size * ratio - sep * 0.5 + split_offset_with_collapse;
 	} else if (first_expanded) {
-		middle_sep = rtl ? size - second_ms : size - p_sep - second_ms;
+		wished_size = size - sep + split_offset_with_collapse;
 	} else {
-		middle_sep = rtl ? first_ms + p_sep : first_ms;
+		wished_size = split_offset_with_collapse;
 	}
+	middle_sep = CLAMP(wished_size, first_ms, size - sep - second_ms);
 
-	if (child_collapsed) {
-		if (rtl) {
-			split_offset = first_visible ? size - middle_sep : -middle_sep + p_sep;
-		} else {
-			split_offset = first_visible ? size - middle_sep - p_sep : -middle_sep;
-		}
-		dirty = false;
-		return;
-	}
-
-	if (dirty && prev_middle_sep > -1) {
-		split_offset += prev_middle_sep - middle_sep;
-	}
-	dirty = false;
-
-	if (rtl) {
-		split_offset = CLAMP(split_offset, -middle_sep + p_sep + first_ms, size - middle_sep - second_ms);
-	} else {
-		split_offset = CLAMP(split_offset, -middle_sep + first_ms, size - middle_sep - p_sep - second_ms);
+	if (p_clamp) {
+		split_offset -= wished_size - middle_sep;
 	}
 }
 
@@ -471,6 +457,15 @@ void SplitContainer::set_split_offset(int p_offset) {
 
 int SplitContainer::get_split_offset() const {
 	return split_offset;
+}
+
+void SplitContainer::clamp_split_offset() {
+	if (!_get_child(0) || !_get_child(1)) {
+		return;
+	}
+
+	_compute_middle_sep(true);
+	queue_sort();
 }
 
 void SplitContainer::set_collapsed(bool p_collapsed) {
