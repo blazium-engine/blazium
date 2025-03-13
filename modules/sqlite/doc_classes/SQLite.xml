@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="SQLite" inherits="Node" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Node containing a [SQLiteDatabase] resource.
+	</brief_description>
+	<description>
+		Node containing a [SQLiteDatabase] resource.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="database" type="SQLiteDatabase" setter="set_database" getter="get_database">
+			Database resource. Can either be in memory or loaded from disk.
+		</member>
+	</members>
+</class>

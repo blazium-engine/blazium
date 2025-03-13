@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="SQLiteColumnSchema" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="create" qualifiers="static">
+			<return type="SQLiteColumnSchema" />
+			<param index="0" name="name" type="String" />
+			<param index="1" name="type" type="int" enum="Variant.Type" default="4" />
+			<param index="2" name="default_value" type="Variant" default="null" />
+			<param index="3" name="primary_key" type="bool" default="false" />
+			<param index="4" name="auto_increment" type="bool" default="false" />
+			<param index="5" name="not_null" type="bool" default="false" />
+			<param index="6" name="unique" type="bool" default="false" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="auto_increment" type="bool" setter="set_auto_increment" getter="is_auto_increment" default="false">
+		</member>
+		<member name="default_value" type="Variant" setter="set_default_value" getter="get_default_value" default="null">
+		</member>
+		<member name="name" type="String" setter="set_name" getter="get_name" default="&quot;&quot;">
+		</member>
+		<member name="not_null" type="bool" setter="set_not_null" getter="is_not_null" default="false">
+		</member>
+		<member name="primary_key" type="bool" setter="set_primary_key" getter="is_primary_key" default="false">
+		</member>
+		<member name="type" type="int" setter="set_type" getter="get_type" enum="Variant.Type" default="0">
+		</member>
+		<member name="unique" type="bool" setter="set_unique" getter="is_unique" default="false">
+		</member>
+	</members>
+</class>
