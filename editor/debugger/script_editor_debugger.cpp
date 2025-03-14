@@ -1931,6 +1931,7 @@ ScriptEditorDebugger::ScriptEditorDebugger() {
 		stack_vb->add_child(stack_dump);
 
 		VBoxContainer *inspector_vbox = memnew(VBoxContainer);
+		inspector_vbox->set_custom_minimum_size(Size2(200, 0) * EDSCALE);
 		inspector_vbox->set_h_size_flags(SIZE_EXPAND_FILL);
 		sc->add_child(inspector_vbox);
 
