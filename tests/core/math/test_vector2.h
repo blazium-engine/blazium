@@ -39,10 +39,18 @@ namespace TestVector2 {
 
 TEST_CASE("[Vector2] Constructor methods") {
 	const Vector2 vector_empty = Vector2();
+	const Vector2 vector_zero_int = Vector2(0);
+	const Vector2 vector_zero_float = Vector2(0.0f);
 	const Vector2 vector_zero = Vector2(0.0, 0.0);
 	CHECK_MESSAGE(
 			vector_empty == vector_zero,
 			"Vector2 Constructor with no inputs should return a zero Vector2.");
+	CHECK_MESSAGE(
+			vector_zero_float == vector_zero,
+			"Vector2 Constructor with single float input should return a zero Vector2.");
+	CHECK_MESSAGE(
+			vector_zero_int == vector_zero,
+			"Vector2 Constructor with single int input should return a zero Vector2.");
 }
 
 TEST_CASE("[Vector2] Angle methods") {
@@ -95,19 +103,19 @@ TEST_CASE("[Vector2] Interpolation methods") {
 			vector1.normalized().slerp(vector2.normalized(), 1.0 / 3.0).is_equal_approx(Vector2(0.508990883827209473, 0.860771894454956055)),
 			"Vector2 slerp should work as expected.");
 	CHECK_MESSAGE(
-			Vector2(5, 0).slerp(Vector2(0, 5), 0.5).is_equal_approx(Vector2(5, 5) * Math_SQRT12),
+			Vector2(5, 0).slerp(Vector2(0, 5), 0.5).is_equal_approx(Vector2(5) * Math_SQRT12),
 			"Vector2 slerp with non-normalized values should work as expected.");
 	CHECK_MESSAGE(
-			Vector2(1, 1).slerp(Vector2(2, 2), 0.5).is_equal_approx(Vector2(1.5, 1.5)),
+			Vector2(1).slerp(Vector2(2), 0.5).is_equal_approx(Vector2(1.5)),
 			"Vector2 slerp with colinear inputs should behave as expected.");
 	CHECK_MESSAGE(
 			Vector2().slerp(Vector2(), 0.5) == Vector2(),
 			"Vector2 slerp with both inputs as zero vectors should return a zero vector.");
 	CHECK_MESSAGE(
-			Vector2().slerp(Vector2(1, 1), 0.5) == Vector2(0.5, 0.5),
+			Vector2().slerp(Vector2(1), 0.5) == Vector2(0.5),
 			"Vector2 slerp with one input as zero should behave like a regular lerp.");
 	CHECK_MESSAGE(
-			Vector2(1, 1).slerp(Vector2(), 0.5) == Vector2(0.5, 0.5),
+			Vector2(1).slerp(Vector2(), 0.5) == Vector2(0.5),
 			"Vector2 slerp with one input as zero should behave like a regular lerp.");
 	CHECK_MESSAGE(
 			Vector2(4, 6).slerp(Vector2(8, 10), 0.5).is_equal_approx(Vector2(5.9076470794008017626, 8.07918879020090480697)),
@@ -130,7 +138,7 @@ TEST_CASE("[Vector2] Interpolation methods") {
 }
 
 TEST_CASE("[Vector2] Length methods") {
-	const Vector2 vector1 = Vector2(10, 10);
+	const Vector2 vector1 = Vector2(10);
 	const Vector2 vector2 = Vector2(20, 30);
 	CHECK_MESSAGE(
 			vector1.length_squared() == 200,
@@ -153,12 +161,12 @@ TEST_CASE("[Vector2] Length methods") {
 }
 
 TEST_CASE("[Vector2] Limiting methods") {
-	const Vector2 vector = Vector2(10, 10);
+	const Vector2 vector = Vector2(10);
 	CHECK_MESSAGE(
-			vector.limit_length().is_equal_approx(Vector2(Math_SQRT12, Math_SQRT12)),
+			vector.limit_length().is_equal_approx(Vector2(Math_SQRT12)),
 			"Vector2 limit_length should work as expected.");
 	CHECK_MESSAGE(
-			vector.limit_length(5).is_equal_approx(5 * Vector2(Math_SQRT12, Math_SQRT12)),
+			vector.limit_length(5).is_equal_approx(5 * Vector2(Math_SQRT12)),
 			"Vector2 limit_length should work as expected.");
 
 	CHECK_MESSAGE(
@@ -174,13 +182,13 @@ TEST_CASE("[Vector2] Normalization methods") {
 			Vector2(1, 0).is_normalized() == true,
 			"Vector2 is_normalized should return true for a normalized vector.");
 	CHECK_MESSAGE(
-			Vector2(1, 1).is_normalized() == false,
+			Vector2(1).is_normalized() == false,
 			"Vector2 is_normalized should return false for a non-normalized vector.");
 	CHECK_MESSAGE(
 			Vector2(1, 0).normalized() == Vector2(1, 0),
 			"Vector2 normalized should return the same vector for a normalized vector.");
 	CHECK_MESSAGE(
-			Vector2(1, 1).normalized().is_equal_approx(Vector2(Math_SQRT12, Math_SQRT12)),
+			Vector2(1).normalized().is_equal_approx(Vector2(Math_SQRT12)),
 			"Vector2 normalized should work as expected.");
 
 	Vector2 vector = Vector2(3.2, -5.4);
@@ -218,7 +226,7 @@ TEST_CASE("[Vector2] Operators") {
 			(power1 - power2) == Vector2(0.25, 1.375),
 			"Vector2 subtraction with powers of two should give exact results.");
 	CHECK_MESSAGE(
-			(int1 - int2) == Vector2(3, 3),
+			(int1 - int2) == Vector2(3),
 			"Vector2 subtraction with integers should give exact results.");
 
 	CHECK_MESSAGE(
@@ -301,7 +309,7 @@ TEST_CASE("[Vector2] Other methods") {
 			vector.direction_to(Vector2()).is_equal_approx(-vector.normalized()),
 			"Vector2 direction_to should work as expected.");
 	CHECK_MESSAGE(
-			Vector2(1, 1).direction_to(Vector2(2, 2)).is_equal_approx(Vector2(Math_SQRT12, Math_SQRT12)),
+			Vector2(1).direction_to(Vector2(2)).is_equal_approx(Vector2(Math_SQRT12, Math_SQRT12)),
 			"Vector2 direction_to should work as expected.");
 
 	CHECK_MESSAGE(
@@ -331,13 +339,13 @@ TEST_CASE("[Vector2] Other methods") {
 			"Vector2 rotated should work as expected.");
 
 	CHECK_MESSAGE(
-			vector.snapped(Vector2(1, 1)) == Vector2(1, 3),
+			vector.snapped(Vector2(1)) == Vector2(1, 3),
 			"Vector2 snapped to integers should be the same as rounding.");
 	CHECK_MESSAGE(
-			Vector2(3.4, 5.6).snapped(Vector2(1, 1)) == Vector2(3, 6),
+			Vector2(3.4, 5.6).snapped(Vector2(1)) == Vector2(3, 6),
 			"Vector2 snapped to integers should be the same as rounding.");
 	CHECK_MESSAGE(
-			vector.snapped(Vector2(0.25, 0.25)) == Vector2(1.25, 3.5),
+			vector.snapped(Vector2(0.25)) == Vector2(1.25, 3.5),
 			"Vector2 snapped to 0.25 should give exact results.");
 
 	CHECK_MESSAGE(
@@ -430,7 +438,7 @@ TEST_CASE("[Vector2] Rounding methods") {
 			"Vector2 round should work as expected.");
 
 	CHECK_MESSAGE(
-			vector1.sign() == Vector2(1, 1),
+			vector1.sign() == Vector2(1),
 			"Vector2 sign should work as expected.");
 	CHECK_MESSAGE(
 			vector2.sign() == Vector2(1, -1),

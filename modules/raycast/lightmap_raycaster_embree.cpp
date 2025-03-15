@@ -32,6 +32,8 @@
 
 #include "lightmap_raycaster_embree.h"
 
+#include <algorithm>
+
 #ifdef __SSE2__
 #include <pmmintrin.h>
 #endif
@@ -130,7 +132,7 @@ void LightmapRaycasterEmbree::add_mesh(const Vector<Vector3> &p_vertices, const 
 	memcpy(embree_vertices, p_vertices.ptr(), sizeof(Vector3) * vertex_count);
 
 	Vector2 *embree_light_uvs = (Vector2 *)rtcSetNewGeometryBuffer(embree_mesh, RTC_BUFFER_TYPE_VERTEX_ATTRIBUTE, 0, RTC_FORMAT_FLOAT2, sizeof(Vector2), vertex_count);
-	memcpy(embree_light_uvs, p_uv2s.ptr(), sizeof(Vector2) * vertex_count);
+	std::copy(p_uv2s.ptr(), p_uv2s.ptr() + vertex_count, embree_light_uvs);
 
 	uint32_t *embree_triangles = (uint32_t *)rtcSetNewGeometryBuffer(embree_mesh, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, sizeof(uint32_t) * 3, vertex_count / 3);
 	for (int i = 0; i < vertex_count; i++) {
