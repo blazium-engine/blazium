@@ -500,8 +500,8 @@ Vector<ScriptLanguage::StackInfo> CSharpLanguage::debug_get_current_stack_info()
 	}
 	_recursion_flag_ = true;
 	SCOPE_EXIT {
-		_recursion_flag_ = false;
-	};
+		_recursion_flag_ = false; // clang-format off
+	}; // clang-format on
 
 	if (!gdmono || !gdmono->is_runtime_initialized()) {
 		return Vector<StackInfo>();
@@ -2744,7 +2744,7 @@ int CSharpScript::get_member_line(const StringName &p_member) const {
 	return -1;
 }
 
-const Variant CSharpScript::get_rpc_config() const {
+Variant CSharpScript::get_rpc_config() const {
 	return rpc_config;
 }
 

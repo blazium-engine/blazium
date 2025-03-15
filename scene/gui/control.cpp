@@ -35,8 +35,8 @@
 #include "core/config/project_settings.h"
 #include "core/math/geometry_2d.h"
 #include "core/os/os.h"
-#include "core/string/print_string.h"
 #include "core/string/translation_server.h"
+#include "scene/main/canvas_layer.h"
 #include "scene/main/window.h"
 #include "scene/theme/theme_db.h"
 #include "scene/theme/theme_owner.h"
@@ -121,11 +121,11 @@ void Control::_edit_set_state(const Dictionary &p_state) {
 void Control::_edit_set_position(const Point2 &p_position) {
 	ERR_FAIL_COND_MSG(!Engine::get_singleton()->is_editor_hint(), "This function can only be used from editor plugins.");
 	set_position(p_position, ControlEditorToolbar::get_singleton()->is_anchors_mode_enabled() && get_parent_control());
-};
+}
 
 Point2 Control::_edit_get_position() const {
 	return get_position();
-};
+}
 
 void Control::_edit_set_scale(const Size2 &p_scale) {
 	set_scale(p_scale);
@@ -2352,6 +2352,24 @@ void Control::_window_find_focus_neighbor(const Vector2 &p_dir, Node *p_at, cons
 		points[2] = xform.xform(c->get_size());
 		points[3] = xform.xform(Point2(0, c->get_size().y));
 
+		// Tie-breaking aims to address situations where a potential focus neighbor's bounding rect
+		// is right next to the currently focused control (e.g. in BoxContainer with
+		// separation overridden to 0). This needs specific handling so that the correct
+		// focus neighbor is selected.
+
+		// Calculate centers of the potential neighbor, currently focused, and closest controls.
+		Point2 center = xform.xform(0.5 * c->get_size());
+		// We only have the points, not an actual reference.
+		Point2 p_center = 0.25 * (p_points[0] + p_points[1] + p_points[2] + p_points[3]);
+		Point2 closest_center;
+		bool should_tiebreak = false;
+		if (*r_closest != nullptr) {
+			should_tiebreak = true;
+			Control *closest = *r_closest;
+			Transform2D closest_xform = closest->get_global_transform();
+			closest_center = closest_xform.xform(0.5 * closest->get_size());
+		}
+
 		real_t min = 1e7;
 
 		for (int i = 0; i < 4; i++) {
@@ -2372,10 +2390,15 @@ void Control::_window_find_focus_neighbor(const Vector2 &p_dir, Node *p_at, cons
 
 					Vector2 pa, pb;
 					real_t d = Geometry2D::get_closest_points_between_segments(la, lb, fa, fb, pa, pb);
-					//real_t d = Geometry2D::get_closest_distance_between_segments(Vector3(la.x,la.y,0),Vector3(lb.x,lb.y,0),Vector3(fa.x,fa.y,0),Vector3(fb.x,fb.y,0));
 					if (d < r_closest_dist) {
 						r_closest_dist = d;
 						*r_closest = c;
+					} else if (should_tiebreak && d == r_closest_dist) {
+						// Tie-break in favor of the control most aligned with p_dir.
+						if (p_dir.dot((center - p_center).normalized()) > p_dir.dot((closest_center - p_center).normalized())) {
+							r_closest_dist = d;
+							*r_closest = c;
+						}
 					}
 				}
 			}
@@ -3020,7 +3043,7 @@ void Control::set_layout_direction(Control::LayoutDirection p_direction) {
 	if (data.layout_dir == p_direction) {
 		return;
 	}
-	ERR_FAIL_INDEX((int)p_direction, 4);
+	ERR_FAIL_INDEX(p_direction, LAYOUT_DIRECTION_MAX);
 
 	data.layout_dir = p_direction;
 
@@ -3093,11 +3116,18 @@ bool Control::is_layout_rtl() const {
 				String locale = TranslationServer::get_singleton()->get_tool_locale();
 				const_cast<Control *>(this)->data.is_rtl = TS->is_locale_right_to_left(locale);
 			}
-		} else if (data.layout_dir == LAYOUT_DIRECTION_LOCALE) {
+		} else if (data.layout_dir == LAYOUT_DIRECTION_APPLICATION_LOCALE) {
 			if (GLOBAL_GET(SNAME("internationalization/rendering/force_right_to_left_layout_direction"))) {
 				const_cast<Control *>(this)->data.is_rtl = true;
 			} else {
 				String locale = TranslationServer::get_singleton()->get_tool_locale();
+				const_cast<Control *>(this)->data.is_rtl = TS->is_locale_right_to_left(locale);
+			}
+		} else if (data.layout_dir == LAYOUT_DIRECTION_SYSTEM_LOCALE) {
+			if (GLOBAL_GET(SNAME("internationalization/rendering/force_right_to_left_layout_direction"))) {
+				const_cast<Control *>(this)->data.is_rtl = true;
+			} else {
+				String locale = OS::get_singleton()->get_locale();
 				const_cast<Control *>(this)->data.is_rtl = TS->is_locale_right_to_left(locale);
 			}
 		} else {
@@ -3134,6 +3164,16 @@ bool Control::is_auto_translating() const {
 	return can_auto_translate();
 }
 #endif
+
+void Control::set_tooltip_auto_translate_mode(AutoTranslateMode p_mode) {
+	ERR_MAIN_THREAD_GUARD;
+	data.tooltip_auto_translate_mode = p_mode;
+}
+
+Node::AutoTranslateMode Control::get_tooltip_auto_translate_mode() const {
+	ERR_READ_THREAD_GUARD_V(AUTO_TRANSLATE_MODE_INHERIT);
+	return data.tooltip_auto_translate_mode;
+}
 
 // Extra properties.
 
@@ -3484,6 +3524,8 @@ void Control::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_v_grow_direction", "direction"), &Control::set_v_grow_direction);
 	ClassDB::bind_method(D_METHOD("get_v_grow_direction"), &Control::get_v_grow_direction);
 
+	ClassDB::bind_method(D_METHOD("set_tooltip_auto_translate_mode", "mode"), &Control::set_tooltip_auto_translate_mode);
+	ClassDB::bind_method(D_METHOD("get_tooltip_auto_translate_mode"), &Control::get_tooltip_auto_translate_mode);
 	ClassDB::bind_method(D_METHOD("set_tooltip_text", "hint"), &Control::set_tooltip_text);
 	ClassDB::bind_method(D_METHOD("get_tooltip_text"), &Control::get_tooltip_text);
 	ClassDB::bind_method(D_METHOD("get_tooltip", "at_position"), &Control::get_tooltip, DEFVAL(Point2()));
@@ -3540,7 +3582,7 @@ void Control::_bind_methods() {
 	ADD_GROUP("Layout", "");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "clip_contents"), "set_clip_contents", "is_clipping_contents");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "custom_minimum_size", PROPERTY_HINT_NONE, "suffix:px"), "set_custom_minimum_size", "get_custom_minimum_size");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "layout_direction", PROPERTY_HINT_ENUM, "Inherited,Based on Locale,Left-to-Right,Right-to-Left"), "set_layout_direction", "get_layout_direction");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "layout_direction", PROPERTY_HINT_ENUM, "Inherited,Based on Application Locale,Left-to-Right,Right-to-Left,Based on System Locale"), "set_layout_direction", "get_layout_direction");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "layout_mode", PROPERTY_HINT_ENUM, "Position,Anchors,Container,Uncontrolled", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_INTERNAL), "_set_layout_mode", "_get_layout_mode");
 	ADD_PROPERTY_DEFAULT("layout_mode", LayoutMode::LAYOUT_MODE_POSITION);
 
@@ -3591,6 +3633,7 @@ void Control::_bind_methods() {
 
 	ADD_GROUP("Tooltip", "tooltip_");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "tooltip_text", PROPERTY_HINT_MULTILINE_TEXT), "set_tooltip_text", "get_tooltip_text");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "tooltip_auto_translate_mode", PROPERTY_HINT_ENUM, "Inherit,Always,Disabled"), "set_tooltip_auto_translate_mode", "get_tooltip_auto_translate_mode");
 
 	ADD_GROUP("Focus", "focus_");
 	ADD_PROPERTYI(PropertyInfo(Variant::NODE_PATH, "focus_neighbor_left", PROPERTY_HINT_NODE_PATH_VALID_TYPES, "Control"), "set_focus_neighbor", "get_focus_neighbor", SIDE_LEFT);
@@ -3688,9 +3731,14 @@ void Control::_bind_methods() {
 	BIND_ENUM_CONSTANT(ANCHOR_END);
 
 	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_INHERITED);
-	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_LOCALE);
+	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_APPLICATION_LOCALE);
 	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_LTR);
 	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_RTL);
+	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_SYSTEM_LOCALE);
+	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_MAX);
+#ifndef DISABLE_DEPRECATED
+	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_LOCALE);
+#endif // DISABLE_DEPRECATED
 
 	BIND_ENUM_CONSTANT(TEXT_DIRECTION_INHERITED);
 	BIND_ENUM_CONSTANT(TEXT_DIRECTION_AUTO);

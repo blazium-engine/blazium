@@ -351,16 +351,14 @@ void SceneTreeEditor::_add_nodes(Node *p_node, TreeItem *p_parent) {
 					msg_temp += String::utf8("•  ") + String(E.name) + "\n";
 				}
 			}
-		}
-		if (num_connections >= 1 || num_groups >= 1) {
-			if (num_groups < 1) {
-				msg_temp += "\n";
-			}
-			msg_temp += TTR("Click to show signals dock.");
+		} else {
+			msg_temp += "\n";
 		}
 
 		Ref<Texture2D> icon_temp;
 		SceneTreeEditorButton signal_temp = BUTTON_SIGNALS;
+		String msg_temp_end = TTR("Click to show signals dock.");
+
 		if (num_connections >= 1 && num_groups >= 1) {
 			icon_temp = get_editor_theme_icon(SNAME("SignalsAndGroups"));
 		} else if (num_connections >= 1) {
@@ -368,9 +366,11 @@ void SceneTreeEditor::_add_nodes(Node *p_node, TreeItem *p_parent) {
 		} else if (num_groups >= 1) {
 			icon_temp = get_editor_theme_icon(SNAME("Groups"));
 			signal_temp = BUTTON_GROUPS;
+			msg_temp_end = TTR("Click to show groups dock.");
 		}
 
 		if (num_connections >= 1 || num_groups >= 1) {
+			msg_temp += msg_temp_end;
 			item->add_button(0, icon_temp, signal_temp, false, msg_temp);
 		}
 	}
@@ -1343,6 +1343,7 @@ Variant SceneTreeEditor::get_drag_data_fw(const Point2 &p_point, Control *p_from
 			tf->set_texture(icons[i]);
 			hb->add_child(tf);
 			Label *label = memnew(Label(selected_nodes[i]->get_name()));
+			label->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 			hb->add_child(label);
 			vb->add_child(hb);
 			hb->set_modulate(Color(1, 1, 1, opacity_item));

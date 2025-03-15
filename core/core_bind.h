@@ -32,7 +32,6 @@
 #define CORE_BIND_H
 
 #include "core/debugger/engine_profiler.h"
-#include "core/io/image.h"
 #include "core/io/resource_loader.h"
 #include "core/io/resource_saver.h"
 #include "core/object/script_language.h"
@@ -73,7 +72,7 @@ public:
 	static ResourceLoader *get_singleton() { return singleton; }
 
 	Error load_threaded_request(const String &p_path, const String &p_type_hint = "", bool p_use_sub_threads = false, CacheMode p_cache_mode = CACHE_MODE_REUSE);
-	ThreadLoadStatus load_threaded_get_status(const String &p_path, Array r_progress = Array());
+	ThreadLoadStatus load_threaded_get_status(const String &p_path, Array r_progress = ClassDB::default_array_arg);
 	Ref<Resource> load_threaded_get(const String &p_path);
 
 	Ref<Resource> load(const String &p_path, const String &p_type_hint = "", CacheMode p_cache_mode = CACHE_MODE_REUSE);
@@ -85,6 +84,8 @@ public:
 	bool has_cached(const String &p_path);
 	bool exists(const String &p_path, const String &p_type_hint = "");
 	ResourceUID::ID get_resource_uid(const String &p_path);
+
+	Vector<String> list_directory(const String &p_directory);
 
 	ResourceLoader() { singleton = this; }
 };
@@ -114,6 +115,8 @@ public:
 	Vector<String> get_recognized_extensions(const Ref<Resource> &p_resource);
 	void add_resource_format_saver(Ref<ResourceFormatSaver> p_format_saver, bool p_at_front);
 	void remove_resource_format_saver(Ref<ResourceFormatSaver> p_format_saver);
+
+	ResourceUID::ID get_resource_id_for_path(const String &p_path, bool p_generate = false);
 
 	ResourceSaver() { singleton = this; }
 };
@@ -159,7 +162,7 @@ public:
 	Vector<String> get_system_font_path_for_text(const String &p_font_name, const String &p_text, const String &p_locale = String(), const String &p_script = String(), int p_weight = 400, int p_stretch = 100, bool p_italic = false) const;
 	String get_executable_path() const;
 	String read_string_from_stdin();
-	int execute(const String &p_path, const Vector<String> &p_arguments, Array r_output = Array(), bool p_read_stderr = false, bool p_open_console = false);
+	int execute(const String &p_path, const Vector<String> &p_arguments, Array r_output = ClassDB::default_array_arg, bool p_read_stderr = false, bool p_open_console = false);
 	Dictionary execute_with_pipe(const String &p_path, const Vector<String> &p_arguments);
 	int create_process(const String &p_path, const Vector<String> &p_arguments, bool p_open_console = false);
 	int create_instance(const Vector<String> &p_arguments);
@@ -317,6 +320,8 @@ public:
 
 	Dictionary make_atlas(const Vector<Size2> &p_rects);
 
+	TypedArray<Point2i> bresenham_line(const Point2i &p_from, const Point2i &p_to);
+
 	Geometry2D() { singleton = this; }
 };
 
@@ -436,6 +441,14 @@ protected:
 	static void _bind_methods();
 
 public:
+	enum APIType {
+		API_CORE,
+		API_EDITOR,
+		API_EXTENSION,
+		API_EDITOR_EXTENSION,
+		API_NONE,
+	};
+
 	PackedStringArray get_class_list() const;
 	PackedStringArray get_inheriters_from_class(const StringName &p_class) const;
 	StringName get_parent_class(const StringName &p_class) const;
@@ -444,6 +457,7 @@ public:
 	bool can_instantiate(const StringName &p_class) const;
 	Variant instantiate(const StringName &p_class) const;
 
+	APIType class_get_api_type(const StringName &p_class) const;
 	bool class_has_signal(const StringName &p_class, const StringName &p_signal) const;
 	Dictionary class_get_signal(const StringName &p_class, const StringName &p_signal) const;
 	TypedArray<Dictionary> class_get_signal_list(const StringName &p_class, bool p_no_inheritance = false) const;
@@ -545,6 +559,9 @@ public:
 	// `set_write_movie_path()` is not exposed to the scripting API as changing it at run-time has no effect.
 	String get_write_movie_path() const;
 
+	void set_print_to_stdout(bool p_enabled);
+	bool is_printing_to_stdout() const;
+
 	void set_print_error_messages(bool p_enabled);
 	bool is_printing_error_messages() const;
 
@@ -620,5 +637,7 @@ VARIANT_ENUM_CAST(core_bind::Geometry2D::PolyJoinType);
 VARIANT_ENUM_CAST(core_bind::Geometry2D::PolyEndType);
 
 VARIANT_ENUM_CAST(core_bind::Thread::Priority);
+
+VARIANT_ENUM_CAST(core_bind::special::ClassDB::APIType);
 
 #endif // CORE_BIND_H

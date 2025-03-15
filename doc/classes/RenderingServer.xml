@@ -329,6 +329,7 @@
 			<param index="4" name="texture" type="RID" default="RID()" />
 			<description>
 				Draws a 2D polygon on the [CanvasItem] pointed to by the [param item] [RID]. If you need more flexibility (such as being able to use bones), use [method canvas_item_add_triangle_array] instead. See also [method CanvasItem.draw_polygon].
+				[b]Note:[/b] If you frequently redraw the same polygon with a large number of vertices, consider pre-calculating the triangulation with [method Geometry2D.triangulate_polygon] and using [method CanvasItem.draw_mesh], [method CanvasItem.draw_multimesh], or [method canvas_item_add_triangle_array].
 			</description>
 		</method>
 		<method name="canvas_item_add_polyline">
@@ -912,7 +913,7 @@
 			<param index="1" name="transform" type="Transform2D" />
 			<description>
 				Transforms both the current and previous stored transform for a canvas light.
-				This allows transforming a light without creating a "glitch" in the interpolation, which is is particularly useful for large worlds utilizing a shifting origin.
+				This allows transforming a light without creating a "glitch" in the interpolation, which is particularly useful for large worlds utilizing a shifting origin.
 			</description>
 		</method>
 		<method name="canvas_occluder_polygon_create">
@@ -1537,6 +1538,20 @@
 			<param index="0" name="rid" type="RID" />
 			<description>
 				Tries to free an object in the RenderingServer. To avoid memory leaks, this should be called after using an object as memory management does not occur automatically when using RenderingServer directly.
+			</description>
+		</method>
+		<method name="get_current_rendering_driver_name" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the name of the current rendering driver. This can be [code]vulkan[/code], [code]d3d12[/code], [code]metal[/code], [code]opengl3[/code], [code]opengl3_es[/code], or [code]opengl3_angle[/code]. See also [method get_current_rendering_method].
+				The rendering driver is determined by [member ProjectSettings.rendering/rendering_device/driver], the [code]--rendering-driver[/code] command line argument that overrides this project setting, or an automatic fallback that is applied depending on the hardware.
+			</description>
+		</method>
+		<method name="get_current_rendering_method" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the name of the current rendering method. This can be [code]forward_plus[/code], [code]mobile[/code], or [code]gl_compatibility[/code]. See also [method get_current_rendering_driver_name].
+				The rendering method is determined by [member ProjectSettings.rendering/renderer/rendering_method], the [code]--rendering-method[/code] command line argument that overrides this project setting, or an automatic fallback that is applied depending on the hardware.
 			</description>
 		</method>
 		<method name="get_default_clear_color">
@@ -2613,6 +2628,9 @@
 				  - Position + Custom data: 16 floats (12 floats for Transform3D, 4 floats of custom data)
 				  - Position + Vertex color + Custom data: 20 floats (12 floats for Transform3D, 4 floats for Color, 4 floats of custom data)
 				[/codeblock]
+				Instance transforms are in row-major order. Specifically:
+				- For [Transform2D] the float-order is: [code](x.x, y.x, padding_float, origin.x, x.y, y.y, padding_float, origin.y)[/code].
+				- For [Transform3D] the float-order is: [code](basis.x.x, basis.y.x, basis.z.x, origin.x, basis.x.y, basis.y.y, basis.z.y, origin.y, basis.x.z, basis.y.z, basis.z.z, origin.z)[/code].
 			</description>
 		</method>
 		<method name="multimesh_set_custom_aabb">
@@ -3479,7 +3497,7 @@
 		<method name="texture_2d_placeholder_create">
 			<return type="RID" />
 			<description>
-				Creates a placeholder for a 2-dimensional layered texture and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]texture_2d_layered_*[/code] RenderingServer functions, although it does nothing when used. See also [method texture_2d_layered_placeholder_create]
+				Creates a placeholder for a 2-dimensional layered texture and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]texture_2d_layered_*[/code] RenderingServer functions, although it does nothing when used. See also [method texture_2d_layered_placeholder_create].
 				Once finished with your RID, you will want to free the RID using the RenderingServer's [method free_rid] method.
 				[b]Note:[/b] The equivalent resource is [PlaceholderTexture2D].
 			</description>
@@ -3528,6 +3546,21 @@
 			<description>
 				Updates the texture specified by the [param texture] [RID]'s data with the data in [param data]. All the texture's layers must be replaced at once.
 				[b]Note:[/b] The [param texture] must have the same width, height, depth and format as the current texture data. Otherwise, an error will be printed and the original texture won't be modified. If you need to use different width, height, depth or format, use [method texture_replace] instead.
+			</description>
+		</method>
+		<method name="texture_create_from_native_handle">
+			<return type="RID" />
+			<param index="0" name="type" type="int" enum="RenderingServer.TextureType" />
+			<param index="1" name="format" type="int" enum="Image.Format" />
+			<param index="2" name="native_handle" type="int" />
+			<param index="3" name="width" type="int" />
+			<param index="4" name="height" type="int" />
+			<param index="5" name="depth" type="int" />
+			<param index="6" name="layers" type="int" default="1" />
+			<param index="7" name="layered_type" type="int" enum="RenderingServer.TextureLayeredType" default="0" />
+			<description>
+				Creates a texture based on a native handle that was created outside of Godot's renderer.
+				[b]Note:[/b] If using the rendering device renderer, using [method RenderingDevice.texture_create_from_extension] rather than this method is recommended. It will give you much more control over the texture's format and usage.
 			</description>
 		</method>
 		<method name="texture_get_format" qualifiers="const">
@@ -4268,6 +4301,15 @@
 		</constant>
 		<constant name="MAX_MESH_SURFACES" value="256">
 			The maximum number of surfaces a mesh can have.
+		</constant>
+		<constant name="TEXTURE_TYPE_2D" value="0" enum="TextureType">
+			2D texture.
+		</constant>
+		<constant name="TEXTURE_TYPE_LAYERED" value="1" enum="TextureType">
+			Layered texture.
+		</constant>
+		<constant name="TEXTURE_TYPE_3D" value="2" enum="TextureType">
+			3D texture.
 		</constant>
 		<constant name="TEXTURE_LAYERED_2D_ARRAY" value="0" enum="TextureLayeredType">
 			Array of 2-dimensional textures (see [Texture2DArray]).
@@ -5094,7 +5136,7 @@
 			The callback is called before our transparent rendering pass, but after our sky is rendered and we've created our back buffers.
 		</constant>
 		<constant name="COMPOSITOR_EFFECT_CALLBACK_TYPE_POST_TRANSPARENT" value="4" enum="CompositorEffectCallbackType">
-			The callback is called after our transparent rendering pass, but before any build in post effects and output to our render target.
+			The callback is called after our transparent rendering pass, but before any built-in post-processing effects and output to our render target.
 		</constant>
 		<constant name="COMPOSITOR_EFFECT_CALLBACK_TYPE_ANY" value="-1" enum="CompositorEffectCallbackType">
 		</constant>
@@ -5165,7 +5207,7 @@
 			Output color as they came in. This can cause bright lighting to look blown out, with noticeable clipping in the output colors.
 		</constant>
 		<constant name="ENV_TONE_MAPPER_REINHARD" value="1" enum="EnvironmentToneMapper">
-			Use the Reinhard tonemapper. Performs a variation on rendered pixels' colors by this formula: [code]color = color / (1 + color)[/code]. This avoids clipping bright highlights, but the resulting image can look a bit dull.
+			Use the Reinhard tonemapper. Performs a variation on rendered pixels' colors by this formula: [code]color = color * (1 + color / (white * white)) / (1 + color)[/code]. This avoids clipping bright highlights, but the resulting image can look a bit dull. When [member Environment.tonemap_white] is left at the default value of [code]1.0[/code] this is identical to [constant ENV_TONE_MAPPER_LINEAR] while also being slightly less performant.
 		</constant>
 		<constant name="ENV_TONE_MAPPER_FILMIC" value="2" enum="EnvironmentToneMapper">
 			Use the filmic tonemapper. This avoids clipping bright highlights, with a resulting image that usually looks more vivid than [constant ENV_TONE_MAPPER_REINHARD].
@@ -5606,7 +5648,10 @@
 		<constant name="GLOBAL_VAR_TYPE_SAMPLERCUBE" value="27" enum="GlobalShaderParameterType">
 			Cubemap sampler global shader parameter ([code]global uniform samplerCube ...[/code]). Exposed as a [Cubemap] in the editor UI.
 		</constant>
-		<constant name="GLOBAL_VAR_TYPE_MAX" value="28" enum="GlobalShaderParameterType">
+		<constant name="GLOBAL_VAR_TYPE_SAMPLEREXT" value="28" enum="GlobalShaderParameterType">
+			External sampler global shader parameter ([code]global uniform samplerExternalOES ...[/code]). Exposed as a [ExternalTexture] in the editor UI.
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_MAX" value="29" enum="GlobalShaderParameterType">
 			Represents the size of the [enum GlobalShaderParameterType] enum.
 		</constant>
 		<constant name="RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME" value="0" enum="RenderingInfo">

@@ -62,6 +62,13 @@ public:
 		NETWORK_ONLINE,
 	};
 
+	enum InitialScreen {
+		INITIAL_SCREEN_AUTO = -5, // Remembers last screen position.
+		INITIAL_SCREEN_WITH_MOUSE_FOCUS = -4,
+		INITIAL_SCREEN_WITH_KEYBOARD_FOCUS = -3,
+		INITIAL_SCREEN_PRIMARY = -2,
+	};
+
 private:
 	struct VariantContainer {
 		int order = 0;
@@ -95,6 +102,7 @@ private:
 	HashMap<String, List<Ref<InputEvent>>> builtin_action_overrides;
 
 	Vector<String> favorites;
+	HashMap<String, PackedStringArray> favorite_properties;
 	Vector<String> recent_dirs;
 
 	bool save_changed_setting = true;
@@ -169,6 +177,8 @@ public:
 
 	void set_favorites(const Vector<String> &p_favorites);
 	Vector<String> get_favorites() const;
+	void set_favorite_properties(const HashMap<String, PackedStringArray> &p_favorite_properties);
+	HashMap<String, PackedStringArray> get_favorite_properties() const;
 	void set_recent_dirs(const Vector<String> &p_recent_dirs);
 	Vector<String> get_recent_dirs() const;
 	void load_favorites_and_recent_dirs();

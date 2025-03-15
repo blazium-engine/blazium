@@ -31,7 +31,6 @@
 #include "control_editor_plugin.h"
 
 #include "editor/editor_node.h"
-#include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
 #include "editor/editor_undo_redo_manager.h"
 #include "editor/plugins/canvas_item_editor_plugin.h"
@@ -164,7 +163,7 @@ ControlPositioningWarning::ControlPositioningWarning() {
 
 void EditorPropertyAnchorsPreset::_set_read_only(bool p_read_only) {
 	options->set_disabled(p_read_only);
-};
+}
 
 void EditorPropertyAnchorsPreset::_option_selected(int p_which) {
 	int64_t val = options->get_item_metadata(p_which);
@@ -228,7 +227,7 @@ void EditorPropertySizeFlags::_set_read_only(bool p_read_only) {
 		check->set_disabled(p_read_only);
 	}
 	flag_presets->set_disabled(p_read_only);
-};
+}
 
 void EditorPropertySizeFlags::_preset_selected(int p_which) {
 	int preset = flag_presets->get_item_id(p_which);
@@ -517,6 +516,9 @@ void ControlEditorPopupButton::_notification(int p_what) {
 		case NOTIFICATION_DRAW: {
 			if (arrow_icon.is_valid()) {
 				Vector2 arrow_pos = Point2(26, 0) * EDSCALE;
+				if (is_layout_rtl()) {
+					arrow_pos.x = get_size().x - arrow_pos.x - arrow_icon->get_width();
+				}
 				arrow_pos.y = get_size().y / 2 - arrow_icon->get_height() / 2;
 				draw_texture(arrow_icon, arrow_pos);
 			}
@@ -540,7 +542,6 @@ ControlEditorPopupButton::ControlEditorPopupButton() {
 	set_focus_mode(FOCUS_NONE);
 
 	popup_panel = memnew(PopupPanel);
-	popup_panel->set_theme_type_variation("ControlEditorPopupPanel");
 	add_child(popup_panel);
 	popup_panel->connect("about_to_popup", callable_mp(this, &ControlEditorPopupButton::_popup_visibility_changed).bind(true));
 	popup_panel->connect("popup_hide", callable_mp(this, &ControlEditorPopupButton::_popup_visibility_changed).bind(false));

@@ -871,7 +871,11 @@ void EditorPropertyDictionary::_property_changed(const String &p_property, Varia
 	}
 
 	object->set(p_property, p_value);
-	emit_changed(get_edited_property(), object->get_dict(), p_name, p_changing);
+	bool new_item_or_key = !p_property.begins_with("indices");
+	emit_changed(get_edited_property(), object->get_dict(), p_name, p_changing || new_item_or_key);
+	if (new_item_or_key) {
+		update_property();
+	}
 }
 
 void EditorPropertyDictionary::_change_type(Object *p_button, int p_slot_index) {
@@ -1085,6 +1089,11 @@ void EditorPropertyDictionary::update_property() {
 				new_prop->set_h_size_flags(SIZE_EXPAND_FILL);
 				new_prop->set_read_only(is_read_only());
 				slot.set_prop(new_prop);
+			} else if (slot.index != EditorPropertyDictionaryObject::NEW_KEY_INDEX && slot.index != EditorPropertyDictionaryObject::NEW_VALUE_INDEX) {
+				Variant key = dict.get_key_at_index(slot.index);
+				String cs = key.get_construct_string();
+				slot.prop->set_label(cs);
+				slot.prop->set_tooltip_text(cs);
 			}
 
 			// We need to grab the focus of the property that is being changed, even if the type didn't actually changed.

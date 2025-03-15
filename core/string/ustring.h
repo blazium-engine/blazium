@@ -118,7 +118,7 @@ public:
 	Char16String &operator+=(char16_t p_char);
 	int length() const { return size() ? size() - 1 : 0; }
 	const char16_t *get_data() const;
-	operator const char16_t *() const { return get_data(); };
+	operator const char16_t *() const { return get_data(); }
 
 protected:
 	void copy_from(const char16_t *p_cstr);
@@ -160,7 +160,7 @@ public:
 	CharString &operator+=(char p_char);
 	int length() const { return size() ? size() - 1 : 0; }
 	const char *get_data() const;
-	operator const char *() const { return get_data(); };
+	operator const char *() const { return get_data(); }
 
 protected:
 	void copy_from(const char *p_cstr);
@@ -287,11 +287,12 @@ public:
 	String substr(int p_from, int p_chars = -1) const;
 	int find(const String &p_str, int p_from = 0) const; ///< return <0 if failed
 	int find(const char *p_str, int p_from = 0) const; ///< return <0 if failed
-	int find_char(const char32_t &p_char, int p_from = 0) const; ///< return <0 if failed
+	int find_char(char32_t p_char, int p_from = 0) const; ///< return <0 if failed
 	int findn(const String &p_str, int p_from = 0) const; ///< return <0 if failed, case insensitive
 	int findn(const char *p_str, int p_from = 0) const; ///< return <0 if failed
 	int rfind(const String &p_str, int p_from = -1) const; ///< return <0 if failed
 	int rfind(const char *p_str, int p_from = -1) const; ///< return <0 if failed
+	int rfind_char(char32_t p_char, int p_from = -1) const; ///< return <0 if failed
 	int rfindn(const String &p_str, int p_from = -1) const; ///< return <0 if failed, case insensitive
 	int rfindn(const char *p_str, int p_from = -1) const; ///< return <0 if failed
 	int findmk(const Vector<String> &p_keys, int p_from = 0, int *r_key = nullptr) const; ///< return <0 if failed
@@ -305,6 +306,7 @@ public:
 	bool is_subsequence_of(const String &p_string) const;
 	bool is_subsequence_ofn(const String &p_string) const;
 	bool is_quoted() const;
+	bool is_lowercase() const;
 	Vector<String> bigrams() const;
 	float similarity(const String &p_string) const;
 	String format(const Variant &values, const String &placeholder = "{_}") const;
@@ -332,6 +334,7 @@ public:
 	static String num(double p_num, int p_decimals = -1);
 	static String num_scientific(double p_num);
 	static String num_real(double p_num, bool p_trailing = true);
+	static String num_real(float p_num, bool p_trailing = true);
 	static String num_int64(int64_t p_num, int base = 10, bool capitalize_hex = false);
 	static String num_uint64(uint64_t p_num, int base = 10, bool capitalize_hex = false);
 	static String chr(char32_t p_char);
@@ -460,6 +463,7 @@ public:
 	static String get_invalid_node_name_characters(bool p_allow_internal = false);
 	String validate_node_name() const;
 	String validate_ascii_identifier() const;
+	String validate_unicode_identifier() const;
 	String validate_filename() const;
 
 	bool is_valid_ascii_identifier() const;

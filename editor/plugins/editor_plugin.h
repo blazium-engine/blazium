@@ -32,6 +32,7 @@
 #define EDITOR_PLUGIN_H
 
 #include "core/io/config_file.h"
+#include "editor/plugins/editor_context_menu_plugin.h"
 #include "scene/3d/camera_3d.h"
 #include "scene/gui/control.h"
 
@@ -248,6 +249,9 @@ public:
 
 	void add_resource_conversion_plugin(const Ref<EditorResourceConversionPlugin> &p_plugin);
 	void remove_resource_conversion_plugin(const Ref<EditorResourceConversionPlugin> &p_plugin);
+
+	void add_context_menu_plugin(EditorContextMenuPlugin::ContextMenuSlot p_slot, const Ref<EditorContextMenuPlugin> &p_plugin);
+	void remove_context_menu_plugin(const Ref<EditorContextMenuPlugin> &p_plugin);
 
 	void enable_plugin();
 	void disable_plugin();

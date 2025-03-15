@@ -122,6 +122,7 @@ GDScriptParser::GDScriptParser() {
 		register_annotation(MethodInfo("@export_flags_avoidance"), AnnotationInfo::VARIABLE, &GDScriptParser::export_annotations<PROPERTY_HINT_LAYERS_AVOIDANCE, Variant::INT>);
 		register_annotation(MethodInfo("@export_storage"), AnnotationInfo::VARIABLE, &GDScriptParser::export_storage_annotation);
 		register_annotation(MethodInfo("@export_custom", PropertyInfo(Variant::INT, "hint", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_CLASS_IS_ENUM, "PropertyHint"), PropertyInfo(Variant::STRING, "hint_string"), PropertyInfo(Variant::INT, "usage", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_CLASS_IS_BITFIELD, "PropertyUsageFlags")), AnnotationInfo::VARIABLE, &GDScriptParser::export_custom_annotation, varray(PROPERTY_USAGE_DEFAULT));
+		register_annotation(MethodInfo("@export_tool_button", PropertyInfo(Variant::STRING, "text"), PropertyInfo(Variant::STRING, "icon")), AnnotationInfo::VARIABLE, &GDScriptParser::export_tool_button_annotation, varray(""));
 		// Export grouping annotations.
 		register_annotation(MethodInfo("@export_category", PropertyInfo(Variant::STRING, "name")), AnnotationInfo::STANDALONE, &GDScriptParser::export_group_annotations<PROPERTY_USAGE_CATEGORY>);
 		register_annotation(MethodInfo("@export_group", PropertyInfo(Variant::STRING, "name"), PropertyInfo(Variant::STRING, "prefix")), AnnotationInfo::STANDALONE, &GDScriptParser::export_group_annotations<PROPERTY_USAGE_GROUP>, varray(""));
@@ -243,7 +244,7 @@ void GDScriptParser::apply_pending_warnings() {
 
 	pending_warnings.clear();
 }
-#endif
+#endif // DEBUG_ENABLED
 
 void GDScriptParser::override_completion_context(const Node *p_for_node, CompletionType p_type, Node *p_node, int p_argument) {
 	if (!for_completion) {
@@ -407,6 +408,10 @@ Error GDScriptParser::parse(const String &p_source_code, const String &p_script_
 	push_multiline(false); // Keep one for the whole parsing.
 	parse_program();
 	pop_multiline();
+
+#ifdef TOOLS_ENABLED
+	comment_data = tokenizer->get_comments();
+#endif
 
 	memdelete(text_tokenizer);
 	tokenizer = nullptr;
@@ -1623,15 +1628,17 @@ GDScriptParser::AnnotationNode *GDScriptParser::parse_annotation(uint32_t p_vali
 		valid = false;
 	}
 
-	annotation->info = &valid_annotations[annotation->name];
+	if (valid) {
+		annotation->info = &valid_annotations[annotation->name];
 
-	if (!annotation->applies_to(p_valid_targets)) {
-		if (annotation->applies_to(AnnotationInfo::SCRIPT)) {
-			push_error(vformat(R"(Annotation "%s" must be at the top of the script, before "extends" and "class_name".)", annotation->name));
-		} else {
-			push_error(vformat(R"(Annotation "%s" is not allowed in this level.)", annotation->name));
+		if (!annotation->applies_to(p_valid_targets)) {
+			if (annotation->applies_to(AnnotationInfo::SCRIPT)) {
+				push_error(vformat(R"(Annotation "%s" must be at the top of the script, before "extends" and "class_name".)", annotation->name));
+			} else {
+				push_error(vformat(R"(Annotation "%s" is not allowed in this level.)", annotation->name));
+			}
+			valid = false;
 		}
-		valid = false;
 	}
 
 	if (check(GDScriptTokenizer::Token::PARENTHESIS_OPEN)) {
@@ -4113,7 +4120,7 @@ bool GDScriptParser::validate_annotation_arguments(AnnotationNode *p_annotation)
 	return true;
 }
 
-bool GDScriptParser::tool_annotation(const AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
+bool GDScriptParser::tool_annotation(AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
 #ifdef DEBUG_ENABLED
 	if (_is_tool) {
 		push_error(R"("@tool" annotation can only be used once.)", p_annotation);
@@ -4124,7 +4131,7 @@ bool GDScriptParser::tool_annotation(const AnnotationNode *p_annotation, Node *p
 	return true;
 }
 
-bool GDScriptParser::icon_annotation(const AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
+bool GDScriptParser::icon_annotation(AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
 	ERR_FAIL_COND_V_MSG(p_target->type != Node::CLASS, false, R"("@icon" annotation can only be applied to classes.)");
 	ERR_FAIL_COND_V(p_annotation->resolved_arguments.is_empty(), false);
 
@@ -4155,7 +4162,7 @@ bool GDScriptParser::icon_annotation(const AnnotationNode *p_annotation, Node *p
 	return true;
 }
 
-bool GDScriptParser::onready_annotation(const AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
+bool GDScriptParser::onready_annotation(AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
 	ERR_FAIL_COND_V_MSG(p_target->type != Node::VARIABLE, false, R"("@onready" annotation can only be applied to class variables.)");
 
 	if (current_class && !ClassDB::is_parent_class(current_class->get_datatype().native_type, SNAME("Node"))) {
@@ -4288,7 +4295,7 @@ static StringName _find_narrowest_native_or_global_class(const GDScriptParser::D
 }
 
 template <PropertyHint t_hint, Variant::Type t_type>
-bool GDScriptParser::export_annotations(const AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
+bool GDScriptParser::export_annotations(AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
 	ERR_FAIL_COND_V_MSG(p_target->type != Node::VARIABLE, false, vformat(R"("%s" annotation can only be applied to variables.)", p_annotation->name));
 	ERR_FAIL_NULL_V(p_class, false);
 
@@ -4527,10 +4534,10 @@ bool GDScriptParser::export_annotations(const AnnotationNode *p_annotation, Node
 // For `@export_storage` and `@export_custom`, there is no need to check the variable type, argument values,
 // or handle array exports in a special way, so they are implemented as separate methods.
 
-bool GDScriptParser::export_storage_annotation(const AnnotationNode *p_annotation, Node *p_node, ClassNode *p_class) {
-	ERR_FAIL_COND_V_MSG(p_node->type != Node::VARIABLE, false, vformat(R"("%s" annotation can only be applied to variables.)", p_annotation->name));
+bool GDScriptParser::export_storage_annotation(AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
+	ERR_FAIL_COND_V_MSG(p_target->type != Node::VARIABLE, false, vformat(R"("%s" annotation can only be applied to variables.)", p_annotation->name));
 
-	VariableNode *variable = static_cast<VariableNode *>(p_node);
+	VariableNode *variable = static_cast<VariableNode *>(p_target);
 	if (variable->is_static) {
 		push_error(vformat(R"(Annotation "%s" cannot be applied to a static variable.)", p_annotation->name), p_annotation);
 		return false;
@@ -4549,11 +4556,11 @@ bool GDScriptParser::export_storage_annotation(const AnnotationNode *p_annotatio
 	return true;
 }
 
-bool GDScriptParser::export_custom_annotation(const AnnotationNode *p_annotation, Node *p_node, ClassNode *p_class) {
-	ERR_FAIL_COND_V_MSG(p_node->type != Node::VARIABLE, false, vformat(R"("%s" annotation can only be applied to variables.)", p_annotation->name));
+bool GDScriptParser::export_custom_annotation(AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
+	ERR_FAIL_COND_V_MSG(p_target->type != Node::VARIABLE, false, vformat(R"("%s" annotation can only be applied to variables.)", p_annotation->name));
 	ERR_FAIL_COND_V_MSG(p_annotation->resolved_arguments.size() < 2, false, R"(Annotation "@export_custom" requires 2 arguments.)");
 
-	VariableNode *variable = static_cast<VariableNode *>(p_node);
+	VariableNode *variable = static_cast<VariableNode *>(p_target);
 	if (variable->is_static) {
 		push_error(vformat(R"(Annotation "%s" cannot be applied to a static variable.)", p_annotation->name), p_annotation);
 		return false;
@@ -4577,32 +4584,74 @@ bool GDScriptParser::export_custom_annotation(const AnnotationNode *p_annotation
 	return true;
 }
 
-template <PropertyUsageFlags t_usage>
-bool GDScriptParser::export_group_annotations(const AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
-	AnnotationNode *annotation = const_cast<AnnotationNode *>(p_annotation);
+bool GDScriptParser::export_tool_button_annotation(AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
+#ifdef TOOLS_ENABLED
+	ERR_FAIL_COND_V_MSG(p_target->type != Node::VARIABLE, false, vformat(R"("%s" annotation can only be applied to variables.)", p_annotation->name));
+	ERR_FAIL_COND_V(p_annotation->resolved_arguments.is_empty(), false);
 
-	if (annotation->resolved_arguments.is_empty()) {
+	if (!is_tool()) {
+		push_error(R"(Tool buttons can only be used in tool scripts (add "@tool" to the top of the script).)", p_annotation);
 		return false;
 	}
 
-	annotation->export_info.name = annotation->resolved_arguments[0];
+	VariableNode *variable = static_cast<VariableNode *>(p_target);
+
+	if (variable->is_static) {
+		push_error(vformat(R"(Annotation "%s" cannot be applied to a static variable.)", p_annotation->name), p_annotation);
+		return false;
+	}
+	if (variable->exported) {
+		push_error(vformat(R"(Annotation "%s" cannot be used with another "@export" annotation.)", p_annotation->name), p_annotation);
+		return false;
+	}
+
+	const DataType variable_type = variable->get_datatype();
+	if (!variable_type.is_variant() && variable_type.is_hard_type()) {
+		if (variable_type.kind != DataType::BUILTIN || variable_type.builtin_type != Variant::CALLABLE) {
+			push_error(vformat(R"("@export_tool_button" annotation requires a variable of type "Callable", but type "%s" was given instead.)", variable_type.to_string()), p_annotation);
+			return false;
+		}
+	}
+
+	variable->exported = true;
+
+	// Build the hint string (format: `<text>[,<icon>]`).
+	String hint_string = p_annotation->resolved_arguments[0].operator String(); // Button text.
+	if (p_annotation->resolved_arguments.size() > 1) {
+		hint_string += "," + p_annotation->resolved_arguments[1].operator String(); // Button icon.
+	}
+
+	variable->export_info.type = Variant::CALLABLE;
+	variable->export_info.hint = PROPERTY_HINT_TOOL_BUTTON;
+	variable->export_info.hint_string = hint_string;
+	variable->export_info.usage = PROPERTY_USAGE_EDITOR;
+#endif // TOOLS_ENABLED
+
+	return true; // Only available in editor.
+}
+
+template <PropertyUsageFlags t_usage>
+bool GDScriptParser::export_group_annotations(AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
+	ERR_FAIL_COND_V(p_annotation->resolved_arguments.is_empty(), false);
+
+	p_annotation->export_info.name = p_annotation->resolved_arguments[0];
 
 	switch (t_usage) {
 		case PROPERTY_USAGE_CATEGORY: {
-			annotation->export_info.usage = t_usage;
+			p_annotation->export_info.usage = t_usage;
 		} break;
 
 		case PROPERTY_USAGE_GROUP: {
-			annotation->export_info.usage = t_usage;
-			if (annotation->resolved_arguments.size() == 2) {
-				annotation->export_info.hint_string = annotation->resolved_arguments[1];
+			p_annotation->export_info.usage = t_usage;
+			if (p_annotation->resolved_arguments.size() == 2) {
+				p_annotation->export_info.hint_string = p_annotation->resolved_arguments[1];
 			}
 		} break;
 
 		case PROPERTY_USAGE_SUBGROUP: {
-			annotation->export_info.usage = t_usage;
-			if (annotation->resolved_arguments.size() == 2) {
-				annotation->export_info.hint_string = annotation->resolved_arguments[1];
+			p_annotation->export_info.usage = t_usage;
+			if (p_annotation->resolved_arguments.size() == 2) {
+				p_annotation->export_info.hint_string = p_annotation->resolved_arguments[1];
 			}
 		} break;
 	}
@@ -4610,7 +4659,7 @@ bool GDScriptParser::export_group_annotations(const AnnotationNode *p_annotation
 	return true;
 }
 
-bool GDScriptParser::warning_annotations(const AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
+bool GDScriptParser::warning_annotations(AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
 #ifndef DEBUG_ENABLED
 	// Only available in debug builds.
 	return true;
@@ -4685,7 +4734,7 @@ bool GDScriptParser::warning_annotations(const AnnotationNode *p_annotation, Nod
 #endif // DEBUG_ENABLED
 }
 
-bool GDScriptParser::rpc_annotation(const AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
+bool GDScriptParser::rpc_annotation(AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
 	ERR_FAIL_COND_V_MSG(p_target->type != Node::FUNCTION, false, vformat(R"("%s" annotation can only be applied to functions.)", p_annotation->name));
 
 	FunctionNode *function = static_cast<FunctionNode *>(p_target);
@@ -4746,7 +4795,7 @@ bool GDScriptParser::rpc_annotation(const AnnotationNode *p_annotation, Node *p_
 	return true;
 }
 
-bool GDScriptParser::static_unload_annotation(const AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
+bool GDScriptParser::static_unload_annotation(AnnotationNode *p_annotation, Node *p_target, ClassNode *p_class) {
 	ERR_FAIL_COND_V_MSG(p_target->type != Node::CLASS, false, vformat(R"("%s" annotation can only be applied to classes.)", p_annotation->name));
 	ClassNode *class_node = static_cast<ClassNode *>(p_target);
 	if (class_node->annotated_static_unload) {

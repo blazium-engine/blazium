@@ -38,6 +38,7 @@
 
 #include "core/config/project_settings.h"
 #include "core/input/input.h"
+#include "core/io/image.h"
 #include "core/os/os.h"
 #include "drivers/unix/ip_unix.h"
 #include "drivers/wasapi/audio_driver_wasapi.h"
@@ -356,8 +357,12 @@ typedef enum _SHC_PROCESS_DPI_AWARENESS {
 	SHC_PROCESS_PER_MONITOR_DPI_AWARE = 2,
 } SHC_PROCESS_DPI_AWARENESS;
 
+class DropTargetWindows;
+
 class DisplayServerWindows : public DisplayServer {
 	// No need to register with GDCLASS, it's platform-specific and nothing is added.
+
+	friend class DropTargetWindows;
 
 	_THREAD_SAFE_CLASS_
 
@@ -469,12 +474,14 @@ class DisplayServerWindows : public DisplayServer {
 		bool resizable = true;
 		bool window_focused = false;
 		int activate_state = 0;
-		bool was_maximized = false;
+		bool was_maximized_pre_fs = false;
+		bool was_fullscreen_pre_min = false;
 		bool always_on_top = false;
 		bool no_focus = false;
 		bool exclusive = false;
 		bool context_created = false;
 		bool mpass = false;
+		bool sharp_corners = false;
 
 		// Used to transfer data between events using timer.
 		WPARAM saved_wparam;
@@ -520,6 +527,9 @@ class DisplayServerWindows : public DisplayServer {
 		Callable input_event_callback;
 		Callable input_text_callback;
 		Callable drop_files_callback;
+
+		// OLE API
+		DropTargetWindows *drop_target = nullptr;
 
 		WindowID transient_parent = INVALID_WINDOW_ID;
 		HashSet<WindowID> transient_children;

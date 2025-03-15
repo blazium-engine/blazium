@@ -37,6 +37,7 @@
 #include "core/string/ustring.h"
 #include "core/version.h"
 #include "editor/debugger/debug_adapter/debug_adapter_protocol.h"
+#include "editor/debugger/editor_expression_evaluator.h"
 #include "editor/debugger/editor_performance_profiler.h"
 #include "editor/debugger/editor_profiler.h"
 #include "editor/debugger/editor_visual_profiler.h"
@@ -253,6 +254,13 @@ const SceneDebuggerTree *ScriptEditorDebugger::get_remote_tree() {
 	return scene_tree;
 }
 
+void ScriptEditorDebugger::request_remote_evaluate(const String &p_expression, int p_stack_frame) {
+	Array msg;
+	msg.push_back(p_expression);
+	msg.push_back(p_stack_frame);
+	_put_msg("evaluate", msg);
+}
+
 void ScriptEditorDebugger::update_remote_object(ObjectID p_obj_id, const String &p_prop, const Variant &p_value) {
 	Array msg;
 	msg.push_back(p_obj_id);
@@ -308,7 +316,7 @@ void ScriptEditorDebugger::_thread_debug_enter(uint64_t p_thread_id) {
 	ThreadDebugged &td = threads_debugged[p_thread_id];
 	_set_reason_text(td.error, MESSAGE_ERROR);
 	emit_signal(SNAME("breaked"), true, td.can_debug, td.error, td.has_stackdump);
-	if (!td.error.is_empty()) {
+	if (!td.error.is_empty() && EDITOR_GET("debugger/auto_switch_to_stack_trace")) {
 		tabs->set_current_tab(0);
 	}
 	inspector->clear_cache(); // Take a chance to force remote objects update.
@@ -812,6 +820,8 @@ void ScriptEditorDebugger::_parse_message(const String &p_msg, uint64_t p_thread
 		if (EditorFileSystem::get_singleton()) {
 			EditorFileSystem::get_singleton()->update_file(p_data[0]);
 		}
+	} else if (p_msg == "evaluation_return") {
+		expression_evaluator->add_value(p_data);
 	} else {
 		int colon_index = p_msg.find_char(':');
 		ERR_FAIL_COND_MSG(colon_index < 1, "Invalid message received");
@@ -855,8 +865,9 @@ void ScriptEditorDebugger::_notification(int p_what) {
 			error_tree->connect(SceneStringName(item_selected), callable_mp(this, &ScriptEditorDebugger::_error_selected));
 			error_tree->connect("item_activated", callable_mp(this, &ScriptEditorDebugger::_error_activated));
 			breakpoints_tree->connect("item_activated", callable_mp(this, &ScriptEditorDebugger::_breakpoint_tree_clicked));
-			[[fallthrough]];
-		}
+			connect("started", callable_mp(expression_evaluator, &EditorExpressionEvaluator::on_start));
+		} break;
+
 		case NOTIFICATION_THEME_CHANGED: {
 			tabs->add_theme_style_override(SceneStringName(panel), get_theme_stylebox(SNAME("DebuggerPanel"), EditorStringName(EditorStyles)));
 
@@ -1013,6 +1024,14 @@ void ScriptEditorDebugger::start(Ref<RemoteDebuggerPeer> p_peer) {
 	_set_reason_text(TTR("Debug session started."), MESSAGE_SUCCESS);
 	_update_buttons_state();
 	emit_signal(SNAME("started"));
+
+	if (EditorSettings::get_singleton()->get_project_metadata("debug_options", "autostart_profiler", false)) {
+		profiler->set_profiling(true);
+	}
+
+	if (EditorSettings::get_singleton()->get_project_metadata("debug_options", "autostart_visual_profiler", false)) {
+		visual_profiler->set_profiling(true);
+	}
 }
 
 void ScriptEditorDebugger::_update_buttons_state() {
@@ -1077,10 +1096,10 @@ void ScriptEditorDebugger::stop() {
 	profiler_signature.clear();
 
 	profiler->set_enabled(false, false);
-	profiler->set_pressed(false);
+	profiler->set_profiling(false);
 
 	visual_profiler->set_enabled(false);
-	visual_profiler->set_pressed(false);
+	visual_profiler->set_profiling(false);
 
 	inspector->edit(nullptr);
 	_update_buttons_state();
@@ -2003,6 +2022,13 @@ ScriptEditorDebugger::ScriptEditorDebugger() {
 		file_dialog = memnew(EditorFileDialog);
 		file_dialog->connect("file_selected", callable_mp(this, &ScriptEditorDebugger::_file_selected));
 		add_child(file_dialog);
+	}
+
+	{ // Expression evaluator
+		expression_evaluator = memnew(EditorExpressionEvaluator);
+		expression_evaluator->set_name(TTR("Evaluator"));
+		expression_evaluator->set_editor_debugger(this);
+		tabs->add_child(expression_evaluator);
 	}
 
 	{ //profiler

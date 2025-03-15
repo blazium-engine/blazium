@@ -3249,7 +3249,7 @@ Vector<uint8_t> RenderingDeviceDriverD3D12::shader_compile_binary_from_spirv(Vec
 							DEV_ASSERT(binding_info.res_class == (uint32_t)RES_CLASS_INVALID || binding_info.res_class == (uint32_t)res_class);
 							binding_info.res_class = res_class;
 						} else if (p_dxil_type == DXIL_RES_SAMPLER) {
-							binding_info.has_sampler = (uint32_t) true;
+							binding_info.has_sampler = (uint32_t)true;
 						} else {
 							CRASH_NOW();
 						}
@@ -6637,7 +6637,7 @@ static Error create_command_signature(ID3D12Device *device, D3D12_INDIRECT_ARGUM
 	HRESULT res = device->CreateCommandSignature(&cs_desc, nullptr, IID_PPV_ARGS(r_cmd_sig->GetAddressOf()));
 	ERR_FAIL_COND_V_MSG(!SUCCEEDED(res), ERR_CANT_CREATE, "CreateCommandSignature failed with error " + vformat("0x%08ux", (uint64_t)res) + ".");
 	return OK;
-};
+}
 
 Error RenderingDeviceDriverD3D12::_initialize_frames(uint32_t p_frame_count) {
 	Error err;

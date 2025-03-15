@@ -71,7 +71,7 @@ bool DisplayServerAndroid::has_feature(Feature p_feature) const {
 		case FEATURE_MOUSE:
 		//case FEATURE_MOUSE_WARP:
 		//case FEATURE_NATIVE_DIALOG:
-		//case FEATURE_NATIVE_DIALOG_INPUT:
+		case FEATURE_NATIVE_DIALOG_INPUT:
 		//case FEATURE_NATIVE_DIALOG_FILE:
 		//case FEATURE_NATIVE_ICON:
 		//case FEATURE_WINDOW_TRANSPARENCY:
@@ -173,6 +173,19 @@ bool DisplayServerAndroid::clipboard_has() const {
 		return godot_java->has_clipboard();
 	} else {
 		return DisplayServer::clipboard_has();
+	}
+}
+
+Error DisplayServerAndroid::dialog_input_text(String p_title, String p_description, String p_partial, const Callable &p_callback) {
+	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
+	ERR_FAIL_NULL_V(godot_java, FAILED);
+	input_dialog_callback = p_callback;
+	return godot_java->show_input_dialog(p_title, p_description, p_partial);
+}
+
+void DisplayServerAndroid::emit_input_dialog_callback(String p_text) {
+	if (input_dialog_callback.is_valid()) {
+		input_dialog_callback.call_deferred(p_text);
 	}
 }
 
@@ -304,6 +317,13 @@ int DisplayServerAndroid::virtual_keyboard_get_height() const {
 	return godot_io_java->get_vk_height();
 }
 
+bool DisplayServerAndroid::has_hardware_keyboard() const {
+	GodotIOJavaWrapper *godot_io_java = OS_Android::get_singleton()->get_godot_io_java();
+	ERR_FAIL_NULL_V(godot_io_java, false);
+
+	return godot_io_java->has_hardware_keyboard();
+}
+
 void DisplayServerAndroid::window_set_window_event_callback(const Callable &p_callable, DisplayServer::WindowID p_window) {
 	window_event_callback = p_callable;
 }
@@ -380,6 +400,14 @@ int64_t DisplayServerAndroid::window_get_native_handle(HandleType p_handle_type,
 			if (rendering_driver == "opengl3") {
 				return reinterpret_cast<int64_t>(eglGetCurrentContext());
 			}
+			return 0;
+		}
+		case EGL_DISPLAY: {
+			// @todo Find a way to get this from the Java side.
+			return 0;
+		}
+		case EGL_CONFIG: {
+			// @todo Find a way to get this from the Java side.
 			return 0;
 		}
 #endif
