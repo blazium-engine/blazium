@@ -7223,7 +7223,7 @@ EditorNode::EditorNode() {
 	title_bar->add_child(main_scroll_box);
 
 	HBoxContainer *main_editor_button_hb = memnew(HBoxContainer);
-	main_editor_button_hb->set_h_size_flags(Control::SIZE_EXPAND_FILL);
+	main_editor_button_hb->set_h_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_CENTER);
 	main_editor_button_hb->set_mouse_filter(Control::MOUSE_FILTER_STOP);
 	editor_main_screen->set_button_container(main_editor_button_hb);
 	main_scroll_box->set_control(main_editor_button_hb);
@@ -7313,13 +7313,15 @@ EditorNode::EditorNode() {
 	}
 	help_menu->add_icon_shortcut(theme->get_icon(SNAME("Heart"), EditorStringName(EditorIcons)), ED_SHORTCUT_AND_COMMAND("editor/support_development", TTR("Join the Blazium Discord")), HELP_SUPPORT_GODOT_DEVELOPMENT);
 
+	HBoxContainer *right_menu_hb = memnew(HBoxContainer);
+	right_menu_hb->set_h_size_flags(Control::SIZE_EXPAND_FILL);
+	title_bar->add_child(right_menu_hb);
+
 	project_run_bar = memnew(EditorRunBar);
-	title_bar->add_child(project_run_bar);
+	project_run_bar->set_h_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_END);
+	right_menu_hb->add_child(project_run_bar);
 	project_run_bar->connect("play_pressed", callable_mp(this, &EditorNode::_project_run_started));
 	project_run_bar->connect("stop_pressed", callable_mp(this, &EditorNode::_project_run_stopped));
-
-	HBoxContainer *right_menu_hb = memnew(HBoxContainer);
-	title_bar->add_child(right_menu_hb);
 
 	renderer = memnew(OptionButton);
 	renderer->set_clip_text(true);
