@@ -3346,6 +3346,13 @@ Error EditorExportPlatformAndroid::export_project_helper(const Ref<EditorExportP
 
 		String build_project_output;
 		int result = EditorNode::get_singleton()->execute_and_show_output(TTR("Building Android Project (gradle)"), build_command, cmdline, true, false, &build_project_output);
+		String command = build_command;
+		for (String line : cmdline) {
+			command += " " + line;
+		}
+		print_verbose("Building gradle with command:");
+		print_verbose(command);
+
 		if (result != 0) {
 			add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), TTR("Building of Android project failed, check output for the error:") + "\n\n" + build_project_output);
 			return ERR_CANT_CREATE;
