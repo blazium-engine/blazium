@@ -230,7 +230,7 @@ String GDScriptDocGen::_docvalue_from_variant(const Variant &p_variant, int p_re
 	}
 }
 
-String GDScriptDocGen::_docvalue_from_expression(const GDP::ExpressionNode *p_expression) {
+String GDScriptDocGen::docvalue_from_expression(const GDP::ExpressionNode *p_expression) {
 	ERR_FAIL_NULL_V(p_expression, String());
 
 	if (p_expression->is_constant) {
@@ -326,6 +326,7 @@ void GDScriptDocGen::_generate_docs(GDScript *p_script, const GDP::ClassNode *p_
 				const_doc.name = const_name;
 				const_doc.value = _docvalue_from_variant(m_const->initializer->reduced_value);
 				const_doc.is_value_valid = true;
+				_doctype_from_gdtype(m_const->get_datatype(), const_doc.type, const_doc.enumeration);
 				const_doc.description = m_const->doc_data.description;
 				const_doc.is_deprecated = m_const->doc_data.is_deprecated;
 				const_doc.deprecated_message = m_const->doc_data.deprecated_message;
@@ -366,7 +367,7 @@ void GDScriptDocGen::_generate_docs(GDScript *p_script, const GDP::ClassNode *p_
 					arg_doc.name = p->identifier->name;
 					_doctype_from_gdtype(p->get_datatype(), arg_doc.type, arg_doc.enumeration);
 					if (p->initializer != nullptr) {
-						arg_doc.default_value = _docvalue_from_expression(p->initializer);
+						arg_doc.default_value = docvalue_from_expression(p->initializer);
 					}
 					method_doc.arguments.push_back(arg_doc);
 				}
@@ -435,7 +436,7 @@ void GDScriptDocGen::_generate_docs(GDScript *p_script, const GDP::ClassNode *p_
 				}
 
 				if (m_var->initializer != nullptr) {
-					prop_doc.default_value = _docvalue_from_expression(m_var->initializer);
+					prop_doc.default_value = docvalue_from_expression(m_var->initializer);
 				}
 
 				prop_doc.overridden = false;
@@ -462,6 +463,7 @@ void GDScriptDocGen::_generate_docs(GDScript *p_script, const GDP::ClassNode *p_
 					const_doc.name = val.identifier->name;
 					const_doc.value = _docvalue_from_variant(val.value);
 					const_doc.is_value_valid = true;
+					const_doc.type = "int";
 					const_doc.enumeration = name;
 					const_doc.description = val.doc_data.description;
 					const_doc.is_deprecated = val.doc_data.is_deprecated;
@@ -484,6 +486,7 @@ void GDScriptDocGen::_generate_docs(GDScript *p_script, const GDP::ClassNode *p_
 				const_doc.name = name;
 				const_doc.value = _docvalue_from_variant(m_enum_val.value);
 				const_doc.is_value_valid = true;
+				const_doc.type = "int";
 				const_doc.enumeration = "@unnamed_enums";
 				const_doc.description = m_enum_val.doc_data.description;
 				const_doc.is_deprecated = m_enum_val.doc_data.is_deprecated;
@@ -509,5 +512,16 @@ void GDScriptDocGen::generate_docs(GDScript *p_script, const GDP::ClassNode *p_c
 		}
 	}
 	_generate_docs(p_script, p_class);
+	singletons.clear();
+}
+
+// This method is needed for the editor, since during autocompletion the script is not compiled, only analyzed.
+void GDScriptDocGen::doctype_from_gdtype(const GDType &p_gdtype, String &r_type, String &r_enum, bool p_is_return) {
+	for (const KeyValue<StringName, ProjectSettings::AutoloadInfo> &E : ProjectSettings::get_singleton()->get_autoload_list()) {
+		if (E.value.is_singleton) {
+			singletons[E.value.path] = E.key;
+		}
+	}
+	_doctype_from_gdtype(p_gdtype, r_type, r_enum, p_is_return);
 	singletons.clear();
 }
