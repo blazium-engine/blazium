@@ -1502,6 +1502,15 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 		}
 	}
 
+	Dictionary int_export = get_internal_export_files();
+	for (const Variant &int_name : int_export.keys()) {
+		const PackedByteArray &array = int_export[int_name];
+		err = p_save_func(p_udata, int_name, array, idx, total, enc_in_filters, enc_ex_filters, key);
+		if (err != OK) {
+			return err;
+		}
+	}
+
 	String config_file = "project.binary";
 	String engine_cfb = EditorPaths::get_singleton()->get_cache_dir().path_join("tmp" + config_file);
 	ProjectSettings::get_singleton()->save_custom(engine_cfb, custom_map, custom_list);
