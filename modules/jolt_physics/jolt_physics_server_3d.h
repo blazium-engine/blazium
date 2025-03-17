@@ -151,6 +151,9 @@ public:
 
 	virtual RID space_create() override;
 
+	virtual void space_step(RID p_space, real_t p_delta) override;
+	virtual void space_flush_queries(RID p_space) override;
+
 	virtual void space_set_active(RID p_space, bool p_active) override;
 	virtual bool space_is_active(RID p_space) const override;
 
@@ -420,6 +423,7 @@ public:
 	virtual bool is_flushing_queries() const override;
 
 	virtual int get_process_info(PhysicsServer3D::ProcessInfo p_process_info) override;
+	virtual int space_get_last_process_info(RID p_space, ProcessInfo p_info) override;
 
 	bool is_active() const { return active; }
 
@@ -442,8 +446,8 @@ public:
 	void space_dump_debug_snapshot(RID p_space, const String &p_dir);
 #endif
 
-	bool joint_get_enabled(RID p_joint) const;
-	void joint_set_enabled(RID p_joint, bool p_enabled);
+	virtual void joint_set_enabled(RID p_joint, bool p_enabled) override;
+	virtual bool joint_is_enabled(RID p_joint) const override;
 
 	int joint_get_solver_velocity_iterations(RID p_joint);
 	void joint_set_solver_velocity_iterations(RID p_joint, int p_value);

@@ -267,6 +267,14 @@ int JoltPhysicsServer3D::space_get_contact_count(RID p_space) const {
 #endif
 }
 
+void JoltPhysicsServer3D::space_step(RID p_space, real_t p_delta) {
+	step(p_delta);
+}
+
+void JoltPhysicsServer3D::space_flush_queries(RID p_space) {
+	flush_queries();
+}
+
 RID JoltPhysicsServer3D::area_create() {
 	JoltArea3D *area = memnew(JoltArea3D);
 	RID rid = area_owner.make_rid(area);
@@ -1619,6 +1627,10 @@ int JoltPhysicsServer3D::get_process_info(ProcessInfo p_process_info) {
 	return 0;
 }
 
+int JoltPhysicsServer3D::space_get_last_process_info(RID p_space, ProcessInfo p_info) {
+	return 0;
+}
+
 void JoltPhysicsServer3D::free_space(JoltSpace3D *p_space) {
 	ERR_FAIL_NULL(p_space);
 
@@ -1684,7 +1696,7 @@ void JoltPhysicsServer3D::space_dump_debug_snapshot(RID p_space, const String &p
 
 #endif
 
-bool JoltPhysicsServer3D::joint_get_enabled(RID p_joint) const {
+bool JoltPhysicsServer3D::joint_is_enabled(RID p_joint) const {
 	JoltJoint3D *joint = joint_owner.get_or_null(p_joint);
 	ERR_FAIL_NULL_V(joint, false);
 
