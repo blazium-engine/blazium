@@ -631,6 +631,9 @@
 		<member name="debug/settings/crash_handler/message.editor" type="String" setter="" getter="" default="&quot;Please include this when reporting the bug on: https://github.com/blazium-engine/blazium/issues&quot;">
 			Editor-only override for [member debug/settings/crash_handler/message]. Does not affect exported projects in debug or release mode.
 		</member>
+		<member name="debug/settings/environment_variables/enable_release" type="bool" setter="" getter="" default="false">
+			In debug builds, environment variables can be used to temporarily override project settings without changing [code]project.godot[/code]. By default, this feature is disabled in release builds to prevent players from abusing settings such as [member application/run/main_scene].
+		</member>
 		<member name="debug/settings/gdscript/max_call_stack" type="int" setter="" getter="" default="1024">
 			Maximum call stack allowed for debugging GDScript.
 		</member>
