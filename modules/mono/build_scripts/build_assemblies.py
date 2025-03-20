@@ -287,6 +287,8 @@ def generate_sdk_package_versions():
             version_status = version_status[:pos] + "." + version_status[pos:]
         version_str += "-" + version_status
 
+    external_version_str = "{external_major}.{external_minor}.{external_patch}-{external_status}".format(**version_info)
+
     import version
 
     version_defines = (
@@ -308,7 +310,7 @@ def generate_sdk_package_versions():
     <GodotVersionConstants>{1}</GodotVersionConstants>
   </PropertyGroup>
 </Project>
-""".format(version_str, ";".join(version_defines))
+""".format(external_version_str, ";".join(version_defines))
 
     # We write in ../SdkPackageVersions.props.
     with open(os.path.join(dirname(script_path), "SdkPackageVersions.props"), "w", encoding="utf-8", newline="\n") as f:
@@ -322,7 +324,7 @@ def generate_sdk_package_versions():
 #pragma warning disable IDE0040 // Add accessibility modifiers.
     partial class Common
     {{
-        public const string VersionDocsUrl = "https://docs.godotengine.org/en/{docs_branch}";
+        public const string VersionDocsUrl = "https://docs.blazium.app";
     }}
 }}
 """.format(**version_info)

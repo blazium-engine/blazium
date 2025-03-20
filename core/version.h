@@ -76,9 +76,21 @@
 // Example: "3.1.4.stable.mono.double.official"
 #define GODOT_VERSION_FULL_BUILD GODOT_VERSION_FULL_CONFIG "." GODOT_VERSION_BUILD
 
-// Same as above, but prepended with Godot's name and a cosmetic "v" for "version".
-// Example: "Godot v3.1.4.stable.official.mono.double"
-#define GODOT_VERSION_FULL_NAME GODOT_VERSION_NAME " v" GODOT_VERSION_FULL_BUILD
+// Example: "0.3.1"
+#define BLAZIUM_VERSION_NUMBER _MKSTR(BLAZIUM_VERSION_MAJOR) "." _MKSTR(BLAZIUM_VERSION_MINOR) "." _MKSTR(BLAZIUM_VERSION_PATCH)
+
+// Describes the full configuration of that Blazium version, including the version number,
+// the status (dev, stable, etc.) and potential module-specific features (e.g. mono).
+// Example: "0.3.1.stable.mono"
+#define BLAZIUM_VERSION_FULL_CONFIG BLAZIUM_VERSION_NUMBER "." BLAZIUM_VERSION_STATUS GODOT_VERSION_MODULE_CONFIG
+
+// Similar to BLAZIUM_VERSION_FULL_CONFIG, but also includes the GODOT_VERSION_NUMBER
+// Example: "1.1.0.stable.mono.blazium (4.4.0)"
+#define BLAZIUM_VERSION_FULL_BUILD BLAZIUM_VERSION_FULL_CONFIG "." GODOT_VERSION_BUILD " (" GODOT_VERSION_NUMBER ")"
+
+// Same as above, but prepended with Blazium's name and a cosmetic "v" for "version".
+// Example: "Blazium Engine v1.1.0.stable.mono.blazium (4.4.0)"
+#define GODOT_VERSION_FULL_NAME GODOT_VERSION_NAME " v" BLAZIUM_VERSION_FULL_BUILD
 
 // Git commit hash, generated at build time in `core/version_hash.gen.cpp`.
 extern const char *const GODOT_VERSION_HASH;

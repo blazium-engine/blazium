@@ -105,7 +105,7 @@ void ExportTemplateManager::_update_template_status() {
 	da->list_dir_end();
 
 	// Update the state of the current version.
-	String current_version = GODOT_VERSION_FULL_CONFIG;
+	String current_version = BLAZIUM_VERSION_FULL_CONFIG;
 	current_value->set_text(current_version);
 
 	if (templates.has(current_version)) {
@@ -273,8 +273,9 @@ void ExportTemplateManager::_refresh_mirrors() {
 	}
 	is_refreshing_mirrors = true;
 
-	String current_version = GODOT_VERSION_FULL_CONFIG;
-	const String mirrors_metadata_url = "https://godotengine.org/mirrorlist/" + current_version + ".json";
+	String current_version = BLAZIUM_VERSION_FULL_CONFIG;
+	String mirror_list_url = MIRROR_LIST_URL;
+	const String mirrors_metadata_url = mirror_list_url + current_version + ".json";
 	request_mirrors->request(mirrors_metadata_url);
 }
 
@@ -791,7 +792,7 @@ String ExportTemplateManager::get_android_source_zip(const Ref<EditorExportPrese
 		}
 	}
 
-	const String templates_dir = EditorPaths::get_singleton()->get_export_templates_dir().path_join(GODOT_VERSION_FULL_CONFIG);
+	const String templates_dir = EditorPaths::get_singleton()->get_export_templates_dir().path_join(BLAZIUM_VERSION_FULL_CONFIG);
 	return templates_dir.path_join("android_source.zip");
 }
 
@@ -803,7 +804,7 @@ String ExportTemplateManager::get_android_template_identifier(const Ref<EditorEx
 			return android_source_zip + String(" [") + FileAccess::get_md5(android_source_zip) + String("]");
 		}
 	}
-	return GODOT_VERSION_FULL_CONFIG;
+	return BLAZIUM_VERSION_FULL_CONFIG;
 }
 
 bool ExportTemplateManager::is_android_template_installed(const Ref<EditorExportPreset> &p_preset) {
@@ -1027,14 +1028,14 @@ ExportTemplateManager::ExportTemplateManager() {
 	current_open_button->set_text(TTR("Open Folder"));
 	current_open_button->set_tooltip_text(TTR("Open the folder containing installed templates for the current version."));
 	current_installed_hb->add_child(current_open_button);
-	current_open_button->connect(SceneStringName(pressed), callable_mp(this, &ExportTemplateManager::_open_template_folder).bind(GODOT_VERSION_FULL_CONFIG));
+	current_open_button->connect(SceneStringName(pressed), callable_mp(this, &ExportTemplateManager::_open_template_folder).bind(BLAZIUM_VERSION_FULL_CONFIG));
 #endif
 
 	current_uninstall_button = memnew(Button);
 	current_uninstall_button->set_text(TTR("Uninstall"));
 	current_uninstall_button->set_tooltip_text(TTR("Uninstall templates for the current version."));
 	current_installed_hb->add_child(current_uninstall_button);
-	current_uninstall_button->connect(SceneStringName(pressed), callable_mp(this, &ExportTemplateManager::_uninstall_template).bind(GODOT_VERSION_FULL_CONFIG));
+	current_uninstall_button->connect(SceneStringName(pressed), callable_mp(this, &ExportTemplateManager::_uninstall_template).bind(BLAZIUM_VERSION_FULL_CONFIG));
 
 	main_vb->add_child(memnew(HSeparator));
 
@@ -1160,7 +1161,7 @@ ExportTemplateManager::ExportTemplateManager() {
 	install_file_dialog->set_access(FileDialog::ACCESS_FILESYSTEM);
 	install_file_dialog->set_file_mode(FileDialog::FILE_MODE_OPEN_FILE);
 	install_file_dialog->set_current_dir(EDITOR_DEF("_export_template_download_directory", ""));
-	install_file_dialog->add_filter("*.tpz", TTR("Godot Export Templates"));
+	install_file_dialog->add_filter("*.tpz", TTR("Blazium Export Templates"));
 	install_file_dialog->connect("file_selected", callable_mp(this, &ExportTemplateManager::_install_file_selected).bind(false));
 	add_child(install_file_dialog);
 

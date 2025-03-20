@@ -317,7 +317,7 @@ static String get_full_version_string() {
 	if (!hash.is_empty()) {
 		hash = "." + hash.left(9);
 	}
-	return String(GODOT_VERSION_FULL_BUILD) + hash;
+	return String(BLAZIUM_VERSION_FULL_BUILD) + hash;
 }
 
 #if defined(TOOLS_ENABLED) && defined(MODULE_GDSCRIPT_ENABLED)
@@ -512,7 +512,7 @@ void Main::print_help_option(const char *p_option, const char *p_description, CL
 void Main::print_help(const char *p_binary) {
 	print_header(true);
 	print_help_copyright("Free and open source software under the terms of the MIT license.");
-	print_help_copyright("(c) 2014-present Godot Engine contributors. (c) 2007-present Juan Linietsky, Ariel Manzur.");
+	print_help_copyright("(c) 2024-present Blazium Engine contributors. (c) 2014-present Godot Engine contributors. (c) 2007-present Juan Linietsky, Ariel Manzur.");
 
 	print_help_title("Usage");
 	OS::get_singleton()->print("  %s \u001b[96m[options] [path to \"project.godot\" file]\u001b[0m\n", p_binary);
@@ -2123,7 +2123,7 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 	// This also prevents logs from being created for the editor instance, as feature tags
 	// are disabled while in the editor (even if they should logically apply).
 	GLOBAL_DEF("debug/file_logging/enable_file_logging.pc", true);
-	GLOBAL_DEF("debug/file_logging/log_path", "user://logs/godot.log");
+	GLOBAL_DEF("debug/file_logging/log_path", "user://logs/blazium.log");
 	GLOBAL_DEF(PropertyInfo(Variant::INT, "debug/file_logging/max_log_files", PROPERTY_HINT_RANGE, "0,20,1,or_greater"), 5);
 
 	// If `--log-file` is used to override the log path, allow creating logs for the project manager or editor

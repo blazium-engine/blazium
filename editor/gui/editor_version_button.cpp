@@ -37,10 +37,10 @@ String _get_version_string(EditorVersionButton::VersionFormat p_format) {
 	String main;
 	switch (p_format) {
 		case EditorVersionButton::FORMAT_BASIC: {
-			return GODOT_VERSION_FULL_CONFIG;
+			return BLAZIUM_VERSION_FULL_CONFIG;
 		} break;
 		case EditorVersionButton::FORMAT_WITH_BUILD: {
-			main = "v" GODOT_VERSION_FULL_BUILD;
+			main = "v" BLAZIUM_VERSION_FULL_BUILD;
 		} break;
 		case EditorVersionButton::FORMAT_WITH_NAME_AND_BUILD: {
 			main = GODOT_VERSION_FULL_NAME;
