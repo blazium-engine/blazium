@@ -44,12 +44,8 @@ def get_opts():
             "Use LLVM/GCC compiler undefined behavior sanitizer (UBSAN)",
             False,
         ),
-        BoolVariable(
-            "use_asan", "Use LLVM/GCC compiler address sanitizer (ASAN)", False
-        ),
-        BoolVariable(
-            "use_tsan", "Use LLVM/GCC compiler thread sanitizer (TSAN)", False
-        ),
+        BoolVariable("use_asan", "Use LLVM/GCC compiler address sanitizer (ASAN)", False),
+        BoolVariable("use_tsan", "Use LLVM/GCC compiler thread sanitizer (TSAN)", False),
         BoolVariable(
             "use_coverage",
             "Use instrumentation codes in the binary (e.g. for code coverage)",
@@ -136,9 +132,7 @@ def configure(env: "SConsEnvironment"):
             env["CC"] = mpprefix + "/libexec/llvm-" + mpclangver + "/bin/clang"
             env["CXX"] = mpprefix + "/libexec/llvm-" + mpclangver + "/bin/clang++"
             env["AR"] = mpprefix + "/libexec/llvm-" + mpclangver + "/bin/llvm-ar"
-            env["RANLIB"] = (
-                mpprefix + "/libexec/llvm-" + mpclangver + "/bin/llvm-ranlib"
-            )
+            env["RANLIB"] = mpprefix + "/libexec/llvm-" + mpclangver + "/bin/llvm-ranlib"
             env["AS"] = mpprefix + "/libexec/llvm-" + mpclangver + "/bin/llvm-as"
         else:
             env["CC"] = ccache_path + "clang"
@@ -163,9 +157,7 @@ def configure(env: "SConsEnvironment"):
 
     # LTO
 
-    if (
-        env["lto"] == "auto"
-    ):  # LTO benefits for macOS (size, performance) haven't been clearly established yet.
+    if env["lto"] == "auto":  # LTO benefits for macOS (size, performance) haven't been clearly established yet.
         env["lto"] = "none"
 
     if env["lto"] != "none":
@@ -189,11 +181,7 @@ def configure(env: "SConsEnvironment"):
                 ]
             )
             env.Append(LINKFLAGS=["-fsanitize=undefined"])
-            env.Append(
-                CCFLAGS=[
-                    "-fsanitize=nullability-return,nullability-arg,function,nullability-assign"
-                ]
-            )
+            env.Append(CCFLAGS=["-fsanitize=nullability-return,nullability-arg,function,nullability-assign"])
 
         if env["use_asan"]:
             env.Append(CCFLAGS=["-fsanitize=address,pointer-subtract,pointer-compare"])
@@ -275,11 +263,7 @@ def configure(env: "SConsEnvironment"):
     )
 
     if env["metal"] and env["arch"] != "arm64":
-        print_warning(
-            "Target architecture '{}' does not support the Metal rendering driver".format(
-                env["arch"]
-            )
-        )
+        print_warning("Target architecture '{}' does not support the Metal rendering driver".format(env["arch"]))
         env["metal"] = False
 
     extra_frameworks = set()
