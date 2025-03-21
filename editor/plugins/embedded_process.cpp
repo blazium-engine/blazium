@@ -31,6 +31,7 @@
 #include "embedded_process.h"
 
 #include "editor/editor_string_names.h"
+#include "scene/main/timer.h"
 #include "scene/main/window.h"
 #include "scene/resources/style_box_flat.h"
 #include "scene/theme/theme_db.h"

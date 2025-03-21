@@ -33,6 +33,8 @@
 
 #include "scene/gui/control.h"
 
+class Timer;
+
 class EmbeddedProcess : public Control {
 	GDCLASS(EmbeddedProcess, Control);
 

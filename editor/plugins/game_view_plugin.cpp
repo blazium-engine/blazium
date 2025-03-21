@@ -36,7 +36,6 @@
 #include "editor/debugger/editor_debugger_node.h"
 #include "editor/debugger/script_editor_debugger.h"
 #include "editor/editor_command_palette.h"
-#include "editor/editor_feature_profile.h"
 #include "editor/editor_interface.h"
 #include "editor/editor_main_screen.h"
 #include "editor/editor_node.h"
@@ -689,6 +688,7 @@ void GameView::_notification(int p_what) {
 
 			_update_ui();
 		} break;
+
 		case NOTIFICATION_WM_POSITION_CHANGED: {
 			if (window_wrapper->get_window_enabled()) {
 				_update_floating_window_settings();
@@ -1125,6 +1125,11 @@ Dictionary GameViewPlugin::get_state() const {
 
 void GameViewPlugin::_notification(int p_what) {
 	switch (p_what) {
+		case EditorSettings::NOTIFICATION_EDITOR_SETTINGS_CHANGED: {
+			if (EditorSettings::get_singleton()->check_changed_settings_in_group("editors/game")) {
+				_feature_profile_changed();
+			}
+		} break;
 		case NOTIFICATION_ENTER_TREE: {
 			add_debugger_plugin(debugger);
 			connect("main_screen_changed", callable_mp(this, &GameViewPlugin::_save_last_editor));
@@ -1137,11 +1142,7 @@ void GameViewPlugin::_notification(int p_what) {
 }
 
 void GameViewPlugin::_feature_profile_changed() {
-	bool is_feature_enabled = true;
-	Ref<EditorFeatureProfile> profile = EditorFeatureProfileManager::get_singleton()->get_current_profile();
-	if (profile.is_valid()) {
-		is_feature_enabled = !profile->is_feature_disabled(EditorFeatureProfile::FEATURE_GAME);
-	}
+	bool is_feature_enabled = EDITOR_GET("editors/game/embedded_game");
 
 	if (debugger.is_valid()) {
 		debugger->set_is_feature_enabled(is_feature_enabled);
@@ -1188,8 +1189,6 @@ GameViewPlugin::GameViewPlugin() {
 	window_wrapper->set_v_size_flags(Control::SIZE_EXPAND_FILL);
 	window_wrapper->hide();
 	window_wrapper->connect("window_visibility_changed", callable_mp(this, &GameViewPlugin::_window_visibility_changed));
-
-	EditorFeatureProfileManager::get_singleton()->connect("current_feature_profile_changed", callable_mp(this, &GameViewPlugin::_feature_profile_changed));
 }
 
 GameViewPlugin::~GameViewPlugin() {
