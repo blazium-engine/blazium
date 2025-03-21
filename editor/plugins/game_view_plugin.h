@@ -121,7 +121,7 @@ class GameView : public VBoxContainer {
 	ScriptEditorDebugger *embedded_script_debugger = nullptr;
 
 	bool embed_on_play = true;
-	bool make_floating_on_play = true;
+	bool make_floating_on_play = false;
 	EmbedSizeMode embed_size_mode = SIZE_MODE_FIXED;
 	bool paused = false;
 	Size2 size_paused;
