@@ -43,6 +43,7 @@
 #include "editor/editor_paths.h"
 #include "editor/editor_resource_preview.h"
 #include "editor/editor_settings.h"
+#include "editor/plugins/script_editor_plugin.h"
 #include "editor/project_settings_editor.h"
 #include "scene/resources/packed_scene.h"
 
@@ -373,7 +374,7 @@ void EditorFileSystem::_scan_filesystem() {
 
 					FileCache fc;
 					fc.type = split[1];
-					if (fc.type.contains("/")) {
+					if (fc.type.contains_char('/')) {
 						fc.type = split[1].get_slice("/", 0);
 						fc.resource_script_class = split[1].get_slice("/", 1);
 					}
@@ -900,18 +901,11 @@ bool EditorFileSystem::_update_scan_actions() {
 			case ItemAction::ACTION_FILE_RELOAD: {
 				int idx = ia.dir->find_file_index(ia.file);
 				ERR_CONTINUE(idx == -1);
-				String full_path = ia.dir->get_file_path(idx);
 
-				const EditorFileSystemDirectory::FileInfo *fi = ia.dir->files[idx];
-				if (ClassDB::is_parent_class(fi->type, SNAME("Script"))) {
-					_queue_update_script_class(full_path, fi->type, fi->script_class_name, fi->script_class_extends, fi->script_class_icon_path);
+				// Only reloads the resources that are already loaded.
+				if (ResourceCache::has(ia.dir->get_file_path(idx))) {
+					reloads.push_back(ia.dir->get_file_path(idx));
 				}
-				if (fi->type == SNAME("PackedScene")) {
-					_queue_update_scene_groups(full_path);
-				}
-
-				reloads.push_back(full_path);
-
 			} break;
 		}
 
@@ -935,7 +929,7 @@ bool EditorFileSystem::_update_scan_actions() {
 		}
 	}
 
-	if (reimports.size()) {
+	if (!reimports.is_empty()) {
 		if (_scan_import_support(reimports)) {
 			return true;
 		}
@@ -944,6 +938,11 @@ bool EditorFileSystem::_update_scan_actions() {
 	} else {
 		//reimport files will update the uid cache file so if nothing was reimported, update it manually
 		ResourceUID::get_singleton()->update_cache();
+	}
+
+	if (!reloads.is_empty()) {
+		// Update global class names, dependencies, etc...
+		update_files(reloads);
 	}
 
 	if (first_scan) {
@@ -1250,6 +1249,15 @@ void EditorFileSystem::_process_file_system(const ScannedDirectory *p_scan_dir, 
 					}
 				}
 			}
+
+			if (fi->uid == ResourceUID::INVALID_ID && ResourceLoader::exists(path) && !ResourceLoader::has_custom_uid_support(path) && !FileAccess::exists(path + ".uid")) {
+				// Create a UID.
+				Ref<FileAccess> f = FileAccess::open(path + ".uid", FileAccess::WRITE);
+				if (f.is_valid()) {
+					fi->uid = ResourceUID::get_singleton()->create_id();
+					f->store_line(ResourceUID::get_singleton()->id_to_text(fi->uid));
+				}
+			}
 		}
 
 		if (fi->uid != ResourceUID::INVALID_ID) {
@@ -1442,8 +1450,7 @@ void EditorFileSystem::_scan_fs_changes(EditorFileSystemDirectory *p_dir, ScanPr
 				ia.file = p_dir->files[i]->file;
 				scan_actions.push_back(ia);
 			}
-		} else if (ResourceCache::has(path)) { //test for potential reload
-
+		} else {
 			uint64_t mt = FileAccess::get_modified_time(path);
 
 			if (mt != p_dir->files[i]->modified_time) {
@@ -1490,6 +1497,9 @@ void EditorFileSystem::_delete_internal_files(const String &p_file) {
 			da->remove(E);
 		}
 		da->remove(p_file + ".import");
+	}
+	if (FileAccess::exists(p_file + ".uid")) {
+		DirAccess::remove_absolute(p_file + ".uid");
 	}
 }
 
@@ -2077,13 +2087,22 @@ void EditorFileSystem::_update_script_documentation() {
 		for (int i = 0; i < ScriptServer::get_language_count(); i++) {
 			ScriptLanguage *lang = ScriptServer::get_language(i);
 			if (lang->supports_documentation() && efd->files[index]->type == lang->get_type()) {
+				bool should_reload_script = _should_reload_script(path);
 				Ref<Script> scr = ResourceLoader::load(path);
 				if (scr.is_null()) {
 					continue;
 				}
-				Vector<DocData::ClassDoc> docs = scr->get_documentation();
-				for (int j = 0; j < docs.size(); j++) {
-					EditorHelp::get_doc_data()->add_doc(docs[j]);
+				if (should_reload_script) {
+					// Reloading the script from disk. Otherwise, the ResourceLoader::load will
+					// return the last loaded version of the script (without the modifications).
+					scr->reload_from_file();
+				}
+				for (const DocData::ClassDoc &cd : scr->get_documentation()) {
+					EditorHelp::get_doc_data()->add_doc(cd);
+					if (!first_scan) {
+						// Update the documentation in the Script Editor if it is open.
+						ScriptEditor::get_singleton()->update_doc(cd.name);
+					}
 				}
 			}
 		}
@@ -2096,6 +2115,25 @@ void EditorFileSystem::_update_script_documentation() {
 	memdelete_notnull(ep);
 
 	update_script_paths_documentation.clear();
+}
+
+bool EditorFileSystem::_should_reload_script(const String &p_path) {
+	if (first_scan) {
+		return false;
+	}
+
+	Ref<Script> scr = ResourceCache::get_ref(p_path);
+	if (scr.is_null()) {
+		// Not a script or not already loaded.
+		return false;
+	}
+
+	// Scripts are reloaded via the script editor if they are currently opened.
+	if (ScriptEditor::get_singleton()->get_open_scripts().has(scr)) {
+		return false;
+	}
+
+	return true;
 }
 
 void EditorFileSystem::_process_update_pending() {
@@ -2537,7 +2575,7 @@ Error EditorFileSystem::_reimport_group(const String &p_group_file, const Vector
 		EditorFileSystemDirectory *fs = nullptr;
 		int cpos = -1;
 		bool found = _find_file(file, &fs, cpos);
-		ERR_FAIL_COND_V_MSG(!found, ERR_UNCONFIGURED, "Can't find file '" + file + "'.");
+		ERR_FAIL_COND_V_MSG(!found, ERR_UNCONFIGURED, vformat("Can't find file '%s' during group reimport.", file));
 
 		//update modified times, to avoid reimport
 		fs->files[cpos]->modified_time = FileAccess::get_modified_time(file);
@@ -2587,7 +2625,7 @@ Error EditorFileSystem::_reimport_file(const String &p_file, const HashMap<Strin
 	int cpos = -1;
 	if (p_update_file_system) {
 		bool found = _find_file(p_file, &fs, cpos);
-		ERR_FAIL_COND_V_MSG(!found, ERR_FILE_NOT_FOUND, "Can't find file '" + p_file + "'.");
+		ERR_FAIL_COND_V_MSG(!found, ERR_FILE_NOT_FOUND, vformat("Can't find file '%s' during file reimport.", p_file));
 	}
 
 	//try to obtain existing params
@@ -2696,13 +2734,17 @@ Error EditorFileSystem::_reimport_file(const String &p_file, const HashMap<Strin
 		}
 	}
 
+	if (uid == ResourceUID::INVALID_ID) {
+		uid = ResourceUID::get_singleton()->create_id();
+	}
+
 	//finally, perform import!!
 	String base_path = ResourceFormatImporter::get_singleton()->get_import_base_path(p_file);
 
 	List<String> import_variants;
 	List<String> gen_files;
 	Variant meta;
-	Error err = importer->import(p_file, base_path, params, &import_variants, &gen_files, &meta);
+	Error err = importer->import(uid, p_file, base_path, params, &import_variants, &gen_files, &meta);
 
 	// As import is complete, save the .import file.
 
@@ -2721,10 +2763,6 @@ Error EditorFileSystem::_reimport_file(const String &p_file, const HashMap<Strin
 		}
 		if (!importer->get_resource_type().is_empty()) {
 			f->store_line("type=\"" + importer->get_resource_type() + "\"");
-		}
-
-		if (uid == ResourceUID::INVALID_ID) {
-			uid = ResourceUID::get_singleton()->create_id();
 		}
 
 		f->store_line("uid=\"" + ResourceUID::get_singleton()->id_to_text(uid) + "\""); // Store in readable format.
@@ -2971,9 +3009,9 @@ void EditorFileSystem::_refresh_filesystem() {
 }
 
 void EditorFileSystem::_reimport_thread(uint32_t p_index, ImportThreadData *p_import_data) {
-	int current_max = p_import_data->reimport_from + int(p_index);
-	p_import_data->max_index.exchange_if_greater(current_max);
-	_reimport_file(p_import_data->reimport_files[current_max].path);
+	int file_idx = p_import_data->reimport_from + int(p_index);
+	_reimport_file(p_import_data->reimport_files[file_idx].path);
+	p_import_data->imported_sem->post();
 }
 
 void EditorFileSystem::reimport_files(const Vector<String> &p_files) {
@@ -3052,6 +3090,7 @@ void EditorFileSystem::reimport_files(const Vector<String> &p_files) {
 #endif
 
 	int from = 0;
+	Semaphore imported_sem;
 	for (int i = 0; i < reimport_files.size(); i++) {
 		if (groups_to_reimport.has(reimport_files[i].path)) {
 			from = i + 1;
@@ -3075,21 +3114,27 @@ void EditorFileSystem::reimport_files(const Vector<String> &p_files) {
 					importer->import_threaded_begin();
 
 					ImportThreadData tdata;
-					tdata.max_index.set(from);
 					tdata.reimport_from = from;
 					tdata.reimport_files = reimport_files.ptr();
+					tdata.imported_sem = &imported_sem;
 
-					WorkerThreadPool::GroupID group_task = WorkerThreadPool::get_singleton()->add_template_group_task(this, &EditorFileSystem::_reimport_thread, &tdata, i - from + 1, -1, false, vformat(TTR("Import resources of type: %s"), reimport_files[from].importer));
-					int current_index = from - 1;
-					do {
-						if (current_index < tdata.max_index.get()) {
-							current_index = tdata.max_index.get();
-							ep->step(reimport_files[current_index].path.get_file(), current_index, false);
+					int item_count = i - from + 1;
+					WorkerThreadPool::GroupID group_task = WorkerThreadPool::get_singleton()->add_template_group_task(this, &EditorFileSystem::_reimport_thread, &tdata, item_count, -1, false, vformat(TTR("Import resources of type: %s"), reimport_files[from].importer));
+
+					int imported_count = 0;
+					while (true) {
+						ep->step(reimport_files[imported_count].path.get_file(), from + imported_count, false);
+						imported_sem.wait();
+						do {
+							imported_count++;
+						} while (imported_sem.try_wait());
+						if (imported_count == item_count) {
+							break;
 						}
-						OS::get_singleton()->delay_usec(1);
-					} while (!WorkerThreadPool::get_singleton()->is_group_task_completed(group_task));
+					}
 
 					WorkerThreadPool::get_singleton()->wait_for_group_task_completion(group_task);
+					DEV_ASSERT(!imported_sem.try_wait());
 
 					importer->import_threaded_end();
 				}
@@ -3500,5 +3545,9 @@ EditorFileSystem::EditorFileSystem() {
 }
 
 EditorFileSystem::~EditorFileSystem() {
+	if (filesystem) {
+		memdelete(filesystem);
+	}
+	filesystem = nullptr;
 	ResourceSaver::set_get_resource_id_for_path(nullptr);
 }

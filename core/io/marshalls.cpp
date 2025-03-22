@@ -144,7 +144,7 @@ Error decode_variant(Variant &r_variant, const uint8_t *p_buffer, int p_len, int
 		case Variant::INT: {
 			if (header & HEADER_DATA_FLAG_64) {
 				ERR_FAIL_COND_V(len < 8, ERR_INVALID_DATA);
-				int64_t val = decode_uint64(buf);
+				int64_t val = int64_t(decode_uint64(buf));
 				r_variant = val;
 				if (r_len) {
 					(*r_len) += 8;
@@ -152,7 +152,7 @@ Error decode_variant(Variant &r_variant, const uint8_t *p_buffer, int p_len, int
 
 			} else {
 				ERR_FAIL_COND_V(len < 4, ERR_INVALID_DATA);
-				int32_t val = decode_uint32(buf);
+				int32_t val = int32_t(decode_uint32(buf));
 				r_variant = val;
 				if (r_len) {
 					(*r_len) += 4;
@@ -698,9 +698,9 @@ Error decode_variant(Variant &r_variant, const uint8_t *p_buffer, int p_len, int
 						if (str == "script" && value.get_type() != Variant::NIL) {
 							ERR_FAIL_COND_V_MSG(value.get_type() != Variant::STRING, ERR_INVALID_DATA, "Invalid value for \"script\" property, expected script path as String.");
 							String path = value;
-							ERR_FAIL_COND_V_MSG(path.is_empty() || !path.begins_with("res://") || !ResourceLoader::exists(path, "Script"), ERR_INVALID_DATA, "Invalid script path: '" + path + "'.");
+							ERR_FAIL_COND_V_MSG(path.is_empty() || !path.begins_with("res://") || !ResourceLoader::exists(path, "Script"), ERR_INVALID_DATA, vformat("Invalid script path: '%s'.", path));
 							Ref<Script> script = ResourceLoader::load(path, "Script");
-							ERR_FAIL_COND_V_MSG(script.is_null(), ERR_INVALID_DATA, "Can't load script at path: '" + path + "'.");
+							ERR_FAIL_COND_V_MSG(script.is_null(), ERR_INVALID_DATA, vformat("Can't load script at path: '%s'.", path));
 							obj->set_script(script);
 						} else {
 							obj->set(str, value);
@@ -820,9 +820,9 @@ Error decode_variant(Variant &r_variant, const uint8_t *p_buffer, int p_len, int
 
 					builtin_type = Variant::OBJECT;
 					if (p_allow_objects) {
-						ERR_FAIL_COND_V_MSG(path.is_empty() || !path.begins_with("res://") || !ResourceLoader::exists(path, "Script"), ERR_INVALID_DATA, "Invalid script path: '" + path + "'.");
+						ERR_FAIL_COND_V_MSG(path.is_empty() || !path.begins_with("res://") || !ResourceLoader::exists(path, "Script"), ERR_INVALID_DATA, vformat("Invalid script path: '%s'.", path));
 						script = ResourceLoader::load(path, "Script");
-						ERR_FAIL_COND_V_MSG(script.is_null(), ERR_INVALID_DATA, "Can't load script at path: '" + path + "'.");
+						ERR_FAIL_COND_V_MSG(script.is_null(), ERR_INVALID_DATA, vformat("Can't load script at path: '%s'.", path));
 						class_name = script->get_instance_base_type();
 					} else {
 						class_name = EncodedObjectAsID::get_class_static();
@@ -1369,13 +1369,13 @@ Error encode_variant(const Variant &p_variant, uint8_t *r_buffer, int &r_len, bo
 			if (header & HEADER_DATA_FLAG_64) {
 				//64 bits
 				if (buf) {
-					encode_uint64(p_variant.operator int64_t(), buf);
+					encode_uint64(p_variant.operator uint64_t(), buf);
 				}
 
 				r_len += 8;
 			} else {
 				if (buf) {
-					encode_uint32(p_variant.operator int32_t(), buf);
+					encode_uint32(p_variant.operator uint32_t(), buf);
 				}
 
 				r_len += 4;

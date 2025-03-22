@@ -272,11 +272,19 @@ void NavigationAgent3D::_notification(int p_what) {
 #endif // DEBUG_ENABLED
 		} break;
 
+		case NOTIFICATION_SUSPENDED:
 		case NOTIFICATION_PAUSED: {
 			if (agent_parent) {
 				NavigationServer3D::get_singleton()->agent_set_paused(get_rid(), !agent_parent->can_process());
 			}
 		} break;
+
+		case NOTIFICATION_UNSUSPENDED: {
+			if (get_tree()->is_paused()) {
+				break;
+			}
+			[[fallthrough]];
+		}
 
 		case NOTIFICATION_UNPAUSED: {
 			if (agent_parent) {
@@ -1073,8 +1081,8 @@ void NavigationAgent3D::_update_debug_path() {
 		debug_path_instance = RenderingServer::get_singleton()->instance_create();
 	}
 
-	if (!debug_path_mesh.is_valid()) {
-		debug_path_mesh = Ref<ArrayMesh>(memnew(ArrayMesh));
+	if (debug_path_mesh.is_null()) {
+		debug_path_mesh.instantiate();
 	}
 
 	debug_path_mesh->clear_surfaces();

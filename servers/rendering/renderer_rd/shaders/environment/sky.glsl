@@ -106,9 +106,11 @@ layout(set = 0, binding = 3, std140) uniform DirectionalLights {
 directional_lights;
 
 #ifdef MATERIAL_UNIFORMS_USED
-layout(set = 1, binding = 0, std140) uniform MaterialUniforms{
+/* clang-format off */
+layout(set = 1, binding = 0, std140) uniform MaterialUniforms {
 #MATERIAL_UNIFORMS
 } material;
+/* clang-format on */
 #endif
 
 layout(set = 2, binding = 0) uniform textureCube radiance;
@@ -187,7 +189,7 @@ void main() {
 	vec3 cube_normal;
 #ifdef USE_MULTIVIEW
 	// In multiview our projection matrices will contain positional and rotational offsets that we need to properly unproject.
-	vec4 unproject = vec4(uv_interp.x, -uv_interp.y, 0.0, 1.0); // unproject at the far plane
+	vec4 unproject = vec4(uv_interp.x, uv_interp.y, 0.0, 1.0); // unproject at the far plane
 	vec4 unprojected = sky_scene_data.view_inv_projections[ViewIndex] * unproject;
 	cube_normal = unprojected.xyz / unprojected.w;
 
@@ -196,7 +198,7 @@ void main() {
 #else
 	cube_normal.z = -1.0;
 	cube_normal.x = (cube_normal.z * (-uv_interp.x - params.projection.x)) / params.projection.y;
-	cube_normal.y = -(cube_normal.z * (-uv_interp.y - params.projection.z)) / params.projection.w;
+	cube_normal.y = -(cube_normal.z * (uv_interp.y - params.projection.z)) / params.projection.w;
 #endif
 	cube_normal = mat3(params.orientation) * cube_normal;
 	cube_normal = normalize(cube_normal);
@@ -247,9 +249,7 @@ void main() {
 #endif //USE_CUBEMAP_PASS
 
 	{
-
 #CODE : SKY
-
 	}
 
 	frag_color.rgb = color;

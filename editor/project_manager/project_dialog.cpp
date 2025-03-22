@@ -134,6 +134,13 @@ void ProjectDialog::_validate_path() {
 				ERR_FAIL_COND_MSG(ret != UNZ_OK, "Failed to get current file info.");
 
 				String name = String::utf8(fname);
+
+				// Skip the __MACOSX directory created by macOS's built-in file zipper.
+				if (name.begins_with("__MACOSX")) {
+					ret = unzGoToNextFile(pkg);
+					continue;
+				}
+
 				if (name.get_file() == "project.godot") {
 					break; // ret == UNZ_OK.
 				}
@@ -490,12 +497,14 @@ void ProjectDialog::ok_pressed() {
 	// Before we create a project, check that the target folder is empty.
 	// If not, we need to ask the user if they're sure they want to do this.
 	if (!is_folder_empty) {
-		ConfirmationDialog *cd = memnew(ConfirmationDialog);
-		cd->set_title(TTR("Warning: This folder is not empty"));
-		cd->set_text(TTR("You are about to create a Godot project in a non-empty folder.\nThe entire contents of this folder will be imported as project resources!\n\nAre you sure you wish to continue?"));
-		cd->get_ok_button()->connect(SceneStringName(pressed), callable_mp(this, &ProjectDialog::_nonempty_confirmation_ok_pressed));
-		get_parent()->add_child(cd);
-		cd->popup_centered();
+		if (!nonempty_confirmation) {
+			nonempty_confirmation = memnew(ConfirmationDialog);
+			nonempty_confirmation->set_title(TTR("Warning: This folder is not empty"));
+			nonempty_confirmation->set_text(TTR("You are about to create a Godot project in a non-empty folder.\nThe entire contents of this folder will be imported as project resources!\n\nAre you sure you wish to continue?"));
+			nonempty_confirmation->get_ok_button()->connect(SceneStringName(pressed), callable_mp(this, &ProjectDialog::_nonempty_confirmation_ok_pressed));
+			add_child(nonempty_confirmation);
+		}
+		nonempty_confirmation->popup_centered();
 		return;
 	}
 
@@ -554,6 +563,21 @@ void ProjectDialog::ok_pressed() {
 		fa_icon->store_string(get_default_project_icon());
 
 		EditorVCSInterface::create_vcs_metadata_files(EditorVCSInterface::VCSMetadata(vcs_metadata_selection->get_selected()), path);
+
+		// Ensures external editors and IDEs use UTF-8 encoding.
+		const String editor_config_path = path.path_join(".editorconfig");
+		Ref<FileAccess> f = FileAccess::open(editor_config_path, FileAccess::WRITE);
+		if (f.is_null()) {
+			// .editorconfig isn't so critical.
+			ERR_PRINT("Couldn't create .editorconfig in project path.");
+		} else {
+			f->store_line("root = true");
+			f->store_line("");
+			f->store_line("[*]");
+			f->store_line("charset = utf-8");
+			f->close();
+			FileAccess::set_hidden_attribute(editor_config_path, true);
+		}
 	}
 
 	// Two cases for importing a ZIP.
@@ -589,6 +613,13 @@ void ProjectDialog::ok_pressed() {
 				ERR_FAIL_COND_MSG(ret != UNZ_OK, "Failed to get current file info.");
 
 				String name = String::utf8(fname);
+
+				// Skip the __MACOSX directory created by macOS's built-in file zipper.
+				if (name.begins_with("__MACOSX")) {
+					ret = unzGoToNextFile(pkg);
+					continue;
+				}
+
 				if (name.get_file() == "project.godot") {
 					zip_root = name.get_base_dir();
 					break;
@@ -621,7 +652,15 @@ void ProjectDialog::ok_pressed() {
 				ret = unzGetCurrentFileInfo(pkg, &info, fname, 16384, nullptr, 0, nullptr, 0);
 				ERR_FAIL_COND_MSG(ret != UNZ_OK, "Failed to get current file info.");
 
-				String rel_path = String::utf8(fname).trim_prefix(zip_root);
+				String name = String::utf8(fname);
+
+				// Skip the __MACOSX directory created by macOS's built-in file zipper.
+				if (name.begins_with("__MACOSX")) {
+					ret = unzGoToNextFile(pkg);
+					continue;
+				}
+
+				String rel_path = name.trim_prefix(zip_root);
 				if (rel_path.is_empty()) { // Root.
 				} else if (rel_path.ends_with("/")) { // Directory.
 					Ref<DirAccess> da = DirAccess::create(DirAccess::ACCESS_FILESYSTEM);
@@ -746,6 +785,7 @@ void ProjectDialog::show_dialog(bool p_reset_name) {
 		project_path->set_editable(true);
 
 		String fav_dir = EDITOR_GET("filesystem/directories/default_project_path");
+		fav_dir = fav_dir.simplify_path();
 		if (!fav_dir.is_empty()) {
 			project_path->set_text(fav_dir);
 			install_path->set_text(fav_dir);
@@ -814,9 +854,9 @@ void ProjectDialog::show_dialog(bool p_reset_name) {
 void ProjectDialog::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_THEME_CHANGED: {
-			create_dir->set_icon(get_editor_theme_icon(SNAME("FolderCreate")));
-			project_browse->set_icon(get_editor_theme_icon(SNAME("FolderBrowse")));
-			install_browse->set_icon(get_editor_theme_icon(SNAME("FolderBrowse")));
+			create_dir->set_button_icon(get_editor_theme_icon(SNAME("FolderCreate")));
+			project_browse->set_button_icon(get_editor_theme_icon(SNAME("FolderBrowse")));
+			install_browse->set_button_icon(get_editor_theme_icon(SNAME("FolderBrowse")));
 		} break;
 		case NOTIFICATION_READY: {
 			fdialog_project = memnew(EditorFileDialog);
@@ -990,7 +1030,7 @@ ProjectDialog::ProjectDialog() {
 	rvb->add_child(renderer_info);
 
 	rd_not_supported = memnew(Label);
-	rd_not_supported->set_text(TTR("Rendering Device backend not available. Please use the Compatibility renderer."));
+	rd_not_supported->set_text(vformat(TTR("RenderingDevice-based methods not available on this GPU:\n%s\nPlease use the Compatibility renderer."), RenderingServer::get_singleton()->get_video_adapter_name()));
 	rd_not_supported->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_CENTER);
 	rd_not_supported->set_custom_minimum_size(Size2(200, 0) * EDSCALE);
 	rd_not_supported->set_autowrap_mode(TextServer::AUTOWRAP_WORD_SMART);

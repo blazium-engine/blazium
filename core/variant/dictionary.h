@@ -33,6 +33,7 @@
 
 #include "core/string/ustring.h"
 #include "core/templates/list.h"
+#include "core/templates/pair.h"
 #include "core/variant/array.h"
 
 class Variant;
@@ -63,6 +64,7 @@ public:
 	int size() const;
 	bool is_empty() const;
 	void clear();
+	void sort();
 	void merge(const Dictionary &p_dictionary, bool p_overwrite = false);
 	Dictionary merged(const Dictionary &p_dictionary, bool p_overwrite = false) const;
 
@@ -94,6 +96,7 @@ public:
 	const void *id() const;
 
 	Dictionary(const Dictionary &p_from);
+	Dictionary(std::initializer_list<KeyValue<Variant, Variant>> p_init);
 	Dictionary();
 	~Dictionary();
 };

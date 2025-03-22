@@ -30,11 +30,13 @@
 
 #include "editor_scene_tabs.h"
 
+#include "editor/editor_main_screen.h"
 #include "editor/editor_node.h"
 #include "editor/editor_resource_preview.h"
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
 #include "editor/editor_undo_redo_manager.h"
+#include "editor/gui/editor_run_bar.h"
 #include "editor/inspector_dock.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/box_container.h"
@@ -53,7 +55,7 @@ void EditorSceneTabs::_notification(int p_what) {
 			tabbar_panel->add_theme_style_override(SceneStringName(panel), get_theme_stylebox(SNAME("tabbar_background"), SNAME("TabContainer")));
 			scene_tabs->add_theme_constant_override("icon_max_width", get_theme_constant(SNAME("class_icon_size"), EditorStringName(Editor)));
 
-			scene_tab_add->set_icon(get_editor_theme_icon(SNAME("Add")));
+			scene_tab_add->set_button_icon(get_editor_theme_icon(SNAME("Add")));
 			scene_tab_add->add_theme_color_override("icon_normal_color", Color(0.6f, 0.6f, 0.6f, 0.8f));
 			[[fallthrough]];
 		}
@@ -93,6 +95,14 @@ void EditorSceneTabs::_scene_tab_hovered(int p_tab) {
 	if (!bool(EDITOR_GET("interface/scene_tabs/show_thumbnail_on_hover"))) {
 		return;
 	}
+
+	// Currently the tab previews are displayed under the running game process when embed.
+	// Right now, the easiest technique to fix that is to prevent displaying the tab preview
+	// when the user is in the Game View.
+	if (EditorNode::get_singleton()->get_editor_main_screen()->get_selected_index() == EditorMainScreen::EDITOR_GAME && EditorRunBar::get_singleton()->is_playing()) {
+		return;
+	}
+
 	int current_tab = scene_tabs->get_current_tab();
 
 	if (p_tab == current_tab || p_tab < 0) {

@@ -45,7 +45,6 @@ class EditorTitleBar;
 class HBoxContainer;
 class HFlowContainer;
 class LineEdit;
-class LinkButton;
 class MarginContainer;
 class OptionButton;
 class PanelContainer;
@@ -128,12 +127,6 @@ class ProjectManager : public Control {
 	void _show_quick_settings();
 	void _restart_confirmed();
 
-	// Footer.
-
-	LinkButton *version_btn = nullptr;
-
-	void _version_button_pressed();
-
 	// Project list.
 
 	VBoxContainer *empty_list_placeholder = nullptr;
@@ -180,6 +173,7 @@ class ProjectManager : public Control {
 	void _run_project_confirm();
 	void _open_selected_projects();
 	void _open_selected_projects_ask();
+	void _open_selected_projects_with_migration();
 
 	void _install_project(const String &p_zip_path, const String &p_title);
 	void _import_project();
@@ -227,6 +221,11 @@ class ProjectManager : public Control {
 	ConfirmationDialog *ask_update_settings = nullptr;
 	Button *full_convert_button = nullptr;
 
+	String version_convert_feature;
+
+#ifndef DISABLE_DEPRECATED
+	void _minor_project_migrate();
+#endif
 	void _full_convert_button_pressed();
 	void _perform_full_project_conversion();
 

@@ -247,7 +247,9 @@ Lightmapper::BakeError LightmapperRD::_blit_meshes_into_atlas(int p_max_texture_
 	}
 
 	if (p_step_function) {
-		p_step_function(0.1, RTR("Determining optimal atlas size"), p_bake_userdata, true);
+		if (p_step_function(0.1, RTR("Determining optimal atlas size"), p_bake_userdata, true)) {
+			return BAKE_ERROR_USER_ABORTED;
+		}
 	}
 
 	atlas_size = Size2i(max, max);
@@ -324,7 +326,9 @@ Lightmapper::BakeError LightmapperRD::_blit_meshes_into_atlas(int p_max_texture_
 	emission_images.resize(atlas_slices);
 
 	if (p_step_function) {
-		p_step_function(0.2, RTR("Blitting albedo and emission"), p_bake_userdata, true);
+		if (p_step_function(0.2, RTR("Blitting albedo and emission"), p_bake_userdata, true)) {
+			return BAKE_ERROR_USER_ABORTED;
+		}
 	}
 
 	for (int i = 0; i < atlas_slices; i++) {
@@ -793,6 +797,35 @@ LightmapperRD::BakeError LightmapperRD::_dilate(RenderingDevice *rd, Ref<RDShade
 	return BAKE_OK;
 }
 
+LightmapperRD::BakeError LightmapperRD::_pack_l1(RenderingDevice *rd, Ref<RDShaderFile> &compute_shader, RID &compute_base_uniform_set, PushConstant &push_constant, RID &source_light_tex, RID &dest_light_tex, const Size2i &atlas_size, int atlas_slices) {
+	Vector<RD::Uniform> uniforms = dilate_or_denoise_common_uniforms(source_light_tex, dest_light_tex);
+
+	RID compute_shader_pack = rd->shader_create_from_spirv(compute_shader->get_spirv_stages("pack_coeffs"));
+	ERR_FAIL_COND_V(compute_shader_pack.is_null(), BAKE_ERROR_LIGHTMAP_CANT_PRE_BAKE_MESHES); //internal check, should not happen
+	RID compute_shader_pack_pipeline = rd->compute_pipeline_create(compute_shader_pack);
+
+	RID dilate_uniform_set = rd->uniform_set_create(uniforms, compute_shader_pack, 1);
+
+	RD::ComputeListID compute_list = rd->compute_list_begin();
+	rd->compute_list_bind_compute_pipeline(compute_list, compute_shader_pack_pipeline);
+	rd->compute_list_bind_uniform_set(compute_list, compute_base_uniform_set, 0);
+	rd->compute_list_bind_uniform_set(compute_list, dilate_uniform_set, 1);
+	push_constant.region_ofs[0] = 0;
+	push_constant.region_ofs[1] = 0;
+	Vector3i group_size(Math::division_round_up(atlas_size.x, 8), Math::division_round_up(atlas_size.y, 8), 1); //restore group size
+
+	for (int i = 0; i < atlas_slices; i++) {
+		push_constant.atlas_slice = i;
+		rd->compute_list_set_push_constant(compute_list, &push_constant, sizeof(PushConstant));
+		rd->compute_list_dispatch(compute_list, group_size.x, group_size.y, group_size.z);
+		//no barrier, let them run all together
+	}
+	rd->compute_list_end();
+	rd->free(compute_shader_pack);
+
+	return BAKE_OK;
+}
+
 Error LightmapperRD::_store_pfm(RenderingDevice *p_rd, RID p_atlas_tex, int p_index, const Size2i &p_atlas_size, const String &p_name) {
 	Vector<uint8_t> data = p_rd->texture_get_data(p_atlas_tex, p_index);
 	Ref<Image> img = Image::create_from_data(p_atlas_size.width, p_atlas_size.height, false, Image::FORMAT_RGBAH, data);
@@ -984,7 +1017,9 @@ LightmapperRD::BakeError LightmapperRD::_denoise(RenderingDevice *p_rd, Ref<RDSh
 		if (p_step_function) {
 			int percent = (s + 1) * 100 / p_atlas_slices;
 			float p = float(s) / p_atlas_slices * 0.1;
-			p_step_function(0.8 + p, vformat(RTR("Denoising %d%%"), percent), p_bake_userdata, false);
+			if (p_step_function(0.8 + p, vformat(RTR("Denoising %d%%"), percent), p_bake_userdata, false)) {
+				return BAKE_ERROR_USER_ABORTED;
+			}
 		}
 	}
 
@@ -1236,7 +1271,15 @@ LightmapperRD::BakeError LightmapperRD::bake(BakeQuality p_quality, bool p_use_d
 	rd->buffer_update(bake_parameters_buffer, 0, sizeof(BakeParameters), &bake_parameters);
 
 	if (p_step_function) {
-		p_step_function(0.47, RTR("Preparing shaders"), p_bake_userdata, true);
+		if (p_step_function(0.47, RTR("Preparing shaders"), p_bake_userdata, true)) {
+			FREE_TEXTURES
+			FREE_BUFFERS
+			memdelete(rd);
+			if (rcd != nullptr) {
+				memdelete(rcd);
+			}
+			return BAKE_ERROR_USER_ABORTED;
+		}
 	}
 
 	//shaders
@@ -1468,7 +1511,17 @@ LightmapperRD::BakeError LightmapperRD::bake(BakeQuality p_quality, bool p_use_d
 	rd->sync();
 
 	if (p_step_function) {
-		p_step_function(0.49, RTR("Un-occluding geometry"), p_bake_userdata, true);
+		if (p_step_function(0.49, RTR("Un-occluding geometry"), p_bake_userdata, true)) {
+			FREE_TEXTURES
+			FREE_BUFFERS
+			FREE_RASTER_RESOURCES
+			FREE_COMPUTE_RESOURCES
+			memdelete(rd);
+			if (rcd != nullptr) {
+				memdelete(rcd);
+			}
+			return BAKE_ERROR_USER_ABORTED;
+		}
 	}
 
 	PushConstant push_constant;
@@ -1510,7 +1563,17 @@ LightmapperRD::BakeError LightmapperRD::bake(BakeQuality p_quality, bool p_use_d
 	}
 
 	if (p_step_function) {
-		p_step_function(0.5, RTR("Plot direct lighting"), p_bake_userdata, true);
+		if (p_step_function(0.5, RTR("Plot direct lighting"), p_bake_userdata, true)) {
+			FREE_TEXTURES
+			FREE_BUFFERS
+			FREE_RASTER_RESOURCES
+			FREE_COMPUTE_RESOURCES
+			memdelete(rd);
+			if (rcd != nullptr) {
+				memdelete(rcd);
+			}
+			return BAKE_ERROR_USER_ABORTED;
+		}
 	}
 
 	// Set ray count to the quality used for direct light and bounces.
@@ -1670,7 +1733,17 @@ LightmapperRD::BakeError LightmapperRD::bake(BakeQuality p_quality, bool p_use_d
 		rd->sync();
 
 		if (p_step_function) {
-			p_step_function(0.6, RTR("Integrate indirect lighting"), p_bake_userdata, true);
+			if (p_step_function(0.6, RTR("Integrate indirect lighting"), p_bake_userdata, true)) {
+				FREE_TEXTURES
+				FREE_BUFFERS
+				FREE_RASTER_RESOURCES
+				FREE_COMPUTE_RESOURCES
+				memdelete(rd);
+				if (rcd != nullptr) {
+					memdelete(rcd);
+				}
+				return BAKE_ERROR_USER_ABORTED;
+			}
 		}
 
 		int count = 0;
@@ -1709,7 +1782,17 @@ LightmapperRD::BakeError LightmapperRD::bake(BakeQuality p_quality, bool p_use_d
 							int total = (atlas_slices * x_regions * y_regions * ray_iterations);
 							int percent = count * 100 / total;
 							float p = float(count) / total * 0.1;
-							p_step_function(0.6 + p, vformat(RTR("Integrate indirect lighting %d%%"), percent), p_bake_userdata, false);
+							if (p_step_function(0.6 + p, vformat(RTR("Integrate indirect lighting %d%%"), percent), p_bake_userdata, false)) {
+								FREE_TEXTURES
+								FREE_BUFFERS
+								FREE_RASTER_RESOURCES
+								FREE_COMPUTE_RESOURCES
+								memdelete(rd);
+								if (rcd != nullptr) {
+									memdelete(rcd);
+								}
+								return BAKE_ERROR_USER_ABORTED;
+							}
 						}
 					}
 				}
@@ -1725,7 +1808,20 @@ LightmapperRD::BakeError LightmapperRD::bake(BakeQuality p_quality, bool p_use_d
 		light_probe_buffer = rd->storage_buffer_create(sizeof(float) * 4 * 9 * probe_positions.size());
 
 		if (p_step_function) {
-			p_step_function(0.7, RTR("Baking lightprobes"), p_bake_userdata, true);
+			if (p_step_function(0.7, RTR("Baking light probes"), p_bake_userdata, true)) {
+				FREE_TEXTURES
+				FREE_BUFFERS
+				FREE_RASTER_RESOURCES
+				FREE_COMPUTE_RESOURCES
+				if (probe_positions.size() > 0) {
+					rd->free(light_probe_buffer);
+				}
+				memdelete(rd);
+				if (rcd != nullptr) {
+					memdelete(rcd);
+				}
+				return BAKE_ERROR_USER_ABORTED;
+			}
 		}
 
 		Vector<RD::Uniform> uniforms;
@@ -1793,7 +1889,20 @@ LightmapperRD::BakeError LightmapperRD::bake(BakeQuality p_quality, bool p_use_d
 			if (p_step_function) {
 				int percent = i * 100 / ray_iterations;
 				float p = float(i) / ray_iterations * 0.1;
-				p_step_function(0.7 + p, vformat(RTR("Integrating light probes %d%%"), percent), p_bake_userdata, false);
+				if (p_step_function(0.7 + p, vformat(RTR("Integrating light probes %d%%"), percent), p_bake_userdata, false)) {
+					FREE_TEXTURES
+					FREE_BUFFERS
+					FREE_RASTER_RESOURCES
+					FREE_COMPUTE_RESOURCES
+					if (probe_positions.size() > 0) {
+						rd->free(light_probe_buffer);
+					}
+					memdelete(rd);
+					if (rcd != nullptr) {
+						memdelete(rcd);
+					}
+					return BAKE_ERROR_USER_ABORTED;
+				}
 			}
 		}
 	}
@@ -1815,7 +1924,20 @@ LightmapperRD::BakeError LightmapperRD::bake(BakeQuality p_quality, bool p_use_d
 
 	if (p_use_denoiser) {
 		if (p_step_function) {
-			p_step_function(0.8, RTR("Denoising"), p_bake_userdata, true);
+			if (p_step_function(0.8, RTR("Denoising"), p_bake_userdata, true)) {
+				FREE_TEXTURES
+				FREE_BUFFERS
+				FREE_RASTER_RESOURCES
+				FREE_COMPUTE_RESOURCES
+				if (probe_positions.size() > 0) {
+					rd->free(light_probe_buffer);
+				}
+				memdelete(rd);
+				if (rcd != nullptr) {
+					memdelete(rcd);
+				}
+				return BAKE_ERROR_USER_ABORTED;
+			}
 		}
 
 		{
@@ -1998,6 +2120,14 @@ LightmapperRD::BakeError LightmapperRD::bake(BakeQuality p_quality, bool p_use_d
 			}
 			seam_offset += slice_seam_count[i];
 			triangle_offset += slice_triangle_count[i];
+		}
+	}
+
+	if (p_bake_sh) {
+		SWAP(light_accum_tex, light_accum_tex2);
+		BakeError error = _pack_l1(rd, compute_shader, compute_base_uniform_set, push_constant, light_accum_tex2, light_accum_tex, atlas_size, atlas_slices);
+		if (unlikely(error != BAKE_OK)) {
+			return error;
 		}
 	}
 

@@ -102,23 +102,24 @@ void Font::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "fallbacks", PROPERTY_HINT_ARRAY_TYPE, MAKE_RESOURCE_TYPE_HINT("Font")), "set_fallbacks", "get_fallbacks");
 }
 
-void Font::_update_rids_fb(const Ref<Font> &p_f, int p_depth) const {
+void Font::_update_rids_fb(const Font *p_f, int p_depth) const {
 	ERR_FAIL_COND(p_depth > MAX_FALLBACK_DEPTH);
-	if (p_f.is_valid()) {
+	if (p_f != nullptr) {
 		RID rid = p_f->_get_rid();
 		if (rid.is_valid()) {
 			rids.push_back(rid);
 		}
 		const TypedArray<Font> &_fallbacks = p_f->get_fallbacks();
 		for (int i = 0; i < _fallbacks.size(); i++) {
-			_update_rids_fb(_fallbacks[i], p_depth + 1);
+			Ref<Font> fb_font = _fallbacks[i];
+			_update_rids_fb(fb_font.ptr(), p_depth + 1);
 		}
 	}
 }
 
 void Font::_update_rids() const {
 	rids.clear();
-	_update_rids_fb(const_cast<Font *>(this), 0);
+	_update_rids_fb(this, 0);
 	dirty_rids = false;
 }
 
@@ -649,13 +650,13 @@ void FontFile::_convert_packed_8bit(Ref<Image> &p_source, int p_page, int p_sz) 
 			wa[ofs_dst + 1] = r[ofs_src + 3];
 		}
 	}
-	Ref<Image> img_r = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_r));
+	Ref<Image> img_r = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_r));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page * 4 + 0, img_r);
-	Ref<Image> img_g = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_g));
+	Ref<Image> img_g = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_g));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page * 4 + 1, img_g);
-	Ref<Image> img_b = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_b));
+	Ref<Image> img_b = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_b));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page * 4 + 2, img_b);
-	Ref<Image> img_a = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_a));
+	Ref<Image> img_a = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_a));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page * 4 + 3, img_a);
 }
 
@@ -740,22 +741,22 @@ void FontFile::_convert_packed_4bit(Ref<Image> &p_source, int p_page, int p_sz) 
 			}
 		}
 	}
-	Ref<Image> img_r = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_r));
+	Ref<Image> img_r = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_r));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page * 4 + 0, img_r);
-	Ref<Image> img_g = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_g));
+	Ref<Image> img_g = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_g));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page * 4 + 1, img_g);
-	Ref<Image> img_b = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_b));
+	Ref<Image> img_b = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_b));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page * 4 + 2, img_b);
-	Ref<Image> img_a = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_a));
+	Ref<Image> img_a = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_a));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page * 4 + 3, img_a);
 
-	Ref<Image> img_ro = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_ro));
+	Ref<Image> img_ro = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_ro));
 	set_texture_image(0, Vector2i(p_sz, 1), p_page * 4 + 0, img_ro);
-	Ref<Image> img_go = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_go));
+	Ref<Image> img_go = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_go));
 	set_texture_image(0, Vector2i(p_sz, 1), p_page * 4 + 1, img_go);
-	Ref<Image> img_bo = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_bo));
+	Ref<Image> img_bo = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_bo));
 	set_texture_image(0, Vector2i(p_sz, 1), p_page * 4 + 2, img_bo);
-	Ref<Image> img_ao = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_ao));
+	Ref<Image> img_ao = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_ao));
 	set_texture_image(0, Vector2i(p_sz, 1), p_page * 4 + 3, img_ao);
 }
 
@@ -808,10 +809,10 @@ void FontFile::_convert_rgba_4bit(Ref<Image> &p_source, int p_page, int p_sz) {
 			}
 		}
 	}
-	Ref<Image> img_g = memnew(Image(w, h, 0, Image::FORMAT_RGBA8, imgdata_g));
+	Ref<Image> img_g = memnew(Image(w, h, false, Image::FORMAT_RGBA8, imgdata_g));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page, img_g);
 
-	Ref<Image> img_o = memnew(Image(w, h, 0, Image::FORMAT_RGBA8, imgdata_o));
+	Ref<Image> img_o = memnew(Image(w, h, false, Image::FORMAT_RGBA8, imgdata_o));
 	set_texture_image(0, Vector2i(p_sz, 1), p_page, img_o);
 }
 
@@ -840,7 +841,7 @@ void FontFile::_convert_mono_8bit(Ref<Image> &p_source, int p_page, int p_ch, in
 			wg[ofs_dst + 1] = r[ofs_src + p_ch];
 		}
 	}
-	Ref<Image> img_g = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_g));
+	Ref<Image> img_g = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_g));
 	set_texture_image(0, Vector2i(p_sz, p_ol), p_page, img_g);
 }
 
@@ -880,10 +881,10 @@ void FontFile::_convert_mono_4bit(Ref<Image> &p_source, int p_page, int p_ch, in
 			}
 		}
 	}
-	Ref<Image> img_g = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_g));
+	Ref<Image> img_g = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_g));
 	set_texture_image(0, Vector2i(p_sz, 0), p_page, img_g);
 
-	Ref<Image> img_o = memnew(Image(w, h, 0, Image::FORMAT_LA8, imgdata_o));
+	Ref<Image> img_o = memnew(Image(w, h, false, Image::FORMAT_LA8, imgdata_o));
 	set_texture_image(0, Vector2i(p_sz, p_ol), p_page, img_o);
 }
 
@@ -1746,7 +1747,7 @@ Error FontFile::_load_bitmap_font(const String &p_path, List<String> *r_image_fi
 		while (true) {
 			String line = f->get_line();
 
-			int delimiter = line.find(" ");
+			int delimiter = line.find_char(' ');
 			String type = line.substr(0, delimiter);
 			int pos = delimiter + 1;
 			HashMap<String, String> keys;
@@ -1756,7 +1757,7 @@ Error FontFile::_load_bitmap_font(const String &p_path, List<String> *r_image_fi
 			}
 
 			while (pos < line.size()) {
-				int eq = line.find("=", pos);
+				int eq = line.find_char('=', pos);
 				if (eq == -1) {
 					break;
 				}
@@ -1764,14 +1765,14 @@ Error FontFile::_load_bitmap_font(const String &p_path, List<String> *r_image_fi
 				int end = -1;
 				String value;
 				if (line[eq + 1] == '"') {
-					end = line.find("\"", eq + 2);
+					end = line.find_char('"', eq + 2);
 					if (end == -1) {
 						break;
 					}
 					value = line.substr(eq + 2, end - 1 - eq - 1);
 					pos = end + 1;
 				} else {
-					end = line.find(" ", eq + 1);
+					end = line.find_char(' ', eq + 1);
 					if (end == -1) {
 						end = line.size();
 					}
@@ -2096,9 +2097,8 @@ void FontFile::set_data(const PackedByteArray &p_data) {
 
 PackedByteArray FontFile::get_data() const {
 	if (unlikely((size_t)data.size() != data_size)) {
-		PackedByteArray *data_w = const_cast<PackedByteArray *>(&data);
-		data_w->resize(data_size);
-		memcpy(data_w->ptrw(), data_ptr, data_size);
+		data.resize(data_size);
+		memcpy(data.ptrw(), data_ptr, data_size);
 	}
 	return data;
 }
@@ -2895,10 +2895,11 @@ void FontVariation::_update_rids() const {
 
 		const TypedArray<Font> &base_fallbacks = f->get_fallbacks();
 		for (int i = 0; i < base_fallbacks.size(); i++) {
-			_update_rids_fb(base_fallbacks[i], 0);
+			Ref<Font> fb_font = base_fallbacks[i];
+			_update_rids_fb(fb_font.ptr(), 0);
 		}
 	} else {
-		_update_rids_fb(const_cast<FontVariation *>(this), 0);
+		_update_rids_fb(this, 0);
 	}
 	dirty_rids = false;
 }
@@ -2945,7 +2946,7 @@ Ref<Font> FontVariation::get_base_font() const {
 
 Ref<Font> FontVariation::_get_base_font_or_default() const {
 	if (theme_font.is_valid()) {
-		theme_font->disconnect_changed(callable_mp(reinterpret_cast<Font *>(const_cast<FontVariation *>(this)), &Font::_invalidate_rids));
+		theme_font->disconnect_changed(callable_mp(static_cast<Font *>(const_cast<FontVariation *>(this)), &Font::_invalidate_rids));
 		theme_font.unref();
 	}
 
@@ -2979,7 +2980,7 @@ Ref<Font> FontVariation::_get_base_font_or_default() const {
 			}
 			if (f.is_valid()) {
 				theme_font = f;
-				theme_font->connect_changed(callable_mp(reinterpret_cast<Font *>(const_cast<FontVariation *>(this)), &Font::_invalidate_rids), CONNECT_REFERENCE_COUNTED);
+				theme_font->connect_changed(callable_mp(static_cast<Font *>(const_cast<FontVariation *>(this)), &Font::_invalidate_rids), CONNECT_REFERENCE_COUNTED);
 			}
 			return f;
 		}
@@ -2989,7 +2990,7 @@ Ref<Font> FontVariation::_get_base_font_or_default() const {
 	if (!_is_base_cyclic(f, 0)) {
 		if (f.is_valid()) {
 			theme_font = f;
-			theme_font->connect_changed(callable_mp(reinterpret_cast<Font *>(const_cast<FontVariation *>(this)), &Font::_invalidate_rids), CONNECT_REFERENCE_COUNTED);
+			theme_font->connect_changed(callable_mp(static_cast<Font *>(const_cast<FontVariation *>(this)), &Font::_invalidate_rids), CONNECT_REFERENCE_COUNTED);
 		}
 		return f;
 	}
@@ -3184,10 +3185,11 @@ void SystemFont::_update_rids() const {
 
 		const TypedArray<Font> &base_fallbacks = f->get_fallbacks();
 		for (int i = 0; i < base_fallbacks.size(); i++) {
-			_update_rids_fb(base_fallbacks[i], 0);
+			Ref<Font> fb_font = base_fallbacks[i];
+			_update_rids_fb(fb_font.ptr(), 0);
 		}
 	} else {
-		_update_rids_fb(const_cast<SystemFont *>(this), 0);
+		_update_rids_fb(this, 0);
 	}
 	dirty_rids = false;
 }
@@ -3325,7 +3327,7 @@ void SystemFont::reset_state() {
 
 Ref<Font> SystemFont::_get_base_font_or_default() const {
 	if (theme_font.is_valid()) {
-		theme_font->disconnect_changed(callable_mp(reinterpret_cast<Font *>(const_cast<SystemFont *>(this)), &Font::_invalidate_rids));
+		theme_font->disconnect_changed(callable_mp(static_cast<Font *>(const_cast<SystemFont *>(this)), &Font::_invalidate_rids));
 		theme_font.unref();
 	}
 
@@ -3354,7 +3356,7 @@ Ref<Font> SystemFont::_get_base_font_or_default() const {
 			}
 			if (f.is_valid()) {
 				theme_font = f;
-				theme_font->connect_changed(callable_mp(reinterpret_cast<Font *>(const_cast<SystemFont *>(this)), &Font::_invalidate_rids), CONNECT_REFERENCE_COUNTED);
+				theme_font->connect_changed(callable_mp(static_cast<Font *>(const_cast<SystemFont *>(this)), &Font::_invalidate_rids), CONNECT_REFERENCE_COUNTED);
 			}
 			return f;
 		}
@@ -3364,7 +3366,7 @@ Ref<Font> SystemFont::_get_base_font_or_default() const {
 	if (!_is_base_cyclic(f, 0)) {
 		if (f.is_valid()) {
 			theme_font = f;
-			theme_font->connect_changed(callable_mp(reinterpret_cast<Font *>(const_cast<SystemFont *>(this)), &Font::_invalidate_rids), CONNECT_REFERENCE_COUNTED);
+			theme_font->connect_changed(callable_mp(static_cast<Font *>(const_cast<SystemFont *>(this)), &Font::_invalidate_rids), CONNECT_REFERENCE_COUNTED);
 		}
 		return f;
 	}

@@ -91,6 +91,7 @@ void Performance::_bind_methods() {
 	BIND_ENUM_CONSTANT(NAVIGATION_EDGE_MERGE_COUNT);
 	BIND_ENUM_CONSTANT(NAVIGATION_EDGE_CONNECTION_COUNT);
 	BIND_ENUM_CONSTANT(NAVIGATION_EDGE_FREE_COUNT);
+	BIND_ENUM_CONSTANT(NAVIGATION_OBSTACLE_COUNT);
 	BIND_ENUM_CONSTANT(MONITOR_MAX);
 }
 
@@ -126,11 +127,9 @@ String Performance::get_monitor_name(Monitor p_monitor) const {
 		PNAME("physics_2d/active_objects"),
 		PNAME("physics_2d/collision_pairs"),
 		PNAME("physics_2d/islands"),
-#ifndef _3D_DISABLED
 		PNAME("physics_3d/active_objects"),
 		PNAME("physics_3d/collision_pairs"),
 		PNAME("physics_3d/islands"),
-#endif // _3D_DISABLED
 		PNAME("audio/driver/output_latency"),
 		PNAME("navigation/active_maps"),
 		PNAME("navigation/regions"),
@@ -141,6 +140,7 @@ String Performance::get_monitor_name(Monitor p_monitor) const {
 		PNAME("navigation/edges_merged"),
 		PNAME("navigation/edges_connected"),
 		PNAME("navigation/edges_free"),
+		PNAME("navigation/obstacles"),
 
 	};
 
@@ -225,6 +225,8 @@ double Performance::get_monitor(Monitor p_monitor) const {
 			return NavigationServer3D::get_singleton()->get_process_info(NavigationServer3D::INFO_EDGE_CONNECTION_COUNT);
 		case NAVIGATION_EDGE_FREE_COUNT:
 			return NavigationServer3D::get_singleton()->get_process_info(NavigationServer3D::INFO_EDGE_FREE_COUNT);
+		case NAVIGATION_OBSTACLE_COUNT:
+			return NavigationServer3D::get_singleton()->get_process_info(NavigationServer3D::INFO_OBSTACLE_COUNT);
 
 		default: {
 		}
@@ -257,12 +259,11 @@ Performance::MonitorType Performance::get_monitor_type(Monitor p_monitor) const 
 		MONITOR_TYPE_QUANTITY,
 		MONITOR_TYPE_QUANTITY,
 		MONITOR_TYPE_QUANTITY,
-#ifndef _3D_DISABLED
 		MONITOR_TYPE_QUANTITY,
 		MONITOR_TYPE_QUANTITY,
 		MONITOR_TYPE_QUANTITY,
-#endif // _3D_DISABLED
 		MONITOR_TYPE_TIME,
+		MONITOR_TYPE_QUANTITY,
 		MONITOR_TYPE_QUANTITY,
 		MONITOR_TYPE_QUANTITY,
 		MONITOR_TYPE_QUANTITY,

@@ -65,7 +65,7 @@ void ShaderFileEditor::_version_selected(int p_option) {
 
 	for (int i = 0; i < RD::SHADER_STAGE_MAX; i++) {
 		if (bytecode->get_stage_bytecode(RD::ShaderStage(i)).is_empty() && bytecode->get_stage_compile_error(RD::ShaderStage(i)) == String()) {
-			stages[i]->set_icon(Ref<Texture2D>());
+			stages[i]->set_button_icon(Ref<Texture2D>());
 			continue;
 		}
 
@@ -75,7 +75,7 @@ void ShaderFileEditor::_version_selected(int p_option) {
 		} else {
 			icon = get_editor_theme_icon(SNAME("ImportCheck"));
 		}
-		stages[i]->set_icon(icon);
+		stages[i]->set_button_icon(icon);
 
 		if (first_found == -1) {
 			first_found = i;
@@ -259,6 +259,7 @@ ShaderFileEditor::ShaderFileEditor() {
 	versions->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 	versions->connect(SceneStringName(item_selected), callable_mp(this, &ShaderFileEditor::_version_selected));
 	versions->set_custom_minimum_size(Size2i(200 * EDSCALE, 0));
+	versions->set_theme_type_variation("TreeSecondary");
 	main_hs->add_child(versions);
 
 	VBoxContainer *main_vb = memnew(VBoxContainer);
@@ -322,7 +323,7 @@ ShaderFileEditorPlugin::ShaderFileEditorPlugin() {
 	shader_editor = memnew(ShaderFileEditor);
 
 	shader_editor->set_custom_minimum_size(Size2(0, 300) * EDSCALE);
-	button = EditorNode::get_bottom_panel()->add_item(TTR("ShaderFile"), shader_editor, ED_SHORTCUT_AND_COMMAND("bottom_panels/toggle_shader_file_bottom_panel", TTR("Toggle ShaderFile Bottom Panel")));
+	button = EditorNode::get_bottom_panel()->add_item(TTR("ShaderFile"), shader_editor, ED_SHORTCUT_AND_COMMAND("bottom_panels/toggle_shader_file_bottom_panel", TTRC("Toggle ShaderFile Bottom Panel")));
 	button->hide();
 }
 

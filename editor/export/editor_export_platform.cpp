@@ -339,11 +339,7 @@ Error EditorExportPlatform::_save_zip_patch_file(void *p_userdata, const String 
 Ref<ImageTexture> EditorExportPlatform::get_option_icon(int p_index) const {
 	Ref<Theme> theme = EditorNode::get_singleton()->get_editor_theme();
 	ERR_FAIL_COND_V(theme.is_null(), Ref<ImageTexture>());
-	if (EditorNode::get_singleton()->get_gui_base()->is_layout_rtl()) {
-		return theme->get_icon(SNAME("PlayBackwards"), EditorStringName(EditorIcons));
-	} else {
-		return theme->get_icon(SNAME("Play"), EditorStringName(EditorIcons));
-	}
+	return theme->get_icon(SNAME("Play"), EditorStringName(EditorIcons));
 }
 
 String EditorExportPlatform::find_export_template(const String &template_file_name, String *err) const {
@@ -1491,7 +1487,15 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 
 	Vector<String> forced_export = get_forced_export_files();
 	for (int i = 0; i < forced_export.size(); i++) {
-		Vector<uint8_t> array = FileAccess::get_file_as_bytes(forced_export[i]);
+		Vector<uint8_t> array;
+		if (GDExtension::get_extension_list_config_file() == forced_export[i]) {
+			array = _filter_extension_list_config_file(forced_export[i], paths);
+			if (array.size() == 0) {
+				continue;
+			}
+		} else {
+			array = FileAccess::get_file_as_bytes(forced_export[i]);
+		}
 		err = p_save_func(p_udata, forced_export[i], array, idx, total, enc_in_filters, enc_ex_filters, key);
 		if (err != OK) {
 			return err;
@@ -1508,7 +1512,7 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 	}
 
 	String config_file = "project.binary";
-	String engine_cfb = EditorPaths::get_singleton()->get_cache_dir().path_join("tmp" + config_file);
+	String engine_cfb = EditorPaths::get_singleton()->get_temp_dir().path_join("tmp" + config_file);
 	ProjectSettings::get_singleton()->save_custom(engine_cfb, custom_map, custom_list);
 	Vector<uint8_t> data = FileAccess::get_file_as_bytes(engine_cfb);
 	DirAccess::remove_file_or_error(engine_cfb);
@@ -1537,6 +1541,22 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 	}
 
 	return OK;
+}
+
+Vector<uint8_t> EditorExportPlatform::_filter_extension_list_config_file(const String &p_config_path, const HashSet<String> &p_paths) {
+	Ref<FileAccess> f = FileAccess::open(p_config_path, FileAccess::READ);
+	if (f.is_null()) {
+		ERR_FAIL_V_MSG(Vector<uint8_t>(), "Can't open file from path '" + String(p_config_path) + "'.");
+	}
+	Vector<uint8_t> data;
+	while (!f->eof_reached()) {
+		String l = f->get_line().strip_edges();
+		if (p_paths.has(l)) {
+			data.append_array(l.to_utf8_buffer());
+			data.append('\n');
+		}
+	}
+	return data;
 }
 
 Error EditorExportPlatform::_pack_add_shared_object(void *p_userdata, const SharedObject &p_so) {
@@ -1796,9 +1816,9 @@ Error EditorExportPlatform::save_pack(const Ref<EditorExportPreset> &p_preset, b
 
 	// Create the temporary export directory if it doesn't exist.
 	Ref<DirAccess> da = DirAccess::create(DirAccess::ACCESS_FILESYSTEM);
-	da->make_dir_recursive(EditorPaths::get_singleton()->get_cache_dir());
+	da->make_dir_recursive(EditorPaths::get_singleton()->get_temp_dir());
 
-	String tmppath = EditorPaths::get_singleton()->get_cache_dir().path_join("packtmp");
+	String tmppath = EditorPaths::get_singleton()->get_temp_dir().path_join("packtmp");
 	Ref<FileAccess> ftmp = FileAccess::open(tmppath, FileAccess::WRITE);
 	if (ftmp.is_null()) {
 		add_message(EXPORT_MESSAGE_ERROR, TTR("Save PCK"), vformat(TTR("Cannot create file \"%s\"."), tmppath));
@@ -2037,7 +2057,7 @@ Error EditorExportPlatform::save_zip(const Ref<EditorExportPreset> &p_preset, bo
 		p_save_func = _save_zip_file;
 	}
 
-	String tmppath = EditorPaths::get_singleton()->get_cache_dir().path_join("packtmp");
+	String tmppath = EditorPaths::get_singleton()->get_temp_dir().path_join("packtmp");
 
 	Ref<FileAccess> io_fa;
 	zlib_filefunc_def io = zipio_create_io(&io_fa);

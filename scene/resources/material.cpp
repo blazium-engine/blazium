@@ -113,12 +113,12 @@ void Material::inspect_native_shader_code() {
 
 RID Material::get_shader_rid() const {
 	RID ret;
-	GDVIRTUAL_REQUIRED_CALL(_get_shader_rid, ret);
+	GDVIRTUAL_CALL(_get_shader_rid, ret);
 	return ret;
 }
 Shader::Mode Material::get_shader_mode() const {
 	Shader::Mode ret = Shader::MODE_MAX;
-	GDVIRTUAL_REQUIRED_CALL(_get_shader_mode, ret);
+	GDVIRTUAL_CALL(_get_shader_mode, ret);
 	return ret;
 }
 
@@ -374,14 +374,11 @@ void ShaderMaterial::_get_property_list(List<PropertyInfo> *p_list) const {
 
 bool ShaderMaterial::_property_can_revert(const StringName &p_name) const {
 	if (shader.is_valid()) {
-		const StringName *pr = remap_cache.getptr(p_name);
-		if (pr) {
-			Variant default_value = RenderingServer::get_singleton()->shader_get_parameter_default(shader->get_rid(), *pr);
-			Variant current_value = get_shader_parameter(*pr);
-			return default_value.get_type() != Variant::NIL && default_value != current_value;
-		} else if (p_name == "render_priority" || p_name == "next_pass") {
+		if (remap_cache.has(p_name)) {
 			return true;
 		}
+		const String sname = p_name;
+		return sname == "render_priority" || sname == "next_pass";
 	}
 	return false;
 }
@@ -946,7 +943,7 @@ uniform vec4 refraction_texture_channel;
 		code += "uniform sampler2D screen_texture : hint_screen_texture, repeat_disable, filter_linear_mipmap;\n";
 	}
 
-	if (proximity_fade_enabled) {
+	if (features[FEATURE_REFRACTION] || proximity_fade_enabled) {
 		code += "uniform sampler2D depth_texture : hint_depth_texture, repeat_disable, filter_nearest;\n";
 	}
 
@@ -1456,7 +1453,7 @@ void fragment() {)";
 				vec3(1.0 + 0.055) * pow(albedo_tex.rgb, vec3(1.0 / 2.4)) - vec3(0.055),
 				vec3(12.92) * albedo_tex.rgb,
 				lessThan(albedo_tex.rgb, vec3(0.0031308)));
-		vec2 msdf_size = vec2(msdf_pixel_range) / vec2(textureSize(texture_albedo, 0));
+		vec2 msdf_size = vec2(msdf_pixel_range) / vec2(albedo_texture_size));
 )";
 		if (flags[FLAG_USE_POINT_SIZE]) {
 			code += "		vec2 dest_size = vec2(1.0) / fwidth(POINT_COORD);\n";
@@ -1627,7 +1624,14 @@ void fragment() {)";
 		}
 		code += R"(
 	float ref_amount = 1.0 - albedo.a * albedo_tex.a;
-	EMISSION += textureLod(screen_texture, ref_ofs, ROUGHNESS * 8.0).rgb * ref_amount * EXPOSURE;
+
+	float refraction_depth_tex = textureLod(depth_texture, ref_ofs, 0.0).r;
+	vec4 refraction_view_pos = INV_PROJECTION_MATRIX * vec4(SCREEN_UV * 2.0 - 1.0, refraction_depth_tex, 1.0);
+	refraction_view_pos.xyz /= refraction_view_pos.w;
+
+	// If the depth buffer is lower then the model's Z position, use the refracted UV, otherwise use the normal screen UV.
+	// At low depth differences, decrease refraction intensity to avoid sudden discontinuities.
+	EMISSION += textureLod(screen_texture, mix(SCREEN_UV, ref_ofs, smoothstep(0.0, 1.0, VERTEX.z - refraction_view_pos.z)), ROUGHNESS * 8.0).rgb * ref_amount * EXPOSURE;
 	ALBEDO *= 1.0 - ref_amount;
 	// Force transparency on the material (required for refraction).
 	ALPHA = 1.0;
@@ -1649,10 +1653,10 @@ void fragment() {)";
 	if (proximity_fade_enabled) {
 		code += R"(
 	// Proximity Fade: Enabled
-	float depth_tex = textureLod(depth_texture, SCREEN_UV, 0.0).r;
-	vec4 world_pos = INV_PROJECTION_MATRIX * vec4(SCREEN_UV * 2.0 - 1.0, depth_tex, 1.0);
-	world_pos.xyz /= world_pos.w;
-	ALPHA *= clamp(1.0 - smoothstep(world_pos.z + proximity_fade_distance, world_pos.z, VERTEX.z), 0.0, 1.0);
+	float proximity_depth_tex = textureLod(depth_texture, SCREEN_UV, 0.0).r;
+	vec4 proximity_view_pos = INV_PROJECTION_MATRIX * vec4(SCREEN_UV * 2.0 - 1.0, proximity_depth_tex, 1.0);
+	proximity_view_pos.xyz /= proximity_view_pos.w;
+	ALPHA *= clamp(1.0 - smoothstep(proximity_view_pos.z + proximity_fade_distance, proximity_view_pos.z, VERTEX.z), 0.0, 1.0);
 )";
 	}
 
@@ -2665,13 +2669,13 @@ float BaseMaterial3D::get_grow() const {
 	return grow;
 }
 
-static Plane _get_texture_mask(BaseMaterial3D::TextureChannel p_channel) {
-	static const Plane masks[5] = {
-		Plane(1, 0, 0, 0),
-		Plane(0, 1, 0, 0),
-		Plane(0, 0, 1, 0),
-		Plane(0, 0, 0, 1),
-		Plane(0.3333333, 0.3333333, 0.3333333, 0),
+static Vector4 _get_texture_mask(BaseMaterial3D::TextureChannel p_channel) {
+	static const Vector4 masks[5] = {
+		Vector4(1, 0, 0, 0),
+		Vector4(0, 1, 0, 0),
+		Vector4(0, 0, 1, 0),
+		Vector4(0, 0, 0, 1),
+		Vector4(0.3333333, 0.3333333, 0.3333333, 0),
 	};
 
 	return masks[p_channel];

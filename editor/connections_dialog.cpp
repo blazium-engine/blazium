@@ -41,9 +41,9 @@
 #include "editor/editor_undo_redo_manager.h"
 #include "editor/gui/scene_tree_editor.h"
 #include "editor/node_dock.h"
+#include "editor/plugins/script_editor_plugin.h"
 #include "editor/scene_tree_dock.h"
 #include "editor/themes/editor_scale.h"
-#include "plugins/script_editor_plugin.h"
 #include "scene/gui/button.h"
 #include "scene/gui/check_box.h"
 #include "scene/gui/check_button.h"
@@ -489,7 +489,7 @@ void ConnectDialog::_notification(int p_what) {
 			}
 
 			method_search->set_right_icon(get_editor_theme_icon("Search"));
-			open_method_tree->set_icon(get_editor_theme_icon("Edit"));
+			open_method_tree->set_button_icon(get_editor_theme_icon("Edit"));
 		} break;
 	}
 }
@@ -524,8 +524,8 @@ void ConnectDialog::set_dst_node(Node *p_node) {
 
 StringName ConnectDialog::get_dst_method_name() const {
 	String txt = dst_method->get_text();
-	if (txt.contains("(")) {
-		txt = txt.left(txt.find("(")).strip_edges();
+	if (txt.contains_char('(')) {
+		txt = txt.left(txt.find_char('(')).strip_edges();
 	}
 	return txt;
 }
@@ -720,6 +720,7 @@ ConnectDialog::ConnectDialog() {
 	from_signal->set_editable(false);
 
 	tree = memnew(SceneTreeEditor(false));
+	tree->set_update_when_invisible(false);
 	tree->set_connecting_signal(true);
 	tree->set_show_enabled_subscene(true);
 	tree->set_v_size_flags(Control::SIZE_FILL | Control::SIZE_EXPAND);
@@ -892,13 +893,11 @@ ConnectDialog::~ConnectDialog() {
 
 Control *ConnectionsDockTree::make_custom_tooltip(const String &p_text) const {
 	// If it's not a doc tooltip, fallback to the default one.
-	if (p_text.contains("::")) {
+	if (p_text.is_empty() || p_text.contains("::")) {
 		return nullptr;
 	}
 
-	EditorHelpBit *help_bit = memnew(EditorHelpBit(p_text));
-	EditorHelpBitTooltip::show_tooltip(help_bit, const_cast<ConnectionsDockTree *>(this));
-	return memnew(Control); // Make the standard tooltip invisible.
+	return EditorHelpBitTooltip::show_tooltip(const_cast<ConnectionsDockTree *>(this), p_text);
 }
 
 struct _ConnectionsDockMethodInfoSort {
@@ -1064,17 +1063,17 @@ void ConnectionsDock::_tree_item_selected() {
 	TreeItem *item = tree->get_selected();
 	if (item && _get_item_type(*item) == TREE_ITEM_TYPE_SIGNAL) {
 		connect_button->set_text(TTR("Connect..."));
-		connect_button->set_icon(get_editor_theme_icon(SNAME("Instance")));
+		connect_button->set_button_icon(get_editor_theme_icon(SNAME("Instance")));
 		connect_button->set_disabled(false);
 	} else if (item && _get_item_type(*item) == TREE_ITEM_TYPE_CONNECTION) {
 		connect_button->set_text(TTR("Disconnect"));
-		connect_button->set_icon(get_editor_theme_icon(SNAME("Unlinked")));
+		connect_button->set_button_icon(get_editor_theme_icon(SNAME("Unlinked")));
 
 		Object::Connection connection = item->get_metadata(0);
 		connect_button->set_disabled(_is_connection_inherited(connection));
 	} else {
 		connect_button->set_text(TTR("Connect..."));
-		connect_button->set_icon(get_editor_theme_icon(SNAME("Instance")));
+		connect_button->set_button_icon(get_editor_theme_icon(SNAME("Instance")));
 		connect_button->set_disabled(true);
 	}
 }
@@ -1571,7 +1570,7 @@ void ConnectionsDock::update_tree() {
 	}
 
 	connect_button->set_text(TTR("Connect..."));
-	connect_button->set_icon(get_editor_theme_icon(SNAME("Instance")));
+	connect_button->set_button_icon(get_editor_theme_icon(SNAME("Instance")));
 	connect_button->set_disabled(true);
 }
 
@@ -1634,7 +1633,7 @@ ConnectionsDock::ConnectionsDock() {
 	slot_menu->connect("about_to_popup", callable_mp(this, &ConnectionsDock::_slot_menu_about_to_popup));
 	slot_menu->add_item(TTR("Edit..."), SLOT_MENU_EDIT);
 	slot_menu->add_item(TTR("Go to Method"), SLOT_MENU_GO_TO_METHOD);
-	slot_menu->add_shortcut(ED_SHORTCUT("connections_editor/disconnect", TTR("Disconnect"), Key::KEY_DELETE), SLOT_MENU_DISCONNECT);
+	slot_menu->add_shortcut(ED_SHORTCUT("connections_editor/disconnect", TTRC("Disconnect"), Key::KEY_DELETE), SLOT_MENU_DISCONNECT);
 	add_child(slot_menu);
 
 	connect_dialog->connect("connected", callable_mp(this, &ConnectionsDock::_make_or_edit_connection));

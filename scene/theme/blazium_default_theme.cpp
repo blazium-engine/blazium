@@ -639,6 +639,7 @@ void update_font_color(Ref<Theme> &p_theme, const Color &p_color) {
 	p_theme->set_color("font_selected_color", "RichTextLabel", font_color);
 	p_theme->set_color("font_selected_color", "CodeEdit", font_color);
 	p_theme->set_color("font_selected_color", "ItemList", font_color);
+	p_theme->set_color("font_hovered_selected_color", "ItemList", font_color);
 	p_theme->set_color("font_selected_color", "TabContainer", font_color);
 	p_theme->set_color("font_selected_color", "TabBar", font_color);
 	p_theme->set_color("font_selected_color", "Tree", font_color);
@@ -1496,7 +1497,9 @@ void make_default_theme(Ref<Font> p_font, float p_scale, TextServer::SubpixelPos
 	t->set_stylebox("cursor_unfocused", "ItemList", button_focus_style);
 	t->set_stylebox("hovered", "ItemList", button_hover_style);
 	t->set_stylebox("selected", "ItemList", button_pressed_style);
+	t->set_stylebox("hovered_selected", "ItemList", button_pressed_style);
 	t->set_stylebox("selected_focus", "ItemList", button_pressed_style);
+	t->set_stylebox("hovered_selected_focus", "ItemList", button_pressed_style);
 	t->set_stylebox(SceneStringName(panel), "ItemList", panel_style);
 
 	t->set_stylebox(CoreStringName(normal), "MenuBar", button_empty_style);

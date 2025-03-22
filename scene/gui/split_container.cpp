@@ -121,7 +121,7 @@ void SplitContainerDragger::gui_input(const Ref<InputEvent> &p_event) {
 				sc->split_offset = drag_ofs + (vertical ? in_parent_pos.y : in_parent_pos.x) - drag_from;
 			}
 		}
-
+		sc->_compute_middle_sep(true);
 		sc->_resort_children();
 		sc->emit_signal(SNAME("dragged"), sc->get_split_offset());
 	}
@@ -239,12 +239,9 @@ int SplitContainer::_get_separation() const {
 		return 0;
 	}
 
-	int sep = 0;
-	if (dragger_control->is_visible()) {
-		sep = MAX(theme_cache.separation, 0);
-		if (!collapsed && theme_cache.draw_grabber_icon) {
-			sep = MAX(sep, vertical ? _get_grabber_icon()->get_height() : _get_grabber_icon()->get_width());
-		}
+	int sep = MAX(theme_cache.separation, 0);
+	if (theme_cache.draw_grabber_icon) {
+		sep = MAX(sep, vertical ? _get_grabber_icon()->get_height() : _get_grabber_icon()->get_width());
 	}
 	return sep;
 }
@@ -258,9 +255,12 @@ Size2 SplitContainer::get_minimum_size() const {
 	Size2 ms;
 	Control *second = _get_child(1);
 	int axis = vertical ? 1 : 0;
+	bool dragger_visible = dragger_visibility != DRAGGER_HIDDEN_COLLAPSED;
 
 	if (first->is_visible() || (collapse_mode == COLLAPSE_FIRST || collapse_mode == COLLAPSE_ALL)) {
 		ms = first->get_combined_minimum_size();
+	} else {
+		dragger_visible = false;
 	}
 
 	if (second && (second->is_visible() || (collapse_mode == COLLAPSE_SECOND || collapse_mode == COLLAPSE_ALL))) {
@@ -268,9 +268,11 @@ Size2 SplitContainer::get_minimum_size() const {
 		int cross_axis = vertical ? 0 : 1;
 		ms[axis] += ms2[axis];
 		ms[cross_axis] = MAX(ms[cross_axis], ms2[cross_axis]);
+	} else {
+		dragger_visible = false;
 	}
 
-	if (first && second) {
+	if (dragger_visible) {
 		ms[axis] += _get_separation();
 	}
 
@@ -329,7 +331,7 @@ void SplitContainer::_resort_children() {
 		return;
 	}
 
-	bool dragger_visible = !collapsed;
+	bool dragger_visible = true;
 	Size2 size = get_size();
 	bool rtl = is_layout_rtl();
 
@@ -340,8 +342,8 @@ void SplitContainer::_resort_children() {
 		Control *target = first_visible ? first : second;
 
 		child_collapsed = first_collapsed || second_collapsed;
-		dragger_visible = dragger_visible && child_collapsed;
-		dragger_control->set_visible(dragger_visible);
+		dragger_visible = child_collapsed;
+		dragger_control->set_visible(dragger_visible && !collapsed);
 
 		if (!dragger_visible) {
 			target->set_rect(Rect2(Point2(), size));
@@ -375,7 +377,7 @@ void SplitContainer::_resort_children() {
 		return;
 	}
 
-	dragger_control->set_visible(dragger_visible);
+	dragger_control->set_visible(dragger_visible && !collapsed);
 
 	_compute_middle_sep(false);
 

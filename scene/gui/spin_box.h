@@ -67,6 +67,7 @@ class SpinBox : public Range {
 	String suffix;
 	String last_updated_text;
 	double custom_arrow_step = 0.0;
+	bool use_custom_arrow_step = false;
 
 	void _line_edit_input(const Ref<InputEvent> &p_event);
 
@@ -127,16 +128,19 @@ class SpinBox : public Range {
 		int buttons_vertical_separation = 0;
 		int field_and_buttons_separation = 0;
 		int buttons_width = 0;
-		int set_min_buttons_width_from_icons = 0;
-
+#ifndef DISABLE_DEPRECATED
+		bool set_min_buttons_width_from_icons = false;
+#endif
 	} theme_cache;
 
 	void _mouse_exited();
 	void _update_buttons_state_for_current_value();
+	void _set_step_no_signal(double p_step);
 
 protected:
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
 	void _value_changed(double p_value) override;
+	void _validate_property(PropertyInfo &p_property) const;
 
 	void _notification(int p_what);
 	static void _bind_methods();

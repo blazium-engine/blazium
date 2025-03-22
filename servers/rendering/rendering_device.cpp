@@ -32,6 +32,7 @@
 #include "rendering_device.compat.inc"
 
 #include "rendering_device_binds.h"
+#include "shader_include_db.h"
 
 #include "core/config/project_settings.h"
 #include "core/io/dir_access.h"
@@ -44,21 +45,21 @@
 
 static String _get_device_vendor_name(const RenderingContextDriver::Device &p_device) {
 	switch (p_device.vendor) {
-		case RenderingContextDriver::VENDOR_AMD:
+		case RenderingContextDriver::Vendor::VENDOR_AMD:
 			return "AMD";
-		case RenderingContextDriver::VENDOR_IMGTEC:
+		case RenderingContextDriver::Vendor::VENDOR_IMGTEC:
 			return "ImgTec";
-		case RenderingContextDriver::VENDOR_APPLE:
+		case RenderingContextDriver::Vendor::VENDOR_APPLE:
 			return "Apple";
-		case RenderingContextDriver::VENDOR_NVIDIA:
+		case RenderingContextDriver::Vendor::VENDOR_NVIDIA:
 			return "NVIDIA";
-		case RenderingContextDriver::VENDOR_ARM:
+		case RenderingContextDriver::Vendor::VENDOR_ARM:
 			return "ARM";
-		case RenderingContextDriver::VENDOR_MICROSOFT:
+		case RenderingContextDriver::Vendor::VENDOR_MICROSOFT:
 			return "Microsoft";
-		case RenderingContextDriver::VENDOR_QUALCOMM:
+		case RenderingContextDriver::Vendor::VENDOR_QUALCOMM:
 			return "Qualcomm";
-		case RenderingContextDriver::VENDOR_INTEL:
+		case RenderingContextDriver::Vendor::VENDOR_INTEL:
 			return "Intel";
 		default:
 			return "Unknown";
@@ -177,6 +178,10 @@ void RenderingDevice::_free_dependencies(RID p_id) {
 	}
 }
 
+/*******************************/
+/**** SHADER INFRASTRUCTURE ****/
+/*******************************/
+
 void RenderingDevice::shader_set_compile_to_spirv_function(ShaderCompileToSPIRVFunction p_function) {
 	compile_to_spirv_function = p_function;
 }
@@ -199,7 +204,7 @@ Vector<uint8_t> RenderingDevice::shader_compile_spirv_from_source(ShaderStage p_
 
 	ERR_FAIL_NULL_V(compile_to_spirv_function, Vector<uint8_t>());
 
-	return compile_to_spirv_function(p_stage, p_source_code, p_language, r_error, this);
+	return compile_to_spirv_function(p_stage, ShaderIncludeDB::parse_include_files(p_source_code), p_language, r_error, this);
 }
 
 String RenderingDevice::shader_get_spirv_cache_key() const {
@@ -694,9 +699,10 @@ RID RenderingDevice::texture_create(const TextureFormat &p_format, const Texture
 
 	if (format.texture_type == TEXTURE_TYPE_1D_ARRAY || format.texture_type == TEXTURE_TYPE_2D_ARRAY || format.texture_type == TEXTURE_TYPE_CUBE_ARRAY || format.texture_type == TEXTURE_TYPE_CUBE) {
 		ERR_FAIL_COND_V_MSG(format.array_layers < 1, RID(),
-				"Amount of layers must be equal or greater than 1 for arrays and cubemaps.");
+				"Number of layers must be equal or greater than 1 for arrays and cubemaps.");
 		ERR_FAIL_COND_V_MSG((format.texture_type == TEXTURE_TYPE_CUBE_ARRAY || format.texture_type == TEXTURE_TYPE_CUBE) && (format.array_layers % 6) != 0, RID(),
 				"Cubemap and cubemap array textures must provide a layer number that is multiple of 6");
+		ERR_FAIL_COND_V_MSG(format.array_layers > driver->limit_get(LIMIT_MAX_TEXTURE_ARRAY_LAYERS), RID(), "Number of layers exceeds device maximum.");
 	} else {
 		format.array_layers = 1;
 	}
@@ -707,6 +713,28 @@ RID RenderingDevice::texture_create(const TextureFormat &p_format, const Texture
 
 	format.height = format.texture_type != TEXTURE_TYPE_1D && format.texture_type != TEXTURE_TYPE_1D_ARRAY ? format.height : 1;
 	format.depth = format.texture_type == TEXTURE_TYPE_3D ? format.depth : 1;
+
+	uint64_t size_max = 0;
+	switch (format.texture_type) {
+		case TEXTURE_TYPE_1D:
+		case TEXTURE_TYPE_1D_ARRAY:
+			size_max = driver->limit_get(LIMIT_MAX_TEXTURE_SIZE_1D);
+			break;
+		case TEXTURE_TYPE_2D:
+		case TEXTURE_TYPE_2D_ARRAY:
+			size_max = driver->limit_get(LIMIT_MAX_TEXTURE_SIZE_2D);
+			break;
+		case TEXTURE_TYPE_CUBE:
+		case TEXTURE_TYPE_CUBE_ARRAY:
+			size_max = driver->limit_get(LIMIT_MAX_TEXTURE_SIZE_CUBE);
+			break;
+		case TEXTURE_TYPE_3D:
+			size_max = driver->limit_get(LIMIT_MAX_TEXTURE_SIZE_3D);
+			break;
+		case TEXTURE_TYPE_MAX:
+			break;
+	}
+	ERR_FAIL_COND_V_MSG(format.width > size_max || format.height > size_max || format.depth > size_max, RID(), "Texture dimensions exceed device maximum.");
 
 	uint32_t required_mipmaps = get_image_required_mipmaps(format.width, format.height, format.depth);
 
@@ -892,6 +920,7 @@ RID RenderingDevice::texture_create_shared(const TextureView &p_view, RID p_with
 
 		RDG::ResourceTracker *tracker = RDG::resource_tracker_create();
 		tracker->texture_driver_id = texture.shared_fallback->texture;
+		tracker->texture_size = Size2i(texture.width, texture.height);
 		tracker->texture_subresources = texture.barrier_range();
 		tracker->texture_usage = alias_format.usage_bits;
 		tracker->reference_count = 1;
@@ -1074,6 +1103,7 @@ RID RenderingDevice::texture_create_shared_from_slice(const TextureView &p_view,
 
 		RDG::ResourceTracker *tracker = RDG::resource_tracker_create();
 		tracker->texture_driver_id = texture.shared_fallback->texture;
+		tracker->texture_size = Size2i(texture.width, texture.height);
 		tracker->texture_subresources = slice_range;
 		tracker->texture_usage = slice_format.usage_bits;
 		tracker->reference_count = 1;
@@ -1946,7 +1976,7 @@ RDD::RenderPassID RenderingDevice::_render_pass_create(const Vector<AttachmentFo
 	}
 
 	LocalVector<RDD::Attachment> attachments;
-	LocalVector<int> attachment_remap;
+	LocalVector<uint32_t> attachment_remap;
 
 	for (int i = 0; i < p_attachments.size(); i++) {
 		if (p_attachments[i].usage_flags == AttachmentFormat::UNUSED_ATTACHMENT) {
@@ -2791,7 +2821,12 @@ void RenderingDevice::_uniform_set_update_shared(UniformSet *p_uniform_set) {
 	}
 }
 
-RID RenderingDevice::uniform_set_create(const Vector<Uniform> &p_uniforms, RID p_shader, uint32_t p_shader_set) {
+template RID RenderingDevice::uniform_set_create(const LocalVector<RD::Uniform> &p_uniforms, RID p_shader, uint32_t p_shader_set);
+
+template RID RenderingDevice::uniform_set_create(const Vector<RD::Uniform> &p_uniforms, RID p_shader, uint32_t p_shader_set);
+
+template <typename Collection>
+RID RenderingDevice::uniform_set_create(const Collection &p_uniforms, RID p_shader, uint32_t p_shader_set) {
 	_THREAD_SAFE_METHOD_
 
 	ERR_FAIL_COND_V(p_uniforms.is_empty(), RID());
@@ -3509,6 +3544,15 @@ int RenderingDevice::screen_get_height(DisplayServer::WindowID p_screen) const {
 	RenderingContextDriver::SurfaceID surface = context->surface_get_from_window(p_screen);
 	ERR_FAIL_COND_V_MSG(surface == 0, 0, "A surface was not created for the screen.");
 	return context->surface_get_height(surface);
+}
+
+int RenderingDevice::screen_get_pre_rotation_degrees(DisplayServer::WindowID p_screen) const {
+	_THREAD_SAFE_METHOD_
+
+	HashMap<DisplayServer::WindowID, RDD::SwapChainID>::ConstIterator it = screen_swap_chains.find(p_screen);
+	ERR_FAIL_COND_V_MSG(it == screen_swap_chains.end(), ERR_CANT_CREATE, "A swap chain was not created for the screen.");
+
+	return driver->swap_chain_get_pre_rotation_degrees(it->value);
 }
 
 RenderingDevice::FramebufferFormatID RenderingDevice::screen_get_framebuffer_format(DisplayServer::WindowID p_screen) const {
@@ -4723,6 +4767,7 @@ bool RenderingDevice::_texture_make_mutable(Texture *p_texture, RID p_texture_id
 						draw_tracker = RDG::resource_tracker_create();
 						draw_tracker->parent = owner_texture->draw_tracker;
 						draw_tracker->texture_driver_id = p_texture->driver_id;
+						draw_tracker->texture_size = Size2i(p_texture->width, p_texture->height);
 						draw_tracker->texture_subresources = p_texture->barrier_range();
 						draw_tracker->texture_usage = p_texture->usage_flags;
 						draw_tracker->texture_slice_or_dirty_rect = p_texture->slice_rect;
@@ -4745,6 +4790,7 @@ bool RenderingDevice::_texture_make_mutable(Texture *p_texture, RID p_texture_id
 			// Regular texture.
 			p_texture->draw_tracker = RDG::resource_tracker_create();
 			p_texture->draw_tracker->texture_driver_id = p_texture->driver_id;
+			p_texture->draw_tracker->texture_size = Size2i(p_texture->width, p_texture->height);
 			p_texture->draw_tracker->texture_subresources = p_texture->barrier_range();
 			p_texture->draw_tracker->texture_usage = p_texture->usage_flags;
 			p_texture->draw_tracker->reference_count = 1;
@@ -5861,6 +5907,12 @@ void RenderingDevice::finalize() {
 	// All these should be clear at this point.
 	ERR_FAIL_COND(dependency_map.size());
 	ERR_FAIL_COND(reverse_dependency_map.size());
+}
+
+void RenderingDevice::_set_max_fps(int p_max_fps) {
+	for (const KeyValue<DisplayServer::WindowID, RDD::SwapChainID> &it : screen_swap_chains) {
+		driver->swap_chain_set_max_fps(it.value, p_max_fps);
+	}
 }
 
 RenderingDevice *RenderingDevice::create_local_device() {

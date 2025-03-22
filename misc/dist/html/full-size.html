@@ -22,9 +22,12 @@ input[type="url"],
 input[type="week"],
 select:focus,
 textarea {
-  font-size: 16px;
+	font-size: 16px;
 }
-html, body, #canvas {
+
+html,
+body,
+#canvas {
 	margin: 0;
 	padding: 0;
 	border: 0;
@@ -45,19 +48,22 @@ body {
 	outline: none;
 }
 
-#status, #status-splash, #status-progress {
+#status,
+#status-splash,
+#status-progress {
 	position: absolute;
 	left: 0;
 	right: 0;
 }
 
-#status, #status-splash {
+#status,
+#status-splash {
 	top: 0;
 	bottom: 0;
 }
 
 #status {
-	background-color: #242424;
+	background-color: $GODOT_SPLASH_COLOR;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
@@ -71,7 +77,8 @@ body {
 	margin: auto;
 }
 
-#status-progress, #status-notice {
+#status-progress,
+#status-notice {
 	display: none;
 }
 

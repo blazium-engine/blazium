@@ -400,10 +400,19 @@ Vector<AudioFrame> AudioStreamPlayer3D::_update_panning() {
 			if (area && area->is_using_reverb_bus() && area->get_reverb_uniformity() > 0) {
 				total_max = MAX(total_max, listener_area_pos.length());
 			}
-			if (total_max > max_distance) {
+			if (dist > total_max || total_max > max_distance) {
+				if (!was_further_than_max_distance_last_frame) {
+					HashMap<StringName, Vector<AudioFrame>> bus_volumes;
+					for (Ref<AudioStreamPlayback> &playback : internal->stream_playbacks) {
+						// So the player gets muted and mostly stops mixing when out of range.
+						AudioServer::get_singleton()->set_playback_bus_volumes_linear(playback, bus_volumes);
+					}
+					was_further_than_max_distance_last_frame = true; // Cache so we don't set the volume over and over.
+				}
 				continue; //can't hear this sound in this listener
 			}
 		}
+		was_further_than_max_distance_last_frame = false;
 
 		float multiplier = Math::db_to_linear(_get_attenuation_db(dist));
 		if (max_distance > 0) {
@@ -544,7 +553,7 @@ void AudioStreamPlayer3D::play(float p_from_pos) {
 	setplay.set(p_from_pos);
 
 	// Sample handling.
-	if (stream_playback->get_is_sample()) {
+	if (stream_playback->get_is_sample() && stream_playback->get_sample_playback().is_valid()) {
 		Ref<AudioSamplePlayback> sample_playback = stream_playback->get_sample_playback();
 		sample_playback->offset = p_from_pos;
 		sample_playback->bus = _get_actual_bus();
@@ -554,10 +563,7 @@ void AudioStreamPlayer3D::play(float p_from_pos) {
 }
 
 void AudioStreamPlayer3D::seek(float p_seconds) {
-	if (is_playing()) {
-		stop();
-		play(p_seconds);
-	}
+	internal->seek(p_seconds);
 }
 
 void AudioStreamPlayer3D::stop() {
@@ -573,6 +579,9 @@ bool AudioStreamPlayer3D::is_playing() const {
 }
 
 float AudioStreamPlayer3D::get_playback_position() {
+	if (setplay.get() >= 0) {
+		return setplay.get(); // play() has been called this frame, but no playback exists just yet.
+	}
 	return internal->get_playback_position();
 }
 
@@ -853,7 +862,7 @@ void AudioStreamPlayer3D::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "unit_size", PROPERTY_HINT_RANGE, "0.1,100,0.01,or_greater"), "set_unit_size", "get_unit_size");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "max_db", PROPERTY_HINT_RANGE, "-24,6,suffix:dB"), "set_max_db", "get_max_db");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "pitch_scale", PROPERTY_HINT_RANGE, "0.01,4,0.01,or_greater"), "set_pitch_scale", "get_pitch_scale");
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "playing", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR), "_set_playing", "is_playing");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "playing", PROPERTY_HINT_ONESHOT, "", PROPERTY_USAGE_EDITOR), "_set_playing", "is_playing");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "autoplay"), "set_autoplay", "is_autoplay_enabled");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "stream_paused", PROPERTY_HINT_NONE, ""), "set_stream_paused", "get_stream_paused");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "max_distance", PROPERTY_HINT_RANGE, "0,4096,0.01,or_greater,suffix:m"), "set_max_distance", "get_max_distance");

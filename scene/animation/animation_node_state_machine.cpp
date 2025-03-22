@@ -51,7 +51,7 @@ AnimationNodeStateMachineTransition::AdvanceMode AnimationNodeStateMachineTransi
 
 void AnimationNodeStateMachineTransition::set_advance_condition(const StringName &p_condition) {
 	String cs = p_condition;
-	ERR_FAIL_COND(cs.contains("/") || cs.contains(":"));
+	ERR_FAIL_COND(cs.contains_char('/') || cs.contains_char(':'));
 	advance_condition = p_condition;
 	if (!cs.is_empty()) {
 		advance_condition_name = "conditions/" + cs;
@@ -1254,7 +1254,7 @@ bool AnimationNodeStateMachine::is_parameter_read_only(const StringName &p_param
 void AnimationNodeStateMachine::add_node(const StringName &p_name, Ref<AnimationNode> p_node, const Vector2 &p_position) {
 	ERR_FAIL_COND(states.has(p_name));
 	ERR_FAIL_COND(p_node.is_null());
-	ERR_FAIL_COND(String(p_name).contains("/"));
+	ERR_FAIL_COND(String(p_name).contains_char('/'));
 
 	State state_new;
 	state_new.node = p_node;
@@ -1273,7 +1273,7 @@ void AnimationNodeStateMachine::add_node(const StringName &p_name, Ref<Animation
 void AnimationNodeStateMachine::replace_node(const StringName &p_name, Ref<AnimationNode> p_node) {
 	ERR_FAIL_COND(states.has(p_name) == false);
 	ERR_FAIL_COND(p_node.is_null());
-	ERR_FAIL_COND(String(p_name).contains("/"));
+	ERR_FAIL_COND(String(p_name).contains_char('/'));
 
 	{
 		Ref<AnimationNode> node = states[p_name].node;
@@ -1579,16 +1579,8 @@ void AnimationNodeStateMachine::remove_transition(const StringName &p_from, cons
 
 void AnimationNodeStateMachine::remove_transition_by_index(const int p_transition) {
 	ERR_FAIL_INDEX(p_transition, transitions.size());
-	Transition tr = transitions[p_transition];
 	transitions.write[p_transition].transition->disconnect("advance_condition_changed", callable_mp(this, &AnimationNodeStateMachine::_tree_changed));
 	transitions.remove_at(p_transition);
-
-	Vector<String> path_from = String(tr.from).split("/");
-	Vector<String> path_to = String(tr.to).split("/");
-
-	List<Vector<String>> paths;
-	paths.push_back(path_from);
-	paths.push_back(path_to);
 }
 
 void AnimationNodeStateMachine::_remove_transition(const Ref<AnimationNodeStateMachineTransition> p_transition) {
@@ -1836,6 +1828,26 @@ void AnimationNodeStateMachine::_bind_methods() {
 	BIND_ENUM_CONSTANT(STATE_MACHINE_TYPE_ROOT);
 	BIND_ENUM_CONSTANT(STATE_MACHINE_TYPE_NESTED);
 	BIND_ENUM_CONSTANT(STATE_MACHINE_TYPE_GROUPED);
+}
+
+Vector<StringName> AnimationNodeStateMachine::get_nodes_with_transitions_from(const StringName &p_node) const {
+	Vector<StringName> result;
+	for (const Transition &transition : transitions) {
+		if (transition.from == p_node) {
+			result.push_back(transition.to);
+		}
+	}
+	return result;
+}
+
+Vector<StringName> AnimationNodeStateMachine::get_nodes_with_transitions_to(const StringName &p_node) const {
+	Vector<StringName> result;
+	for (const Transition &transition : transitions) {
+		if (transition.to == p_node) {
+			result.push_back(transition.from);
+		}
+	}
+	return result;
 }
 
 AnimationNodeStateMachine::AnimationNodeStateMachine() {

@@ -154,7 +154,6 @@ void EditorPlugin::add_control_to_container(CustomControlContainer p_location, C
 		} break;
 		case CONTAINER_PROJECT_SETTING_TAB_RIGHT: {
 			ProjectSettingsEditor::get_singleton()->get_tabs()->add_child(p_control);
-			ProjectSettingsEditor::get_singleton()->get_tabs()->move_child(p_control, 1);
 
 		} break;
 	}
@@ -309,13 +308,13 @@ void EditorPlugin::forward_3d_force_draw_over_viewport(Control *p_overlay) {
 	GDVIRTUAL_CALL(_forward_3d_force_draw_over_viewport, p_overlay);
 }
 
-String EditorPlugin::get_name() const {
+String EditorPlugin::get_plugin_name() const {
 	String name;
 	GDVIRTUAL_CALL(_get_plugin_name, name);
 	return name;
 }
 
-const Ref<Texture2D> EditorPlugin::get_icon() const {
+const Ref<Texture2D> EditorPlugin::get_plugin_icon() const {
 	Ref<Texture2D> icon;
 	GDVIRTUAL_CALL(_get_plugin_icon, icon);
 	return icon;
@@ -491,6 +490,14 @@ void EditorPlugin::remove_scene_post_import_plugin(const Ref<EditorScenePostImpo
 	ResourceImporterScene::remove_post_importer_plugin(p_plugin);
 }
 
+void EditorPlugin::add_context_menu_plugin(EditorContextMenuPlugin::ContextMenuSlot p_slot, const Ref<EditorContextMenuPlugin> &p_plugin) {
+	EditorContextMenuPluginManager::get_singleton()->add_plugin(p_slot, p_plugin);
+}
+
+void EditorPlugin::remove_context_menu_plugin(const Ref<EditorContextMenuPlugin> &p_plugin) {
+	EditorContextMenuPluginManager::get_singleton()->remove_plugin(p_plugin);
+}
+
 int find(const PackedStringArray &a, const String &v) {
 	const String *r = a.ptr();
 	for (int j = 0; j < a.size(); ++j) {
@@ -630,6 +637,8 @@ void EditorPlugin::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("remove_resource_conversion_plugin", "plugin"), &EditorPlugin::remove_resource_conversion_plugin);
 	ClassDB::bind_method(D_METHOD("set_input_event_forwarding_always_enabled"), &EditorPlugin::set_input_event_forwarding_always_enabled);
 	ClassDB::bind_method(D_METHOD("set_force_draw_over_forwarding_enabled"), &EditorPlugin::set_force_draw_over_forwarding_enabled);
+	ClassDB::bind_method(D_METHOD("add_context_menu_plugin", "slot", "plugin"), &EditorPlugin::add_context_menu_plugin);
+	ClassDB::bind_method(D_METHOD("remove_context_menu_plugin", "plugin"), &EditorPlugin::remove_context_menu_plugin);
 
 	ClassDB::bind_method(D_METHOD("get_editor_interface"), &EditorPlugin::get_editor_interface);
 	ClassDB::bind_method(D_METHOD("get_script_create_dialog"), &EditorPlugin::get_script_create_dialog);

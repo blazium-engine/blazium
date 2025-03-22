@@ -327,7 +327,6 @@ private:
 	MenuButton *snap_config_menu = nullptr;
 	PopupMenu *smartsnap_config_popup = nullptr;
 
-	Button *override_camera_button = nullptr;
 	Button *lock_button = nullptr;
 	Button *unlock_button = nullptr;
 	Button *group_button = nullptr;
@@ -520,9 +519,6 @@ private:
 	void _zoom_on_position(real_t p_zoom, Point2 p_position = Point2());
 	void _button_toggle_smart_snap(bool p_status);
 	void _button_toggle_grid_snap(bool p_status);
-	void _button_override_camera(bool p_pressed);
-
-	void _update_override_camera_button(bool p_game_running);
 
 	HSplitContainer *left_panel_split = nullptr;
 	HSplitContainer *right_panel_split = nullptr;
@@ -608,7 +604,7 @@ protected:
 	void _notification(int p_what);
 
 public:
-	virtual String get_name() const override { return "2D"; }
+	virtual String get_plugin_name() const override { return "2D"; }
 	bool has_main_screen() const override { return true; }
 	virtual void edit(Object *p_object) override;
 	virtual bool handles(Object *p_object) const override;

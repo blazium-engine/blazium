@@ -63,6 +63,7 @@ class ViewportTexture : public Texture2D {
 	bool vp_changed = false;
 
 	void _setup_local_to_scene(const Node *p_loc_scene);
+	void _err_print_viewport_not_set() const;
 
 	mutable RID proxy_ph;
 	mutable RID proxy;
@@ -360,7 +361,6 @@ private:
 
 	struct GUI {
 		bool mouse_in_viewport = false;
-		bool key_event_accepted = false;
 		HashMap<int, ObjectID> touch_focus;
 		Control *mouse_focus = nullptr;
 		Control *mouse_click_grabber = nullptr;
@@ -411,8 +411,9 @@ private:
 	DefaultCanvasItemTextureRepeat default_canvas_item_texture_repeat = DEFAULT_CANVAS_ITEM_TEXTURE_REPEAT_DISABLED;
 
 	bool disable_input = false;
+	bool disable_input_override = false;
 
-	bool _gui_call_input(Control *p_control, const Ref<InputEvent> &p_input);
+	void _gui_call_input(Control *p_control, const Ref<InputEvent> &p_input);
 	void _gui_call_notification(Control *p_control, int p_what);
 
 	void _gui_sort_roots();
@@ -485,6 +486,9 @@ private:
 	void _process_dirty_canvas_parent_orders();
 	void _propagate_world_2d_changed(Node *p_node);
 
+	void _window_start_drag(Window *p_window);
+	void _window_start_resize(SubWindowResize p_edge, Window *p_window);
+
 protected:
 	bool _set_size(const Size2i &p_size, const Size2i &p_size_2d_override, bool p_allocated);
 
@@ -524,6 +528,7 @@ public:
 	void set_global_canvas_transform(const Transform2D &p_transform);
 	Transform2D get_global_canvas_transform() const;
 
+	Transform2D get_stretch_transform() const;
 	virtual Transform2D get_final_transform() const;
 
 	void gui_set_root_order_dirty();
@@ -589,9 +594,13 @@ public:
 #ifndef DISABLE_DEPRECATED
 	void push_unhandled_input(const Ref<InputEvent> &p_event, bool p_local_coords = false);
 #endif // DISABLE_DEPRECATED
+	void notify_mouse_entered();
+	void notify_mouse_exited();
 
 	void set_disable_input(bool p_disable);
 	bool is_input_disabled() const;
+
+	void set_disable_input_override(bool p_disable);
 
 	Vector2 get_mouse_position() const;
 	void warp_mouse(const Vector2 &p_position);
@@ -673,7 +682,7 @@ public:
 	Rect2i subwindow_get_popup_safe_rect(Window *p_window) const;
 
 	Viewport *get_parent_viewport() const;
-	Window *get_base_window() const;
+	Window *get_base_window();
 
 	void set_canvas_cull_mask(uint32_t p_layers);
 	uint32_t get_canvas_cull_mask() const;
@@ -787,6 +796,11 @@ public:
 
 	void set_camera_3d_override_perspective(real_t p_fovy_degrees, real_t p_z_near, real_t p_z_far);
 	void set_camera_3d_override_orthogonal(real_t p_size, real_t p_z_near, real_t p_z_far);
+	HashMap<StringName, real_t> get_camera_3d_override_properties() const;
+
+	Vector3 camera_3d_override_project_ray_normal(const Point2 &p_pos) const;
+	Vector3 camera_3d_override_project_ray_origin(const Point2 &p_pos) const;
+	Vector3 camera_3d_override_project_local_ray_normal(const Point2 &p_pos) const;
 
 	void set_disable_3d(bool p_disable);
 	bool is_3d_disabled() const;

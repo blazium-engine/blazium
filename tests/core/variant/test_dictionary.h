@@ -66,8 +66,7 @@ TEST_CASE("[Dictionary] Assignment using bracket notation ([])") {
 
 	map[StringName("HelloName")] = 6;
 	CHECK(int(map[StringName("HelloName")]) == 6);
-	// Check that StringName key is converted to String.
-	CHECK(int(map.find_key(6).get_type()) == Variant::STRING);
+	CHECK(int(map.find_key(6).get_type()) == Variant::STRING_NAME);
 	map[StringName("HelloName")] = 7;
 	CHECK(int(map[StringName("HelloName")]) == 7);
 
@@ -94,6 +93,20 @@ TEST_CASE("[Dictionary] Assignment using bracket notation ([])") {
 	map.make_read_only();
 	CHECK(int(map["This key does not exist"].get_type()) == Variant::NIL);
 	CHECK(map.size() == length);
+}
+
+TEST_CASE("[Dictionary] List init") {
+	Dictionary dict{
+		{ 0, "int" },
+		{ "packed_string_array", PackedStringArray({ "array", "of", "values" }) },
+		{ "key", Dictionary({ { "nested", 200 } }) },
+		{ Vector2(), "v2" },
+	};
+	CHECK(dict.size() == 4);
+	CHECK(dict[0] == "int");
+	CHECK(PackedStringArray(dict["packed_string_array"])[2] == "values");
+	CHECK(Dictionary(dict["key"])["nested"] == Variant(200));
+	CHECK(dict[Vector2()] == "v2");
 }
 
 TEST_CASE("[Dictionary] get_key_lists()") {

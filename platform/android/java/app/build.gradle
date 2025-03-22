@@ -63,11 +63,14 @@ dependencies {
         implementation files(pluginsBinaries)
     }
 
-    // .NET dependencies
-    String jar = '../../../../modules/mono/thirdparty/libSystem.Security.Cryptography.Native.Android.jar'
-    if (file(jar).exists()) {
-        monoImplementation files(jar)
+    // Automatically pick up local dependencies in res://addons
+    String addonsDirectory = getAddonsDirectory()
+    if (addonsDirectory != null && !addonsDirectory.isBlank()) {
+        implementation fileTree(dir: "$addonsDirectory", include: ['*.jar', '*.aar'])
     }
+
+    // .NET dependencies
+    monoImplementation fileTree(dir: 'monoLibs', include: ['*.jar'])
 }
 
 android {

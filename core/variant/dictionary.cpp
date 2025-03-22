@@ -81,15 +81,7 @@ Variant Dictionary::get_value_at_index(int p_index) const {
 
 Variant &Dictionary::operator[](const Variant &p_key) {
 	if (unlikely(_p->read_only)) {
-		if (p_key.get_type() == Variant::STRING_NAME) {
-			const StringName *sn = VariantInternal::get_string_name(&p_key);
-			const String &key = sn->operator String();
-			if (likely(_p->variant_map.has(key))) {
-				*_p->read_only = _p->variant_map[key];
-			} else {
-				*_p->read_only = Variant();
-			}
-		} else if (likely(_p->variant_map.has(p_key))) {
+		if (likely(_p->variant_map.has(p_key))) {
 			*_p->read_only = _p->variant_map[p_key];
 		} else {
 			*_p->read_only = Variant();
@@ -97,12 +89,7 @@ Variant &Dictionary::operator[](const Variant &p_key) {
 
 		return *_p->read_only;
 	} else {
-		if (p_key.get_type() == Variant::STRING_NAME) {
-			const StringName *sn = VariantInternal::get_string_name(&p_key);
-			return _p->variant_map[sn->operator String()];
-		} else {
-			return _p->variant_map[p_key];
-		}
+		return _p->variant_map[p_key];
 	}
 }
 
@@ -246,6 +233,11 @@ void Dictionary::_ref(const Dictionary &p_from) const {
 void Dictionary::clear() {
 	ERR_FAIL_COND_MSG(_p->read_only, "Dictionary is in read-only state.");
 	_p->variant_map.clear();
+}
+
+void Dictionary::sort() {
+	ERR_FAIL_COND_MSG(_p->read_only, "Dictionary is in read-only state.");
+	_p->variant_map.sort();
 }
 
 void Dictionary::merge(const Dictionary &p_dictionary, bool p_overwrite) {
@@ -406,6 +398,15 @@ Dictionary::Dictionary(const Dictionary &p_from) {
 Dictionary::Dictionary() {
 	_p = memnew(DictionaryPrivate);
 	_p->refcount.init();
+}
+
+Dictionary::Dictionary(std::initializer_list<KeyValue<Variant, Variant>> p_init) {
+	_p = memnew(DictionaryPrivate);
+	_p->refcount.init();
+
+	for (const KeyValue<Variant, Variant> &E : p_init) {
+		operator[](E.key) = E.value;
+	}
 }
 
 Dictionary::~Dictionary() {

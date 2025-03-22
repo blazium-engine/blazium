@@ -39,9 +39,7 @@ class ResourceUID : public Object {
 	GDCLASS(ResourceUID, Object)
 public:
 	typedef int64_t ID;
-	enum {
-		INVALID_ID = -1
-	};
+	constexpr const static ID INVALID_ID = -1;
 
 	static String get_cache_file();
 
@@ -72,6 +70,10 @@ public:
 	void set_id(ID p_id, const String &p_path);
 	String get_id_path(ID p_id) const;
 	void remove_id(ID p_id);
+
+	static String uid_to_path(const String &p_uid);
+	static String path_to_uid(const String &p_path);
+	static String ensure_path(const String &p_uid_or_path);
 
 	Error load_from_cache(bool p_reset);
 	Error save_to_cache();

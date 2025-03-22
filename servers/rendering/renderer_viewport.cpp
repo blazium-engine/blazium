@@ -41,14 +41,31 @@
 static Transform2D _canvas_get_transform(RendererViewport::Viewport *p_viewport, RendererCanvasCull::Canvas *p_canvas, RendererViewport::Viewport::CanvasData *p_canvas_data, const Vector2 &p_vp_size) {
 	Transform2D xf = p_viewport->global_transform;
 
+	Vector2 pixel_snap_offset;
+	if (p_viewport->snap_2d_transforms_to_pixel) {
+		// We use `floor(p + 0.5)` to snap canvas items, but `ceil(p - 0.5)`
+		// to snap viewport transform because the viewport transform is inverse
+		// to the camera transform. Also, if the viewport size is not divisible
+		// by 2, the center point is offset by 0.5 px and we need to add 0.5
+		// before rounding to cancel it out.
+		pixel_snap_offset.x = (p_viewport->size.width % 2) ? 0.0 : -0.5;
+		pixel_snap_offset.y = (p_viewport->size.height % 2) ? 0.0 : -0.5;
+	}
+
 	float scale = 1.0;
 	if (p_viewport->canvas_map.has(p_canvas->parent)) {
 		Transform2D c_xform = p_viewport->canvas_map[p_canvas->parent].transform;
+		if (p_viewport->snap_2d_transforms_to_pixel) {
+			c_xform.columns[2] = (c_xform.columns[2] * p_canvas->parent_scale + pixel_snap_offset).ceil() / p_canvas->parent_scale;
+		}
 		xf = xf * c_xform;
 		scale = p_canvas->parent_scale;
 	}
 
 	Transform2D c_xform = p_canvas_data->transform;
+	if (p_viewport->snap_2d_transforms_to_pixel) {
+		c_xform.columns[2] = (c_xform.columns[2] + pixel_snap_offset).ceil();
+	}
 	xf = xf * c_xform;
 
 	if (scale != 1.0 && !RSG::canvas->disable_scale) {
@@ -773,7 +790,16 @@ void RendererViewport::draw_viewports(bool p_swap_buffers) {
 				RSG::texture_storage->render_target_set_override(vp->render_target,
 						xr_interface->get_color_texture(),
 						xr_interface->get_depth_texture(),
-						xr_interface->get_velocity_texture());
+						xr_interface->get_velocity_texture(),
+						xr_interface->get_velocity_depth_texture());
+
+				RSG::texture_storage->render_target_set_velocity_target_size(vp->render_target, xr_interface->get_velocity_target_size());
+
+				if (xr_interface->get_velocity_texture().is_valid()) {
+					viewport_set_force_motion_vectors(vp->self, true);
+				} else {
+					viewport_set_force_motion_vectors(vp->self, false);
+				}
 
 				// render...
 				RSG::scene->set_debug_draw_mode(vp->debug_draw);
@@ -981,7 +1007,7 @@ void RendererViewport::_viewport_set_size(Viewport *p_viewport, int p_width, int
 }
 
 bool RendererViewport::_viewport_requires_motion_vectors(Viewport *p_viewport) {
-	return p_viewport->use_taa || p_viewport->scaling_3d_mode == RenderingServer::VIEWPORT_SCALING_3D_MODE_FSR2 || p_viewport->debug_draw == RenderingServer::VIEWPORT_DEBUG_DRAW_MOTION_VECTORS;
+	return p_viewport->use_taa || p_viewport->scaling_3d_mode == RenderingServer::VIEWPORT_SCALING_3D_MODE_FSR2 || p_viewport->debug_draw == RenderingServer::VIEWPORT_DEBUG_DRAW_MOTION_VECTORS || p_viewport->force_motion_vectors;
 }
 
 void RendererViewport::viewport_set_active(RID p_viewport, bool p_active) {
@@ -1319,6 +1345,25 @@ void RendererViewport::viewport_set_use_debanding(RID p_viewport, bool p_use_deb
 		return;
 	}
 	viewport->use_debanding = p_use_debanding;
+	_configure_3d_render_buffers(viewport);
+}
+
+void RendererViewport::viewport_set_force_motion_vectors(RID p_viewport, bool p_force_motion_vectors) {
+	Viewport *viewport = viewport_owner.get_or_null(p_viewport);
+	ERR_FAIL_NULL(viewport);
+
+	if (viewport->force_motion_vectors == p_force_motion_vectors) {
+		return;
+	}
+
+	bool motion_vectors_before = _viewport_requires_motion_vectors(viewport);
+	viewport->force_motion_vectors = p_force_motion_vectors;
+
+	bool motion_vectors_after = _viewport_requires_motion_vectors(viewport);
+	if (motion_vectors_before != motion_vectors_after) {
+		num_viewports_with_motion_vectors += motion_vectors_after ? 1 : -1;
+	}
+
 	_configure_3d_render_buffers(viewport);
 }
 

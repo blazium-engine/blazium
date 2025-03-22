@@ -46,6 +46,7 @@ func test_func_hard_int() -> int: return 1
 func test_func_args_1(_a: int, _b: Array[int], _c: int = 1, _d = 2): pass
 func test_func_args_2(_a = 1, _b = _a, _c = [2], _d = 3): pass
 
+@warning_ignore_start("unused_signal")
 signal test_signal_1()
 signal test_signal_2(a: Variant, b)
 signal test_signal_3(a: int, b: Array[int])

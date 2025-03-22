@@ -137,20 +137,20 @@ void EditorScrollBox::_update_buttons() {
 void EditorScrollBox::_update_buttons_icon_and_tooltip() {
 	if (!is_vertical()) {
 		if (is_layout_rtl()) {
-			second_button->set_icon(theme_cache.arrow_left);
+			second_button->set_button_icon(theme_cache.arrow_left);
 			second_button->set_tooltip_text(TTR("Scroll Left\nHold Ctrl to scroll to the begin.\nHold Shift to scroll one page."));
-			first_button->set_icon(theme_cache.arrow_right);
+			first_button->set_button_icon(theme_cache.arrow_right);
 			first_button->set_tooltip_text(TTR("Scroll Right\nHold Ctrl to scroll to the end.\nHold Shift to scroll one page."));
 		} else {
-			first_button->set_icon(theme_cache.arrow_left);
+			first_button->set_button_icon(theme_cache.arrow_left);
 			first_button->set_tooltip_text(TTR("Scroll Left\nHold Ctrl to scroll to the begin.\nHold Shift to scroll one page."));
-			second_button->set_icon(theme_cache.arrow_right);
+			second_button->set_button_icon(theme_cache.arrow_right);
 			second_button->set_tooltip_text(TTR("Scroll Right\nHold Ctrl to scroll to the end.\nHold Shift to scroll one page."));
 		}
 	} else {
-		first_button->set_icon(theme_cache.arrow_up);
+		first_button->set_button_icon(theme_cache.arrow_up);
 		first_button->set_tooltip_text(TTR("Scroll Up\nHold Ctrl to scroll to the begin.\nHold Shift to scroll one page."));
-		first_button->set_icon(theme_cache.arrow_down);
+		first_button->set_button_icon(theme_cache.arrow_down);
 		second_button->set_tooltip_text(TTR("Scroll Down\nHold Ctrl to scroll to the end.\nHold Shift to scroll one page."));
 	}
 }

@@ -2,8 +2,14 @@ import os
 import sys
 from typing import TYPE_CHECKING
 
-from methods import detect_darwin_sdk_path, get_compiler_version, is_vanilla_clang, print_error
-from platform_methods import detect_arch, detect_mvk
+from methods import (
+    detect_darwin_sdk_path,
+    get_compiler_version,
+    is_apple_clang,
+    print_error,
+    print_warning,
+)
+from platform_methods import detect_arch, detect_mvk, validate_arch
 
 if TYPE_CHECKING:
     from SCons.Script.SConscript import SConsEnvironment
@@ -27,18 +33,35 @@ def get_opts():
         ("osxcross_sdk", "OSXCross SDK version", "darwin16"),
         ("MACOS_SDK_PATH", "Path to the macOS SDK", ""),
         ("vulkan_sdk_path", "Path to the Vulkan SDK", ""),
-        EnumVariable("macports_clang", "Build using Clang from MacPorts", "no", ("no", "5.0", "devel")),
-        BoolVariable("use_ubsan", "Use LLVM/GCC compiler undefined behavior sanitizer (UBSAN)", False),
+        EnumVariable(
+            "macports_clang",
+            "Build using Clang from MacPorts",
+            "no",
+            ("no", "5.0", "devel"),
+        ),
+        BoolVariable(
+            "use_ubsan",
+            "Use LLVM/GCC compiler undefined behavior sanitizer (UBSAN)",
+            False,
+        ),
         BoolVariable("use_asan", "Use LLVM/GCC compiler address sanitizer (ASAN)", False),
         BoolVariable("use_tsan", "Use LLVM/GCC compiler thread sanitizer (TSAN)", False),
-        BoolVariable("use_coverage", "Use instrumentation codes in the binary (e.g. for code coverage)", False),
+        BoolVariable(
+            "use_coverage",
+            "Use instrumentation codes in the binary (e.g. for code coverage)",
+            False,
+        ),
         ("angle_libs", "Path to the ANGLE static libraries", ""),
         (
             "bundle_sign_identity",
             "The 'Full Name', 'Common Name' or SHA-1 hash of the signing identity used to sign editor .app bundle.",
             "-",
         ),
-        BoolVariable("generate_bundle", "Generate an APP bundle after building iOS/macOS binaries", False),
+        BoolVariable(
+            "generate_bundle",
+            "Generate an APP bundle after building iOS/macOS binaries",
+            False,
+        ),
     ]
 
 
@@ -64,20 +87,7 @@ def get_flags():
 def configure(env: "SConsEnvironment"):
     # Validate arch.
     supported_arches = ["x86_64", "arm64"]
-    if env["arch"] not in supported_arches:
-        print_error(
-            'Unsupported CPU architecture "%s" for macOS. Supported architectures are: %s.'
-            % (env["arch"], ", ".join(supported_arches))
-        )
-        sys.exit(255)
-
-    ## Build type
-
-    if env["target"] == "template_release":
-        if env["arch"] not in ["arm64", "arm32"]:
-            env.Prepend(CCFLAGS=["-msse2"])
-    elif env.dev_build:
-        env.Prepend(LINKFLAGS=["-Xlinker", "-no_deduplicate"])
+    validate_arch(env["arch"], get_name(), supported_arches)
 
     ## Compiler configuration
 
@@ -98,17 +108,22 @@ def configure(env: "SConsEnvironment"):
         env.Append(LINKFLAGS=["-arch", "x86_64", "-mmacosx-version-min=10.13"])
 
     env.Append(CCFLAGS=["-ffp-contract=off"])
+    env.Append(CCFLAGS=["-fobjc-arc"])
 
     cc_version = get_compiler_version(env)
     cc_version_major = cc_version["apple_major"]
     cc_version_minor = cc_version["apple_minor"]
-    vanilla = is_vanilla_clang(env)
 
     # Workaround for Xcode 15 linker bug.
-    if not vanilla and cc_version_major == 1500 and cc_version_minor == 0:
+    if is_apple_clang(env) and cc_version_major == 1500 and cc_version_minor == 0:
         env.Prepend(LINKFLAGS=["-ld_classic"])
 
-    env.Append(CCFLAGS=["-fobjc-arc"])
+    if env.dev_build:
+        env.Prepend(LINKFLAGS=["-Xlinker", "-no_deduplicate"])
+
+    ccache_path = os.environ.get("CCACHE", "")
+    if ccache_path != "":
+        ccache_path = ccache_path + " "
 
     if "osxcross" not in env:  # regular native build
         if env["macports_clang"] != "no":
@@ -120,8 +135,8 @@ def configure(env: "SConsEnvironment"):
             env["RANLIB"] = mpprefix + "/libexec/llvm-" + mpclangver + "/bin/llvm-ranlib"
             env["AS"] = mpprefix + "/libexec/llvm-" + mpclangver + "/bin/llvm-as"
         else:
-            env["CC"] = "clang"
-            env["CXX"] = "clang++"
+            env["CC"] = ccache_path + "clang"
+            env["CXX"] = ccache_path + "clang++"
 
         detect_darwin_sdk_path("macos", env)
         env.Append(CCFLAGS=["-isysroot", "$MACOS_SDK_PATH"])
@@ -134,15 +149,8 @@ def configure(env: "SConsEnvironment"):
         else:
             basecmd = root + "/target/bin/x86_64-apple-" + env["osxcross_sdk"] + "-"
 
-        ccache_path = os.environ.get("CCACHE")
-        if ccache_path is None:
-            env["CC"] = basecmd + "cc"
-            env["CXX"] = basecmd + "c++"
-        else:
-            # there aren't any ccache wrappers available for macOS cross-compile,
-            # to enable caching we need to prepend the path to the ccache binary
-            env["CC"] = ccache_path + " " + basecmd + "cc"
-            env["CXX"] = ccache_path + " " + basecmd + "c++"
+        env["CC"] = ccache_path + basecmd + "cc"
+        env["CXX"] = ccache_path + basecmd + "c++"
         env["AR"] = basecmd + "ar"
         env["RANLIB"] = basecmd + "ranlib"
         env["AS"] = basecmd + "as"
@@ -195,7 +203,14 @@ def configure(env: "SConsEnvironment"):
     ## Flags
 
     env.Prepend(CPPPATH=["#platform/macos"])
-    env.Append(CPPDEFINES=["MACOS_ENABLED", "UNIX_ENABLED", "COREAUDIO_ENABLED", "COREMIDI_ENABLED"])
+    env.Append(
+        CPPDEFINES=[
+            "MACOS_ENABLED",
+            "UNIX_ENABLED",
+            "COREAUDIO_ENABLED",
+            "COREMIDI_ENABLED",
+        ]
+    )
     env.Append(
         LINKFLAGS=[
             "-framework",
@@ -238,10 +253,17 @@ def configure(env: "SConsEnvironment"):
             env.Append(LINKFLAGS=["-lGLES.macos." + env["arch"]])
         env.Prepend(CPPPATH=["#thirdparty/angle/include"])
 
-    env.Append(LINKFLAGS=["-rpath", "@executable_path/../Frameworks", "-rpath", "@executable_path"])
+    env.Append(
+        LINKFLAGS=[
+            "-rpath",
+            "@executable_path/../Frameworks",
+            "-rpath",
+            "@executable_path",
+        ]
+    )
 
     if env["metal"] and env["arch"] != "arm64":
-        # Only supported on arm64, so skip it for x86_64 builds.
+        print_warning("Target architecture '{}' does not support the Metal rendering driver".format(env["arch"]))
         env["metal"] = False
 
     extra_frameworks = set()

@@ -40,10 +40,12 @@
 #include "core/debugger/script_debugger.h"
 #include "core/io/marshalls.h"
 #include "core/version_generated.gen.h"
-#include "drivers/unix/net_socket_posix.h"
 #include "drivers/windows/dir_access_windows.h"
 #include "drivers/windows/file_access_windows.h"
 #include "drivers/windows/file_access_windows_pipe.h"
+#include "drivers/windows/ip_windows.h"
+#include "drivers/windows/net_socket_winsock.h"
+#include "drivers/windows/thread_windows.h"
 #include "main/main.h"
 #include "servers/audio_server.h"
 #include "servers/rendering/rendering_server_default.h"
@@ -135,13 +137,13 @@ void RedirectIOToConsole() {
 
 	if (AttachConsole(ATTACH_PARENT_PROCESS)) {
 		// Restore redirection (Note: if not redirected it's NULL handles not INVALID_HANDLE_VALUE).
-		if (h_stdin != 0) {
+		if (h_stdin != nullptr) {
 			SetStdHandle(STD_INPUT_HANDLE, h_stdin);
 		}
-		if (h_stdout != 0) {
+		if (h_stdout != nullptr) {
 			SetStdHandle(STD_OUTPUT_HANDLE, h_stdout);
 		}
-		if (h_stderr != 0) {
+		if (h_stderr != nullptr) {
 			SetStdHandle(STD_ERROR_HANDLE, h_stderr);
 		}
 
@@ -197,6 +199,10 @@ void OS_Windows::initialize() {
 	add_error_handler(&error_handlers);
 #endif
 
+#ifdef THREADS_ENABLED
+	init_thread_win();
+#endif
+
 	FileAccess::make_default<FileAccessWindows>(FileAccess::ACCESS_RESOURCES);
 	FileAccess::make_default<FileAccessWindows>(FileAccess::ACCESS_USERDATA);
 	FileAccess::make_default<FileAccessWindows>(FileAccess::ACCESS_FILESYSTEM);
@@ -205,7 +211,7 @@ void OS_Windows::initialize() {
 	DirAccess::make_default<DirAccessWindows>(DirAccess::ACCESS_USERDATA);
 	DirAccess::make_default<DirAccessWindows>(DirAccess::ACCESS_FILESYSTEM);
 
-	NetSocketPosix::make_default();
+	NetSocketWinSock::make_default();
 
 	// We need to know how often the clock is updated
 	QueryPerformanceFrequency((LARGE_INTEGER *)&ticks_per_second);
@@ -232,7 +238,7 @@ void OS_Windows::initialize() {
 	current_pi.pi.hProcess = GetCurrentProcess();
 	process_map->insert(GetCurrentProcessId(), current_pi);
 
-	IPUnix::make_default();
+	IPWindows::make_default();
 	main_loop = nullptr;
 
 	HRESULT hr = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown **>(&dwrite_factory));
@@ -307,7 +313,7 @@ void OS_Windows::finalize_core() {
 	timeEndPeriod(1);
 
 	memdelete(process_map);
-	NetSocketPosix::cleanup();
+	NetSocketWinSock::cleanup();
 
 #ifdef WINDOWS_DEBUG_OUTPUT_ENABLED
 	remove_error_handler(&error_handlers);
@@ -970,9 +976,9 @@ Dictionary OS_Windows::execute_with_pipe(const String &p_path, const List<String
 	}
 
 	// Create pipes.
-	HANDLE pipe_in[2] = { 0, 0 };
-	HANDLE pipe_out[2] = { 0, 0 };
-	HANDLE pipe_err[2] = { 0, 0 };
+	HANDLE pipe_in[2] = { nullptr, nullptr };
+	HANDLE pipe_out[2] = { nullptr, nullptr };
+	HANDLE pipe_err[2] = { nullptr, nullptr };
 
 	SECURITY_ATTRIBUTES sa;
 	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
@@ -1058,7 +1064,7 @@ Dictionary OS_Windows::execute_with_pipe(const String &p_path, const List<String
 
 	Ref<FileAccessWindowsPipe> err_pipe;
 	err_pipe.instantiate();
-	err_pipe->open_existing(pipe_err[0], 0);
+	err_pipe->open_existing(pipe_err[0], nullptr);
 
 	ret["stdio"] = main_pipe;
 	ret["stderr"] = err_pipe;
@@ -1468,7 +1474,7 @@ public:
 		locale = p_locale;
 		n_sub = p_nsub;
 		rtl = p_rtl;
-	};
+	}
 
 	virtual ~FallbackTextAnalysisSource() {}
 };
@@ -1542,7 +1548,8 @@ DWRITE_FONT_STRETCH OS_Windows::_stretch_to_dw(int p_stretch) const {
 }
 
 Vector<String> OS_Windows::get_system_font_path_for_text(const String &p_font_name, const String &p_text, const String &p_locale, const String &p_script, int p_weight, int p_stretch, bool p_italic) const {
-	if (!dwrite2_init) {
+	// This may be called before TextServerManager has been created, which would cause a crash downstream if we do not check here
+	if (!dwrite2_init || !TextServerManager::get_singleton()) {
 		return Vector<String>();
 	}
 
@@ -1732,7 +1739,7 @@ String OS_Windows::get_environment(const String &p_var) const {
 }
 
 void OS_Windows::set_environment(const String &p_var, const String &p_value) const {
-	ERR_FAIL_COND_MSG(p_var.is_empty() || p_var.contains("="), vformat("Invalid environment variable name '%s', cannot be empty or include '='.", p_var));
+	ERR_FAIL_COND_MSG(p_var.is_empty() || p_var.contains_char('='), vformat("Invalid environment variable name '%s', cannot be empty or include '='.", p_var));
 	Char16String var = p_var.utf16();
 	Char16String value = p_value.utf16();
 	ERR_FAIL_COND_MSG(var.length() + value.length() + 2 > 32767, vformat("Invalid definition for environment variable '%s', cannot exceed 32767 characters.", p_var));
@@ -1740,7 +1747,7 @@ void OS_Windows::set_environment(const String &p_var, const String &p_value) con
 }
 
 void OS_Windows::unset_environment(const String &p_var) const {
-	ERR_FAIL_COND_MSG(p_var.is_empty() || p_var.contains("="), vformat("Invalid environment variable name '%s', cannot be empty or include '='.", p_var));
+	ERR_FAIL_COND_MSG(p_var.is_empty() || p_var.contains_char('='), vformat("Invalid environment variable name '%s', cannot be empty or include '='.", p_var));
 	SetEnvironmentVariableW((LPCWSTR)(p_var.utf16().get_data()), nullptr); // Null to delete.
 }
 
@@ -1843,6 +1850,34 @@ String OS_Windows::get_locale() const {
 	}
 
 	return "en";
+}
+
+String OS_Windows::get_model_name() const {
+	HKEY hkey;
+	if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", 0, KEY_QUERY_VALUE, &hkey) != ERROR_SUCCESS) {
+		return OS::get_model_name();
+	}
+
+	String sys_name;
+	String board_name;
+	WCHAR buffer[256];
+	DWORD buffer_len = 256;
+	DWORD vtype = REG_SZ;
+	if (RegQueryValueExW(hkey, L"SystemProductName", nullptr, &vtype, (LPBYTE)buffer, &buffer_len) == ERROR_SUCCESS && buffer_len != 0) {
+		sys_name = String::utf16((const char16_t *)buffer, buffer_len).strip_edges();
+	}
+	buffer_len = 256;
+	if (RegQueryValueExW(hkey, L"BaseBoardProduct", nullptr, &vtype, (LPBYTE)buffer, &buffer_len) == ERROR_SUCCESS && buffer_len != 0) {
+		board_name = String::utf16((const char16_t *)buffer, buffer_len).strip_edges();
+	}
+	RegCloseKey(hkey);
+	if (!sys_name.is_empty() && sys_name.to_lower() != "system product name") {
+		return sys_name;
+	}
+	if (!board_name.is_empty() && board_name.to_lower() != "base board product") {
+		return board_name;
+	}
+	return OS::get_model_name();
 }
 
 String OS_Windows::get_processor_name() const {
@@ -1955,14 +1990,35 @@ String OS_Windows::get_cache_path() const {
 		if (has_environment("LOCALAPPDATA")) {
 			cache_path_cache = get_environment("LOCALAPPDATA").replace("\\", "/");
 		}
-		if (cache_path_cache.is_empty() && has_environment("TEMP")) {
-			cache_path_cache = get_environment("TEMP").replace("\\", "/");
-		}
 		if (cache_path_cache.is_empty()) {
-			cache_path_cache = get_config_path();
+			cache_path_cache = get_temp_path();
 		}
 	}
 	return cache_path_cache;
+}
+
+String OS_Windows::get_temp_path() const {
+	static String temp_path_cache;
+	if (temp_path_cache.is_empty()) {
+		{
+			Vector<WCHAR> temp_path;
+			// The maximum possible size is MAX_PATH+1 (261) + terminating null character.
+			temp_path.resize(MAX_PATH + 2);
+			DWORD temp_path_length = GetTempPathW(temp_path.size(), temp_path.ptrw());
+			if (temp_path_length > 0 && temp_path_length < temp_path.size()) {
+				temp_path_cache = String::utf16((const char16_t *)temp_path.ptr());
+				// Let's try to get the long path instead of the short path (with tildes ~).
+				DWORD temp_path_long_length = GetLongPathNameW(temp_path.ptr(), temp_path.ptrw(), temp_path.size());
+				if (temp_path_long_length > 0 && temp_path_long_length < temp_path.size()) {
+					temp_path_cache = String::utf16((const char16_t *)temp_path.ptr());
+				}
+			}
+		}
+		if (temp_path_cache.is_empty()) {
+			temp_path_cache = get_config_path();
+		}
+	}
+	return temp_path_cache;
 }
 
 // Get properly capitalized engine name for system paths
@@ -2135,9 +2191,14 @@ void OS_Windows::add_frame_delay(bool p_can_draw) {
 		target_ticks += dynamic_delay;
 		uint64_t current_ticks = get_ticks_usec();
 
-		// The minimum sleep resolution on windows is 1 ms on most systems.
-		if (current_ticks < (target_ticks - delay_resolution)) {
-			delay_usec((target_ticks - delay_resolution) - current_ticks);
+		if (target_ticks > current_ticks + delay_resolution) {
+			uint64_t delay_time = target_ticks - current_ticks - delay_resolution;
+			// Make sure we always sleep for a multiple of delay_resolution to avoid overshooting.
+			// Refer to: https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-sleep#remarks
+			delay_time = (delay_time / delay_resolution) * delay_resolution;
+			if (delay_time > 0) {
+				delay_usec(delay_time);
+			}
 		}
 		// Busy wait for the remainder of time.
 		while (get_ticks_usec() < target_ticks) {

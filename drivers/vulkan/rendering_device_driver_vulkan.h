@@ -128,6 +128,12 @@ class RenderingDeviceDriverVulkan : public RenderingDeviceDriver {
 	ShaderCapabilities shader_capabilities;
 	StorageBufferCapabilities storage_buffer_capabilities;
 	bool pipeline_cache_control_support = false;
+
+#if defined(SWAPPY_FRAME_PACING_ENABLED)
+	// Swappy frame pacer for Android.
+	bool swappy_frame_pacer_enable = false;
+	uint8_t swappy_mode = 2; // See default value for display/window/frame_pacing/android/swappy_mode.
+#endif
 	DeviceFunctions device_functions;
 
 	void _register_requested_device_extension(const CharString &p_extension_name, bool p_required);
@@ -191,6 +197,9 @@ public:
 			VmaAllocation handle = nullptr;
 			VmaAllocationInfo info = {};
 		} allocation; // All 0/null if just a view.
+#ifdef DEBUG_ENABLED
+		bool created_from_extension = false;
+#endif
 	};
 
 	VkSampleCountFlagBits _ensure_supported_sample_count(TextureSamples p_requested_sample_count);
@@ -328,7 +337,11 @@ private:
 		LocalVector<CommandQueue *> command_queues_acquired;
 		LocalVector<uint32_t> command_queues_acquired_semaphores;
 		RenderPassID render_pass;
+		int pre_transform_rotation_degrees = 0;
 		uint32_t image_index = 0;
+#ifdef ANDROID_ENABLED
+		uint64_t refresh_duration = 0;
+#endif
 	};
 
 	void _swap_chain_release(SwapChain *p_swap_chain);
@@ -338,7 +351,9 @@ public:
 	virtual Error swap_chain_resize(CommandQueueID p_cmd_queue, SwapChainID p_swap_chain, uint32_t p_desired_framebuffer_count) override final;
 	virtual FramebufferID swap_chain_acquire_framebuffer(CommandQueueID p_cmd_queue, SwapChainID p_swap_chain, bool &r_resize_required) override final;
 	virtual RenderPassID swap_chain_get_render_pass(SwapChainID p_swap_chain) override final;
+	virtual int swap_chain_get_pre_rotation_degrees(SwapChainID p_swap_chain) override final;
 	virtual DataFormat swap_chain_get_format(SwapChainID p_swap_chain) override final;
+	virtual void swap_chain_set_max_fps(SwapChainID p_swap_chain, int p_max_fps) override final;
 	virtual void swap_chain_free(SwapChainID p_swap_chain) override final;
 
 	/*********************/
@@ -357,7 +372,8 @@ private:
 		// Version 2: Added shader name.
 		// Version 3: Added writable.
 		// Version 4: 64-bit vertex input mask.
-		static const uint32_t VERSION = 4;
+		// Version 5: Add 4 bytes padding to align the Data struct after the change in version 4.
+		static const uint32_t VERSION = 5;
 
 		struct DataBinding {
 			uint32_t type = 0;
@@ -441,7 +457,7 @@ private:
 	struct UniformSetInfo {
 		VkDescriptorSet vk_descriptor_set = VK_NULL_HANDLE;
 		VkDescriptorPool vk_descriptor_pool = VK_NULL_HANDLE;
-		DescriptorSetPools::Iterator pool_sets_it = {};
+		DescriptorSetPools::Iterator pool_sets_it;
 	};
 
 public:
@@ -601,6 +617,12 @@ public:
 
 	virtual void command_begin_label(CommandBufferID p_cmd_buffer, const char *p_label_name, const Color &p_color) override final;
 	virtual void command_end_label(CommandBufferID p_cmd_buffer) override final;
+
+	/****************/
+	/**** DEBUG *****/
+	/****************/
+
+	static String get_vulkan_result(VkResult err);
 
 	/********************/
 	/**** SUBMISSION ****/

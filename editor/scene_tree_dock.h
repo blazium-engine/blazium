@@ -39,7 +39,6 @@
 class CheckBox;
 class EditorData;
 class EditorSelection;
-class EditorQuickOpen;
 class MenuButton;
 class PopupMenu;
 class ReparentDialog;
@@ -117,6 +116,7 @@ class SceneTreeDock : public VBoxContainer {
 	Button *button_instance = nullptr;
 	Button *button_create_script = nullptr;
 	Button *button_detach_script = nullptr;
+	Button *button_extend_script = nullptr;
 	MenuButton *button_tree_menu = nullptr;
 
 	Button *node_shortcuts_toggle = nullptr;
@@ -160,7 +160,6 @@ class SceneTreeDock : public VBoxContainer {
 	ConfirmationDialog *placeholder_editable_instance_remove_dialog = nullptr;
 
 	ReparentDialog *reparent_dialog = nullptr;
-	EditorQuickOpen *quick_open = nullptr;
 	EditorFileDialog *new_scene_from_dialog = nullptr;
 
 	enum FilterMenuItems {
@@ -263,11 +262,12 @@ class SceneTreeDock : public VBoxContainer {
 	bool _has_tracks_to_delete(Node *p_node, List<Node *> &p_to_delete) const;
 
 	void _normalize_drop(Node *&to_node, int &to_pos, int p_type);
+	Array _get_selection_array();
 
 	void _nodes_dragged(const Array &p_nodes, NodePath p_to, int p_type);
 	void _files_dropped(const Vector<String> &p_files, NodePath p_to, int p_type);
 	void _script_dropped(const String &p_file, NodePath p_to);
-	void _quick_open();
+	void _quick_open(const String &p_file_path);
 
 	void _tree_rmb(const Vector2 &p_menu_pos);
 	void _update_tree_menu();
@@ -303,6 +303,7 @@ class SceneTreeDock : public VBoxContainer {
 	static void _update_configuration_warning();
 
 	bool _update_node_path(Node *p_root_node, NodePath &r_node_path, HashMap<Node *, NodePath> *p_renames) const;
+	void _check_object_properties_recursive(Node *p_root_node, Object *p_obj, HashMap<Node *, NodePath> *p_renames, bool p_inside_resource = false) const;
 	bool _check_node_path_recursive(Node *p_root_node, Variant &r_variant, HashMap<Node *, NodePath> *p_renames, bool p_inside_resource = false) const;
 	bool _check_node_recursive(Variant &r_variant, Node *p_node, Node *p_by_node, const String type_hint, String &r_warn_message);
 	void _replace_node(Node *p_node, Node *p_by_node, bool p_keep_properties = true, bool p_remove_old = true);

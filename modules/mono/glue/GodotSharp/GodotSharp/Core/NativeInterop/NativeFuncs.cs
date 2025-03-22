@@ -47,7 +47,7 @@ namespace Godot.NativeInterop
         public static partial IntPtr godotsharp_method_bind_get_method_with_compatibility(
             in godot_string_name p_classname, in godot_string_name p_methodname, ulong p_hash);
 
-        public static partial delegate* unmanaged<IntPtr> godotsharp_get_class_constructor(
+        public static partial delegate* unmanaged<godot_bool, IntPtr> godotsharp_get_class_constructor(
             in godot_string_name p_classname);
 
         public static partial IntPtr godotsharp_engine_get_singleton(in godot_string p_name);
@@ -401,6 +401,14 @@ namespace Godot.NativeInterop
         public static partial int godotsharp_array_last_index_of(ref godot_array p_self, in godot_variant p_item, int p_index);
 
         public static partial void godotsharp_array_make_read_only(ref godot_array p_self);
+
+        public static partial void godotsharp_array_set_typed(
+            ref godot_array p_self,
+            uint p_elem_type,
+            in godot_string_name p_elem_class_name,
+            in godot_ref p_elem_script);
+
+        public static partial godot_bool godotsharp_array_is_typed(ref godot_array p_self);
 
         public static partial void godotsharp_array_max(ref godot_array p_self, out godot_variant r_value);
 

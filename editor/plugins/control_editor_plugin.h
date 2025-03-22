@@ -240,7 +240,7 @@ protected:
 	static ControlEditorToolbar *singleton;
 
 public:
-	bool is_anchors_mode_enabled() { return anchors_mode; };
+	bool is_anchors_mode_enabled() { return anchors_mode; }
 
 	static ControlEditorToolbar *get_singleton() { return singleton; }
 
@@ -254,7 +254,7 @@ class ControlEditorPlugin : public EditorPlugin {
 	ControlEditorToolbar *toolbar = nullptr;
 
 public:
-	virtual String get_name() const override { return "Control"; }
+	virtual String get_plugin_name() const override { return "Control"; }
 
 	ControlEditorPlugin();
 };

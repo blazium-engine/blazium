@@ -177,7 +177,7 @@ void EditorUndoRedoManager::_add_do_method(const Variant **p_args, int p_argcoun
 		return;
 	}
 
-	if (p_args[1]->get_type() != Variant::STRING_NAME && p_args[1]->get_type() != Variant::STRING) {
+	if (!p_args[1]->is_string()) {
 		r_error.error = Callable::CallError::CALL_ERROR_INVALID_ARGUMENT;
 		r_error.argument = 1;
 		r_error.expected = Variant::STRING_NAME;
@@ -206,7 +206,7 @@ void EditorUndoRedoManager::_add_undo_method(const Variant **p_args, int p_argco
 		return;
 	}
 
-	if (p_args[1]->get_type() != Variant::STRING_NAME && p_args[1]->get_type() != Variant::STRING) {
+	if (!p_args[1]->is_string()) {
 		r_error.error = Callable::CallError::CALL_ERROR_INVALID_ARGUMENT;
 		r_error.argument = 1;
 		r_error.expected = Variant::STRING_NAME;
@@ -262,6 +262,22 @@ void EditorUndoRedoManager::commit_action(bool p_execute) {
 
 	if (!merging) {
 		history.undo_stack.push_back(pending_action);
+	}
+
+	if (history.id != GLOBAL_HISTORY) {
+		// Clear global redo, to avoid unexpected actions when redoing.
+		History &global = get_or_create_history(GLOBAL_HISTORY);
+		global.redo_stack.clear();
+		global.undo_redo->discard_redo();
+	} else {
+		// On global actions, clear redo of all scenes instead.
+		for (KeyValue<int, History> &E : history_map) {
+			if (E.key == GLOBAL_HISTORY) {
+				continue;
+			}
+			E.value.redo_stack.clear();
+			E.value.undo_redo->discard_redo();
+		}
 	}
 
 	pending_action = Action();

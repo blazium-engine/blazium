@@ -224,7 +224,7 @@
 			<param index="0" name="item" type="RID" />
 			<param index="1" name="ignore" type="bool" />
 			<description>
-				If [param ignore] is [code]true[/code], ignore clipping on items drawn with this canvas item until this is called again with [param ignore] set to false.
+				If [param ignore] is [code]true[/code], ignore clipping on items drawn with this canvas item until this is called again with [param ignore] set to [code]false[/code].
 			</description>
 		</method>
 		<method name="canvas_item_add_lcd_texture_rect_region">
@@ -329,6 +329,7 @@
 			<param index="4" name="texture" type="RID" default="RID()" />
 			<description>
 				Draws a 2D polygon on the [CanvasItem] pointed to by the [param item] [RID]. If you need more flexibility (such as being able to use bones), use [method canvas_item_add_triangle_array] instead. See also [method CanvasItem.draw_polygon].
+				[b]Note:[/b] If you frequently redraw the same polygon with a large number of vertices, consider pre-calculating the triangulation with [method Geometry2D.triangulate_polygon] and using [method CanvasItem.draw_mesh], [method CanvasItem.draw_multimesh], or [method canvas_item_add_triangle_array].
 			</description>
 		</method>
 		<method name="canvas_item_add_polyline">
@@ -912,7 +913,7 @@
 			<param index="1" name="transform" type="Transform2D" />
 			<description>
 				Transforms both the current and previous stored transform for a canvas light.
-				This allows transforming a light without creating a "glitch" in the interpolation, which is is particularly useful for large worlds utilizing a shifting origin.
+				This allows transforming a light without creating a "glitch" in the interpolation, which is particularly useful for large worlds utilizing a shifting origin.
 			</description>
 		</method>
 		<method name="canvas_occluder_polygon_create">
@@ -1074,7 +1075,7 @@
 			<return type="RenderingDevice" />
 			<description>
 				Creates a RenderingDevice that can be used to do draw and compute operations on a separate thread. Cannot draw to the screen nor share data with the global RenderingDevice.
-				[b]Note:[/b] When using the OpenGL backend or when running in headless mode, this function always returns [code]null[/code].
+				[b]Note:[/b] When using the OpenGL rendering driver or when running in headless mode, this function always returns [code]null[/code].
 			</description>
 		</method>
 		<method name="debug_canvas_item_get_rect">
@@ -1275,6 +1276,14 @@
 			<param index="2" name="exposure_value" type="float" />
 			<description>
 				Sets the intensity of the background color.
+			</description>
+		</method>
+		<method name="environment_set_camera_id">
+			<return type="void" />
+			<param index="0" name="env" type="RID" />
+			<param index="1" name="id" type="int" />
+			<description>
+				Sets the camera ID to be used as environment background.
 			</description>
 		</method>
 		<method name="environment_set_canvas_max_layer">
@@ -1539,6 +1548,20 @@
 				Tries to free an object in the RenderingServer. To avoid memory leaks, this should be called after using an object as memory management does not occur automatically when using RenderingServer directly.
 			</description>
 		</method>
+		<method name="get_current_rendering_driver_name" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the name of the current rendering driver. This can be [code]vulkan[/code], [code]d3d12[/code], [code]metal[/code], [code]opengl3[/code], [code]opengl3_es[/code], or [code]opengl3_angle[/code]. See also [method get_current_rendering_method].
+				The rendering driver is determined by [member ProjectSettings.rendering/rendering_device/driver], the [code]--rendering-driver[/code] command line argument that overrides this project setting, or an automatic fallback that is applied depending on the hardware.
+			</description>
+		</method>
+		<method name="get_current_rendering_method" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the name of the current rendering method. This can be [code]forward_plus[/code], [code]mobile[/code], or [code]gl_compatibility[/code]. See also [method get_current_rendering_driver_name].
+				The rendering method is determined by [member ProjectSettings.rendering/renderer/rendering_method], the [code]--rendering-method[/code] command line argument that overrides this project setting, or an automatic fallback that is applied depending on the hardware.
+			</description>
+		</method>
 		<method name="get_default_clear_color">
 			<return type="Color" />
 			<description>
@@ -1555,7 +1578,7 @@
 			<return type="RenderingDevice" />
 			<description>
 				Returns the global RenderingDevice.
-				[b]Note:[/b] When using the OpenGL backend or when running in headless mode, this function always returns [code]null[/code].
+				[b]Note:[/b] When using the OpenGL rendering driver or when running in headless mode, this function always returns [code]null[/code].
 			</description>
 		</method>
 		<method name="get_rendering_info">
@@ -1591,7 +1614,7 @@
 			<return type="RID" />
 			<description>
 				Returns the RID of a 256×256 texture with a testing pattern on it (in [constant Image.FORMAT_RGB8] format). This texture will be created and returned on the first call to [method get_test_texture], then it will be cached for subsequent calls. See also [method get_white_texture].
-				Example of getting the test texture and applying it to a [Sprite2D] node:
+				[b]Example:[/b] Get the test texture and apply it to a [Sprite2D] node:
 				[codeblock]
 				var texture_rid = RenderingServer.get_test_texture()
 				var texture = ImageTexture.create_from_image(RenderingServer.texture_2d_get(texture_rid))
@@ -1618,7 +1641,7 @@
 			<return type="int" enum="RenderingDevice.DeviceType" />
 			<description>
 				Returns the type of the video adapter. Since dedicated graphics cards from a given generation will [i]usually[/i] be significantly faster than integrated graphics made in the same generation, the device type can be used as a basis for automatic graphics settings adjustment. However, this is not always true, so make sure to provide users with a way to manually override graphics settings.
-				[b]Note:[/b] When using the OpenGL backend or when running in headless mode, this function always returns [constant RenderingDevice.DEVICE_TYPE_OTHER].
+				[b]Note:[/b] When using the OpenGL rendering driver or when running in headless mode, this function always returns [constant RenderingDevice.DEVICE_TYPE_OTHER].
 			</description>
 		</method>
 		<method name="get_video_adapter_vendor" qualifiers="const">
@@ -1632,7 +1655,7 @@
 			<return type="RID" />
 			<description>
 				Returns the ID of a 4×4 white texture (in [constant Image.FORMAT_RGB8] format). This texture will be created and returned on the first call to [method get_white_texture], then it will be cached for subsequent calls. See also [method get_test_texture].
-				Example of getting the white texture and applying it to a [Sprite2D] node:
+				[b]Example:[/b] Get the white texture and apply it to a [Sprite2D] node:
 				[codeblock]
 				var texture_rid = RenderingServer.get_white_texture()
 				var texture = ImageTexture.create_from_image(RenderingServer.texture_2d_get(texture_rid))
@@ -1864,6 +1887,14 @@
 				Sets the visibility range values for the given geometry instance. Equivalent to [member GeometryInstance3D.visibility_range_begin] and related properties.
 			</description>
 		</method>
+		<method name="instance_reset_physics_interpolation">
+			<return type="void" />
+			<param index="0" name="instance" type="RID" />
+			<description>
+				Prevents physics interpolation for the current physics tick.
+				This is useful when moving an instance to a new location, to give an instantaneous change rather than interpolation from the previous location.
+			</description>
+		</method>
 		<method name="instance_set_base">
 			<return type="void" />
 			<param index="0" name="instance" type="RID" />
@@ -1903,6 +1934,14 @@
 			<param index="1" name="enabled" type="bool" />
 			<description>
 				If [code]true[/code], ignores both frustum and occlusion culling on the specified 3D geometry instance. This is not the same as [member GeometryInstance3D.ignore_occlusion_culling], which only ignores occlusion culling and leaves frustum culling intact.
+			</description>
+		</method>
+		<method name="instance_set_interpolated">
+			<return type="void" />
+			<param index="0" name="instance" type="RID" />
+			<param index="1" name="interpolated" type="bool" />
+			<description>
+				Turns on and off physics interpolation for the instance.
 			</description>
 		</method>
 		<method name="instance_set_layer_mask">
@@ -2428,6 +2467,14 @@
 				Returns a mesh's surface's material.
 			</description>
 		</method>
+		<method name="mesh_surface_remove">
+			<return type="void" />
+			<param index="0" name="mesh" type="RID" />
+			<param index="1" name="surface" type="int" />
+			<description>
+				Removes a mesh's surface at position surf_idx, shifting greater surfaces one surf_idx slot down.
+			</description>
+		</method>
 		<method name="mesh_surface_set_material">
 			<return type="void" />
 			<param index="0" name="mesh" type="RID" />
@@ -2498,6 +2545,13 @@
 				[b]Note:[/b] If the buffer is in the engine's internal cache, it will have to be fetched from GPU memory and possibly decompressed. This means [method multimesh_get_buffer] is potentially a slow operation and should be avoided whenever possible.
 			</description>
 		</method>
+		<method name="multimesh_get_buffer_rd_rid" qualifiers="const">
+			<return type="RID" />
+			<param index="0" name="multimesh" type="RID" />
+			<description>
+				Returns the [RenderingDevice] [RID] handle of the [MultiMesh], which can be used as any other buffer on the Rendering Device.
+			</description>
+		</method>
 		<method name="multimesh_get_custom_aabb" qualifiers="const">
 			<return type="AABB" />
 			<param index="0" name="multimesh" type="RID" />
@@ -2558,6 +2612,15 @@
 				Returns the [Transform2D] of the specified instance. For use when the multimesh is set to use 2D transforms.
 			</description>
 		</method>
+		<method name="multimesh_instance_reset_physics_interpolation">
+			<return type="void" />
+			<param index="0" name="multimesh" type="RID" />
+			<param index="1" name="index" type="int" />
+			<description>
+				Prevents physics interpolation for the specified instance during the current physics tick.
+				This is useful when moving an instance to a new location, to give an instantaneous change rather than interpolation from the previous location.
+			</description>
+		</method>
 		<method name="multimesh_instance_set_color">
 			<return type="void" />
 			<param index="0" name="multimesh" type="RID" />
@@ -2613,6 +2676,19 @@
 				  - Position + Custom data: 16 floats (12 floats for Transform3D, 4 floats of custom data)
 				  - Position + Vertex color + Custom data: 20 floats (12 floats for Transform3D, 4 floats for Color, 4 floats of custom data)
 				[/codeblock]
+				Instance transforms are in row-major order. Specifically:
+				- For [Transform2D] the float-order is: [code](x.x, y.x, padding_float, origin.x, x.y, y.y, padding_float, origin.y)[/code].
+				- For [Transform3D] the float-order is: [code](basis.x.x, basis.y.x, basis.z.x, origin.x, basis.x.y, basis.y.y, basis.z.y, origin.y, basis.x.z, basis.y.z, basis.z.z, origin.z)[/code].
+			</description>
+		</method>
+		<method name="multimesh_set_buffer_interpolated">
+			<return type="void" />
+			<param index="0" name="multimesh" type="RID" />
+			<param index="1" name="buffer" type="PackedFloat32Array" />
+			<param index="2" name="buffer_previous" type="PackedFloat32Array" />
+			<description>
+				Alternative version of [method multimesh_set_buffer] for use with physics interpolation.
+				Takes both an array of current data and an array of data for the previous physics tick.
 			</description>
 		</method>
 		<method name="multimesh_set_custom_aabb">
@@ -2629,6 +2705,23 @@
 			<param index="1" name="mesh" type="RID" />
 			<description>
 				Sets the mesh to be drawn by the multimesh. Equivalent to [member MultiMesh.mesh].
+			</description>
+		</method>
+		<method name="multimesh_set_physics_interpolated">
+			<return type="void" />
+			<param index="0" name="multimesh" type="RID" />
+			<param index="1" name="interpolated" type="bool" />
+			<description>
+				Turns on and off physics interpolation for this MultiMesh resource.
+			</description>
+		</method>
+		<method name="multimesh_set_physics_interpolation_quality">
+			<return type="void" />
+			<param index="0" name="multimesh" type="RID" />
+			<param index="1" name="quality" type="int" enum="RenderingServer.MultimeshPhysicsInterpolationQuality" />
+			<description>
+				Sets the physics interpolation quality for the [MultiMesh].
+				A value of [constant MULTIMESH_INTERP_QUALITY_FAST] gives fast but low quality interpolation, a value of [constant MULTIMESH_INTERP_QUALITY_HIGH] gives slower but higher quality interpolation.
 			</description>
 		</method>
 		<method name="multimesh_set_visible_instances">
@@ -2885,7 +2978,7 @@
 			<param index="0" name="particles" type="RID" />
 			<param index="1" name="emitting" type="bool" />
 			<description>
-				If [code]true[/code], particles will emit over time. Setting to false does not reset the particles, but only stops their emission. Equivalent to [member GPUParticles3D.emitting].
+				If [code]true[/code], particles will emit over time. Setting to [code]false[/code] does not reset the particles, but only stops their emission. Equivalent to [member GPUParticles3D.emitting].
 			</description>
 		</method>
 		<method name="particles_set_explosiveness_ratio">
@@ -3068,6 +3161,14 @@
 			<param index="1" name="enable" type="bool" />
 			<description>
 				If [code]true[/code], reflections will ignore sky contribution. Equivalent to [member ReflectionProbe.interior].
+			</description>
+		</method>
+		<method name="reflection_probe_set_blend_distance">
+			<return type="void" />
+			<param index="0" name="probe" type="RID" />
+			<param index="1" name="blend_distance" type="float" />
+			<description>
+				Sets the distance in meters over which a probe blends into the scene.
 			</description>
 		</method>
 		<method name="reflection_probe_set_cull_mask">
@@ -3442,7 +3543,7 @@
 			<param index="0" name="texture" type="RID" />
 			<description>
 				Returns an [Image] instance from the given [param texture] [RID].
-				Example of getting the test texture from [method get_test_texture] and applying it to a [Sprite2D] node:
+				[b]Example:[/b] Get the test texture from [method get_test_texture] and apply it to a [Sprite2D] node:
 				[codeblock]
 				var texture_rid = RenderingServer.get_test_texture()
 				var texture = ImageTexture.create_from_image(RenderingServer.texture_2d_get(texture_rid))
@@ -3479,7 +3580,7 @@
 		<method name="texture_2d_placeholder_create">
 			<return type="RID" />
 			<description>
-				Creates a placeholder for a 2-dimensional layered texture and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]texture_2d_layered_*[/code] RenderingServer functions, although it does nothing when used. See also [method texture_2d_layered_placeholder_create]
+				Creates a placeholder for a 2-dimensional layered texture and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]texture_2d_layered_*[/code] RenderingServer functions, although it does nothing when used. See also [method texture_2d_layered_placeholder_create].
 				Once finished with your RID, you will want to free the RID using the RenderingServer's [method free_rid] method.
 				[b]Note:[/b] The equivalent resource is [PlaceholderTexture2D].
 			</description>
@@ -3528,6 +3629,21 @@
 			<description>
 				Updates the texture specified by the [param texture] [RID]'s data with the data in [param data]. All the texture's layers must be replaced at once.
 				[b]Note:[/b] The [param texture] must have the same width, height, depth and format as the current texture data. Otherwise, an error will be printed and the original texture won't be modified. If you need to use different width, height, depth or format, use [method texture_replace] instead.
+			</description>
+		</method>
+		<method name="texture_create_from_native_handle">
+			<return type="RID" />
+			<param index="0" name="type" type="int" enum="RenderingServer.TextureType" />
+			<param index="1" name="format" type="int" enum="Image.Format" />
+			<param index="2" name="native_handle" type="int" />
+			<param index="3" name="width" type="int" />
+			<param index="4" name="height" type="int" />
+			<param index="5" name="depth" type="int" />
+			<param index="6" name="layers" type="int" default="1" />
+			<param index="7" name="layered_type" type="int" enum="RenderingServer.TextureLayeredType" default="0" />
+			<description>
+				Creates a texture based on a native handle that was created outside of Godot's renderer.
+				[b]Note:[/b] If using the rendering device renderer, using [method RenderingDevice.texture_create_from_extension] rather than this method is recommended. It will give you much more control over the texture's format and usage.
 			</description>
 		</method>
 		<method name="texture_get_format" qualifiers="const">
@@ -3637,12 +3753,11 @@
 			<description>
 				Copies the viewport to a region of the screen specified by [param rect]. If [method viewport_set_render_direct_to_screen] is [code]true[/code], then the viewport does not use a framebuffer and the contents of the viewport are rendered directly to screen. However, note that the root viewport is drawn last, therefore it will draw over the screen. Accordingly, you must set the root viewport to an area that does not cover the area that you have attached this viewport to.
 				For example, you can set the root viewport to not render at all with the following code:
-				FIXME: The method seems to be non-existent.
 				[codeblocks]
 				[gdscript]
 				func _ready():
-				    get_viewport().set_attach_to_screen_rect(Rect2())
-				    $Viewport.set_attach_to_screen_rect(Rect2(0, 0, 600, 600))
+				    RenderingServer.viewport_attach_to_screen(get_viewport().get_viewport_rid(), Rect2())
+				    RenderingServer.viewport_attach_to_screen($Viewport.get_viewport_rid(), Rect2(0, 0, 600, 600))
 				[/gdscript]
 				[/codeblocks]
 				Using this can result in significant optimization, especially on lower-end devices. However, it comes at the cost of having to manage your viewports manually. For further optimization, see [method viewport_set_render_direct_to_screen].
@@ -4023,7 +4138,7 @@
 			<param index="1" name="enabled" type="bool" />
 			<description>
 				If [code]true[/code], 2D rendering will use a high dynamic range (HDR) format framebuffer matching the bit depth of the 3D framebuffer. When using the Forward+ renderer this will be an [code]RGBA16[/code] framebuffer, while when using the Mobile renderer it will be an [code]RGB10_A2[/code] framebuffer. Additionally, 2D rendering will take place in linear color space and will be converted to sRGB space immediately before blitting to the screen (if the Viewport is attached to the screen). Practically speaking, this means that the end result of the Viewport will not be clamped into the [code]0-1[/code] range and can be used in 3D rendering without color space adjustments. This allows 2D rendering to take advantage of effects requiring high dynamic range (e.g. 2D glow) as well as substantially improves the appearance of effects requiring highly detailed gradients. This setting has the same effect as [member Viewport.use_hdr_2d].
-				[b]Note:[/b] This setting will have no effect when using the GL Compatibility renderer as the GL Compatibility renderer always renders in low dynamic range for performance reasons.
+				[b]Note:[/b] This setting will have no effect when using the Compatibility renderer, which always renders in low dynamic range for performance reasons.
 			</description>
 		</method>
 		<method name="viewport_set_use_occlusion_culling">
@@ -4269,6 +4384,15 @@
 		<constant name="MAX_MESH_SURFACES" value="256">
 			The maximum number of surfaces a mesh can have.
 		</constant>
+		<constant name="TEXTURE_TYPE_2D" value="0" enum="TextureType">
+			2D texture.
+		</constant>
+		<constant name="TEXTURE_TYPE_LAYERED" value="1" enum="TextureType">
+			Layered texture.
+		</constant>
+		<constant name="TEXTURE_TYPE_3D" value="2" enum="TextureType">
+			3D texture.
+		</constant>
 		<constant name="TEXTURE_LAYERED_2D_ARRAY" value="0" enum="TextureLayeredType">
 			Array of 2-dimensional textures (see [Texture2DArray]).
 		</constant>
@@ -4432,27 +4556,37 @@
 			Flag used to mark an index array.
 		</constant>
 		<constant name="ARRAY_FORMAT_BLEND_SHAPE_MASK" value="7" enum="ArrayFormat" is_bitfield="true">
+			Mask of mesh channels permitted in blend shapes.
 		</constant>
 		<constant name="ARRAY_FORMAT_CUSTOM_BASE" value="13" enum="ArrayFormat" is_bitfield="true">
+			Shift of first custom channel.
 		</constant>
 		<constant name="ARRAY_FORMAT_CUSTOM_BITS" value="3" enum="ArrayFormat" is_bitfield="true">
+			Number of format bits per custom channel. See [enum ArrayCustomFormat].
 		</constant>
 		<constant name="ARRAY_FORMAT_CUSTOM0_SHIFT" value="13" enum="ArrayFormat" is_bitfield="true">
+			Amount to shift [enum ArrayCustomFormat] for custom channel index 0.
 		</constant>
 		<constant name="ARRAY_FORMAT_CUSTOM1_SHIFT" value="16" enum="ArrayFormat" is_bitfield="true">
+			Amount to shift [enum ArrayCustomFormat] for custom channel index 1.
 		</constant>
 		<constant name="ARRAY_FORMAT_CUSTOM2_SHIFT" value="19" enum="ArrayFormat" is_bitfield="true">
+			Amount to shift [enum ArrayCustomFormat] for custom channel index 2.
 		</constant>
 		<constant name="ARRAY_FORMAT_CUSTOM3_SHIFT" value="22" enum="ArrayFormat" is_bitfield="true">
+			Amount to shift [enum ArrayCustomFormat] for custom channel index 3.
 		</constant>
 		<constant name="ARRAY_FORMAT_CUSTOM_MASK" value="7" enum="ArrayFormat" is_bitfield="true">
+			Mask of custom format bits per custom channel. Must be shifted by one of the SHIFT constants. See [enum ArrayCustomFormat].
 		</constant>
 		<constant name="ARRAY_COMPRESS_FLAGS_BASE" value="25" enum="ArrayFormat" is_bitfield="true">
+			Shift of first compress flag. Compress flags should be passed to [method ArrayMesh.add_surface_from_arrays] and [method SurfaceTool.commit].
 		</constant>
 		<constant name="ARRAY_FLAG_USE_2D_VERTICES" value="33554432" enum="ArrayFormat" is_bitfield="true">
 			Flag used to mark that the array contains 2D vertices.
 		</constant>
 		<constant name="ARRAY_FLAG_USE_DYNAMIC_UPDATE" value="67108864" enum="ArrayFormat" is_bitfield="true">
+			Flag indices that the mesh data will use [code]GL_DYNAMIC_DRAW[/code] on GLES. Unused on Vulkan.
 		</constant>
 		<constant name="ARRAY_FLAG_USE_8_BONE_WEIGHTS" value="134217728" enum="ArrayFormat" is_bitfield="true">
 			Flag used to mark that the array uses 8 bone weights instead of 4.
@@ -4510,6 +4644,12 @@
 		</constant>
 		<constant name="MULTIMESH_TRANSFORM_3D" value="1" enum="MultimeshTransformFormat">
 			Use [Transform3D] to store MultiMesh transform.
+		</constant>
+		<constant name="MULTIMESH_INTERP_QUALITY_FAST" value="0" enum="MultimeshPhysicsInterpolationQuality">
+			MultiMesh physics interpolation favors speed over quality.
+		</constant>
+		<constant name="MULTIMESH_INTERP_QUALITY_HIGH" value="1" enum="MultimeshPhysicsInterpolationQuality">
+			MultiMesh physics interpolation favors quality over speed.
 		</constant>
 		<constant name="LIGHT_PROJECTOR_FILTER_NEAREST" value="0" enum="LightProjectorFilter">
 			Nearest-neighbor filter for light projectors (use for pixel art light projectors). No mipmaps are used for rendering, which means light projectors at a distance will look sharp but grainy. This has roughly the same performance cost as using mipmaps.
@@ -5094,7 +5234,7 @@
 			The callback is called before our transparent rendering pass, but after our sky is rendered and we've created our back buffers.
 		</constant>
 		<constant name="COMPOSITOR_EFFECT_CALLBACK_TYPE_POST_TRANSPARENT" value="4" enum="CompositorEffectCallbackType">
-			The callback is called after our transparent rendering pass, but before any build in post effects and output to our render target.
+			The callback is called after our transparent rendering pass, but before any built-in post-processing effects and output to our render target.
 		</constant>
 		<constant name="COMPOSITOR_EFFECT_CALLBACK_TYPE_ANY" value="-1" enum="CompositorEffectCallbackType">
 		</constant>
@@ -5165,7 +5305,7 @@
 			Output color as they came in. This can cause bright lighting to look blown out, with noticeable clipping in the output colors.
 		</constant>
 		<constant name="ENV_TONE_MAPPER_REINHARD" value="1" enum="EnvironmentToneMapper">
-			Use the Reinhard tonemapper. Performs a variation on rendered pixels' colors by this formula: [code]color = color / (1 + color)[/code]. This avoids clipping bright highlights, but the resulting image can look a bit dull.
+			Use the Reinhard tonemapper. Performs a variation on rendered pixels' colors by this formula: [code]color = color * (1 + color / (white * white)) / (1 + color)[/code]. This avoids clipping bright highlights, but the resulting image can look a bit dull. When [member Environment.tonemap_white] is left at the default value of [code]1.0[/code] this is identical to [constant ENV_TONE_MAPPER_LINEAR] while also being slightly less performant.
 		</constant>
 		<constant name="ENV_TONE_MAPPER_FILMIC" value="2" enum="EnvironmentToneMapper">
 			Use the filmic tonemapper. This avoids clipping bright highlights, with a resulting image that usually looks more vivid than [constant ENV_TONE_MAPPER_REINHARD].
@@ -5606,7 +5746,10 @@
 		<constant name="GLOBAL_VAR_TYPE_SAMPLERCUBE" value="27" enum="GlobalShaderParameterType">
 			Cubemap sampler global shader parameter ([code]global uniform samplerCube ...[/code]). Exposed as a [Cubemap] in the editor UI.
 		</constant>
-		<constant name="GLOBAL_VAR_TYPE_MAX" value="28" enum="GlobalShaderParameterType">
+		<constant name="GLOBAL_VAR_TYPE_SAMPLEREXT" value="28" enum="GlobalShaderParameterType">
+			External sampler global shader parameter ([code]global uniform samplerExternalOES ...[/code]). Exposed as a [ExternalTexture] in the editor UI.
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_MAX" value="29" enum="GlobalShaderParameterType">
 			Represents the size of the [enum GlobalShaderParameterType] enum.
 		</constant>
 		<constant name="RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME" value="0" enum="RenderingInfo">
@@ -5625,7 +5768,7 @@
 			Buffer memory used (in bytes). This includes vertex data, uniform buffers, and many miscellaneous buffer types used internally.
 		</constant>
 		<constant name="RENDERING_INFO_VIDEO_MEM_USED" value="5" enum="RenderingInfo">
-			Video memory used (in bytes). When using the Forward+ or mobile rendering backends, this is always greater than the sum of [constant RENDERING_INFO_TEXTURE_MEM_USED] and [constant RENDERING_INFO_BUFFER_MEM_USED], since there is miscellaneous data not accounted for by those two metrics. When using the GL Compatibility backend, this is equal to the sum of [constant RENDERING_INFO_TEXTURE_MEM_USED] and [constant RENDERING_INFO_BUFFER_MEM_USED].
+			Video memory used (in bytes). When using the Forward+ or Mobile renderers, this is always greater than the sum of [constant RENDERING_INFO_TEXTURE_MEM_USED] and [constant RENDERING_INFO_BUFFER_MEM_USED], since there is miscellaneous data not accounted for by those two metrics. When using the Compatibility renderer, this is equal to the sum of [constant RENDERING_INFO_TEXTURE_MEM_USED] and [constant RENDERING_INFO_BUFFER_MEM_USED].
 		</constant>
 		<constant name="FEATURE_SHADERS" value="0" enum="Features" deprecated="This constant has not been used since Godot 3.0.">
 		</constant>

@@ -47,10 +47,10 @@
 #include "scene/gui/slider.h"
 #include "scene/gui/spin_box.h"
 #include "scene/gui/texture_rect.h"
+#include "scene/resources/atlas_texture.h"
 #include "scene/resources/gradient_texture.h"
 #include "scene/resources/image_texture.h"
 #include "scene/resources/style_box_flat.h"
-#include "scene/resources/style_box_texture.h"
 #include "scene/theme/theme_db.h"
 #include "servers/display_server.h"
 #include "thirdparty/misc/ok_color.h"
@@ -100,7 +100,7 @@ void ColorPicker::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_THEME_CHANGED: {
-			btn_pick->set_icon(theme_cache.screen_picker);
+			btn_pick->set_button_icon(theme_cache.screen_picker);
 
 			preset_foldable->set_button_icon(0, theme_cache.add_preset);
 
@@ -133,7 +133,7 @@ void ColorPicker::_notification(int p_what) {
 				mode_btns[i]->begin_bulk_theme_override();
 				mode_btns[i]->add_theme_style_override(SceneStringName(pressed), theme_cache.mode_button_pressed);
 				mode_btns[i]->add_theme_style_override(CoreStringName(normal), theme_cache.mode_button_normal);
-				mode_btns[i]->add_theme_style_override(SNAME("hover"), theme_cache.mode_button_hover);
+				mode_btns[i]->add_theme_style_override(SceneStringName(hover), theme_cache.mode_button_hover);
 				mode_btns[i]->end_bulk_theme_override();
 			}
 
@@ -143,7 +143,7 @@ void ColorPicker::_notification(int p_what) {
 			shape_popup->set_item_icon(shape_popup->get_item_index(SHAPE_OKHSL_CIRCLE), theme_cache.shape_circle);
 
 			if (current_shape != SHAPE_NONE) {
-				btn_shape->set_icon(shape_popup->get_item_icon(current_shape));
+				btn_shape->set_button_icon(shape_popup->get_item_icon(current_shape));
 			}
 
 			Size2 preset_size = Size2(0, MAX(theme_cache.preset_size, 16 * theme_cache.base_scale));
@@ -151,9 +151,9 @@ void ColorPicker::_notification(int p_what) {
 			recent_preset_hbc->set_custom_minimum_size(preset_size);
 
 			if (text_is_constructor) {
-				text_type->set_icon(theme_cache.hex_code_icon);
+				text_type->set_button_icon(theme_cache.hex_code_icon);
 			} else {
-				text_type->set_icon(theme_cache.hex_icon);
+				text_type->set_button_icon(theme_cache.hex_icon);
 			}
 
 			int margin = MAX(theme_cache.content_margin, 0);
@@ -222,7 +222,25 @@ void ColorPicker::_notification(int p_what) {
 			if (!is_picking_color) {
 				return;
 			}
-			set_pick_color(DisplayServer::get_singleton()->screen_get_pixel(DisplayServer::get_singleton()->mouse_get_position()));
+			DisplayServer *ds = DisplayServer::get_singleton();
+			Vector2 ofs = ds->mouse_get_position();
+			picker_window->set_position(ofs - Vector2(28, 28));
+
+			Color c = DisplayServer::get_singleton()->screen_get_pixel(ofs);
+
+			picker_preview_style_box_color->set_bg_color(c);
+			picker_preview_style_box->set_bg_color(c.get_luminance() < 0.5 ? Color(1.0f, 1.0f, 1.0f) : Color(0.0f, 0.0f, 0.0f));
+
+			if (ds->has_feature(DisplayServer::FEATURE_SCREEN_EXCLUDE_FROM_CAPTURE)) {
+				Ref<Image> zoom_preview_img = ds->screen_get_image_rect(Rect2i(ofs.x - 8, ofs.y - 8, 17, 17));
+				picker_window->set_position(ofs - Vector2(28, 28));
+				picker_texture_zoom->set_texture(ImageTexture::create_from_image(zoom_preview_img));
+			} else {
+				Size2i screen_size = ds->screen_get_size();
+				picker_window->set_position(ofs + Vector2(ofs.x < screen_size.width / 2 ? 8 : -36, ofs.y < screen_size.height / 2 ? 8 : -36));
+			}
+
+			set_pick_color(c);
 		}
 	}
 }
@@ -743,12 +761,12 @@ void ColorPicker::_update_recent_presets() {
 void ColorPicker::_text_type_toggled() {
 	text_is_constructor = !text_is_constructor;
 	if (text_is_constructor) {
-		text_type->set_icon(theme_cache.hex_code_icon);
+		text_type->set_button_icon(theme_cache.hex_code_icon);
 
 		c_text->set_editable(false);
 		c_text->set_tooltip_text(RTR("Copy this constructor in a script."));
 	} else {
-		text_type->set_icon(theme_cache.hex_icon);
+		text_type->set_button_icon(theme_cache.hex_icon);
 
 		c_text->set_editable(true);
 		c_text->set_tooltip_text(ETR("Enter a hex code (\"#ff0000\") or named color (\"red\")."));
@@ -775,7 +793,7 @@ void ColorPicker::set_picker_shape(PickerShapeType p_shape) {
 	}
 	if (p_shape != SHAPE_NONE) {
 		shape_popup->set_item_checked(p_shape, true);
-		btn_shape->set_icon(shape_popup->get_item_icon(p_shape));
+		btn_shape->set_button_icon(shape_popup->get_item_icon(p_shape));
 	}
 
 	current_shape = p_shape;
@@ -1483,15 +1501,64 @@ void ColorPicker::_add_preset_pressed() {
 
 void ColorPicker::_pick_button_pressed() {
 	is_picking_color = true;
-	set_process_internal(true);
 
 	if (!picker_window) {
 		picker_window = memnew(Popup);
-		picker_window->set_size(Vector2i(1, 1));
+		bool has_feature_exclude_from_capture = DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_SCREEN_EXCLUDE_FROM_CAPTURE);
+		if (!has_feature_exclude_from_capture) {
+			picker_window->set_size(Vector2i(28, 28));
+		} else {
+			picker_window->set_size(Vector2i(55, 72));
+			picker_window->set_flag(Window::FLAG_EXCLUDE_FROM_CAPTURE, true); // Only supported on MacOS and Windows.
+		}
 		picker_window->connect(SceneStringName(visibility_changed), callable_mp(this, &ColorPicker::_pick_finished));
+		picker_window->connect(SceneStringName(window_input), callable_mp(this, &ColorPicker::_target_gui_input));
+
+		picker_preview = memnew(Panel);
+		picker_preview->set_mouse_filter(MOUSE_FILTER_IGNORE);
+		picker_preview->set_size(Vector2i(55, 72));
+		picker_window->add_child(picker_preview);
+
+		picker_preview_color = memnew(Panel);
+		picker_preview_color->set_mouse_filter(MOUSE_FILTER_IGNORE);
+		if (!has_feature_exclude_from_capture) {
+			picker_preview_color->set_size(Vector2i(24, 24));
+			picker_preview_color->set_position(Vector2i(2, 2));
+		} else {
+			picker_preview_color->set_size(Vector2i(51, 15));
+			picker_preview_color->set_position(Vector2i(2, 55));
+		}
+		picker_preview->add_child(picker_preview_color);
+
+		if (has_feature_exclude_from_capture) {
+			picker_texture_zoom = memnew(TextureRect);
+			picker_texture_zoom->set_mouse_filter(MOUSE_FILTER_IGNORE);
+			picker_texture_zoom->set_custom_minimum_size(Vector2i(51, 51));
+			picker_texture_zoom->set_position(Vector2i(2, 2));
+			picker_texture_zoom->set_texture_filter(CanvasItem::TEXTURE_FILTER_NEAREST);
+			picker_preview->add_child(picker_texture_zoom);
+		}
+
+		picker_preview_style_box.instantiate();
+		picker_preview->add_theme_style_override(SceneStringName(panel), picker_preview_style_box);
+
+		picker_preview_style_box_color.instantiate();
+		picker_preview_color->add_theme_style_override(SceneStringName(panel), picker_preview_style_box_color);
+
 		add_child(picker_window, false, INTERNAL_MODE_FRONT);
+		picker_window->force_parent_owned();
 	}
+	set_process_internal(true);
+
 	picker_window->popup();
+}
+
+void ColorPicker::_target_gui_input(const Ref<InputEvent> &p_event) {
+	const Ref<InputEventMouseButton> mouse_event = p_event;
+	if (mouse_event.is_valid() && mouse_event->is_pressed()) {
+		picker_window->hide();
+		_pick_finished();
+	}
 }
 
 void ColorPicker::_pick_finished() {
@@ -1518,33 +1585,63 @@ void ColorPicker::_pick_button_pressed_legacy() {
 		picker_window->hide();
 		picker_window->set_transient(true);
 		add_child(picker_window, false, INTERNAL_MODE_FRONT);
+		picker_window->force_parent_owned();
 
 		picker_texture_rect = memnew(TextureRect);
 		picker_texture_rect->set_anchors_preset(Control::PRESET_FULL_RECT);
+		picker_texture_rect->set_expand_mode(TextureRect::EXPAND_IGNORE_SIZE);
+		picker_texture_rect->set_default_cursor_shape(Control::CURSOR_CROSS);
 		picker_window->add_child(picker_texture_rect);
-		picker_texture_rect->set_default_cursor_shape(CURSOR_POINTING_HAND);
 		picker_texture_rect->connect(SceneStringName(gui_input), callable_mp(this, &ColorPicker::_picker_texture_input));
 
+		bool has_feature_exclude_from_capture = DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_SCREEN_EXCLUDE_FROM_CAPTURE);
 		picker_preview = memnew(Panel);
-		picker_preview->set_anchors_preset(Control::PRESET_CENTER_TOP);
 		picker_preview->set_mouse_filter(MOUSE_FILTER_IGNORE);
+		if (!has_feature_exclude_from_capture) {
+			picker_preview->set_size(Vector2i(28, 28));
+		} else {
+			picker_preview->set_size(Vector2i(55, 72));
+		}
 		picker_window->add_child(picker_preview);
 
-		picker_preview_label = memnew(Label);
-		picker_preview->set_anchors_preset(Control::PRESET_CENTER_TOP);
-		picker_preview_label->set_text("Color Picking active");
-		picker_preview->add_child(picker_preview_label);
+		picker_preview_color = memnew(Panel);
+		picker_preview_color->set_mouse_filter(MOUSE_FILTER_IGNORE);
+		if (!has_feature_exclude_from_capture) {
+			picker_preview_color->set_size(Vector2i(24, 24));
+			picker_preview_color->set_position(Vector2i(2, 2));
+		} else {
+			picker_preview_color->set_size(Vector2i(51, 15));
+			picker_preview_color->set_position(Vector2i(2, 55));
+		}
+		picker_preview->add_child(picker_preview_color);
 
-		picker_preview_style_box = (Ref<StyleBoxFlat>)memnew(StyleBoxFlat);
-		picker_preview_style_box->set_bg_color(Color(1.0, 1.0, 1.0));
+		if (has_feature_exclude_from_capture) {
+			picker_texture_zoom = memnew(TextureRect);
+			picker_texture_zoom->set_mouse_filter(MOUSE_FILTER_IGNORE);
+			picker_texture_zoom->set_custom_minimum_size(Vector2i(51, 51));
+			picker_texture_zoom->set_position(Vector2i(2, 2));
+			picker_texture_zoom->set_texture_filter(CanvasItem::TEXTURE_FILTER_NEAREST);
+			picker_preview->add_child(picker_texture_zoom);
+		}
+
+		picker_preview_style_box.instantiate();
 		picker_preview->add_theme_style_override(SceneStringName(panel), picker_preview_style_box);
+
+		picker_preview_style_box_color.instantiate();
+		picker_preview_color->add_theme_style_override(SceneStringName(panel), picker_preview_style_box_color);
 	}
 
 	Rect2i screen_rect;
 	if (picker_window->is_embedded()) {
+		Ref<ImageTexture> tx = ImageTexture::create_from_image(picker_window->get_embedder()->get_texture()->get_image());
 		screen_rect = picker_window->get_embedder()->get_visible_rect();
 		picker_window->set_position(Point2i());
-		picker_texture_rect->set_texture(ImageTexture::create_from_image(picker_window->get_embedder()->get_texture()->get_image()));
+		picker_texture_rect->set_texture(tx);
+
+		Ref<AtlasTexture> atlas;
+		atlas.instantiate();
+		atlas->set_atlas(tx);
+		picker_texture_zoom->set_texture(atlas);
 	} else {
 		screen_rect = picker_window->get_parent_rect();
 		picker_window->set_position(screen_rect.position);
@@ -1573,7 +1670,6 @@ void ColorPicker::_pick_button_pressed_legacy() {
 	}
 
 	picker_window->set_size(screen_rect.size);
-	picker_preview->set_size(screen_rect.size / 10.0); // 10% of size in each axis.
 	picker_window->popup();
 }
 
@@ -1594,9 +1690,17 @@ void ColorPicker::_picker_texture_input(const Ref<InputEvent> &p_event) {
 		Ref<Image> img = picker_texture_rect->get_texture()->get_image();
 		if (img.is_valid() && !img->is_empty()) {
 			Vector2 ofs = mev->get_position();
+			picker_preview->set_position(ofs - Vector2(28, 28));
+			Vector2 scale = picker_texture_rect->get_size() / img->get_size();
+			ofs /= scale;
 			picker_color = img->get_pixel(ofs.x, ofs.y);
-			picker_preview_style_box->set_bg_color(picker_color);
-			picker_preview_label->set_self_modulate(picker_color.get_luminance() < 0.5 ? Color(1.0f, 1.0f, 1.0f) : Color(0.0f, 0.0f, 0.0f));
+			picker_preview_style_box_color->set_bg_color(picker_color);
+			picker_preview_style_box->set_bg_color(picker_color.get_luminance() < 0.5 ? Color(1.0f, 1.0f, 1.0f) : Color(0.0f, 0.0f, 0.0f));
+
+			Ref<AtlasTexture> atlas = picker_texture_zoom->get_texture();
+			if (atlas.is_valid()) {
+				atlas->set_region(Rect2i(ofs.x - 8, ofs.y - 8, 17, 17));
+			}
 		}
 	}
 }
@@ -1900,7 +2004,7 @@ ColorPicker::ColorPicker() {
 	c_text->set_select_all_on_focus(true);
 	c_text->set_tooltip_text(ETR("Enter a hex code (\"#ff0000\") or named color (\"red\")."));
 	c_text->set_placeholder(ETR("Hex code or named color"));
-	c_text->connect("text_submitted", callable_mp(this, &ColorPicker::_html_submitted));
+	c_text->connect(SceneStringName(text_submitted), callable_mp(this, &ColorPicker::_html_submitted));
 	c_text->connect(SceneStringName(text_changed), callable_mp(this, &ColorPicker::_text_changed));
 	c_text->connect(SceneStringName(focus_exited), callable_mp(this, &ColorPicker::_html_focus_exit));
 
@@ -1940,7 +2044,7 @@ ColorPicker::ColorPicker() {
 	updating = false;
 
 	preset_foldable = memnew(FoldableContainer);
-	preset_foldable->set_text("Swatches");
+	preset_foldable->set_text(ETR("Swatches"));
 	preset_foldable->add_button();
 	preset_foldable->set_button_tooltip(0, ETR("Add current color as a preset."));
 	preset_foldable->set_button_visible(0, can_add_swatches);
@@ -1961,7 +2065,7 @@ ColorPicker::ColorPicker() {
 	preset_group.instantiate();
 
 	recent_preset_foldable = memnew(FoldableContainer);
-	recent_preset_foldable->set_text("Recent Colors");
+	recent_preset_foldable->set_text(ETR("Recent Colors"));
 
 	ScrollContainer *recent_preset_scroll = memnew(ScrollContainer);
 	recent_preset_scroll->add_theme_constant_override("h_scroll_bar_separation", 4);
@@ -2043,7 +2147,9 @@ void ColorPickerButton::pressed() {
 	float v_offset = show_above ? -minsize.y : get_size().y;
 	popup->set_position(get_screen_position() + Vector2(h_offset, v_offset));
 	popup->popup();
-	picker->set_focus_on_line_edit();
+	if (DisplayServer::get_singleton()->has_hardware_keyboard()) {
+		picker->set_focus_on_line_edit();
+	}
 }
 
 void ColorPickerButton::_validate_property(PropertyInfo &p_property) const {
@@ -2127,6 +2233,7 @@ void ColorPickerButton::_update_picker() {
 		picker->set_anchors_and_offsets_preset(PRESET_FULL_RECT);
 		popup->add_child(picker);
 		add_child(popup, false, INTERNAL_MODE_FRONT);
+		popup->force_parent_owned();
 		picker->connect("color_changed", callable_mp(this, &ColorPickerButton::_color_changed));
 		popup->connect("about_to_popup", callable_mp(this, &ColorPickerButton::_about_to_popup));
 		popup->connect("popup_hide", callable_mp(this, &ColorPickerButton::_modal_closed));
