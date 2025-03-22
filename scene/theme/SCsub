@@ -5,10 +5,7 @@ Import("env")
 
 import default_theme_builders
 
-sources = [
-    "theme_db.cpp",
-    "theme_owner.cpp"
-]
+sources = ["theme_db.cpp", "theme_owner.cpp"]
 
 if env["legacy_theme"]:
     sources += ["default_theme.cpp"]
