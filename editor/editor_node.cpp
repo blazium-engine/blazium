@@ -6670,11 +6670,12 @@ void EditorNode::_feature_profile_changed() {
 		editor_dock_manager->set_dock_enabled(history_dock, true);
 		editor_main_screen->set_button_enabled(EditorMainScreen::EDITOR_3D, true);
 		editor_main_screen->set_button_enabled(EditorMainScreen::EDITOR_SCRIPT, true);
-		editor_main_screen->set_button_enabled(EditorMainScreen::EDITOR_GAME, true);
 		if (AssetLibraryEditorPlugin::is_available()) {
 			editor_main_screen->set_button_enabled(EditorMainScreen::EDITOR_ASSETLIB, true);
 		}
 	}
+	// Make sure game window is disabled since we use EditorSettings for it to avoid breaking compatibility with 4.3.
+	editor_main_screen->set_button_enabled(EditorMainScreen::EDITOR_GAME, EDITOR_GET("editors/game/embedded_game"));
 }
 
 void EditorNode::_bind_methods() {

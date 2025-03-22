@@ -1190,6 +1190,9 @@ GameViewPlugin::GameViewPlugin() {
 	window_wrapper->set_v_size_flags(Control::SIZE_EXPAND_FILL);
 	window_wrapper->hide();
 	window_wrapper->connect("window_visibility_changed", callable_mp(this, &GameViewPlugin::_window_visibility_changed));
+
+	// Check if game view is already disabled on startup since we aren't using editor feature profile.
+	_feature_profile_changed();
 }
 
 GameViewPlugin::~GameViewPlugin() {
