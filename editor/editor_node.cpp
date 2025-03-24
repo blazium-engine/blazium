@@ -7514,13 +7514,13 @@ EditorNode::EditorNode() {
 	}
 	help_menu->add_icon_shortcut(theme->get_icon(SNAME("Heart"), EditorStringName(EditorIcons)), ED_SHORTCUT_AND_COMMAND("editor/support_development", TTRC("Join the Blazium Discord")), HELP_SUPPORT_GODOT_DEVELOPMENT);
 
-	HBoxContainer *right_menu_hb = memnew(HBoxContainer);
-	right_menu_hb->set_h_size_flags(Control::SIZE_EXPAND_FILL);
-	title_bar->add_child(right_menu_hb);
+	title_right_hbox = memnew(HBoxContainer);
+	title_right_hbox->set_h_size_flags(Control::SIZE_EXPAND_FILL);
+	title_bar->add_child(title_right_hbox);
 
 	project_run_bar = memnew(EditorRunBar);
 	project_run_bar->set_h_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_END);
-	right_menu_hb->add_child(project_run_bar);
+	title_right_hbox->add_child(project_run_bar);
 	project_run_bar->connect("play_pressed", callable_mp(this, &EditorNode::_project_run_started));
 	project_run_bar->connect("stop_pressed", callable_mp(this, &EditorNode::_project_run_stopped));
 
@@ -7532,7 +7532,7 @@ EditorNode::EditorNode() {
 	renderer->set_focus_mode(Control::FOCUS_NONE);
 	renderer->set_tooltip_text(TTR("Choose a rendering method.\n\nNotes:\n- On mobile platforms, the Mobile rendering method is used if Forward+ is selected here.\n- On the web platform, the Compatibility rendering method is always used."));
 
-	right_menu_hb->add_child(renderer);
+	title_right_hbox->add_child(renderer);
 
 	if (can_expand) {
 		// Add spacer to avoid other controls under the window minimize/maximize/close buttons (right side).
@@ -7585,7 +7585,7 @@ EditorNode::EditorNode() {
 	layout_dialog->connect("name_confirmed", callable_mp(this, &EditorNode::_dialog_action));
 
 	update_spinner = memnew(MenuButton);
-	right_menu_hb->add_child(update_spinner);
+	title_right_hbox->add_child(update_spinner);
 	update_spinner->set_button_icon(theme->get_icon(SNAME("Progress1"), EditorStringName(EditorIcons)));
 	update_spinner->get_popup()->connect(SceneStringName(id_pressed), callable_mp(this, &EditorNode::_menu_option));
 	PopupMenu *p = update_spinner->get_popup();
