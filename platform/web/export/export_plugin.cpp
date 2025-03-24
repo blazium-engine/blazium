@@ -153,9 +153,15 @@ void EditorExportPlatformWeb::_fix_html(Vector<uint8_t> &p_html, const Ref<Edito
 	if (p_preset->get("progressive_web_app/enabled")) {
 		head_include += "<link rel=\"manifest\" href=\"" + p_name + ".manifest.json\">\n";
 	}
-	String youtube_playables_sdk;
-	if (p_preset->get("blazium/youtube_playable/enabled")) {
-		youtube_playables_sdk = R"(<script src="https://www.youtube.com/game_api/v1"></script>)";
+	String blazium_third_party;
+	bool youtube_playable = p_preset->get("blazium/youtube_playable/enabled");
+	bool discord_embed = p_preset->get("blazium/discord_embed/enabled");
+	if (youtube_playable || discord_embed) {
+		if (youtube_playable) {
+			// the ytplay sdk needs to be the first
+			blazium_third_party += R"(<script src="https://www.youtube.com/game_api/v1"></script>)";
+		}
+		blazium_third_party += R"(<script src=")" + p_name + ".third.party.js" + R"("></script>)";
 	}
 	String blazium_header_embeds;
 	if (p_preset->get("blazium/web_headers/enabled")) {
@@ -204,8 +210,9 @@ void EditorExportPlatformWeb::_fix_html(Vector<uint8_t> &p_html, const Ref<Edito
 	const String custom_head_include = p_preset->get("html/head_include");
 	HashMap<String, String> replaces;
 
-	replaces["$BLAZIUM_YOUTUBE_PLAYABLES_SDK"] = youtube_playables_sdk;
+	replaces["$BLAZIUM_THIRD_PARTY"] = blazium_third_party;
 	replaces["$BLAZIUM_HEADER_EMBEDS"] = blazium_header_embeds;
+	replaces["$BLAZIUM_ENGINE_STARTER"] = p_name + ".engine.starter.js";
 
 	replaces["$GODOT_URL"] = p_name + ".js";
 	replaces["$GODOT_PROJECT_NAME"] = GLOBAL_GET("application/config/name");
@@ -248,8 +255,8 @@ Error EditorExportPlatformWeb::_add_manifest_icon(const String &p_path, const St
 	return err;
 }
 
-Error EditorExportPlatformWeb::_build_main_js(const Ref<EditorExportPreset> &p_preset, const String &p_path, BitField<EditorExportPlatform::DebugFlags> p_flags, const Vector<SharedObject> p_shared_objects, const Dictionary &p_file_sizes) {
-	Vector<uint8_t> main_js;
+Error EditorExportPlatformWeb::_build_js_files(const Ref<EditorExportPreset> &p_preset, const String &p_path, BitField<EditorExportPlatform::DebugFlags> p_flags, const Vector<SharedObject> p_shared_objects, const Dictionary &p_file_sizes) {
+	Vector<uint8_t> third_party_js;
 	const String dir = p_path.get_base_dir();
 	const String name = p_path.get_file().get_basename();
 
@@ -259,7 +266,7 @@ Error EditorExportPlatformWeb::_build_main_js(const Ref<EditorExportPreset> &p_p
 		Vector<uint8_t> discord_embed_js;
 		Ref<FileAccess> f = FileAccess::open(discord_embed_path, FileAccess::READ);
 		if (f.is_null()) {
-			add_message(EXPORT_MESSAGE_ERROR, TTR("BUILD_MAIN_JS"), vformat(TTR("Could not read file: \"%s\"."), discord_embed_path));
+			add_message(EXPORT_MESSAGE_ERROR, TTR("BUILD_JS_FILES"), vformat(TTR("Could not read file: \"%s\"."), discord_embed_path));
 			return ERR_FILE_CANT_READ;
 		}
 		discord_embed_js.resize(f->get_length());
@@ -268,7 +275,7 @@ Error EditorExportPlatformWeb::_build_main_js(const Ref<EditorExportPreset> &p_p
 		HashMap<String, String> replaces;
 		replaces["$BLAZIUM_DISCORD_AUTODETECT"] = "true" ? p_preset->get("blazium/discord_embed/autodetect") : "false";
 		_replace_strings(replaces, discord_embed_js);
-		main_js.append_array(discord_embed_js);
+		third_party_js.append_array(discord_embed_js);
 	}
 	DirAccess::remove_file_or_error(discord_embed_path);
 
@@ -278,29 +285,21 @@ Error EditorExportPlatformWeb::_build_main_js(const Ref<EditorExportPreset> &p_p
 		Vector<uint8_t> youtube_playables_js;
 		Ref<FileAccess> f = FileAccess::open(youtube_playables_path, FileAccess::READ);
 		if (f.is_null()) {
-			add_message(EXPORT_MESSAGE_ERROR, TTR("BUILD_MAIN_JS"), vformat(TTR("Could not read file: \"%s\"."), youtube_playables_path));
+			add_message(EXPORT_MESSAGE_ERROR, TTR("BUILD_JS_FILES"), vformat(TTR("Could not read file: \"%s\"."), youtube_playables_path));
 			return ERR_FILE_CANT_READ;
 		}
 		youtube_playables_js.resize(f->get_length());
 		f->get_buffer(youtube_playables_js.ptrw(), youtube_playables_js.size());
 
-		main_js.append_array(youtube_playables_js);
+		third_party_js.append_array(youtube_playables_js);
 	}
 	DirAccess::remove_file_or_error(youtube_playables_path);
 
-	// Get engine.js file contents
-	String main_js_path = dir.path_join(name + ".js");
-	Vector<uint8_t> engine_js;
-	{
-		Ref<FileAccess> f = FileAccess::open(main_js_path, FileAccess::READ);
-		if (f.is_null()) {
-			add_message(EXPORT_MESSAGE_ERROR, TTR("BUILD_MAIN_JS"), vformat(TTR("Could not read file: \"%s\"."), main_js_path));
-			return ERR_FILE_CANT_READ;
-		}
-		engine_js.resize(f->get_length());
-		f->get_buffer(engine_js.ptrw(), engine_js.size());
+	// Write third party js file
+	Error err = _write_or_error(third_party_js.ptr(), third_party_js.size(), dir.path_join(name + ".third.party.js"), "Export", false);
+	if (err != OK) {
+		return err;
 	}
-	main_js.append_array(engine_js);
 
 	// Get engine.starter.js file contents
 	String engine_starter_path = dir.path_join(name + ".engine.starter.js");
@@ -308,13 +307,12 @@ Error EditorExportPlatformWeb::_build_main_js(const Ref<EditorExportPreset> &p_p
 	{
 		Ref<FileAccess> f = FileAccess::open(engine_starter_path, FileAccess::READ);
 		if (f.is_null()) {
-			add_message(EXPORT_MESSAGE_ERROR, TTR("BUILD_MAIN_JS"), vformat(TTR("Could not read file: \"%s\"."), engine_starter_path));
+			add_message(EXPORT_MESSAGE_ERROR, TTR("BUILD_JS_FILES"), vformat(TTR("Could not read file: \"%s\"."), engine_starter_path));
 			return ERR_FILE_CANT_READ;
 		}
 		engine_starter_js.resize(f->get_length());
 		f->get_buffer(engine_starter_js.ptrw(), engine_starter_js.size());
 	}
-	DirAccess::remove_file_or_error(engine_starter_path);
 
 	Dictionary engine_config;
 	engine_config["canvasResizePolicy"] = p_preset->get("html/canvas_resize_policy");
@@ -349,10 +347,9 @@ Error EditorExportPlatformWeb::_build_main_js(const Ref<EditorExportPreset> &p_p
 		replaces["$GODOT_THREADS_ENABLED"] = "false";
 	}
 	_replace_strings(replaces, engine_starter_js);
-	main_js.append_array(engine_starter_js);
 
-	// Write main js file
-	Error err = _write_or_error(main_js.ptr(), main_js.size(), main_js_path, "Export", false);
+	// Write enigine starter js file
+	err = _write_or_error(engine_starter_js.ptr(), engine_starter_js.size(), engine_starter_path, "Export", false);
 	if (err != OK) {
 		return err;
 	}
@@ -739,7 +736,7 @@ Error EditorExportPlatformWeb::export_project(const Ref<EditorExportPreset> &p_p
 	html.resize(0);
 
 	// Build main JavaScript file.
-	err = _build_main_js(p_preset, p_path, p_flags, shared_objects, file_sizes);
+	err = _build_js_files(p_preset, p_path, p_flags, shared_objects, file_sizes);
 	if (err != OK) {
 		return err;
 	}
