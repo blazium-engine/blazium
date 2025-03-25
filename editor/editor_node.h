@@ -46,6 +46,7 @@ class ColorPicker;
 class ConfirmationDialog;
 class Control;
 class FileDialog;
+class HBoxContainer;
 class MenuBar;
 class MenuButton;
 class OptionButton;
@@ -322,6 +323,7 @@ private:
 	Control *left_menu_spacer = nullptr;
 	Control *right_menu_spacer = nullptr;
 	EditorTitleBar *title_bar = nullptr;
+	HBoxContainer *title_right_hbox = nullptr;
 	EditorHScrollBox *menu_scroll_box = nullptr;
 	EditorHScrollBox *main_scroll_box = nullptr;
 	EditorRunBar *project_run_bar = nullptr;
@@ -696,6 +698,7 @@ public:
 	static EditorFolding &get_editor_folding() { return singleton->editor_folding; }
 
 	static EditorTitleBar *get_title_bar() { return singleton->title_bar; }
+	static HBoxContainer *get_title_right_hbox() { return singleton->title_right_hbox; }
 	static VSplitContainer *get_top_split() { return singleton->top_split; }
 	static EditorBottomPanel *get_bottom_panel() { return singleton->bottom_panel; }
 	static EditorMainScreen *get_editor_main_screen() { return singleton->editor_main_screen; }
