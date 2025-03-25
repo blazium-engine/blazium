@@ -50,11 +50,15 @@ class WindowWrapper : public MarginContainer {
 
 	Ref<Shortcut> enable_shortcut;
 
+	bool override_close_request = false;
+
 	Rect2 _get_default_window_rect() const;
 	Node *_get_wrapped_control_parent() const;
 
 	void _set_window_enabled_with_rect(bool p_visible, const Rect2 p_rect);
 	void _set_window_rect(const Rect2 p_rect);
+	void _window_size_changed();
+	void _window_close_request();
 
 protected:
 	static void _bind_methods();
@@ -81,6 +85,11 @@ public:
 
 	void set_window_title(const String &p_title);
 	void set_margins_enabled(bool p_enabled);
+	Size2 get_margins_size();
+	Size2 get_margins_top_left();
+	void grab_window_focus();
+
+	void set_override_close_request(bool p_enabled);
 
 	WindowWrapper();
 	~WindowWrapper();
@@ -90,7 +99,6 @@ class ScreenSelect : public Button {
 	GDCLASS(ScreenSelect, Button);
 
 	Popup *popup = nullptr;
-	Panel *popup_background = nullptr;
 	HBoxContainer *screen_list = nullptr;
 
 	void _build_advanced_menu();

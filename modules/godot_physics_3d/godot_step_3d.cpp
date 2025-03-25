@@ -50,7 +50,7 @@ void GodotStep3D::_populate_island(GodotBody3D *p_body, LocalVector<GodotBody3D 
 	}
 
 	for (const KeyValue<GodotConstraint3D *, int> &E : p_body->get_constraint_map()) {
-		GodotConstraint3D *constraint = const_cast<GodotConstraint3D *>(E.key);
+		GodotConstraint3D *constraint = E.key;
 		if (constraint->get_island_step() == _step) {
 			continue; // Already processed.
 		}
@@ -88,8 +88,8 @@ void GodotStep3D::_populate_island(GodotBody3D *p_body, LocalVector<GodotBody3D 
 void GodotStep3D::_populate_island_soft_body(GodotSoftBody3D *p_soft_body, LocalVector<GodotBody3D *> &p_body_island, LocalVector<GodotConstraint3D *> &p_constraint_island) {
 	p_soft_body->set_island_step(_step);
 
-	for (const GodotConstraint3D *E : p_soft_body->get_constraints()) {
-		GodotConstraint3D *constraint = const_cast<GodotConstraint3D *>(E);
+	for (GodotConstraint3D *E : p_soft_body->get_constraints()) {
+		GodotConstraint3D *constraint = E;
 		if (constraint->get_island_step() == _step) {
 			continue; // Already processed.
 		}
@@ -355,14 +355,14 @@ void GodotStep3D::step(GodotSpace3D *p_space, real_t p_delta) {
 
 	/* PRE-SOLVE CONSTRAINT ISLANDS */
 
-	// Warning: This doesn't run on threads, because it involves thread-unsafe processing.
+	// WARNING: This doesn't run on threads, because it involves thread-unsafe processing.
 	for (uint32_t island_index = 0; island_index < island_count; ++island_index) {
 		_pre_solve_island(constraint_islands[island_index]);
 	}
 
 	/* SOLVE CONSTRAINT ISLANDS */
 
-	// Warning: _solve_island modifies the constraint islands for optimization purpose,
+	// WARNING: `_solve_island` modifies the constraint islands for optimization purpose,
 	// their content is not reliable after these calls and shouldn't be used anymore.
 	group_task = WorkerThreadPool::get_singleton()->add_template_group_task(this, &GodotStep3D::_solve_island, nullptr, island_count, -1, true, SNAME("Physics3DConstraintSolveIslands"));
 	WorkerThreadPool::get_singleton()->wait_for_group_task_completion(group_task);

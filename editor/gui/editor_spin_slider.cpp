@@ -39,10 +39,6 @@
 #include "scene/gui/texture_rect.h"
 #include "scene/theme/theme_db.h"
 
-bool EditorSpinSlider::is_text_field() const {
-	return true;
-}
-
 String EditorSpinSlider::get_tooltip(const Point2 &p_pos) const {
 	if (!read_only && grabber->is_visible()) {
 		Key key = (OS::get_singleton()->has_feature("macos") || OS::get_singleton()->has_feature("web_macos") || OS::get_singleton()->has_feature("web_ios")) ? Key::META : Key::CTRL;
@@ -73,6 +69,7 @@ void EditorSpinSlider::gui_input(const Ref<InputEvent> &p_event) {
 					} else {
 						set_value(get_value() - get_step());
 					}
+					emit_signal("updown_pressed");
 					return;
 				}
 				_grab_start();
@@ -187,10 +184,6 @@ void EditorSpinSlider::_grabber_gui_input(const Ref<InputEvent> &p_event) {
 
 	Ref<InputEventMouseButton> mb = p_event;
 
-	if (is_read_only()) {
-		return;
-	}
-
 	if (grabbing_grabber) {
 		if (mb.is_valid()) {
 			if (mb->get_button_index() == MouseButton::WHEEL_UP) {
@@ -243,7 +236,7 @@ void EditorSpinSlider::_grabber_gui_input(const Ref<InputEvent> &p_event) {
 
 void EditorSpinSlider::_value_input_gui_input(const Ref<InputEvent> &p_event) {
 	Ref<InputEventKey> k = p_event;
-	if (k.is_valid() && k->is_pressed() && !is_read_only()) {
+	if (k.is_valid() && k->is_pressed() && !read_only) {
 		Key code = k->get_keycode();
 
 		switch (code) {
@@ -317,7 +310,7 @@ void EditorSpinSlider::_draw_spin_slider() {
 	bool rtl = is_layout_rtl();
 	Vector2 size = get_size();
 
-	Ref<StyleBox> sb = get_theme_stylebox(is_read_only() ? SNAME("read_only") : CoreStringName(normal), SNAME("LineEdit"));
+	Ref<StyleBox> sb = get_theme_stylebox(read_only ? SNAME("read_only") : CoreStringName(normal), SNAME("LineEdit"));
 	if (!flat) {
 		draw_style_box(sb, Rect2(Vector2(), size));
 	}
@@ -329,14 +322,14 @@ void EditorSpinSlider::_draw_spin_slider() {
 	int label_width = font->get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).width;
 	int number_width = size.width - sb->get_minimum_size().width - label_width - sep;
 
-	Ref<Texture2D> updown = get_theme_icon(is_read_only() ? SNAME("updown_disabled") : SNAME("updown"), SNAME("SpinBox"));
+	Ref<Texture2D> updown = get_theme_icon(read_only ? SNAME("updown_disabled") : SNAME("updown"), SNAME("SpinBox"));
 
 	String numstr = get_text_value();
 
 	int vofs = (size.height - font->get_height(font_size)) / 2 + font->get_ascent(font_size);
 
-	Color fc = get_theme_color(is_read_only() ? SNAME("font_uneditable_color") : SceneStringName(font_color), SNAME("LineEdit"));
-	Color lc = get_theme_color(is_read_only() ? SNAME("read_only_label_color") : SNAME("label_color"));
+	Color fc = get_theme_color(read_only ? SNAME("font_uneditable_color") : SceneStringName(font_color), SNAME("LineEdit"));
+	Color lc = get_theme_color(read_only ? SNAME("read_only_label_color") : SNAME("label_color"));
 
 	if (flat && !label.is_empty()) {
 		Ref<StyleBox> label_bg = get_theme_stylebox(SNAME("label_bg"), SNAME("EditorSpinSlider"));
@@ -375,7 +368,7 @@ void EditorSpinSlider::_draw_spin_slider() {
 				}
 				if (glyphs[i].font_rid != RID()) {
 					TS->font_draw_glyph(glyphs[i].font_rid, ci, glyphs[i].font_size, text_ofs + Vector2(glyphs[i].x_off, glyphs[i].y_off), glyphs[i].index, color);
-				} else if ((glyphs[i].flags & TextServer::GRAPHEME_IS_VIRTUAL) != TextServer::GRAPHEME_IS_VIRTUAL) {
+				} else if (((glyphs[i].flags & TextServer::GRAPHEME_IS_VIRTUAL) != TextServer::GRAPHEME_IS_VIRTUAL) && ((glyphs[i].flags & TextServer::GRAPHEME_IS_EMBEDDED_OBJECT) != TextServer::GRAPHEME_IS_EMBEDDED_OBJECT)) {
 					TS->draw_hex_code_box(ci, glyphs[i].font_size, text_ofs + Vector2(glyphs[i].x_off, glyphs[i].y_off), glyphs[i].index, color);
 				}
 			}
@@ -386,7 +379,7 @@ void EditorSpinSlider::_draw_spin_slider() {
 
 	if (!hide_slider) {
 		if (get_step() == 1) {
-			Ref<Texture2D> updown2 = is_read_only() ? theme_cache.updown_disabled_icon : theme_cache.updown_icon;
+			Ref<Texture2D> updown2 = read_only ? theme_cache.updown_disabled_icon : theme_cache.updown_icon;
 			int updown_vofs = (size.height - updown2->get_height()) / 2;
 			if (rtl) {
 				updown_offset = sb->get_margin(SIDE_LEFT);
@@ -606,7 +599,7 @@ void EditorSpinSlider::_value_focus_exited() {
 		return;
 	}
 
-	if (is_read_only()) {
+	if (read_only) {
 		// Spin slider has become read only while it was being edited.
 		return;
 	}
@@ -642,7 +635,7 @@ void EditorSpinSlider::_grabber_mouse_exited() {
 
 void EditorSpinSlider::set_read_only(bool p_enable) {
 	read_only = p_enable;
-	if (read_only && value_input) {
+	if (read_only && value_input && value_input->is_inside_tree()) {
 		value_input->release_focus();
 	}
 
@@ -667,7 +660,7 @@ bool EditorSpinSlider::is_grabbing() const {
 }
 
 void EditorSpinSlider::_focus_entered() {
-	if (is_read_only()) {
+	if (read_only) {
 		return;
 	}
 
@@ -706,6 +699,7 @@ void EditorSpinSlider::_bind_methods() {
 
 	ADD_SIGNAL(MethodInfo("grabbed"));
 	ADD_SIGNAL(MethodInfo("ungrabbed"));
+	ADD_SIGNAL(MethodInfo("updown_pressed"));
 	ADD_SIGNAL(MethodInfo("value_focus_entered"));
 	ADD_SIGNAL(MethodInfo("value_focus_exited"));
 
@@ -727,7 +721,7 @@ void EditorSpinSlider::_ensure_input_popup() {
 	value_input_popup->add_child(value_input);
 	value_input->set_anchors_and_offsets_preset(PRESET_FULL_RECT);
 	value_input_popup->connect(SceneStringName(hidden), callable_mp(this, &EditorSpinSlider::_value_input_closed));
-	value_input->connect("text_submitted", callable_mp(this, &EditorSpinSlider::_value_input_submitted));
+	value_input->connect(SceneStringName(text_submitted), callable_mp(this, &EditorSpinSlider::_value_input_submitted));
 	value_input->connect(SceneStringName(focus_exited), callable_mp(this, &EditorSpinSlider::_value_focus_exited));
 	value_input->connect(SceneStringName(gui_input), callable_mp(this, &EditorSpinSlider::_value_input_gui_input));
 

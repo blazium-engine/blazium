@@ -1,11 +1,13 @@
 name: Test Blazium project converter
 description: Test the Blazium project converter.
+
 inputs:
   bin:
     description: The path to the Blazium executable
     required: true
+
 runs:
-  using: "composite"
+  using: composite
   steps:
     - name: Test 3-to-4 conversion
       shell: sh

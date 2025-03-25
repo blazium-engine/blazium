@@ -48,7 +48,7 @@ void GodotStep2D::_populate_island(GodotBody2D *p_body, LocalVector<GodotBody2D 
 	}
 
 	for (const Pair<GodotConstraint2D *, int> &E : p_body->get_constraint_list()) {
-		GodotConstraint2D *constraint = const_cast<GodotConstraint2D *>(E.first);
+		GodotConstraint2D *constraint = E.first;
 		if (constraint->get_island_step() == _step) {
 			continue; // Already processed.
 		}
@@ -251,14 +251,14 @@ void GodotStep2D::step(GodotSpace2D *p_space, real_t p_delta) {
 
 	/* PRE-SOLVE CONSTRAINT ISLANDS */
 
-	// Warning: This doesn't run on threads, because it involves thread-unsafe processing.
+	// WARNING: This doesn't run on threads, because it involves thread-unsafe processing.
 	for (uint32_t island_index = 0; island_index < island_count; ++island_index) {
 		_pre_solve_island(constraint_islands[island_index]);
 	}
 
 	/* SOLVE CONSTRAINT ISLANDS */
 
-	// Warning: _solve_island modifies the constraint islands for optimization purpose,
+	// WARNING: `_solve_island` modifies the constraint islands for optimization purpose,
 	// their content is not reliable after these calls and shouldn't be used anymore.
 	group_task = WorkerThreadPool::get_singleton()->add_template_group_task(this, &GodotStep2D::_solve_island, nullptr, island_count, -1, true, SNAME("Physics2DConstraintSolveIslands"));
 	WorkerThreadPool::get_singleton()->wait_for_group_task_completion(group_task);

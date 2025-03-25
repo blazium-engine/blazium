@@ -58,7 +58,7 @@
 
 void MDCommandBuffer::begin() {
 	DEV_ASSERT(commandBuffer == nil);
-	commandBuffer = queue.commandBuffer;
+	commandBuffer = queue.commandBufferWithUnretainedReferences;
 }
 
 void MDCommandBuffer::end() {
@@ -96,6 +96,9 @@ void MDCommandBuffer::bind_pipeline(RDD::PipelineID p_pipeline) {
 		MDRenderPipeline *rp = (MDRenderPipeline *)p;
 
 		if (render.encoder == nil) {
+			// This error would happen if the render pass failed.
+			ERR_FAIL_NULL_MSG(render.desc, "Render pass descriptor is null.");
+
 			// This condition occurs when there are no attachments when calling render_next_subpass()
 			// and is due to the SUPPORTS_FRAGMENT_SHADER_WITH_ONLY_SIDE_EFFECTS flag.
 			render.desc.defaultRasterSampleCount = static_cast<NSUInteger>(rp->sample_count);
@@ -220,8 +223,9 @@ void MDCommandBuffer::render_bind_uniform_set(RDD::UniformSetID p_uniform_set, R
 void MDCommandBuffer::render_clear_attachments(VectorView<RDD::AttachmentClear> p_attachment_clears, VectorView<Rect2i> p_rects) {
 	DEV_ASSERT(type == MDCommandBufferStateType::Render);
 
-	uint32_t vertex_count = p_rects.size() * 6;
+	const MDSubpass &subpass = render.get_subpass();
 
+	uint32_t vertex_count = p_rects.size() * 6 * subpass.view_count;
 	simd::float4 vertices[vertex_count];
 	simd::float4 clear_colors[ClearAttKey::ATTACHMENT_COUNT];
 
@@ -232,6 +236,9 @@ void MDCommandBuffer::render_clear_attachments(VectorView<RDD::AttachmentClear> 
 
 	ClearAttKey key;
 	key.sample_count = render.pass->get_sample_count();
+	if (subpass.view_count > 1) {
+		key.enable_layered_rendering();
+	}
 
 	float depth_value = 0;
 	uint32_t stencil_value = 0;
@@ -242,7 +249,7 @@ void MDCommandBuffer::render_clear_attachments(VectorView<RDD::AttachmentClear> 
 		if (attClear.aspect.has_flag(RDD::TEXTURE_ASPECT_COLOR_BIT)) {
 			attachment_index = attClear.color_attachment;
 		} else {
-			attachment_index = render.pass->subpasses[render.current_subpass].depth_stencil_reference.attachment;
+			attachment_index = subpass.depth_stencil_reference.attachment;
 		}
 
 		MDAttachment const &mda = render.pass->attachments[attachment_index];
@@ -305,6 +312,13 @@ void MDCommandBuffer::render_clear_attachments(VectorView<RDD::AttachmentClear> 
 
 void MDCommandBuffer::_render_set_dirty_state() {
 	_render_bind_uniform_sets();
+
+	MDSubpass const &subpass = render.get_subpass();
+	if (subpass.view_count > 1) {
+		uint32_t view_range[2] = { 0, subpass.view_count };
+		[render.encoder setVertexBytes:view_range length:sizeof(view_range) atIndex:VIEW_MASK_BUFFER_INDEX];
+		[render.encoder setFragmentBytes:view_range length:sizeof(view_range) atIndex:VIEW_MASK_BUFFER_INDEX];
+	}
 
 	if (render.dirty.has_flag(RenderState::DIRTY_PIPELINE)) {
 		[render.encoder setRenderPipelineState:render.pipeline->state];
@@ -386,6 +400,38 @@ void MDCommandBuffer::render_set_blend_constants(const Color &p_constants) {
 	}
 }
 
+void BoundUniformSet::merge_into(ResourceUsageMap &p_dst) const {
+	for (KeyValue<StageResourceUsage, ResourceVector> const &keyval : usage_to_resources) {
+		ResourceVector *resources = p_dst.getptr(keyval.key);
+		if (resources == nullptr) {
+			resources = &p_dst.insert(keyval.key, ResourceVector())->value;
+		}
+		// Reserve space for the new resources, assuming they are all added.
+		resources->reserve(resources->size() + keyval.value.size());
+
+		uint32_t i = 0, j = 0;
+		__unsafe_unretained id<MTLResource> *resources_ptr = resources->ptr();
+		const __unsafe_unretained id<MTLResource> *keyval_ptr = keyval.value.ptr();
+		// 2-way merge.
+		while (i < resources->size() && j < keyval.value.size()) {
+			if (resources_ptr[i] < keyval_ptr[j]) {
+				i++;
+			} else if (resources_ptr[i] > keyval_ptr[j]) {
+				resources->insert(i, keyval_ptr[j]);
+				i++;
+				j++;
+			} else {
+				i++;
+				j++;
+			}
+		}
+		// Append the remaining resources.
+		for (; j < keyval.value.size(); j++) {
+			resources->push_back(keyval_ptr[j]);
+		}
+	}
+}
+
 void MDCommandBuffer::_render_bind_uniform_sets() {
 	DEV_ASSERT(type == MDCommandBufferStateType::Render);
 	if (!render.dirty.has_flag(RenderState::DIRTY_UNIFORMS)) {
@@ -404,7 +450,7 @@ void MDCommandBuffer::_render_bind_uniform_sets() {
 		// Find the index of the next set bit.
 		int index = __builtin_ctzll(set_uniforms);
 		// Clear the set bit.
-		set_uniforms &= ~(1ULL << index);
+		set_uniforms &= (set_uniforms - 1);
 		MDUniformSet *set = render.uniform_sets[index];
 		if (set == nullptr || set->index >= (uint32_t)shader->sets.size()) {
 			continue;
@@ -412,17 +458,7 @@ void MDCommandBuffer::_render_bind_uniform_sets() {
 		UniformSet const &set_info = shader->sets[set->index];
 
 		BoundUniformSet &bus = set->boundUniformSetForShader(shader, device);
-
-		for (KeyValue<id<MTLResource>, StageResourceUsage> const &keyval : bus.bound_resources) {
-			MTLResourceUsage usage = resource_usage_for_stage(keyval.value, RDD::ShaderStage::SHADER_STAGE_VERTEX);
-			if (usage != 0) {
-				[enc useResource:keyval.key usage:usage stages:MTLRenderStageVertex];
-			}
-			usage = resource_usage_for_stage(keyval.value, RDD::ShaderStage::SHADER_STAGE_FRAGMENT);
-			if (usage != 0) {
-				[enc useResource:keyval.key usage:usage stages:MTLRenderStageFragment];
-			}
-		}
+		bus.merge_into(render.resource_usage);
 
 		// Set the buffer for the vertex stage.
 		{
@@ -466,36 +502,40 @@ uint32_t MDCommandBuffer::_populate_vertices(simd::float4 *p_vertices, uint32_t 
 	simd::float4 vtx;
 
 	uint32_t idx = p_index;
-	vtx.z = 0.0;
-	vtx.w = (float)1;
+	uint32_t endLayer = render.get_subpass().view_count;
 
-	// Top left vertex - First triangle.
-	vtx.y = topPos;
-	vtx.x = leftPos;
-	p_vertices[idx++] = vtx;
+	for (uint32_t layer = 0; layer < endLayer; layer++) {
+		vtx.z = 0.0;
+		vtx.w = (float)layer;
 
-	// Bottom left vertex.
-	vtx.y = bottomPos;
-	vtx.x = leftPos;
-	p_vertices[idx++] = vtx;
+		// Top left vertex - First triangle.
+		vtx.y = topPos;
+		vtx.x = leftPos;
+		p_vertices[idx++] = vtx;
 
-	// Bottom right vertex.
-	vtx.y = bottomPos;
-	vtx.x = rightPos;
-	p_vertices[idx++] = vtx;
+		// Bottom left vertex.
+		vtx.y = bottomPos;
+		vtx.x = leftPos;
+		p_vertices[idx++] = vtx;
 
-	// Bottom right vertex - Second triangle.
-	p_vertices[idx++] = vtx;
+		// Bottom right vertex.
+		vtx.y = bottomPos;
+		vtx.x = rightPos;
+		p_vertices[idx++] = vtx;
 
-	// Top right vertex.
-	vtx.y = topPos;
-	vtx.x = rightPos;
-	p_vertices[idx++] = vtx;
+		// Bottom right vertex - Second triangle.
+		p_vertices[idx++] = vtx;
 
-	// Top left vertex.
-	vtx.y = topPos;
-	vtx.x = leftPos;
-	p_vertices[idx++] = vtx;
+		// Top right vertex.
+		vtx.y = topPos;
+		vtx.x = rightPos;
+		p_vertices[idx++] = vtx;
+
+		// Top left vertex.
+		vtx.y = topPos;
+		vtx.x = leftPos;
+		p_vertices[idx++] = vtx;
+	}
 
 	return idx;
 }
@@ -522,8 +562,7 @@ void MDCommandBuffer::render_begin_pass(RDD::RenderPassID p_render_pass, RDD::Fr
 
 void MDCommandBuffer::_end_render_pass() {
 	MDFrameBuffer const &fb_info = *render.frameBuffer;
-	MDRenderPass const &pass_info = *render.pass;
-	MDSubpass const &subpass = pass_info.subpasses[render.current_subpass];
+	MDSubpass const &subpass = render.get_subpass();
 
 	PixelFormats &pf = device_driver->get_pixel_formats();
 
@@ -531,23 +570,22 @@ void MDCommandBuffer::_end_render_pass() {
 		uint32_t color_index = subpass.color_references[i].attachment;
 		uint32_t resolve_index = subpass.resolve_references[i].attachment;
 		DEV_ASSERT((color_index == RDD::AttachmentReference::UNUSED) == (resolve_index == RDD::AttachmentReference::UNUSED));
-		if (color_index == RDD::AttachmentReference::UNUSED || !fb_info.textures[color_index]) {
+		if (color_index == RDD::AttachmentReference::UNUSED || !fb_info.has_texture(color_index)) {
 			continue;
 		}
 
-		id<MTLTexture> resolve_tex = fb_info.textures[resolve_index];
+		id<MTLTexture> resolve_tex = fb_info.get_texture(resolve_index);
 
 		CRASH_COND_MSG(!flags::all(pf.getCapabilities(resolve_tex.pixelFormat), kMTLFmtCapsResolve), "not implemented: unresolvable texture types");
 		// see: https://github.com/KhronosGroup/MoltenVK/blob/d20d13fe2735adb845636a81522df1b9d89c0fba/MoltenVK/MoltenVK/GPUObjects/MVKRenderPass.mm#L407
 	}
 
-	[render.encoder endEncoding];
-	render.encoder = nil;
+	render.end_encoding();
 }
 
 void MDCommandBuffer::_render_clear_render_area() {
 	MDRenderPass const &pass = *render.pass;
-	MDSubpass const &subpass = pass.subpasses[render.current_subpass];
+	MDSubpass const &subpass = render.get_subpass();
 
 	// First determine attachments that should be cleared.
 	LocalVector<RDD::AttachmentClear> clears;
@@ -560,10 +598,10 @@ void MDCommandBuffer::_render_clear_render_area() {
 		}
 	}
 	uint32_t ds_index = subpass.depth_stencil_reference.attachment;
-	MDAttachment const &attachment = pass.attachments[ds_index];
-	bool shouldClearDepth = (ds_index != RDD::AttachmentReference::UNUSED && attachment.shouldClear(subpass, false));
-	bool shouldClearStencil = (ds_index != RDD::AttachmentReference::UNUSED && attachment.shouldClear(subpass, true));
+	bool shouldClearDepth = (ds_index != RDD::AttachmentReference::UNUSED && pass.attachments[ds_index].shouldClear(subpass, false));
+	bool shouldClearStencil = (ds_index != RDD::AttachmentReference::UNUSED && pass.attachments[ds_index].shouldClear(subpass, true));
 	if (shouldClearDepth || shouldClearStencil) {
+		MDAttachment const &attachment = pass.attachments[ds_index];
 		BitField<RDD::TextureAspectBits> bits;
 		if (shouldClearDepth && attachment.type & MDAttachmentType::Depth) {
 			bits.set_flag(RDD::TEXTURE_ASPECT_DEPTH_BIT);
@@ -594,9 +632,14 @@ void MDCommandBuffer::render_next_subpass() {
 
 	MDFrameBuffer const &fb = *render.frameBuffer;
 	MDRenderPass const &pass = *render.pass;
-	MDSubpass const &subpass = pass.subpasses[render.current_subpass];
+	MDSubpass const &subpass = render.get_subpass();
 
 	MTLRenderPassDescriptor *desc = MTLRenderPassDescriptor.renderPassDescriptor;
+
+	if (subpass.view_count > 1) {
+		desc.renderTargetArrayLength = subpass.view_count;
+	}
+
 	PixelFormats &pf = device_driver->get_pixel_formats();
 
 	uint32_t attachmentCount = 0;
@@ -613,7 +656,7 @@ void MDCommandBuffer::render_next_subpass() {
 		bool has_resolve = resolveIdx != RDD::AttachmentReference::UNUSED;
 		bool can_resolve = true;
 		if (resolveIdx != RDD::AttachmentReference::UNUSED) {
-			id<MTLTexture> resolve_tex = fb.textures[resolveIdx];
+			id<MTLTexture> resolve_tex = fb.get_texture(resolveIdx);
 			can_resolve = flags::all(pf.getCapabilities(resolve_tex.pixelFormat), kMTLFmtCapsResolve);
 			if (can_resolve) {
 				ca.resolveTexture = resolve_tex;
@@ -624,7 +667,9 @@ void MDCommandBuffer::render_next_subpass() {
 
 		MDAttachment const &attachment = pass.attachments[idx];
 
-		id<MTLTexture> tex = fb.textures[idx];
+		id<MTLTexture> tex = fb.get_texture(idx);
+		ERR_FAIL_NULL_MSG(tex, "Frame buffer color texture is null.");
+
 		if ((attachment.type & MDAttachmentType::Color)) {
 			if (attachment.configureDescriptor(ca, pf, subpass, tex, render.is_rendering_entire_area, has_resolve, can_resolve, false)) {
 				Color clearColor = render.clear_values[idx].color;
@@ -637,7 +682,8 @@ void MDCommandBuffer::render_next_subpass() {
 		attachmentCount += 1;
 		uint32_t idx = subpass.depth_stencil_reference.attachment;
 		MDAttachment const &attachment = pass.attachments[idx];
-		id<MTLTexture> tex = fb.textures[idx];
+		id<MTLTexture> tex = fb.get_texture(idx);
+		ERR_FAIL_NULL_MSG(tex, "Frame buffer depth / stencil texture is null.");
 		if (attachment.type & MDAttachmentType::Depth) {
 			MTLRenderPassDepthAttachmentDescriptor *da = desc.depthAttachment;
 			if (attachment.configureDescriptor(da, pf, subpass, tex, render.is_rendering_entire_area, false, false, false)) {
@@ -677,7 +723,14 @@ void MDCommandBuffer::render_draw(uint32_t p_vertex_count,
 		uint32_t p_base_vertex,
 		uint32_t p_first_instance) {
 	DEV_ASSERT(type == MDCommandBufferStateType::Render);
+	ERR_FAIL_NULL_MSG(render.pipeline, "No pipeline set for render command buffer.");
+
 	_render_set_dirty_state();
+
+	MDSubpass const &subpass = render.get_subpass();
+	if (subpass.view_count > 1) {
+		p_instance_count *= subpass.view_count;
+	}
 
 	DEV_ASSERT(render.dirty == 0);
 
@@ -726,7 +779,14 @@ void MDCommandBuffer::render_draw_indexed(uint32_t p_index_count,
 		int32_t p_vertex_offset,
 		uint32_t p_first_instance) {
 	DEV_ASSERT(type == MDCommandBufferStateType::Render);
+	ERR_FAIL_NULL_MSG(render.pipeline, "No pipeline set for render command buffer.");
+
 	_render_set_dirty_state();
+
+	MDSubpass const &subpass = render.get_subpass();
+	if (subpass.view_count > 1) {
+		p_instance_count *= subpass.view_count;
+	}
 
 	id<MTLRenderCommandEncoder> enc = render.encoder;
 
@@ -745,6 +805,8 @@ void MDCommandBuffer::render_draw_indexed(uint32_t p_index_count,
 
 void MDCommandBuffer::render_draw_indexed_indirect(RDD::BufferID p_indirect_buffer, uint64_t p_offset, uint32_t p_draw_count, uint32_t p_stride) {
 	DEV_ASSERT(type == MDCommandBufferStateType::Render);
+	ERR_FAIL_NULL_MSG(render.pipeline, "No pipeline set for render command buffer.");
+
 	_render_set_dirty_state();
 
 	id<MTLRenderCommandEncoder> enc = render.encoder;
@@ -769,6 +831,8 @@ void MDCommandBuffer::render_draw_indexed_indirect_count(RDD::BufferID p_indirec
 
 void MDCommandBuffer::render_draw_indirect(RDD::BufferID p_indirect_buffer, uint64_t p_offset, uint32_t p_draw_count, uint32_t p_stride) {
 	DEV_ASSERT(type == MDCommandBufferStateType::Render);
+	ERR_FAIL_NULL_MSG(render.pipeline, "No pipeline set for render command buffer.");
+
 	_render_set_dirty_state();
 
 	id<MTLRenderCommandEncoder> enc = render.encoder;
@@ -791,9 +855,88 @@ void MDCommandBuffer::render_draw_indirect_count(RDD::BufferID p_indirect_buffer
 void MDCommandBuffer::render_end_pass() {
 	DEV_ASSERT(type == MDCommandBufferStateType::Render);
 
-	[render.encoder endEncoding];
+	render.end_encoding();
 	render.reset();
 	type = MDCommandBufferStateType::None;
+}
+
+#pragma mark - RenderState
+
+void MDCommandBuffer::RenderState::reset() {
+	pass = nil;
+	frameBuffer = nil;
+	pipeline = nil;
+	current_subpass = UINT32_MAX;
+	render_area = {};
+	is_rendering_entire_area = false;
+	desc = nil;
+	encoder = nil;
+	index_buffer = nil;
+	index_type = MTLIndexTypeUInt16;
+	dirty = DIRTY_NONE;
+	uniform_sets.clear();
+	uniform_set_mask = 0;
+	clear_values.clear();
+	viewports.clear();
+	scissors.clear();
+	blend_constants.reset();
+	vertex_buffers.clear();
+	vertex_offsets.clear();
+	// Keep the keys, as they are likely to be used again.
+	for (KeyValue<StageResourceUsage, LocalVector<__unsafe_unretained id<MTLResource>>> &kv : resource_usage) {
+		kv.value.clear();
+	}
+}
+
+void MDCommandBuffer::RenderState::end_encoding() {
+	if (encoder == nil) {
+		return;
+	}
+
+	// Bind all resources.
+	for (KeyValue<StageResourceUsage, ResourceVector> const &keyval : resource_usage) {
+		if (keyval.value.is_empty()) {
+			continue;
+		}
+
+		MTLResourceUsage vert_usage = resource_usage_for_stage(keyval.key, RDD::ShaderStage::SHADER_STAGE_VERTEX);
+		MTLResourceUsage frag_usage = resource_usage_for_stage(keyval.key, RDD::ShaderStage::SHADER_STAGE_FRAGMENT);
+		if (vert_usage == frag_usage) {
+			[encoder useResources:keyval.value.ptr() count:keyval.value.size() usage:vert_usage stages:MTLRenderStageVertex | MTLRenderStageFragment];
+		} else {
+			if (vert_usage != 0) {
+				[encoder useResources:keyval.value.ptr() count:keyval.value.size() usage:vert_usage stages:MTLRenderStageVertex];
+			}
+			if (frag_usage != 0) {
+				[encoder useResources:keyval.value.ptr() count:keyval.value.size() usage:frag_usage stages:MTLRenderStageFragment];
+			}
+		}
+	}
+
+	[encoder endEncoding];
+	encoder = nil;
+}
+
+#pragma mark - ComputeState
+
+void MDCommandBuffer::ComputeState::end_encoding() {
+	if (encoder == nil) {
+		return;
+	}
+
+	// Bind all resources.
+	for (KeyValue<StageResourceUsage, ResourceVector> const &keyval : resource_usage) {
+		if (keyval.value.is_empty()) {
+			continue;
+		}
+		MTLResourceUsage usage = resource_usage_for_stage(keyval.key, RDD::ShaderStage::SHADER_STAGE_COMPUTE);
+		if (usage != 0) {
+			[encoder useResources:keyval.value.ptr() count:keyval.value.size() usage:usage];
+		}
+	}
+
+	[encoder endEncoding];
+	encoder = nil;
 }
 
 #pragma mark - Compute
@@ -809,13 +952,7 @@ void MDCommandBuffer::compute_bind_uniform_set(RDD::UniformSetID p_uniform_set, 
 
 	MDUniformSet *set = (MDUniformSet *)(p_uniform_set.id);
 	BoundUniformSet &bus = set->boundUniformSetForShader(shader, device);
-
-	for (KeyValue<id<MTLResource>, StageResourceUsage> &keyval : bus.bound_resources) {
-		MTLResourceUsage usage = resource_usage_for_stage(keyval.value, RDD::ShaderStage::SHADER_STAGE_COMPUTE);
-		if (usage != 0) {
-			[enc useResource:keyval.key usage:usage];
-		}
-	}
+	bus.merge_into(compute.resource_usage);
 
 	uint32_t const *offset = set_info.offsets.getptr(RDD::SHADER_STAGE_COMPUTE);
 	if (offset) {
@@ -844,7 +981,7 @@ void MDCommandBuffer::compute_dispatch_indirect(RDD::BufferID p_indirect_buffer,
 void MDCommandBuffer::_end_compute_dispatch() {
 	DEV_ASSERT(type == MDCommandBufferStateType::Compute);
 
-	[compute.encoder endEncoding];
+	compute.end_encoding();
 	compute.reset();
 	type = MDCommandBufferStateType::None;
 }
@@ -875,8 +1012,11 @@ void MDComputeShader::encode_push_constant_data(VectorView<uint32_t> p_data, MDC
 	[enc setBytes:ptr length:length atIndex:push_constants.binding];
 }
 
-MDRenderShader::MDRenderShader(CharString p_name, Vector<UniformSet> p_sets, MDLibrary *_Nonnull p_vert, MDLibrary *_Nonnull p_frag) :
-		MDShader(p_name, p_sets), vert(p_vert), frag(p_frag) {
+MDRenderShader::MDRenderShader(CharString p_name,
+		bool p_needs_view_mask_buffer,
+		Vector<UniformSet> p_sets,
+		MDLibrary *_Nonnull p_vert, MDLibrary *_Nonnull p_frag) :
+		MDShader(p_name, p_sets), needs_view_mask_buffer(p_needs_view_mask_buffer), vert(p_vert), frag(p_frag) {
 }
 
 void MDRenderShader::encode_push_constant_data(VectorView<uint32_t> p_data, MDCommandBuffer *p_cb) {
@@ -1048,7 +1188,20 @@ BoundUniformSet &MDUniformSet::boundUniformSetForShader(MDShader *p_shader, id<M
 		}
 	}
 
-	BoundUniformSet bs = { .buffer = enc_buffer, .bound_resources = bound_resources };
+	SearchArray<__unsafe_unretained id<MTLResource>> search;
+	ResourceUsageMap usage_to_resources;
+	for (KeyValue<id<MTLResource>, StageResourceUsage> const &keyval : bound_resources) {
+		ResourceVector *resources = usage_to_resources.getptr(keyval.value);
+		if (resources == nullptr) {
+			resources = &usage_to_resources.insert(keyval.value, ResourceVector())->value;
+		}
+		int64_t pos = search.bisect(resources->ptr(), resources->size(), keyval.key, true);
+		if (pos == resources->size() || (*resources)[pos] != keyval.key) {
+			resources->insert(pos, keyval.key);
+		}
+	}
+
+	BoundUniformSet bs = { .buffer = enc_buffer, .usage_to_resources = usage_to_resources };
 	bound_uniforms.insert(p_shader, bs);
 	return bound_uniforms.get(p_shader);
 }
@@ -1198,7 +1351,7 @@ typedef struct {
 
 typedef struct {
     float4 v_position [[position]];
-    uint layer;
+    uint layer%s;
 } VaryingsPos;
 
 vertex VaryingsPos vertClear(AttributesPos attributes [[stage_in]], constant ClearColorsIn& ccIn [[buffer(0)]]) {
@@ -1207,8 +1360,7 @@ vertex VaryingsPos vertClear(AttributesPos attributes [[stage_in]], constant Cle
     varyings.layer = uint(attributes.a_position.w);
     return varyings;
 }
-)",
-								  ClearAttKey::DEPTH_INDEX];
+)", p_key.is_layered_rendering_enabled() ? " [[render_target_array_index]]" : "", ClearAttKey::DEPTH_INDEX];
 
 		return new_func(msl, @"vertClear", nil);
 	}
@@ -1498,7 +1650,7 @@ void ShaderCacheEntry::notify_free() const {
 				   self->_library = library;
 				   self->_error = error;
 				   if (error) {
-					   ERR_PRINT(String(U"Error compiling shader %s: %s").format(entry->name.get_data(), error.localizedDescription.UTF8String));
+					   ERR_PRINT(vformat(U"Error compiling shader %s: %s", entry->name.get_data(), error.localizedDescription.UTF8String));
 				   }
 
 				   {

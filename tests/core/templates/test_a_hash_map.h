@@ -217,9 +217,12 @@ TEST_CASE("[AHashMap] Insert, iterate and remove many elements") {
 TEST_CASE("[AHashMap] Insert, iterate and remove many strings") {
 	const int elem_max = 432;
 	AHashMap<String, String> map;
+
+	ERR_PRINT_OFF;
 	for (int i = 0; i < elem_max; i++) {
 		map.insert(itos(i), itos(i));
 	}
+	ERR_PRINT_ON;
 
 	//insert order should have been kept
 	int idx = 0;

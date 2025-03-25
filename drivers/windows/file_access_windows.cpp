@@ -52,10 +52,18 @@
 #define S_ISREG(m) ((m) & _S_IFREG)
 #endif
 
-void FileAccessWindows::check_errors() const {
+void FileAccessWindows::check_errors(bool p_write) const {
 	ERR_FAIL_NULL(f);
 
-	if (feof(f)) {
+	last_error = OK;
+	if (ferror(f)) {
+		if (p_write) {
+			last_error = ERR_FILE_CANT_WRITE;
+		} else {
+			last_error = ERR_FILE_CANT_READ;
+		}
+	}
+	if (!p_write && feof(f)) {
 		last_error = ERR_FILE_EOF;
 	}
 }
@@ -64,7 +72,7 @@ bool FileAccessWindows::is_path_invalid(const String &p_path) {
 	// Check for invalid operating system file.
 	String fname = p_path.get_file().to_lower();
 
-	int dot = fname.find(".");
+	int dot = fname.find_char('.');
 	if (dot != -1) {
 		fname = fname.substr(0, dot);
 	}
@@ -118,15 +126,16 @@ Error FileAccessWindows::open_internal(const String &p_path, int p_mode_flags) {
 		return ERR_INVALID_PARAMETER;
 	}
 
-	struct _stat st;
-	if (_wstat((LPCWSTR)(path.utf16().get_data()), &st) == 0) {
-		if (!S_ISREG(st.st_mode)) {
-			return ERR_FILE_CANT_OPEN;
-		}
+	if (path.ends_with(":\\") || path.ends_with(":")) {
+		return ERR_FILE_CANT_OPEN;
+	}
+	DWORD file_attr = GetFileAttributesW((LPCWSTR)(path.utf16().get_data()));
+	if (file_attr != INVALID_FILE_ATTRIBUTES && (file_attr & FILE_ATTRIBUTE_DIRECTORY)) {
+		return ERR_FILE_CANT_OPEN;
 	}
 
 #ifdef TOOLS_ENABLED
-	// Windows is case insensitive, but all other platforms are sensitive to it
+	// Windows is case insensitive in the default configuration, but other platforms can be sensitive to it
 	// To ease cross-platform development, we issue a warning if users try to access
 	// a file using the wrong case (which *works* on Windows, but won't on other
 	// platforms), we only check for relative paths, or paths in res:// or user://,
@@ -192,7 +201,7 @@ Error FileAccessWindows::open_internal(const String &p_path, int p_mode_flags) {
 		uint64_t id = OS::get_singleton()->get_ticks_usec();
 		while (true) {
 			tmpfile = path + itos(id++) + ".tmp";
-			HANDLE handle = CreateFileW((LPCWSTR)tmpfile.utf16().get_data(), GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0);
+			HANDLE handle = CreateFileW((LPCWSTR)tmpfile.utf16().get_data(), GENERIC_WRITE, 0, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
 			if (handle != INVALID_HANDLE_VALUE) {
 				CloseHandle(handle);
 				break;
@@ -283,7 +292,6 @@ bool FileAccessWindows::is_open() const {
 void FileAccessWindows::seek(uint64_t p_position) {
 	ERR_FAIL_NULL(f);
 
-	last_error = OK;
 	if (_fseeki64(f, p_position, SEEK_SET)) {
 		check_errors();
 	}
@@ -319,8 +327,7 @@ uint64_t FileAccessWindows::get_length() const {
 }
 
 bool FileAccessWindows::eof_reached() const {
-	check_errors();
-	return last_error == ERR_FILE_EOF;
+	return feof(f);
 }
 
 uint64_t FileAccessWindows::get_buffer(uint8_t *p_dst, uint64_t p_length) const {
@@ -384,7 +391,9 @@ void FileAccessWindows::store_buffer(const uint8_t *p_src, uint64_t p_length) {
 		prev_op = WRITE;
 	}
 
-	ERR_FAIL_COND(fwrite(p_src, 1, p_length, f) != (size_t)p_length);
+	size_t res = fwrite(p_src, 1, p_length, f);
+	check_errors(true);
+	ERR_FAIL_COND(res != (size_t)p_length);
 }
 
 bool FileAccessWindows::file_exists(const String &p_name) {
@@ -393,13 +402,8 @@ bool FileAccessWindows::file_exists(const String &p_name) {
 	}
 
 	String filename = fix_path(p_name);
-	FILE *g = _wfsopen((LPCWSTR)(filename.utf16().get_data()), L"rb", _SH_DENYNO);
-	if (g == nullptr) {
-		return false;
-	} else {
-		fclose(g);
-		return true;
-	}
+	DWORD file_attr = GetFileAttributesW((LPCWSTR)(filename.utf16().get_data()));
+	return (file_attr != INVALID_FILE_ATTRIBUTES) && !(file_attr & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 uint64_t FileAccessWindows::_get_modified_time(const String &p_file) {
@@ -524,6 +528,9 @@ void FileAccessWindows::initialize() {
 		invalid_files.insert(reserved_files[reserved_file_index]);
 		reserved_file_index++;
 	}
+
+	_setmaxstdio(8192);
+	print_verbose(vformat("Maximum number of file handles: %d", _getmaxstdio()));
 }
 
 void FileAccessWindows::finalize() {

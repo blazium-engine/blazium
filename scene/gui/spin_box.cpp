@@ -44,7 +44,11 @@ Size2 SpinBox::get_minimum_size() const {
 }
 
 void SpinBox::_update_text(bool p_keep_line_edit) {
-	String value = String::num(get_value(), Math::range_step_decimals(get_step()));
+	double step = get_step();
+	if (use_custom_arrow_step && custom_arrow_step != 0.0) {
+		step = custom_arrow_step;
+	}
+	String value = String::num(get_value(), Math::range_step_decimals(step));
 	if (is_localizing_numeral_system()) {
 		value = TS->format_number(value);
 	}
@@ -67,6 +71,10 @@ void SpinBox::_update_text(bool p_keep_line_edit) {
 }
 
 void SpinBox::_text_submitted(const String &p_string) {
+	if (p_string.is_empty()) {
+		return;
+	}
+
 	Ref<Expression> expr;
 	expr.instantiate();
 
@@ -78,6 +86,9 @@ void SpinBox::_text_submitted(const String &p_string) {
 	text = text.trim_prefix(prefix + " ").trim_suffix(" " + suffix);
 
 	Error err = expr->parse(text);
+
+	use_custom_arrow_step = false;
+
 	if (err != OK) {
 		// If the expression failed try without converting commas to dots - they might have been for parameter separation.
 		text = p_string;
@@ -117,8 +128,13 @@ void SpinBox::_line_edit_input(const Ref<InputEvent> &p_event) {
 void SpinBox::_range_click_timeout() {
 	if (!drag.enabled && Input::get_singleton()->is_mouse_button_pressed(MouseButton::LEFT)) {
 		bool up = get_local_mouse_position().y < (get_size().height / 2);
-		double step = get_custom_arrow_step() != 0.0 ? get_custom_arrow_step() : get_step();
-		set_value(get_value() + (up ? step : -step));
+		double step = get_step();
+		// Arrow button is being pressed, so we also need to set the step to the same value as custom_arrow_step if its not 0.
+		double temp_step = get_custom_arrow_step() != 0.0 ? get_custom_arrow_step() : get_step();
+		_set_step_no_signal(temp_step);
+		set_value(get_value() + (up ? temp_step : -temp_step));
+		_set_step_no_signal(step);
+		use_custom_arrow_step = true;
 
 		if (range_click_timer->is_one_shot()) {
 			range_click_timer->set_wait_time(0.075);
@@ -159,8 +175,7 @@ void SpinBox::gui_input(const Ref<InputEvent> &p_event) {
 	Ref<InputEventMouseButton> mb = p_event;
 	Ref<InputEventMouseMotion> mm = p_event;
 
-	double step = get_custom_arrow_step() != 0.0 ? get_custom_arrow_step() : get_step();
-
+	double step = get_step();
 	Vector2 mpos;
 	bool mouse_on_up_button = false;
 	bool mouse_on_down_button = false;
@@ -180,7 +195,12 @@ void SpinBox::gui_input(const Ref<InputEvent> &p_event) {
 				line_edit->grab_focus();
 
 				if (mouse_on_up_button || mouse_on_down_button) {
-					set_value(get_value() + (mouse_on_up_button ? step : -step));
+					// Arrow button is being pressed, so step is being changed temporarily.
+					double temp_step = get_custom_arrow_step() != 0.0 ? get_custom_arrow_step() : get_step();
+					_set_step_no_signal(temp_step);
+					set_value(get_value() + (mouse_on_up_button ? temp_step : -temp_step));
+					_set_step_no_signal(step);
+					use_custom_arrow_step = true;
 				}
 				state_cache.up_button_pressed = mouse_on_up_button;
 				state_cache.down_button_pressed = mouse_on_down_button;
@@ -196,17 +216,20 @@ void SpinBox::gui_input(const Ref<InputEvent> &p_event) {
 			case MouseButton::RIGHT: {
 				line_edit->grab_focus();
 				if (mouse_on_up_button || mouse_on_down_button) {
+					use_custom_arrow_step = false;
 					set_value(mouse_on_up_button ? get_max() : get_min());
 				}
 			} break;
 			case MouseButton::WHEEL_UP: {
 				if (line_edit->is_editing()) {
+					use_custom_arrow_step = false;
 					set_value(get_value() + step * mb->get_factor());
 					accept_event();
 				}
 			} break;
 			case MouseButton::WHEEL_DOWN: {
 				if (line_edit->is_editing()) {
+					use_custom_arrow_step = false;
 					set_value(get_value() - step * mb->get_factor());
 					accept_event();
 				}
@@ -246,6 +269,7 @@ void SpinBox::gui_input(const Ref<InputEvent> &p_event) {
 		if (drag.enabled) {
 			drag.diff_y += mm->get_relative().y;
 			double diff_y = -0.01 * Math::pow(ABS(drag.diff_y), 1.8) * SIGN(drag.diff_y);
+			use_custom_arrow_step = false;
 			set_value(CLAMP(drag.base_val + step * diff_y, get_min(), get_max()));
 		} else if (drag.allowed && drag.capture_pos.distance_to(mm->get_position()) > 2) {
 			Input::get_singleton()->set_mouse_mode(Input::MOUSE_MODE_CAPTURED);
@@ -267,8 +291,8 @@ void SpinBox::_line_edit_editing_toggled(bool p_toggled_on) {
 			line_edit->select_all();
 		}
 	} else {
-		// Discontinue because the focus_exit was caused by canceling.
-		if (Input::get_singleton()->is_action_pressed("ui_cancel")) {
+		// Discontinue because the focus_exit was caused by canceling or the text is empty.
+		if (Input::get_singleton()->is_action_pressed("ui_cancel") || line_edit->get_text().is_empty()) {
 			_update_text();
 			return;
 		}
@@ -282,7 +306,12 @@ inline void SpinBox::_compute_sizes() {
 	int buttons_block_wanted_width = theme_cache.buttons_width + theme_cache.field_and_buttons_separation;
 	int buttons_block_icon_enforced_width = _get_widest_button_icon_width() + theme_cache.field_and_buttons_separation;
 
-	int w = theme_cache.set_min_buttons_width_from_icons != 0 ? MAX(buttons_block_icon_enforced_width, buttons_block_wanted_width) : buttons_block_wanted_width;
+#ifndef DISABLE_DEPRECATED
+	const bool min_width_from_icons = theme_cache.set_min_buttons_width_from_icons || (theme_cache.buttons_width < 0);
+#else
+	const bool min_width_from_icons = theme_cache.buttons_width < 0;
+#endif
+	int w = min_width_from_icons != 0 ? MAX(buttons_block_icon_enforced_width, buttons_block_wanted_width) : buttons_block_wanted_width;
 
 	if (w != sizing_cache.buttons_block_width) {
 		line_edit->set_offset(SIDE_LEFT, 0);
@@ -517,6 +546,18 @@ void SpinBox::_update_buttons_state_for_current_value() {
 	}
 }
 
+void SpinBox::_set_step_no_signal(double p_step) {
+	set_block_signals(true);
+	set_step(p_step);
+	set_block_signals(false);
+}
+
+void SpinBox::_validate_property(PropertyInfo &p_property) const {
+	if (p_property.name == "exp_edit") {
+		p_property.usage = PROPERTY_USAGE_NONE;
+	}
+}
+
 void SpinBox::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_horizontal_alignment", "alignment"), &SpinBox::set_horizontal_alignment);
 	ClassDB::bind_method(D_METHOD("get_horizontal_alignment"), &SpinBox::get_horizontal_alignment);
@@ -546,7 +587,9 @@ void SpinBox::_bind_methods() {
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, SpinBox, buttons_vertical_separation);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, SpinBox, field_and_buttons_separation);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, SpinBox, buttons_width);
+#ifndef DISABLE_DEPRECATED
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, SpinBox, set_min_buttons_width_from_icons);
+#endif
 
 	BIND_THEME_ITEM_CUSTOM(Theme::DATA_TYPE_ICON, SpinBox, updown_icon, "updown");
 	BIND_THEME_ITEM_CUSTOM(Theme::DATA_TYPE_ICON, SpinBox, up_icon, "up");
@@ -589,7 +632,7 @@ SpinBox::SpinBox() {
 	line_edit->set_mouse_filter(MOUSE_FILTER_PASS);
 	line_edit->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_LEFT);
 
-	line_edit->connect("text_submitted", callable_mp(this, &SpinBox::_text_submitted), CONNECT_DEFERRED);
+	line_edit->connect(SceneStringName(text_submitted), callable_mp(this, &SpinBox::_text_submitted), CONNECT_DEFERRED);
 	line_edit->connect("editing_toggled", callable_mp(this, &SpinBox::_line_edit_editing_toggled), CONNECT_DEFERRED);
 	line_edit->connect(SceneStringName(gui_input), callable_mp(this, &SpinBox::_line_edit_input));
 

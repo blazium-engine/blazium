@@ -32,6 +32,7 @@
 #define OS_WEB_H
 
 #include "audio_driver_web.h"
+#include "webmidi_driver.h"
 
 #include "godot_js.h"
 
@@ -45,6 +46,8 @@ class OS_Web : public OS_Unix {
 	MainLoop *main_loop = nullptr;
 	List<AudioDriverWeb *> audio_drivers;
 
+	MIDIDriverWebMidi midi_driver;
+
 	bool idb_is_syncing = false;
 	bool idb_available = false;
 	bool idb_needs_sync = false;
@@ -53,6 +56,7 @@ class OS_Web : public OS_Unix {
 	WASM_EXPORT static void main_loop_callback();
 
 	WASM_EXPORT static void file_access_close_callback(const String &p_file, int p_flags);
+	WASM_EXPORT static void dir_access_remove_callback(const String &p_file);
 	WASM_EXPORT static void fs_sync_callback();
 	WASM_EXPORT static void update_pwa_state_callback();
 

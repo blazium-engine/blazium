@@ -120,9 +120,9 @@ struct VersatileResourceTemplate {
 class RenderingDeviceDriver : public RenderingDeviceCommons {
 public:
 	struct ID {
-		size_t id = 0;
+		uint64_t id = 0;
 		_ALWAYS_INLINE_ ID() = default;
-		_ALWAYS_INLINE_ ID(size_t p_id) :
+		_ALWAYS_INLINE_ ID(uint64_t p_id) :
 				id(p_id) {}
 	};
 
@@ -138,11 +138,9 @@ public:
 		_ALWAYS_INLINE_ bool operator!=(const m_name##ID &p_other) const { return id != p_other.id; } \
 		_ALWAYS_INLINE_ m_name##ID(const m_name##ID &p_other) : ID(p_other.id) {}                     \
 		_ALWAYS_INLINE_ explicit m_name##ID(uint64_t p_int) : ID(p_int) {}                            \
-		_ALWAYS_INLINE_ explicit m_name##ID(void *p_ptr) : ID((size_t)p_ptr) {}                       \
+		_ALWAYS_INLINE_ explicit m_name##ID(void *p_ptr) : ID((uint64_t)p_ptr) {}                     \
 		_ALWAYS_INLINE_ m_name##ID() = default;                                                       \
-	};                                                                                                \
-	/* Ensure type-punnable to pointer. Makes some things easier.*/                                   \
-	static_assert(sizeof(m_name##ID) == sizeof(void *));
+	};
 
 	// Id types declared before anything else to prevent cyclic dependencies between the different concerns.
 	DEFINE_ID(Buffer);
@@ -453,8 +451,15 @@ public:
 	// Retrieve the render pass that can be used to draw on the swap chain's framebuffers.
 	virtual RenderPassID swap_chain_get_render_pass(SwapChainID p_swap_chain) = 0;
 
+	// Retrieve the rotation in degrees to apply as a pre-transform. Usually 0 on PC. May be 0, 90, 180 & 270 on Android.
+	virtual int swap_chain_get_pre_rotation_degrees(SwapChainID p_swap_chain) { return 0; }
+
 	// Retrieve the format used by the swap chain's framebuffers.
 	virtual DataFormat swap_chain_get_format(SwapChainID p_swap_chain) = 0;
+
+	// Tells the swapchain the max_fps so it can use the proper frame pacing.
+	// Android uses this with Swappy library. Some implementations or platforms may ignore this hint.
+	virtual void swap_chain_set_max_fps(SwapChainID p_swap_chain, int p_max_fps) {}
 
 	// Wait until all rendering associated to the swap chain is finished before deleting it.
 	virtual void swap_chain_free(SwapChainID p_swap_chain) = 0;
@@ -744,6 +749,7 @@ public:
 		API_TRAIT_TEXTURE_DATA_ROW_PITCH_STEP,
 		API_TRAIT_SECONDARY_VIEWPORT_SCISSOR,
 		API_TRAIT_CLEARS_WITH_COPY_ENGINE,
+		API_TRAIT_BUFFERS_REQUIRE_TRANSITIONS,
 	};
 
 	enum ShaderChangeInvalidation {

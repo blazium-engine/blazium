@@ -1,15 +1,17 @@
 name: Upload Blazium artifact
 description: Upload the Blazium artifact.
+
 inputs:
   name:
     description: The artifact name.
-    default: "${{ github.job }}"
+    default: ${{ github.job }}
   path:
     description: The path to upload.
     required: true
-    default: "bin/*"
+    default: bin/*
+
 runs:
-  using: "composite"
+  using: composite
   steps:
     - name: Upload Blazium Artifact
       uses: actions/upload-artifact@v4

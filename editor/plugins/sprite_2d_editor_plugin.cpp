@@ -145,7 +145,7 @@ void Sprite2DEditor::_menu_option(int p_option) {
 
 void Sprite2DEditor::_popup_debug_uv_dialog() {
 	String error_message;
-	if (node->get_owner() != get_tree()->get_edited_scene_root()) {
+	if (node->get_owner() != get_tree()->get_edited_scene_root() && node != get_tree()->get_edited_scene_root()) {
 		error_message = TTR("Can't convert a sprite from a foreign scene.");
 	}
 	Ref<Texture2D> texture = node->get_texture();
@@ -566,7 +566,7 @@ void Sprite2DEditor::_notification(int p_what) {
 		} break;
 		case NOTIFICATION_ENTER_TREE:
 		case NOTIFICATION_THEME_CHANGED: {
-			options->set_icon(get_editor_theme_icon(SNAME("Sprite2D")));
+			options->set_button_icon(get_editor_theme_icon(SNAME("Sprite2D")));
 
 			options->get_popup()->set_item_icon(MENU_OPTION_CONVERT_TO_MESH_2D, get_editor_theme_icon(SNAME("MeshInstance2D")));
 			options->get_popup()->set_item_icon(MENU_OPTION_CONVERT_TO_POLYGON_2D, get_editor_theme_icon(SNAME("Polygon2D")));
@@ -599,12 +599,12 @@ Sprite2DEditor::Sprite2DEditor() {
 	add_child(err_dialog);
 
 	debug_uv_dialog = memnew(ConfirmationDialog);
+	debug_uv_dialog->set_size(Size2(960, 540) * EDSCALE);
 	VBoxContainer *vb = memnew(VBoxContainer);
 	debug_uv_dialog->add_child(vb);
 	debug_uv = memnew(Panel);
 	debug_uv->connect(SceneStringName(gui_input), callable_mp(this, &Sprite2DEditor::_debug_uv_input));
 	debug_uv->connect(SceneStringName(draw), callable_mp(this, &Sprite2DEditor::_debug_uv_draw));
-	debug_uv->set_custom_minimum_size(Size2(800, 500) * EDSCALE);
 	debug_uv->set_clip_contents(true);
 	vb->add_margin_child(TTR("Preview:"), debug_uv, true);
 

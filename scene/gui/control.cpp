@@ -29,14 +29,13 @@
 /**************************************************************************/
 
 #include "control.h"
-#include "control.compat.inc"
 
 #include "container.h"
 #include "core/config/project_settings.h"
-#include "core/math/geometry_2d.h"
 #include "core/os/os.h"
-#include "core/string/print_string.h"
 #include "core/string/translation_server.h"
+#include "scene/gui/scroll_container.h"
+#include "scene/main/canvas_layer.h"
 #include "scene/main/window.h"
 #include "scene/theme/theme_db.h"
 #include "scene/theme/theme_owner.h"
@@ -45,7 +44,7 @@
 
 #ifdef TOOLS_ENABLED
 #include "editor/plugins/control_editor_plugin.h"
-#endif
+#endif // TOOLS_ENABLED
 
 // Editor plugin interoperability.
 
@@ -121,11 +120,11 @@ void Control::_edit_set_state(const Dictionary &p_state) {
 void Control::_edit_set_position(const Point2 &p_position) {
 	ERR_FAIL_COND_MSG(!Engine::get_singleton()->is_editor_hint(), "This function can only be used from editor plugins.");
 	set_position(p_position, ControlEditorToolbar::get_singleton()->is_anchors_mode_enabled() && get_parent_control());
-};
+}
 
 Point2 Control::_edit_get_position() const {
 	return get_position();
-};
+}
 
 void Control::_edit_set_scale(const Size2 &p_scale) {
 	set_scale(p_scale);
@@ -139,14 +138,6 @@ void Control::_edit_set_rect(const Rect2 &p_edit_rect) {
 	ERR_FAIL_COND_MSG(!Engine::get_singleton()->is_editor_hint(), "This function can only be used from editor plugins.");
 	set_position((get_position() + get_transform().basis_xform(p_edit_rect.position)).snappedf(1), ControlEditorToolbar::get_singleton()->is_anchors_mode_enabled());
 	set_size(p_edit_rect.size.snappedf(1), ControlEditorToolbar::get_singleton()->is_anchors_mode_enabled());
-}
-
-Rect2 Control::_edit_get_rect() const {
-	return Rect2(Point2(), get_size());
-}
-
-bool Control::_edit_use_rect() const {
-	return true;
 }
 
 void Control::_edit_set_rotation(real_t p_rotation) {
@@ -179,7 +170,17 @@ bool Control::_edit_use_pivot() const {
 Size2 Control::_edit_get_minimum_size() const {
 	return get_combined_minimum_size();
 }
-#endif
+#endif // TOOLS_ENABLED
+
+#ifdef DEBUG_ENABLED
+Rect2 Control::_edit_get_rect() const {
+	return Rect2(Point2(), get_size());
+}
+
+bool Control::_edit_use_rect() const {
+	return true;
+}
+#endif // DEBUG_ENABLED
 
 void Control::reparent(Node *p_parent, bool p_keep_global_transform) {
 	ERR_MAIN_THREAD_GUARD;
@@ -240,7 +241,7 @@ void Control::get_argument_options(const StringName &p_function, int p_idx, List
 	}
 	CanvasItem::get_argument_options(p_function, p_idx, r_options);
 }
-#endif
+#endif // TOOLS_ENABLED
 
 PackedStringArray Control::get_configuration_warnings() const {
 	ERR_READ_THREAD_GUARD_V(PackedStringArray());
@@ -664,7 +665,7 @@ Rect2 Control::get_parent_anchorable_rect() const {
 
 #else
 		parent_rect = get_viewport()->get_visible_rect();
-#endif
+#endif // TOOLS_ENABLED
 	}
 
 	return parent_rect;
@@ -1397,7 +1398,7 @@ void Control::set_position(const Point2 &p_point, bool p_keep_offsets) {
 		data.pos_cache = p_point;
 		return;
 	}
-#endif
+#endif // TOOLS_ENABLED
 
 	if (p_keep_offsets) {
 		_compute_anchors(Rect2(p_point, data.size_cache), data.offset, data.anchor);
@@ -1441,7 +1442,7 @@ void Control::_set_size(const Size2 &p_size) {
 	if (data.size_warning && (data.anchor[SIDE_LEFT] != data.anchor[SIDE_RIGHT] || data.anchor[SIDE_TOP] != data.anchor[SIDE_BOTTOM])) {
 		WARN_PRINT("Nodes with non-equal opposite anchors will have their size overridden after _ready(). \nIf you want to set size, change the anchors or consider using set_deferred().");
 	}
-#endif
+#endif // DEBUG_ENABLED
 	set_size(p_size);
 }
 
@@ -1463,7 +1464,7 @@ void Control::set_size(const Size2 &p_size, bool p_keep_offsets) {
 		data.size_cache = new_size;
 		return;
 	}
-#endif
+#endif // TOOLS_ENABLED
 
 	if (p_keep_offsets) {
 		_compute_anchors(Rect2(data.pos_cache, new_size), data.offset, data.anchor);
@@ -1671,7 +1672,7 @@ Size2 Control::get_custom_minimum_size() const {
 	return data.custom_minimum_size;
 }
 
-void Control::_update_minimum_size_cache() {
+void Control::_update_minimum_size_cache() const {
 	Size2 minsize = get_minimum_size();
 	minsize = minsize.max(data.custom_minimum_size);
 
@@ -1682,7 +1683,7 @@ void Control::_update_minimum_size_cache() {
 Size2 Control::get_combined_minimum_size() const {
 	ERR_READ_THREAD_GUARD_V(Size2());
 	if (!data.minimum_size_valid) {
-		const_cast<Control *>(this)->_update_minimum_size_cache();
+		_update_minimum_size_cache();
 	}
 	return data.minimum_size_cache;
 }
@@ -2280,17 +2281,8 @@ Control *Control::_get_focus_neighbor(Side p_side, int p_count) {
 		return c;
 	}
 
-	real_t dist = 1e7;
+	real_t square_of_dist = 1e14;
 	Control *result = nullptr;
-
-	Point2 points[4];
-
-	Transform2D xform = get_global_transform();
-
-	points[0] = xform.xform(Point2());
-	points[1] = xform.xform(Point2(get_size().x, 0));
-	points[2] = xform.xform(get_size());
-	points[3] = xform.xform(Point2(0, get_size().y));
 
 	const Vector2 dir[4] = {
 		Vector2(-1, 0),
@@ -2301,18 +2293,73 @@ Control *Control::_get_focus_neighbor(Side p_side, int p_count) {
 
 	Vector2 vdir = dir[p_side];
 
-	real_t maxd = -1e7;
+	Rect2 r = get_global_rect();
+	real_t begin_d = vdir.dot(r.get_position());
+	real_t end_d = vdir.dot(r.get_end());
+	real_t maxd = MAX(begin_d, end_d);
 
-	for (int i = 0; i < 4; i++) {
-		real_t d = vdir.dot(points[i]);
-		if (d > maxd) {
-			maxd = d;
-		}
-	}
+	Rect2 clamp = Rect2(-1e7, -1e7, 2e7, 2e7);
+	Rect2 result_rect;
 
 	Node *base = this;
 
 	while (base) {
+		ScrollContainer *sc = Object::cast_to<ScrollContainer>(base);
+
+		if (sc) {
+			Rect2 sc_r = sc->get_global_rect();
+			bool follow_focus = sc->is_following_focus();
+
+			if (result && !follow_focus && !sc_r.intersects(result_rect)) {
+				result = nullptr; // Skip invisible control.
+			}
+
+			if (result == nullptr) {
+				real_t sc_begin_d = vdir.dot(sc_r.get_position());
+				real_t sc_end_d = vdir.dot(sc_r.get_end());
+				real_t sc_maxd = sc_begin_d;
+				real_t sc_mind = sc_end_d;
+				if (sc_begin_d < sc_end_d) {
+					sc_maxd = sc_end_d;
+					sc_mind = sc_begin_d;
+				}
+
+				if (!follow_focus && maxd < sc_mind) {
+					// Reposition to find visible control.
+					maxd = sc_mind;
+					r.set_position(r.get_position() + (sc_mind - maxd) * vdir);
+				}
+
+				if (follow_focus || sc_maxd > maxd) {
+					_window_find_focus_neighbor(vdir, base, r, clamp, maxd, square_of_dist, &result);
+				}
+
+				if (result == nullptr) {
+					// Reposition to search upwards.
+					maxd = sc_maxd;
+					r.set_position(r.get_position() + (sc_maxd - maxd) * vdir);
+				} else {
+					result_rect = result->get_global_rect();
+					if (follow_focus) {
+						real_t r_begin_d = vdir.dot(result_rect.get_position());
+						real_t r_end_d = vdir.dot(result_rect.get_end());
+						real_t r_maxd = r_begin_d;
+						real_t r_mind = r_end_d;
+						if (r_begin_d < r_end_d) {
+							r_maxd = r_end_d;
+							r_mind = r_begin_d;
+						}
+
+						if (r_maxd > sc_maxd) {
+							result_rect.set_position(result_rect.get_position() + (sc_maxd - r_maxd) * vdir);
+						} else if (r_mind < sc_mind) {
+							result_rect.set_position(result_rect.get_position() + (sc_mind - r_mind) * vdir);
+						}
+					}
+				}
+			}
+		}
+
 		Control *c = Object::cast_to<Control>(base);
 		if (c) {
 			if (c->data.RI) {
@@ -2322,11 +2369,15 @@ Control *Control::_get_focus_neighbor(Side p_side, int p_count) {
 		base = base->get_parent();
 	}
 
+	if (result) {
+		return result;
+	}
+
 	if (!base) {
 		return nullptr;
 	}
 
-	_window_find_focus_neighbor(vdir, base, points, maxd, dist, &result);
+	_window_find_focus_neighbor(vdir, base, r, clamp, maxd, square_of_dist, &result);
 
 	return result;
 }
@@ -2335,49 +2386,79 @@ Control *Control::find_valid_focus_neighbor(Side p_side) const {
 	return const_cast<Control *>(this)->_get_focus_neighbor(p_side);
 }
 
-void Control::_window_find_focus_neighbor(const Vector2 &p_dir, Node *p_at, const Point2 *p_points, real_t p_min, real_t &r_closest_dist, Control **r_closest) {
+void Control::_window_find_focus_neighbor(const Vector2 &p_dir, Node *p_at, const Rect2 &p_rect, const Rect2 &p_clamp, real_t p_min, real_t &r_closest_dist_squared, Control **r_closest) {
 	if (Object::cast_to<Viewport>(p_at)) {
-		return; //bye
+		return; // Bye.
 	}
 
 	Control *c = Object::cast_to<Control>(p_at);
+	Container *container = Object::cast_to<Container>(p_at);
+	bool in_container = container ? container->is_ancestor_of(this) : false;
 
-	if (c && c != this && c->get_focus_mode() == FOCUS_ALL && c->is_visible_in_tree()) {
-		Point2 points[4];
+	if (c && c != this && c->get_focus_mode() == FOCUS_ALL && !in_container && p_clamp.intersects(c->get_global_rect())) {
+		Rect2 r_c = c->get_global_rect();
+		r_c = r_c.intersection(p_clamp);
+		real_t begin_d = p_dir.dot(r_c.get_position());
+		real_t end_d = p_dir.dot(r_c.get_end());
+		real_t max = MAX(begin_d, end_d);
 
-		Transform2D xform = c->get_global_transform();
+		// Use max to allow navigation to overlapping controls (for ScrollContainer case).
+		if (max > (p_min + CMP_EPSILON)) {
+			// Calculate the shortest distance. (No shear transform)
+			// Flip along axis(es) so that C falls in the first quadrant of c (as origin) for easy calculation.
+			// The same transformation would put the direction vector in the positive direction (+x or +y).
+			//       |           -------------
+			//       |           |     |     |
+			//       |           |-----C-----|
+			//   ----|---a       |     |     |
+			//   |   |   |       b------------
+			//  -|---c---|----------------------->
+			//   |   |   |
+			//   ----|----
+			// cC = ca + ab + bC
+			// The shortest distance is the vector ab's length or its positive projection length.
 
-		points[0] = xform.xform(Point2());
-		points[1] = xform.xform(Point2(c->get_size().x, 0));
-		points[2] = xform.xform(c->get_size());
-		points[3] = xform.xform(Point2(0, c->get_size().y));
+			Vector2 cC_origin = r_c.get_center() - p_rect.get_center();
+			Vector2 cC = cC_origin.abs(); // Converted to fall in the first quadrant of c.
 
-		real_t min = 1e7;
+			Vector2 ab = cC - 0.5 * r_c.get_size() - 0.5 * p_rect.get_size();
 
-		for (int i = 0; i < 4; i++) {
-			real_t d = p_dir.dot(points[i]);
-			if (d < min) {
-				min = d;
+			real_t min_d_squared = 0.0;
+			if (ab.x > 0.0) {
+				min_d_squared += ab.x * ab.x;
+			}
+			if (ab.y > 0.0) {
+				min_d_squared += ab.y * ab.y;
+			}
+
+			if (min_d_squared < r_closest_dist_squared || *r_closest == nullptr) {
+				r_closest_dist_squared = min_d_squared;
+				*r_closest = c;
+			} else if (min_d_squared == r_closest_dist_squared) {
+				// Tie-breaking aims to address situations where a potential focus neighbor's bounding rect
+				// is right next to the currently focused control (e.g. in BoxContainer with
+				// separation overridden to 0). This needs specific handling so that the correct
+				// focus neighbor is selected.
+
+				Point2 p_center = p_rect.get_center();
+				Control *closest = *r_closest;
+				Point2 closest_center = closest->get_global_rect().get_center();
+
+				// Tie-break in favor of the control most aligned with p_dir.
+				if (Math::abs(p_dir.cross(cC_origin)) < Math::abs(p_dir.cross(closest_center - p_center))) {
+					*r_closest = c;
+				}
 			}
 		}
+	}
 
-		if (min > (p_min - CMP_EPSILON)) {
-			for (int i = 0; i < 4; i++) {
-				Vector2 la = p_points[i];
-				Vector2 lb = p_points[(i + 1) % 4];
-
-				for (int j = 0; j < 4; j++) {
-					Vector2 fa = points[j];
-					Vector2 fb = points[(j + 1) % 4];
-
-					Vector2 pa, pb;
-					real_t d = Geometry2D::get_closest_points_between_segments(la, lb, fa, fb, pa, pb);
-					//real_t d = Geometry2D::get_closest_distance_between_segments(Vector3(la.x,la.y,0),Vector3(lb.x,lb.y,0),Vector3(fa.x,fa.y,0),Vector3(fb.x,fb.y,0));
-					if (d < r_closest_dist) {
-						r_closest_dist = d;
-						*r_closest = c;
-					}
-				}
+	ScrollContainer *sc = Object::cast_to<ScrollContainer>(c);
+	Rect2 intersection = p_clamp;
+	if (sc) {
+		if (!sc->is_following_focus() || !in_container) {
+			intersection = p_clamp.intersection(sc->get_global_rect());
+			if (!intersection.has_area()) {
+				return;
 			}
 		}
 	}
@@ -2385,10 +2466,18 @@ void Control::_window_find_focus_neighbor(const Vector2 &p_dir, Node *p_at, cons
 	for (int i = 0; i < p_at->get_child_count(); i++) {
 		Node *child = p_at->get_child(i);
 		Control *childc = Object::cast_to<Control>(child);
-		if (childc && childc->data.RI) {
-			continue; //subwindow, ignore
+		if (childc) {
+			if (childc->data.RI) {
+				continue; // Subwindow, ignore.
+			}
+			if (!childc->is_visible_in_tree()) {
+				continue; // Skip invisible node trees.
+			}
+			if (Object::cast_to<ScrollContainer>(childc) && childc->is_ancestor_of(this)) {
+				continue; // Already searched in it, skip it.
+			}
 		}
-		_window_find_focus_neighbor(p_dir, p_at->get_child(i), p_points, p_min, r_closest_dist, r_closest);
+		_window_find_focus_neighbor(p_dir, child, p_rect, intersection, p_min, r_closest_dist_squared, r_closest);
 	}
 }
 
@@ -2723,7 +2812,7 @@ Variant Control::get_theme_item(Theme::DataType p_data_type, const StringName &p
 Ref<Texture2D> Control::get_editor_theme_icon(const StringName &p_name) const {
 	return get_theme_icon(p_name, SNAME("EditorIcons"));
 }
-#endif
+#endif // TOOLS_ENABLED
 
 bool Control::has_theme_icon(const StringName &p_name, const StringName &p_theme_type) const {
 	ERR_READ_THREAD_GUARD_V(false);
@@ -3020,7 +3109,7 @@ void Control::set_layout_direction(Control::LayoutDirection p_direction) {
 	if (data.layout_dir == p_direction) {
 		return;
 	}
-	ERR_FAIL_INDEX((int)p_direction, 4);
+	ERR_FAIL_INDEX(p_direction, LAYOUT_DIRECTION_MAX);
 
 	data.layout_dir = p_direction;
 
@@ -3035,11 +3124,11 @@ Control::LayoutDirection Control::get_layout_direction() const {
 bool Control::is_layout_rtl() const {
 	ERR_READ_THREAD_GUARD_V(false);
 	if (data.is_rtl_dirty) {
-		const_cast<Control *>(this)->data.is_rtl_dirty = false;
+		data.is_rtl_dirty = false;
 		if (data.layout_dir == LAYOUT_DIRECTION_INHERITED) {
 #ifdef TOOLS_ENABLED
 			if (is_part_of_edited_scene() && GLOBAL_GET(SNAME("internationalization/rendering/force_right_to_left_layout_direction"))) {
-				const_cast<Control *>(this)->data.is_rtl = true;
+				data.is_rtl = true;
 				return data.is_rtl;
 			}
 			if (is_inside_tree()) {
@@ -3047,61 +3136,68 @@ bool Control::is_layout_rtl() const {
 				if (edited_scene_root == this) {
 					int proj_root_layout_direction = GLOBAL_GET(SNAME("internationalization/rendering/root_node_layout_direction"));
 					if (proj_root_layout_direction == 1) {
-						const_cast<Control *>(this)->data.is_rtl = false;
+						data.is_rtl = false;
 					} else if (proj_root_layout_direction == 2) {
-						const_cast<Control *>(this)->data.is_rtl = true;
+						data.is_rtl = true;
 					} else if (proj_root_layout_direction == 3) {
 						String locale = OS::get_singleton()->get_locale();
-						const_cast<Control *>(this)->data.is_rtl = TS->is_locale_right_to_left(locale);
+						data.is_rtl = TS->is_locale_right_to_left(locale);
 					} else {
 						String locale = TranslationServer::get_singleton()->get_tool_locale();
-						const_cast<Control *>(this)->data.is_rtl = TS->is_locale_right_to_left(locale);
+						data.is_rtl = TS->is_locale_right_to_left(locale);
 					}
 					return data.is_rtl;
 				}
 			}
 #else
 			if (GLOBAL_GET(SNAME("internationalization/rendering/force_right_to_left_layout_direction"))) {
-				const_cast<Control *>(this)->data.is_rtl = true;
+				data.is_rtl = true;
 				return data.is_rtl;
 			}
-#endif
+#endif // TOOLS_ENABLED
 			Node *parent_node = get_parent();
 			while (parent_node) {
 				Control *parent_control = Object::cast_to<Control>(parent_node);
 				if (parent_control) {
-					const_cast<Control *>(this)->data.is_rtl = parent_control->is_layout_rtl();
+					data.is_rtl = parent_control->is_layout_rtl();
 					return data.is_rtl;
 				}
 
 				Window *parent_window = Object::cast_to<Window>(parent_node);
 				if (parent_window) {
-					const_cast<Control *>(this)->data.is_rtl = parent_window->is_layout_rtl();
+					data.is_rtl = parent_window->is_layout_rtl();
 					return data.is_rtl;
 				}
 				parent_node = parent_node->get_parent();
 			}
 
 			if (root_layout_direction == 1) {
-				const_cast<Control *>(this)->data.is_rtl = false;
+				data.is_rtl = false;
 			} else if (root_layout_direction == 2) {
-				const_cast<Control *>(this)->data.is_rtl = true;
+				data.is_rtl = true;
 			} else if (root_layout_direction == 3) {
 				String locale = OS::get_singleton()->get_locale();
-				const_cast<Control *>(this)->data.is_rtl = TS->is_locale_right_to_left(locale);
+				data.is_rtl = TS->is_locale_right_to_left(locale);
 			} else {
 				String locale = TranslationServer::get_singleton()->get_tool_locale();
-				const_cast<Control *>(this)->data.is_rtl = TS->is_locale_right_to_left(locale);
+				data.is_rtl = TS->is_locale_right_to_left(locale);
 			}
-		} else if (data.layout_dir == LAYOUT_DIRECTION_LOCALE) {
+		} else if (data.layout_dir == LAYOUT_DIRECTION_APPLICATION_LOCALE) {
+			if (GLOBAL_GET(SNAME("internationalization/rendering/force_right_to_left_layout_direction"))) {
+				data.is_rtl = true;
+			} else {
+				String locale = TranslationServer::get_singleton()->get_tool_locale();
+				data.is_rtl = TS->is_locale_right_to_left(locale);
+			}
+		} else if (data.layout_dir == LAYOUT_DIRECTION_SYSTEM_LOCALE) {
 			if (GLOBAL_GET(SNAME("internationalization/rendering/force_right_to_left_layout_direction"))) {
 				const_cast<Control *>(this)->data.is_rtl = true;
 			} else {
-				String locale = TranslationServer::get_singleton()->get_tool_locale();
+				String locale = OS::get_singleton()->get_locale();
 				const_cast<Control *>(this)->data.is_rtl = TS->is_locale_right_to_left(locale);
 			}
 		} else {
-			const_cast<Control *>(this)->data.is_rtl = (data.layout_dir == LAYOUT_DIRECTION_RTL);
+			data.is_rtl = (data.layout_dir == LAYOUT_DIRECTION_RTL);
 		}
 	}
 	return data.is_rtl;
@@ -3133,7 +3229,17 @@ bool Control::is_auto_translating() const {
 	ERR_READ_THREAD_GUARD_V(false);
 	return can_auto_translate();
 }
-#endif
+#endif // DISABLE_DEPRECATED
+
+void Control::set_tooltip_auto_translate_mode(AutoTranslateMode p_mode) {
+	ERR_MAIN_THREAD_GUARD;
+	data.tooltip_auto_translate_mode = p_mode;
+}
+
+Node::AutoTranslateMode Control::get_tooltip_auto_translate_mode() const {
+	ERR_READ_THREAD_GUARD_V(AUTO_TRANSLATE_MODE_INHERIT);
+	return data.tooltip_auto_translate_mode;
+}
 
 // Extra properties.
 
@@ -3176,7 +3282,7 @@ void Control::_notification(int p_notification) {
 		case NOTIFICATION_EDITOR_POST_SAVE: {
 			saving = false;
 		} break;
-#endif
+#endif // TOOLS_ENABLED
 		case NOTIFICATION_POSTINITIALIZE: {
 			data.initialized = true;
 
@@ -3222,7 +3328,7 @@ void Control::_notification(int p_notification) {
 		case NOTIFICATION_READY: {
 #ifdef DEBUG_ENABLED
 			connect(SceneStringName(ready), callable_mp(this, &Control::_clear_size_warning), CONNECT_DEFERRED | CONNECT_ONE_SHOT);
-#endif
+#endif // DEBUG_ENABLED
 		} break;
 
 		case NOTIFICATION_ENTER_CANVAS: {
@@ -3484,6 +3590,8 @@ void Control::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_v_grow_direction", "direction"), &Control::set_v_grow_direction);
 	ClassDB::bind_method(D_METHOD("get_v_grow_direction"), &Control::get_v_grow_direction);
 
+	ClassDB::bind_method(D_METHOD("set_tooltip_auto_translate_mode", "mode"), &Control::set_tooltip_auto_translate_mode);
+	ClassDB::bind_method(D_METHOD("get_tooltip_auto_translate_mode"), &Control::get_tooltip_auto_translate_mode);
 	ClassDB::bind_method(D_METHOD("set_tooltip_text", "hint"), &Control::set_tooltip_text);
 	ClassDB::bind_method(D_METHOD("get_tooltip_text"), &Control::get_tooltip_text);
 	ClassDB::bind_method(D_METHOD("get_tooltip", "at_position"), &Control::get_tooltip, DEFVAL(Point2()));
@@ -3532,7 +3640,7 @@ void Control::_bind_methods() {
 #ifndef DISABLE_DEPRECATED
 	ClassDB::bind_method(D_METHOD("set_auto_translate", "enable"), &Control::set_auto_translate);
 	ClassDB::bind_method(D_METHOD("is_auto_translating"), &Control::is_auto_translating);
-#endif
+#endif // DISABLE_DEPRECATED
 
 	ClassDB::bind_method(D_METHOD("set_localize_numeral_system", "enable"), &Control::set_localize_numeral_system);
 	ClassDB::bind_method(D_METHOD("is_localizing_numeral_system"), &Control::is_localizing_numeral_system);
@@ -3540,7 +3648,7 @@ void Control::_bind_methods() {
 	ADD_GROUP("Layout", "");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "clip_contents"), "set_clip_contents", "is_clipping_contents");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "custom_minimum_size", PROPERTY_HINT_NONE, "suffix:px"), "set_custom_minimum_size", "get_custom_minimum_size");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "layout_direction", PROPERTY_HINT_ENUM, "Inherited,Based on Locale,Left-to-Right,Right-to-Left"), "set_layout_direction", "get_layout_direction");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "layout_direction", PROPERTY_HINT_ENUM, "Inherited,Based on Application Locale,Left-to-Right,Right-to-Left,Based on System Locale"), "set_layout_direction", "get_layout_direction");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "layout_mode", PROPERTY_HINT_ENUM, "Position,Anchors,Container,Uncontrolled", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_INTERNAL), "_set_layout_mode", "_get_layout_mode");
 	ADD_PROPERTY_DEFAULT("layout_mode", LayoutMode::LAYOUT_MODE_POSITION);
 
@@ -3587,10 +3695,11 @@ void Control::_bind_methods() {
 
 #ifndef DISABLE_DEPRECATED
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "auto_translate", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NONE), "set_auto_translate", "is_auto_translating");
-#endif
+#endif // DISABLE_DEPRECATED
 
 	ADD_GROUP("Tooltip", "tooltip_");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "tooltip_text", PROPERTY_HINT_MULTILINE_TEXT), "set_tooltip_text", "get_tooltip_text");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "tooltip_auto_translate_mode", PROPERTY_HINT_ENUM, "Inherit,Always,Disabled"), "set_tooltip_auto_translate_mode", "get_tooltip_auto_translate_mode");
 
 	ADD_GROUP("Focus", "focus_");
 	ADD_PROPERTYI(PropertyInfo(Variant::NODE_PATH, "focus_neighbor_left", PROPERTY_HINT_NODE_PATH_VALID_TYPES, "Control"), "set_focus_neighbor", "get_focus_neighbor", SIDE_LEFT);
@@ -3688,9 +3797,14 @@ void Control::_bind_methods() {
 	BIND_ENUM_CONSTANT(ANCHOR_END);
 
 	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_INHERITED);
-	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_LOCALE);
+	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_APPLICATION_LOCALE);
 	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_LTR);
 	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_RTL);
+	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_SYSTEM_LOCALE);
+	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_MAX);
+#ifndef DISABLE_DEPRECATED
+	BIND_ENUM_CONSTANT(LAYOUT_DIRECTION_LOCALE);
+#endif // DISABLE_DEPRECATED
 
 	BIND_ENUM_CONSTANT(TEXT_DIRECTION_INHERITED);
 	BIND_ENUM_CONSTANT(TEXT_DIRECTION_AUTO);

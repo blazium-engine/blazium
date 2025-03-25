@@ -488,6 +488,8 @@ class TextServerAdvanced : public TextServerExtension {
 			Variant meta;
 		};
 		Vector<Span> spans;
+		int first_span = 0; // First span in the parent ShapedTextData.
+		int last_span = 0;
 
 		struct EmbeddedObject {
 			int start = -1;
@@ -716,7 +718,7 @@ class TextServerAdvanced : public TextServerExtension {
 	};
 
 protected:
-	static void _bind_methods(){};
+	static void _bind_methods() {}
 
 	void full_copy(ShapedTextDataAdvanced *p_shaped);
 	void invalidate(ShapedTextDataAdvanced *p_shaped, bool p_text = false);
@@ -959,6 +961,7 @@ public:
 
 	MODBIND1RC(int64_t, shaped_get_span_count, const RID &);
 	MODBIND2RC(Variant, shaped_get_span_meta, const RID &, int64_t);
+	MODBIND2RC(Variant, shaped_get_span_embedded_object, const RID &, int64_t);
 	MODBIND5(shaped_set_span_update_font, const RID &, int64_t, const TypedArray<RID> &, int64_t, const Dictionary &);
 
 	MODBIND3RC(RID, shaped_text_substr, const RID &, int64_t, int64_t);

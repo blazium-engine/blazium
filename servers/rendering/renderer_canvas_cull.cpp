@@ -95,7 +95,7 @@ void RendererCanvasCull::_collect_ysort_children(RendererCanvasCull::Item *p_can
 			}
 
 			if (snapping_2d_transforms_to_pixel) {
-				child_xform.columns[2] = child_xform.columns[2].round();
+				child_xform.columns[2] = (child_xform.columns[2] + Point2(0.5, 0.5)).floor();
 			}
 
 			r_items[r_index] = child_items[i];
@@ -278,6 +278,19 @@ void RendererCanvasCull::_cull_canvas_item(Item *p_canvas_item, const Transform2
 		ci->children_order_dirty = false;
 	}
 
+	if (ci->use_parent_material && p_material_owner) {
+		ci->material_owner = p_material_owner;
+	} else {
+		p_material_owner = ci;
+		ci->material_owner = nullptr;
+	}
+
+	Color modulate = ci->modulate * p_modulate;
+
+	if (modulate.a < 0.007) {
+		return;
+	}
+
 	Rect2 rect = ci->get_rect();
 
 	if (ci->visibility_notifier) {
@@ -303,8 +316,8 @@ void RendererCanvasCull::_cull_canvas_item(Item *p_canvas_item, const Transform2
 		Transform2D parent_xform = p_parent_xform;
 
 		if (snapping_2d_transforms_to_pixel) {
-			self_xform.columns[2] = self_xform.columns[2].round();
-			parent_xform.columns[2] = parent_xform.columns[2].round();
+			self_xform.columns[2] = (self_xform.columns[2] + Point2(0.5, 0.5)).floor();
+			parent_xform.columns[2] = (parent_xform.columns[2] + Point2(0.5, 0.5)).floor();
 		}
 
 		final_xform = parent_xform * self_xform;
@@ -346,19 +359,6 @@ void RendererCanvasCull::_cull_canvas_item(Item *p_canvas_item, const Transform2
 	}
 	global_rect.position += p_clip_rect.position;
 
-	if (ci->use_parent_material && p_material_owner) {
-		ci->material_owner = p_material_owner;
-	} else {
-		p_material_owner = ci;
-		ci->material_owner = nullptr;
-	}
-
-	Color modulate(ci->modulate.r * p_modulate.r, ci->modulate.g * p_modulate.g, ci->modulate.b * p_modulate.b, ci->modulate.a * p_modulate.a);
-
-	if (modulate.a < 0.007) {
-		return;
-	}
-
 	int child_item_count = ci->child_items.size();
 	Item **child_items = ci->child_items.ptrw();
 
@@ -397,7 +397,7 @@ void RendererCanvasCull::_cull_canvas_item(Item *p_canvas_item, const Transform2
 			child_items = (Item **)alloca(child_item_count * sizeof(Item *));
 
 			ci->ysort_xform = Transform2D();
-			ci->ysort_modulate = Color(1, 1, 1, 1);
+			ci->ysort_modulate = Color(1, 1, 1, 1) / ci->modulate;
 			ci->ysort_index = 0;
 			ci->ysort_parent_abs_z_index = parent_z;
 			child_items[0] = ci;
@@ -612,8 +612,9 @@ void RendererCanvasCull::canvas_item_set_visibility_layer(RID p_item, uint32_t p
 
 uint32_t RendererCanvasCull::canvas_item_get_visibility_layer(RID p_item) {
 	Item *canvas_item = canvas_item_owner.get_or_null(p_item);
-	if (!canvas_item)
+	if (!canvas_item) {
 		return 0;
+	}
 	return canvas_item->visibility_layer;
 }
 

@@ -683,7 +683,7 @@ private:
 		.preferred_buffer_transform = _wl_surface_on_preferred_buffer_transform,
 	};
 
-	static constexpr struct wl_callback_listener frame_wl_callback_listener {
+	static constexpr struct wl_callback_listener frame_wl_callback_listener = {
 		.done = _frame_wl_callback_on_done,
 	};
 
@@ -701,7 +701,7 @@ private:
 		.name = _wl_seat_on_name,
 	};
 
-	static constexpr struct wl_callback_listener cursor_frame_callback_listener {
+	static constexpr struct wl_callback_listener cursor_frame_callback_listener = {
 		.done = _cursor_frame_callback_on_done,
 	};
 
@@ -955,6 +955,8 @@ public:
 
 	struct wl_surface *window_get_wl_surface(DisplayServer::WindowID p_window_id) const;
 
+	void window_start_resize(DisplayServer::WindowResizeEdge p_edge, DisplayServer::WindowID p_window);
+
 	void window_set_max_size(DisplayServer::WindowID p_window_id, const Size2i &p_size);
 	void window_set_min_size(DisplayServer::WindowID p_window_id, const Size2i &p_size);
 
@@ -970,6 +972,8 @@ public:
 
 	// Optional - requires xdg_activation_v1
 	void window_request_attention(DisplayServer::WindowID p_window_id);
+
+	void window_start_drag(DisplayServer::WindowID p_window_id);
 
 	// Optional - require idle_inhibit_unstable_v1
 	void window_set_idle_inhibition(DisplayServer::WindowID p_window_id, bool p_enable);

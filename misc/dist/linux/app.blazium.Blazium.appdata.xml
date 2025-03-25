@@ -6,7 +6,7 @@
   <project_license>MIT</project_license>
   <name>Blazium Engine</name>
   <summary>Multi-platform 2D and 3D game engine with a feature-rich editor</summary>
-  ​<launchable type="desktop-id">app.blazium.Godot.desktop</launchable>
+  <launchable type="desktop-id">app.blazium.Godot.desktop</launchable>
   <description>
     <p>
       Blazium is an advanced, feature-packed, multi-platform 2D and 3D game

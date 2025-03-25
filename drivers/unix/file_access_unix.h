@@ -38,12 +38,10 @@
 
 #if defined(UNIX_ENABLED)
 
-typedef void (*CloseNotificationFunc)(const String &p_file, int p_flags);
-
 class FileAccessUnix : public FileAccess {
 	FILE *f = nullptr;
 	int flags = 0;
-	void check_errors() const;
+	void check_errors(bool p_write = false) const;
 	mutable Error last_error = OK;
 	String save_path;
 	String path;
@@ -51,7 +49,12 @@ class FileAccessUnix : public FileAccess {
 
 	void _close();
 
+#if defined(TOOLS_ENABLED)
+	String get_real_path() const; // Returns the resolved real path for the current open file.
+#endif
+
 public:
+	typedef void (*CloseNotificationFunc)(const String &p_file, int p_flags);
 	static CloseNotificationFunc close_notification_func;
 
 	virtual Error open_internal(const String &p_path, int p_mode_flags) override; ///< open a file

@@ -114,9 +114,9 @@ class EditorFileSystemImportFormatSupportQuery : public RefCounted {
 	GDCLASS(EditorFileSystemImportFormatSupportQuery, RefCounted);
 
 protected:
-	GDVIRTUAL0RC(bool, _is_active)
-	GDVIRTUAL0RC(Vector<String>, _get_file_extensions)
-	GDVIRTUAL0RC(bool, _query)
+	GDVIRTUAL0RC_REQUIRED(bool, _is_active)
+	GDVIRTUAL0RC_REQUIRED(Vector<String>, _get_file_extensions)
+	GDVIRTUAL0RC_REQUIRED(bool, _query)
 	static void _bind_methods() {
 		GDVIRTUAL_BIND(_is_active);
 		GDVIRTUAL_BIND(_get_file_extensions);
@@ -126,17 +126,17 @@ protected:
 public:
 	virtual bool is_active() const {
 		bool ret = false;
-		GDVIRTUAL_REQUIRED_CALL(_is_active, ret);
+		GDVIRTUAL_CALL(_is_active, ret);
 		return ret;
 	}
 	virtual Vector<String> get_file_extensions() const {
 		Vector<String> ret;
-		GDVIRTUAL_REQUIRED_CALL(_get_file_extensions, ret);
+		GDVIRTUAL_CALL(_get_file_extensions, ret);
 		return ret;
 	}
 	virtual bool query() {
 		bool ret = false;
-		GDVIRTUAL_REQUIRED_CALL(_query, ret);
+		GDVIRTUAL_CALL(_query, ret);
 		return ret;
 	}
 };
@@ -178,7 +178,7 @@ class EditorFileSystem : public Node {
 	static void _thread_func(void *_userdata);
 
 	EditorFileSystemDirectory *new_filesystem = nullptr;
-	ScannedDirectory *first_scan_root_dir = nullptr;
+	static ScannedDirectory *first_scan_root_dir;
 
 	bool filesystem_changed_queued = false;
 	bool scanning = false;
@@ -188,12 +188,16 @@ class EditorFileSystem : public Node {
 	float scan_total;
 	String filesystem_settings_version_for_import;
 	bool revalidate_import_files = false;
-	int nb_files_total = 0;
+	static int nb_files_total;
 
 	void _notify_filesystem_changed();
 	void _scan_filesystem();
 	void _first_scan_filesystem();
 	void _first_scan_process_scripts(const ScannedDirectory *p_scan_dir, HashSet<String> &p_existing_class_names, HashSet<String> &p_extensions);
+
+	static void _scan_for_uid_directory(const ScannedDirectory *p_scan_dir, const HashSet<String> &p_import_extensions);
+
+	static void _load_first_scan_root_dir();
 
 	HashSet<String> late_update_files;
 
@@ -251,7 +255,7 @@ class EditorFileSystem : public Node {
 	HashSet<String> valid_extensions;
 	HashSet<String> import_extensions;
 
-	int _scan_new_dir(ScannedDirectory *p_dir, Ref<DirAccess> &da);
+	static int _scan_new_dir(ScannedDirectory *p_dir, Ref<DirAccess> &da);
 	void _process_file_system(const ScannedDirectory *p_scan_dir, EditorFileSystemDirectory *p_dir, ScanProgress &p_progress, HashSet<String> *p_processed_files);
 
 	Thread thread_sources;
@@ -303,6 +307,7 @@ class EditorFileSystem : public Node {
 	void _update_script_documentation();
 	void _process_update_pending();
 	void _process_removed_files(const HashSet<String> &p_processed_files);
+	bool _should_reload_script(const String &p_path);
 
 	Mutex update_scene_mutex;
 	HashSet<String> update_scene_paths;
@@ -341,7 +346,7 @@ class EditorFileSystem : public Node {
 	struct ImportThreadData {
 		const ImportFile *reimport_files;
 		int reimport_from;
-		SafeNumeric<int> max_index;
+		Semaphore *imported_sem = nullptr;
 	};
 
 	void _reimport_thread(uint32_t p_index, ImportThreadData *p_import_data);
@@ -396,6 +401,8 @@ public:
 	Error copy_directory(const String &p_from, const String &p_to);
 
 	static bool _should_skip_directory(const String &p_path);
+
+	static void scan_for_uid();
 
 	void add_import_format_support_query(Ref<EditorFileSystemImportFormatSupportQuery> p_query);
 	void remove_import_format_support_query(Ref<EditorFileSystemImportFormatSupportQuery> p_query);

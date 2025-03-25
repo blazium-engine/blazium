@@ -30,9 +30,7 @@
 
 #include "button.h"
 
-#include "core/string/translation.h"
 #include "scene/theme/theme_db.h"
-#include "servers/rendering_server.h"
 
 Size2 Button::get_minimum_size() const {
 	Ref<Texture2D> _icon = icon;
@@ -212,6 +210,13 @@ void Button::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_DRAW: {
+			// Reshape and update size min. if text is invalidated by an external source (e.g., oversampling).
+			if (text_buf.is_valid() && !TS->shaped_text_is_ready(text_buf->get_rid())) {
+				_shape();
+
+				update_minimum_size();
+			}
+
 			const RID ci = get_canvas_item();
 			const Size2 size = get_size();
 			const bool rtl = is_layout_rtl();
@@ -300,19 +305,12 @@ void Button::_notification(int p_what) {
 					}
 				} break;
 				case DRAW_HOVER_PRESSED: {
-					// Edge case for CheckButton and CheckBox.
-					if (has_theme_stylebox("hover_pressed")) {
-						if (has_theme_color(SNAME("font_hover_pressed_color"))) {
-							font_color = theme_cache.font_hover_pressed_color;
-						}
-						if (has_theme_color(SNAME("icon_hover_pressed_color"))) {
-							icon_modulate_color = theme_cache.icon_hover_pressed_color;
-						}
-
-						break;
+					font_color = theme_cache.font_hover_pressed_color;
+					if (has_theme_color(SNAME("icon_hover_pressed_color"))) {
+						icon_modulate_color = theme_cache.icon_hover_pressed_color;
 					}
-				}
-					[[fallthrough]];
+
+				} break;
 				case DRAW_PRESSED: {
 					if (has_theme_color(SNAME("font_pressed_color"))) {
 						font_color = theme_cache.font_pressed_color;
@@ -438,7 +436,7 @@ void Button::_notification(int p_what) {
 			if (draw_text) {
 				text_buf->set_alignment(align_rtl_checked);
 				if (expand_text) {
-					text_buf_width = Math::ceil(MAX(1.0f, drawable_size_remained.width));
+					text_buf_width = Math::ceil(MAX(1.0f, drawable_size_remained.width)); // The space's width filled by the text_buf.
 				} else {
 					text_buf->set_width(drawable_size_remained.width);
 					if (!is_clipped) {
@@ -446,6 +444,9 @@ void Button::_notification(int p_what) {
 					} else {
 						text_buf_width = MAX(1.0f, MIN(text_buf->get_size().width, drawable_size_remained.width));
 					}
+				}
+				if (autowrap_mode != TextServer::AUTOWRAP_OFF && !Math::is_equal_approx(text_buf_width, text_buf->get_width())) {
+					update_minimum_size();
 				}
 				text_buf->set_width(text_buf_width);
 
@@ -532,7 +533,7 @@ Size2 Button::get_minimum_size_for_text_and_icon(const String &p_text, Ref<Textu
 		paragraph = text_buf;
 	} else {
 		paragraph.instantiate();
-		const_cast<Button *>(this)->_shape(paragraph, p_text);
+		_shape(paragraph, p_text);
 	}
 
 	Size2 minsize = paragraph->get_size();
@@ -571,7 +572,7 @@ Size2 Button::get_minimum_size_for_text_and_icon(const String &p_text, Ref<Textu
 	return (theme_cache.align_to_largest_stylebox ? _get_largest_stylebox_size() : _get_current_stylebox()->get_minimum_size()) + minsize;
 }
 
-void Button::_shape(Ref<TextParagraph> p_paragraph, String p_text) {
+void Button::_shape(Ref<TextParagraph> p_paragraph, String p_text) const {
 	if (p_paragraph.is_null()) {
 		p_paragraph = text_buf;
 	}
@@ -605,6 +606,7 @@ void Button::_shape(Ref<TextParagraph> p_paragraph, String p_text) {
 	}
 	autowrap_flags = autowrap_flags | TextServer::BREAK_TRIM_EDGE_SPACES;
 	p_paragraph->set_break_flags(autowrap_flags);
+	p_paragraph->set_line_spacing(theme_cache.line_spacing);
 
 	if (text_direction == Control::TEXT_DIRECTION_INHERITED) {
 		p_paragraph->set_direction(is_layout_rtl() ? TextServer::DIRECTION_RTL : TextServer::DIRECTION_LTR);
@@ -686,7 +688,7 @@ String Button::get_language() const {
 	return language;
 }
 
-void Button::set_icon(const Ref<Texture2D> &p_icon) {
+void Button::set_button_icon(const Ref<Texture2D> &p_icon) {
 	if (icon == p_icon) {
 		return;
 	}
@@ -710,7 +712,7 @@ void Button::_texture_changed() {
 	update_minimum_size();
 }
 
-Ref<Texture2D> Button::get_icon() const {
+Ref<Texture2D> Button::get_button_icon() const {
 	return icon;
 }
 
@@ -819,8 +821,8 @@ void Button::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_text_direction"), &Button::get_text_direction);
 	ClassDB::bind_method(D_METHOD("set_language", "language"), &Button::set_language);
 	ClassDB::bind_method(D_METHOD("get_language"), &Button::get_language);
-	ClassDB::bind_method(D_METHOD("set_button_icon", "texture"), &Button::set_icon);
-	ClassDB::bind_method(D_METHOD("get_button_icon"), &Button::get_icon);
+	ClassDB::bind_method(D_METHOD("set_button_icon", "texture"), &Button::set_button_icon);
+	ClassDB::bind_method(D_METHOD("get_button_icon"), &Button::get_button_icon);
 	ClassDB::bind_method(D_METHOD("set_flat", "enabled"), &Button::set_flat);
 	ClassDB::bind_method(D_METHOD("is_flat"), &Button::is_flat);
 	ClassDB::bind_method(D_METHOD("set_clip_text", "enabled"), &Button::set_clip_text);
@@ -893,6 +895,7 @@ void Button::_bind_methods() {
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, Button, icon_max_width);
 
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, Button, align_to_largest_stylebox);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, Button, line_spacing);
 }
 
 Button::Button(const String &p_text) {

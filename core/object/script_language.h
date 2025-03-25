@@ -35,7 +35,6 @@
 #include "core/io/resource.h"
 #include "core/object/script_instance.h"
 #include "core/templates/pair.h"
-#include "core/templates/rb_map.h"
 #include "core/templates/safe_refcount.h"
 #include "core/variant/typed_array.h"
 
@@ -54,6 +53,7 @@ class ScriptServer {
 	static int _language_count;
 	static bool languages_ready;
 	static Mutex languages_mutex;
+	static thread_local bool thread_entered;
 
 	static bool scripting_enabled;
 	static bool reload_scripts_on_save;
@@ -101,6 +101,7 @@ public:
 	static void init_languages();
 	static void finish_languages();
 	static bool are_languages_initialized();
+	static bool thread_is_entered();
 };
 
 class PlaceHolderScriptInstance;
@@ -110,7 +111,10 @@ class Script : public Resource {
 	OBJ_SAVE_TYPE(Script);
 
 protected:
-	virtual bool editor_can_reload_from_file() override { return false; } // this is handled by editor better
+	// Scripts are reloaded via the Script Editor when edited in Godot,
+	// the LSP server when edited in a connected external editor, or
+	// through EditorFileSystem::_update_script_documentation when updated directly on disk.
+	virtual bool editor_can_reload_from_file() override { return false; }
 	void _notification(int p_what);
 	static void _bind_methods();
 
@@ -145,6 +149,7 @@ public:
 	virtual Error reload(bool p_keep_state = false) = 0;
 
 #ifdef TOOLS_ENABLED
+	virtual StringName get_doc_class_name() const = 0;
 	virtual Vector<DocData::ClassDoc> get_documentation() const = 0;
 	virtual String get_class_icon_path() const = 0;
 	virtual PropertyInfo get_class_category() const;
@@ -176,11 +181,11 @@ public:
 	virtual int get_member_line(const StringName &p_member) const { return -1; }
 
 	virtual void get_constants(HashMap<StringName, Variant> *p_constants) {}
-	virtual void get_members(HashSet<StringName> *p_constants) {}
+	virtual void get_members(HashSet<StringName> *p_members) {}
 
 	virtual bool is_placeholder_fallback_enabled() const { return false; }
 
-	virtual const Variant get_rpc_config() const = 0;
+	virtual Variant get_rpc_config() const = 0;
 
 	Script() {}
 };
@@ -335,25 +340,46 @@ public:
 	virtual Error complete_code(const String &p_code, const String &p_path, Object *p_owner, List<CodeCompletionOption> *r_options, bool &r_force, String &r_call_hint) { return ERR_UNAVAILABLE; }
 
 	enum LookupResultType {
-		LOOKUP_RESULT_SCRIPT_LOCATION,
+		LOOKUP_RESULT_SCRIPT_LOCATION, // Use if none of the options below apply.
 		LOOKUP_RESULT_CLASS,
 		LOOKUP_RESULT_CLASS_CONSTANT,
 		LOOKUP_RESULT_CLASS_PROPERTY,
 		LOOKUP_RESULT_CLASS_METHOD,
 		LOOKUP_RESULT_CLASS_SIGNAL,
 		LOOKUP_RESULT_CLASS_ENUM,
-		LOOKUP_RESULT_CLASS_TBD_GLOBALSCOPE,
+		LOOKUP_RESULT_CLASS_TBD_GLOBALSCOPE, // Deprecated.
 		LOOKUP_RESULT_CLASS_ANNOTATION,
-		LOOKUP_RESULT_MAX
+		LOOKUP_RESULT_LOCAL_CONSTANT,
+		LOOKUP_RESULT_LOCAL_VARIABLE,
+		LOOKUP_RESULT_MAX,
 	};
 
 	struct LookupResult {
 		LookupResultType type;
-		Ref<Script> script;
+
+		// For `CLASS_*`.
 		String class_name;
 		String class_member;
-		String class_path;
-		int location;
+
+		// For `LOCAL_*`.
+		String description;
+		bool is_deprecated = false;
+		String deprecated_message;
+		bool is_experimental = false;
+		String experimental_message;
+
+		// For `LOCAL_*`.
+		String doc_type;
+		String enumeration;
+		bool is_bitfield = false;
+
+		// For `LOCAL_*`.
+		String value;
+
+		// `SCRIPT_LOCATION` and `LOCAL_*` must have, `CLASS_*` can have.
+		Ref<Script> script;
+		String script_path;
+		int location = -1;
 	};
 
 	virtual Error lookup_code(const String &p_code, const String &p_symbol, const String &p_path, Object *p_owner, LookupResult &r_result) { return ERR_UNAVAILABLE; }
@@ -441,8 +467,8 @@ public:
 	virtual Variant::Type get_property_type(const StringName &p_name, bool *r_is_valid = nullptr) const override;
 	virtual void validate_property(PropertyInfo &p_property) const override {}
 
-	virtual bool property_can_revert(const StringName &p_name) const override { return false; };
-	virtual bool property_get_revert(const StringName &p_name, Variant &r_ret) const override { return false; };
+	virtual bool property_can_revert(const StringName &p_name) const override { return false; }
+	virtual bool property_get_revert(const StringName &p_name, Variant &r_ret) const override { return false; }
 
 	virtual void get_method_list(List<MethodInfo> *p_list) const override;
 	virtual bool has_method(const StringName &p_method) const override;

@@ -36,6 +36,7 @@
 #include "core/license.gen.h"
 #include "core/variant/typed_array.h"
 #include "core/version.h"
+#include "servers/rendering/rendering_device.h"
 
 void Engine::set_physics_ticks_per_second(int p_ips) {
 	ERR_FAIL_COND_MSG(p_ips <= 0, "Engine iterations per second must be greater than 0.");
@@ -68,6 +69,11 @@ double Engine::get_physics_jitter_fix() const {
 
 void Engine::set_max_fps(int p_fps) {
 	_max_fps = p_fps > 0 ? p_fps : 0;
+
+	RenderingDevice *rd = RenderingDevice::get_singleton();
+	if (rd) {
+		rd->_set_max_fps(_max_fps);
+	}
 }
 
 int Engine::get_max_fps() const {
@@ -114,6 +120,10 @@ void Engine::set_time_scale(double p_scale) {
 }
 
 double Engine::get_time_scale() const {
+	return freeze_time_scale ? 0 : _time_scale;
+}
+
+double Engine::get_unfrozen_time_scale() const {
 	return _time_scale;
 }
 
@@ -242,6 +252,9 @@ String Engine::get_architecture_name() const {
 	return "ppc";
 #endif
 
+#elif defined(__loongarch64)
+	return "loongarch64";
+
 #elif defined(__wasm__)
 #if defined(__wasm64__)
 	return "wasm64";
@@ -265,6 +278,14 @@ bool Engine::is_validation_layers_enabled() const {
 
 bool Engine::is_generate_spirv_debug_info_enabled() const {
 	return generate_spirv_debug_info;
+}
+
+void Engine::set_print_to_stdout(bool p_enabled) {
+	CoreGlobals::print_line_enabled = p_enabled;
+}
+
+bool Engine::is_printing_to_stdout() const {
+	return CoreGlobals::print_line_enabled;
 }
 
 void Engine::set_print_error_messages(bool p_enabled) {
@@ -382,6 +403,18 @@ Engine *Engine::get_singleton() {
 bool Engine::notify_frame_server_synced() {
 	frame_server_synced = true;
 	return server_syncs > SERVER_SYNC_FRAME_COUNT_WARNING;
+}
+
+void Engine::set_freeze_time_scale(bool p_frozen) {
+	freeze_time_scale = p_frozen;
+}
+
+void Engine::set_embedded_in_editor(bool p_enabled) {
+	embedded_in_editor = p_enabled;
+}
+
+bool Engine::is_embedded_in_editor() const {
+	return embedded_in_editor;
 }
 
 Engine::Engine() {

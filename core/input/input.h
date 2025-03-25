@@ -47,12 +47,14 @@ class Input : public Object {
 	static constexpr uint64_t MAX_EVENT = 32;
 
 public:
+	// Keep synced with "DisplayServer::MouseMode" enum.
 	enum MouseMode {
 		MOUSE_MODE_VISIBLE,
 		MOUSE_MODE_HIDDEN,
 		MOUSE_MODE_CAPTURED,
 		MOUSE_MODE_CONFINED,
 		MOUSE_MODE_CONFINED_HIDDEN,
+		MOUSE_MODE_MAX,
 	};
 
 #undef CursorShape
@@ -103,6 +105,7 @@ private:
 	Vector2 mouse_pos;
 	int64_t mouse_window = 0;
 	bool legacy_just_pressed_behavior = false;
+	bool disable_input = false;
 
 	struct ActionState {
 		uint64_t pressed_physics_frame = UINT64_MAX;
@@ -263,6 +266,10 @@ private:
 
 	static void (*set_mouse_mode_func)(MouseMode);
 	static MouseMode (*get_mouse_mode_func)();
+	static void (*set_mouse_mode_override_func)(MouseMode);
+	static MouseMode (*get_mouse_mode_override_func)();
+	static void (*set_mouse_mode_override_enabled_func)(bool);
+	static bool (*is_mouse_mode_override_enabled_func)();
 	static void (*warp_mouse_func)(const Vector2 &p_position);
 
 	static CursorShape (*get_current_cursor_shape_func)();
@@ -281,6 +288,10 @@ protected:
 public:
 	void set_mouse_mode(MouseMode p_mode);
 	MouseMode get_mouse_mode() const;
+	void set_mouse_mode_override(MouseMode p_mode);
+	MouseMode get_mouse_mode_override() const;
+	void set_mouse_mode_override_enabled(bool p_override_enabled);
+	bool is_mouse_mode_override_enabled();
 
 #ifdef TOOLS_ENABLED
 	void get_argument_options(const StringName &p_function, int p_idx, List<String> *r_options) const override;
@@ -289,6 +300,7 @@ public:
 	static Input *get_singleton();
 
 	bool is_anything_pressed() const;
+	bool is_anything_pressed_except_mouse() const;
 	bool is_key_pressed(Key p_keycode) const;
 	bool is_physical_key_pressed(Key p_keycode) const;
 	bool is_key_label_pressed(Key p_keycode) const;
@@ -381,6 +393,9 @@ public:
 	void release_pressed_events();
 
 	void set_event_dispatch_function(EventDispatchFunc p_function);
+
+	void set_disable_input(bool p_disable);
+	bool is_input_disabled() const;
 
 	Input();
 	~Input();

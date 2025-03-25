@@ -296,8 +296,6 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 				let locatedPath = path;
 				if (!path.startsWith('godot.')) {
 					locatedPath = path;
-				} else if (path.endsWith('.worker.js')) {
-					locatedPath = `${loadPath}.worker.js`;
 				} else if (path.endsWith('.audio.worklet.js')) {
 					locatedPath = `${loadPath}.audio.worklet.js`;
 				} else if (path.endsWith('.audio.position.worklet.js')) {

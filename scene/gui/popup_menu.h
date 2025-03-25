@@ -39,6 +39,7 @@
 
 class ScrollContainer;
 class Timer;
+class PanelContainer;
 
 class PopupMenu : public Popup {
 	GDCLASS(PopupMenu, Popup);
@@ -97,6 +98,9 @@ class PopupMenu : public Popup {
 		Item(bool p_dummy) {}
 	};
 
+	mutable Rect2i pre_popup_rect;
+	void _update_shadow_offsets() const;
+
 	static inline PropertyListHelper base_property_helper;
 	PropertyListHelper property_helper;
 
@@ -115,7 +119,7 @@ class PopupMenu : public Popup {
 	Timer *minimum_lifetime_timer = nullptr;
 	Timer *submenu_timer = nullptr;
 	List<Rect2> autohide_areas;
-	Vector<Item> items;
+	mutable Vector<Item> items;
 	BitField<MouseButtonMask> initial_button_mask;
 	bool during_grabbed_click = false;
 	bool is_scrolling = false;
@@ -130,7 +134,7 @@ class PopupMenu : public Popup {
 	int _get_items_total_height() const;
 	Size2 _get_item_icon_size(int p_idx) const;
 
-	void _shape_item(int p_idx);
+	void _shape_item(int p_idx) const;
 
 	void _activate_submenu(int p_over, bool p_by_keyboard = false);
 	void _submenu_timeout();
@@ -152,6 +156,7 @@ class PopupMenu : public Popup {
 	uint64_t search_time_msec = 0;
 	String search_string = "";
 
+	PanelContainer *panel = nullptr;
 	ScrollContainer *scroll_container = nullptr;
 	Control *control = nullptr;
 
@@ -214,6 +219,8 @@ class PopupMenu : public Popup {
 	int _get_item_checkable_type(int p_index) const;
 
 protected:
+	virtual Rect2i _popup_adjust_rect() const override;
+
 	virtual void add_child_notify(Node *p_child) override;
 	virtual void remove_child_notify(Node *p_child) override;
 	virtual void _input_from_window(const Ref<InputEvent> &p_event) override;

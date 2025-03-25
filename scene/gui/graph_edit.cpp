@@ -319,7 +319,7 @@ bool GraphEdit::is_node_connected(const StringName &p_from, int p_from_port, con
 void GraphEdit::disconnect_node(const StringName &p_from, int p_from_port, const StringName &p_to, int p_to_port) {
 	ERR_FAIL_NULL_MSG(connections_layer, "connections_layer is missing.");
 
-	for (const List<Ref<Connection>>::Element *E = connections.front(); E; E = E->next()) {
+	for (List<Ref<Connection>>::Element *E = connections.front(); E; E = E->next()) {
 		if (E->get()->from_node == p_from && E->get()->from_port == p_from_port && E->get()->to_node == p_to && E->get()->to_port == p_to_port) {
 			connection_map[p_from].erase(E->get());
 			connection_map[p_to].erase(E->get());
@@ -337,6 +337,16 @@ void GraphEdit::disconnect_node(const StringName &p_from, int p_from_port, const
 
 const List<Ref<GraphEdit::Connection>> &GraphEdit::get_connection_list() const {
 	return connections;
+}
+
+int GraphEdit::get_connection_count(const StringName &p_node, int p_port) {
+	int count = 0;
+	for (const Ref<Connection> &conn : connections) {
+		if ((conn->from_node == p_node && conn->from_port == p_port) || (conn->to_node == p_node && conn->to_port == p_port)) {
+			count += 1;
+		}
+	}
+	return count;
 }
 
 void GraphEdit::set_scroll_offset(const Vector2 &p_offset) {
@@ -735,14 +745,14 @@ void GraphEdit::_update_theme_item_cache() {
 void GraphEdit::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_THEME_CHANGED: {
-			zoom_minus_button->set_icon(theme_cache.zoom_out);
-			zoom_reset_button->set_icon(theme_cache.zoom_reset);
-			zoom_plus_button->set_icon(theme_cache.zoom_in);
+			zoom_minus_button->set_button_icon(theme_cache.zoom_out);
+			zoom_reset_button->set_button_icon(theme_cache.zoom_reset);
+			zoom_plus_button->set_button_icon(theme_cache.zoom_in);
 
-			toggle_snapping_button->set_icon(theme_cache.snapping_toggle);
-			toggle_grid_button->set_icon(theme_cache.grid_toggle);
-			minimap_button->set_icon(theme_cache.minimap_toggle);
-			arrange_button->set_icon(theme_cache.layout);
+			toggle_snapping_button->set_button_icon(theme_cache.snapping_toggle);
+			toggle_grid_button->set_button_icon(theme_cache.grid_toggle);
+			minimap_button->set_button_icon(theme_cache.minimap_toggle);
+			arrange_button->set_button_icon(theme_cache.layout);
 
 			zoom_label->set_custom_minimum_size(Size2(48, 0) * theme_cache.base_scale);
 
@@ -1666,24 +1676,34 @@ void GraphEdit::_draw_grid() {
 			Color transparent_grid_minor = theme_cache.grid_minor;
 			transparent_grid_minor.a *= CLAMP(1.0 * (zoom - 0.4), 0, 1);
 
-			for (int i = from_pos.x; i < from_pos.x + len.x; i++) {
-				for (int j = from_pos.y; j < from_pos.y + len.y; j++) {
-					Color color = transparent_grid_minor;
+			// Minor dots.
+			if (transparent_grid_minor.a != 0) {
+				for (int i = from_pos.x; i < from_pos.x + len.x; i++) {
+					for (int j = from_pos.y; j < from_pos.y + len.y; j++) {
+						if (ABS(i) % GRID_MINOR_STEPS_PER_MAJOR_DOT == 0 && ABS(j) % GRID_MINOR_STEPS_PER_MAJOR_DOT == 0) {
+							continue;
+						}
 
-					if (ABS(i) % GRID_MINOR_STEPS_PER_MAJOR_DOT == 0 && ABS(j) % GRID_MINOR_STEPS_PER_MAJOR_DOT == 0) {
-						color = theme_cache.grid_major;
+						float base_offset_x = i * snapping_distance * zoom - offset.x * zoom;
+						float base_offset_y = j * snapping_distance * zoom - offset.y * zoom;
+
+						draw_rect(Rect2(base_offset_x - 1, base_offset_y - 1, 3, 3), transparent_grid_minor);
 					}
-
-					if (color.a == 0) {
-						continue;
-					}
-
-					float base_offset_x = i * snapping_distance * zoom - offset.x * zoom;
-					float base_offset_y = j * snapping_distance * zoom - offset.y * zoom;
-
-					draw_rect(Rect2(base_offset_x - 1, base_offset_y - 1, 3, 3), color);
 				}
 			}
+
+			// Major dots.
+			if (theme_cache.grid_major.a != 0) {
+				for (int i = from_pos.x - from_pos.x % GRID_MINOR_STEPS_PER_MAJOR_DOT; i < from_pos.x + len.x; i += GRID_MINOR_STEPS_PER_MAJOR_DOT) {
+					for (int j = from_pos.y - from_pos.y % GRID_MINOR_STEPS_PER_MAJOR_DOT; j < from_pos.y + len.y; j += GRID_MINOR_STEPS_PER_MAJOR_DOT) {
+						float base_offset_x = i * snapping_distance * zoom - offset.x * zoom;
+						float base_offset_y = j * snapping_distance * zoom - offset.y * zoom;
+
+						draw_rect(Rect2(base_offset_x - 1, base_offset_y - 1, 3, 3), theme_cache.grid_major);
+					}
+				}
+			}
+
 		} break;
 	}
 }
@@ -2010,6 +2030,9 @@ void GraphEdit::gui_input(const Ref<InputEvent> &p_ev) {
 			accept_event();
 		} else if (p_ev->is_action("ui_copy", true)) {
 			emit_signal(SNAME("copy_nodes_request"));
+			accept_event();
+		} else if (p_ev->is_action("ui_cut", true)) {
+			emit_signal(SNAME("cut_nodes_request"));
 			accept_event();
 		} else if (p_ev->is_action("ui_paste", true)) {
 			emit_signal(SNAME("paste_nodes_request"));
@@ -2629,6 +2652,7 @@ void GraphEdit::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("disconnect_node", "from_node", "from_port", "to_node", "to_port"), &GraphEdit::disconnect_node);
 	ClassDB::bind_method(D_METHOD("set_connection_activity", "from_node", "from_port", "to_node", "to_port", "amount"), &GraphEdit::set_connection_activity);
 	ClassDB::bind_method(D_METHOD("get_connection_list"), &GraphEdit::_get_connection_list);
+	ClassDB::bind_method(D_METHOD("get_connection_count", "from_node", "from_port"), &GraphEdit::get_connection_count);
 	ClassDB::bind_method(D_METHOD("get_closest_connection_at_point", "point", "max_distance"), &GraphEdit::_get_closest_connection_at_point, DEFVAL(4.0));
 	ClassDB::bind_method(D_METHOD("get_connections_intersecting_with_rect", "rect"), &GraphEdit::_get_connections_intersecting_with_rect);
 	ClassDB::bind_method(D_METHOD("clear_connections"), &GraphEdit::clear_connections);
@@ -2767,6 +2791,7 @@ void GraphEdit::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("connection_drag_ended"));
 
 	ADD_SIGNAL(MethodInfo("copy_nodes_request"));
+	ADD_SIGNAL(MethodInfo("cut_nodes_request"));
 	ADD_SIGNAL(MethodInfo("paste_nodes_request"));
 	ADD_SIGNAL(MethodInfo("duplicate_nodes_request"));
 	ADD_SIGNAL(MethodInfo("delete_nodes_request", PropertyInfo(Variant::ARRAY, "nodes", PROPERTY_HINT_ARRAY_TYPE, "StringName")));
@@ -2893,7 +2918,7 @@ GraphEdit::GraphEdit() {
 	_update_zoom_label();
 
 	zoom_minus_button = memnew(Button);
-	zoom_minus_button->set_theme_type_variation("FlatButton");
+	zoom_minus_button->set_theme_type_variation(SceneStringName(FlatButton));
 	zoom_minus_button->set_visible(show_zoom_buttons);
 	zoom_minus_button->set_tooltip_text(ETR("Zoom Out"));
 	zoom_minus_button->set_focus_mode(FOCUS_NONE);
@@ -2901,7 +2926,7 @@ GraphEdit::GraphEdit() {
 	zoom_minus_button->connect(SceneStringName(pressed), callable_mp(this, &GraphEdit::_zoom_minus));
 
 	zoom_reset_button = memnew(Button);
-	zoom_reset_button->set_theme_type_variation("FlatButton");
+	zoom_reset_button->set_theme_type_variation(SceneStringName(FlatButton));
 	zoom_reset_button->set_visible(show_zoom_buttons);
 	zoom_reset_button->set_tooltip_text(ETR("Zoom Reset"));
 	zoom_reset_button->set_focus_mode(FOCUS_NONE);
@@ -2909,7 +2934,7 @@ GraphEdit::GraphEdit() {
 	zoom_reset_button->connect(SceneStringName(pressed), callable_mp(this, &GraphEdit::_zoom_reset));
 
 	zoom_plus_button = memnew(Button);
-	zoom_plus_button->set_theme_type_variation("FlatButton");
+	zoom_plus_button->set_theme_type_variation(SceneStringName(FlatButton));
 	zoom_plus_button->set_visible(show_zoom_buttons);
 	zoom_plus_button->set_tooltip_text(ETR("Zoom In"));
 	zoom_plus_button->set_focus_mode(FOCUS_NONE);
@@ -2919,7 +2944,7 @@ GraphEdit::GraphEdit() {
 	// Grid controls.
 
 	toggle_grid_button = memnew(Button);
-	toggle_grid_button->set_theme_type_variation("FlatButton");
+	toggle_grid_button->set_theme_type_variation(SceneStringName(FlatButton));
 	toggle_grid_button->set_visible(show_grid_buttons);
 	toggle_grid_button->set_toggle_mode(true);
 	toggle_grid_button->set_pressed(true);
@@ -2929,7 +2954,7 @@ GraphEdit::GraphEdit() {
 	toggle_grid_button->connect(SceneStringName(pressed), callable_mp(this, &GraphEdit::_show_grid_toggled));
 
 	toggle_snapping_button = memnew(Button);
-	toggle_snapping_button->set_theme_type_variation("FlatButton");
+	toggle_snapping_button->set_theme_type_variation(SceneStringName(FlatButton));
 	toggle_snapping_button->set_visible(show_grid_buttons);
 	toggle_snapping_button->set_toggle_mode(true);
 	toggle_snapping_button->set_tooltip_text(ETR("Toggle snapping to the grid."));
@@ -2951,7 +2976,7 @@ GraphEdit::GraphEdit() {
 	// Extra controls.
 
 	minimap_button = memnew(Button);
-	minimap_button->set_theme_type_variation("FlatButton");
+	minimap_button->set_theme_type_variation(SceneStringName(FlatButton));
 	minimap_button->set_visible(show_minimap_button);
 	minimap_button->set_toggle_mode(true);
 	minimap_button->set_tooltip_text(ETR("Toggle the graph minimap."));
@@ -2961,7 +2986,7 @@ GraphEdit::GraphEdit() {
 	minimap_button->connect(SceneStringName(pressed), callable_mp(this, &GraphEdit::_minimap_toggled));
 
 	arrange_button = memnew(Button);
-	arrange_button->set_theme_type_variation("FlatButton");
+	arrange_button->set_theme_type_variation(SceneStringName(FlatButton));
 	arrange_button->set_visible(show_arrange_button);
 	arrange_button->connect(SceneStringName(pressed), callable_mp(this, &GraphEdit::arrange_nodes));
 	arrange_button->set_focus_mode(FOCUS_NONE);
@@ -2989,5 +3014,5 @@ GraphEdit::GraphEdit() {
 
 	set_clip_contents(true);
 
-	arranger = Ref<GraphEditArranger>(memnew(GraphEditArranger(this)));
+	arranger.instantiate(this);
 }

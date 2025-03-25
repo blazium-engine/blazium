@@ -42,7 +42,7 @@
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/popup_menu.h"
 
-String SceneExporterGLTFPlugin::get_name() const {
+String SceneExporterGLTFPlugin::get_plugin_name() const {
 	return "ConvertGLTF2";
 }
 

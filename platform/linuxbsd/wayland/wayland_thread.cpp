@@ -200,10 +200,7 @@ bool WaylandThread::_seat_state_configure_key_event(SeatState &p_ss, Ref<InputEv
 
 	Key physical_keycode = KeyMappingXKB::get_scancode(p_keycode);
 	KeyLocation key_location = KeyMappingXKB::get_location(p_keycode);
-
-	if (physical_keycode == Key::NONE) {
-		return false;
-	}
+	uint32_t unicode = xkb_state_key_get_utf32(p_ss.xkb_state, p_keycode);
 
 	Key keycode = Key::NONE;
 	if (num_sys > 0 && syms) {
@@ -218,6 +215,10 @@ bool WaylandThread::_seat_state_configure_key_event(SeatState &p_ss, Ref<InputEv
 		keycode -= 'a' - 'A';
 	}
 
+	if (physical_keycode == Key::NONE && keycode == Key::NONE && unicode == 0) {
+		return false;
+	}
+
 	p_event->set_window_id(DisplayServer::MAIN_WINDOW_ID);
 
 	// Set all pressed modifiers.
@@ -230,8 +231,6 @@ bool WaylandThread::_seat_state_configure_key_event(SeatState &p_ss, Ref<InputEv
 	p_event->set_keycode(keycode);
 	p_event->set_physical_keycode(physical_keycode);
 	p_event->set_location(key_location);
-
-	uint32_t unicode = xkb_state_key_get_utf32(p_ss.xkb_state, p_keycode);
 
 	if (unicode != 0) {
 		p_event->set_key_label(fix_key_label(unicode, keycode));
@@ -3345,6 +3344,96 @@ void WaylandThread::beep() const {
 	if (registry.xdg_system_bell) {
 		xdg_system_bell_v1_ring(registry.xdg_system_bell, nullptr);
 	}
+}
+
+void WaylandThread::window_start_drag(DisplayServer::WindowID p_window_id) {
+	// TODO: Use window IDs for multiwindow support.
+	WindowState &ws = main_window;
+	SeatState *ss = wl_seat_get_seat_state(wl_seat_current);
+
+	if (ss && ws.xdg_toplevel) {
+		xdg_toplevel_move(ws.xdg_toplevel, ss->wl_seat, ss->pointer_data.button_serial);
+	}
+
+#ifdef LIBDECOR_ENABLED
+	if (ws.libdecor_frame) {
+		libdecor_frame_move(ws.libdecor_frame, ss->wl_seat, ss->pointer_data.button_serial);
+	}
+#endif
+}
+
+void WaylandThread::window_start_resize(DisplayServer::WindowResizeEdge p_edge, DisplayServer::WindowID p_window) {
+	// TODO: Use window IDs for multiwindow support.
+	WindowState &ws = main_window;
+	SeatState *ss = wl_seat_get_seat_state(wl_seat_current);
+
+	if (ss && ws.xdg_toplevel) {
+		xdg_toplevel_resize_edge edge = XDG_TOPLEVEL_RESIZE_EDGE_NONE;
+		switch (p_edge) {
+			case DisplayServer::WINDOW_EDGE_TOP_LEFT: {
+				edge = XDG_TOPLEVEL_RESIZE_EDGE_TOP_LEFT;
+			} break;
+			case DisplayServer::WINDOW_EDGE_TOP: {
+				edge = XDG_TOPLEVEL_RESIZE_EDGE_TOP;
+			} break;
+			case DisplayServer::WINDOW_EDGE_TOP_RIGHT: {
+				edge = XDG_TOPLEVEL_RESIZE_EDGE_TOP_RIGHT;
+			} break;
+			case DisplayServer::WINDOW_EDGE_LEFT: {
+				edge = XDG_TOPLEVEL_RESIZE_EDGE_LEFT;
+			} break;
+			case DisplayServer::WINDOW_EDGE_RIGHT: {
+				edge = XDG_TOPLEVEL_RESIZE_EDGE_RIGHT;
+			} break;
+			case DisplayServer::WINDOW_EDGE_BOTTOM_LEFT: {
+				edge = XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_LEFT;
+			} break;
+			case DisplayServer::WINDOW_EDGE_BOTTOM: {
+				edge = XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM;
+			} break;
+			case DisplayServer::WINDOW_EDGE_BOTTOM_RIGHT: {
+				edge = XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT;
+			} break;
+			default:
+				break;
+		}
+		xdg_toplevel_resize(ws.xdg_toplevel, ss->wl_seat, ss->pointer_data.button_serial, edge);
+	}
+
+#ifdef LIBDECOR_ENABLED
+	if (ws.libdecor_frame) {
+		libdecor_resize_edge edge = LIBDECOR_RESIZE_EDGE_NONE;
+		switch (p_edge) {
+			case DisplayServer::WINDOW_EDGE_TOP_LEFT: {
+				edge = LIBDECOR_RESIZE_EDGE_TOP_LEFT;
+			} break;
+			case DisplayServer::WINDOW_EDGE_TOP: {
+				edge = LIBDECOR_RESIZE_EDGE_TOP;
+			} break;
+			case DisplayServer::WINDOW_EDGE_TOP_RIGHT: {
+				edge = LIBDECOR_RESIZE_EDGE_TOP_RIGHT;
+			} break;
+			case DisplayServer::WINDOW_EDGE_LEFT: {
+				edge = LIBDECOR_RESIZE_EDGE_LEFT;
+			} break;
+			case DisplayServer::WINDOW_EDGE_RIGHT: {
+				edge = LIBDECOR_RESIZE_EDGE_RIGHT;
+			} break;
+			case DisplayServer::WINDOW_EDGE_BOTTOM_LEFT: {
+				edge = LIBDECOR_RESIZE_EDGE_BOTTOM_LEFT;
+			} break;
+			case DisplayServer::WINDOW_EDGE_BOTTOM: {
+				edge = LIBDECOR_RESIZE_EDGE_BOTTOM;
+			} break;
+			case DisplayServer::WINDOW_EDGE_BOTTOM_RIGHT: {
+				edge = LIBDECOR_RESIZE_EDGE_BOTTOM_RIGHT;
+			} break;
+			default:
+				break;
+		}
+		libdecor_frame_resize(ws.libdecor_frame, ss->wl_seat, ss->pointer_data.button_serial, edge);
+	}
+#endif
 }
 
 void WaylandThread::window_set_max_size(DisplayServer::WindowID p_window_id, const Size2i &p_size) {

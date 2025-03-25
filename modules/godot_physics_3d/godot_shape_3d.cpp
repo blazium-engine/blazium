@@ -69,7 +69,7 @@ void GodotShape3D::configure(const AABB &p_aabb) {
 	aabb = p_aabb;
 	configured = true;
 	for (const KeyValue<GodotShapeOwner3D *, int> &E : owners) {
-		GodotShapeOwner3D *co = const_cast<GodotShapeOwner3D *>(E.key);
+		GodotShapeOwner3D *co = E.key;
 		co->_shape_changed();
 	}
 }
@@ -1133,8 +1133,9 @@ void GodotConvexPolygonShape3D::_setup(const Vector<Vector3> &p_vertices) {
 							max_support = s;
 						}
 					}
-					if (!extreme_vertices.has(best_vertex))
+					if (!extreme_vertices.has(best_vertex)) {
 						extreme_vertices.push_back(best_vertex);
+					}
 				}
 			}
 		}

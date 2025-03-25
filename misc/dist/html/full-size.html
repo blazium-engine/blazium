@@ -22,9 +22,12 @@ input[type="url"],
 input[type="week"],
 select:focus,
 textarea {
-  font-size: 16px;
+	font-size: 16px;
 }
-html, body, #canvas {
+
+html,
+body,
+#canvas {
 	margin: 0;
 	padding: 0;
 	border: 0;
@@ -45,19 +48,22 @@ body {
 	outline: none;
 }
 
-#status, #status-splash, #status-progress {
+#status,
+#status-splash,
+#status-progress {
 	position: absolute;
 	left: 0;
 	right: 0;
 }
 
-#status, #status-splash {
+#status,
+#status-splash {
 	top: 0;
 	bottom: 0;
 }
 
 #status {
-	background-color: #242424;
+	background-color: $GODOT_SPLASH_COLOR;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
@@ -71,7 +77,22 @@ body {
 	margin: auto;
 }
 
-#status-progress, #status-notice {
+#status-splash.show-image--false {
+	display: none;
+}
+
+#status-splash.fullsize--true {
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+}
+
+#status-splash.use-filter--false {
+	image-rendering: pixelated;
+}
+
+#status-progress,
+#status-notice {
 	display: none;
 }
 
@@ -105,7 +126,7 @@ body {
 			Your browser does not support JavaScript.
 		</noscript>
 		<div id="status">
-			<img id="status-splash" src="$GODOT_SPLASH" alt="">
+			<img id="status-splash" class="$GODOT_SPLASH_CLASSES" src="$GODOT_SPLASH" alt="">
 			<progress id="status-progress"></progress>
 			<div id="status-notice"></div>
 		</div>

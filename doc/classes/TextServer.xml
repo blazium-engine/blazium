@@ -229,6 +229,11 @@
 				[code]points[/code]         - [PackedVector3Array], containing outline points. [code]x[/code] and [code]y[/code] are point coordinates. [code]z[/code] is the type of the point, using the [enum ContourPointTag] values.
 				[code]contours[/code]       - [PackedInt32Array], containing indices the end points of each contour.
 				[code]orientation[/code]    - [bool], contour orientation. If [code]true[/code], clockwise contours must be filled.
+				- Two successive [constant CONTOUR_CURVE_TAG_ON] points indicate a line segment.
+				- One [constant CONTOUR_CURVE_TAG_OFF_CONIC] point between two [constant CONTOUR_CURVE_TAG_ON] points indicates a single conic (quadratic) Bézier arc.
+				- Two [constant CONTOUR_CURVE_TAG_OFF_CUBIC] points between two [constant CONTOUR_CURVE_TAG_ON] points indicate a single cubic Bézier arc.
+				- Two successive [constant CONTOUR_CURVE_TAG_OFF_CONIC] points indicate two successive conic (quadratic) Bézier arcs with a virtual [constant CONTOUR_CURVE_TAG_ON] point at their middle.
+				- Each contour is closed. The last point of a contour uses the first point of a contour as its next point, and vice versa. The first point can be [constant CONTOUR_CURVE_TAG_OFF_CONIC] point.
 			</description>
 		</method>
 		<method name="font_get_glyph_index" qualifiers="const">
@@ -1217,6 +1222,14 @@
 				Returns number of text spans added using [method shaped_text_add_string] or [method shaped_text_add_object].
 			</description>
 		</method>
+		<method name="shaped_get_span_embedded_object" qualifiers="const">
+			<return type="Variant" />
+			<param index="0" name="shaped" type="RID" />
+			<param index="1" name="index" type="int" />
+			<description>
+				Returns text embedded object key.
+			</description>
+		</method>
 		<method name="shaped_get_span_meta" qualifiers="const">
 			<return type="Variant" />
 			<param index="0" name="shaped" type="RID" />
@@ -1768,7 +1781,7 @@
 				Returns array of the composite character boundaries.
 				[codeblock]
 				var ts = TextServerManager.get_primary_interface()
-				print(ts.string_get_word_breaks("Test ❤️‍🔥 Test")) # Prints [1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14]
+				print(ts.string_get_character_breaks("Test ❤️‍🔥 Test")) # Prints [1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14]
 				[/codeblock]
 			</description>
 		</method>
@@ -1945,6 +1958,7 @@
 		</constant>
 		<constant name="VC_CHARS_BEFORE_SHAPING" value="0" enum="VisibleCharactersBehavior">
 			Trims text before the shaping. e.g, increasing [member Label.visible_characters] or [member RichTextLabel.visible_characters] value is visually identical to typing the text.
+			[b]Note:[/b] In this mode, trimmed text is not processed at all. It is not accounted for in line breaking and size calculations.
 		</constant>
 		<constant name="VC_CHARS_AFTER_SHAPING" value="1" enum="VisibleCharactersBehavior">
 			Displays glyphs that are mapped to the first [member Label.visible_characters] or [member RichTextLabel.visible_characters] characters from the beginning of the text.

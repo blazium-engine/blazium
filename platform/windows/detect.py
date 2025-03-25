@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import methods
 from methods import print_error, print_warning
-from platform_methods import detect_arch
+from platform_methods import detect_arch, validate_arch
 
 if TYPE_CHECKING:
     from SCons.Script.SConscript import SConsEnvironment
@@ -198,8 +198,16 @@ def get_opts():
         BoolVariable("use_asan", "Use address sanitizer (ASAN)", False),
         BoolVariable("use_ubsan", "Use LLVM compiler undefined behavior sanitizer (UBSAN)", False),
         BoolVariable("debug_crt", "Compile with MSVC's debug CRT (/MDd)", False),
-        BoolVariable("incremental_link", "Use MSVC incremental linking. May increase or decrease build times.", False),
-        BoolVariable("silence_msvc", "Silence MSVC's cl/link stdout bloat, redirecting any errors to stderr.", True),
+        BoolVariable(
+            "incremental_link",
+            "Use MSVC incremental linking. May increase or decrease build times.",
+            False,
+        ),
+        BoolVariable(
+            "silence_msvc",
+            "Silence MSVC's cl/link stdout bloat, redirecting any errors to stderr.",
+            True,
+        ),
         ("angle_libs", "Path to the ANGLE static libraries", ""),
         # Direct3D 12 support.
         (
@@ -217,7 +225,11 @@ def get_opts():
             "Whether the Agility SDK DLLs will be stored in arch-specific subdirectories",
             False,
         ),
-        BoolVariable("use_pix", "Use PIX (Performance tuning and debugging for DirectX 12) runtime", False),
+        BoolVariable(
+            "use_pix",
+            "Use PIX (Performance tuning and debugging for DirectX 12) runtime",
+            False,
+        ),
         (
             "pix_path",
             "Path to the PIX runtime distribution (optional for D3D12)",
@@ -358,6 +370,11 @@ def configure_msvc(env: "SConsEnvironment", vcvars_msvc_config):
 
         env.AppendUnique(CPPDEFINES=["R128_STDC_ONLY"])
         env.extra_suffix = ".llvm" + env.extra_suffix
+
+        # Ensure intellisense tools like `compile_commands.json` play nice with MSVC syntax.
+        env["CPPDEFPREFIX"] = "-D"
+        env["INCPREFIX"] = "-I"
+        env.AppendUnique(CPPDEFINES=[("alloca", "_alloca")])
 
     if env["silence_msvc"] and not env.GetOption("clean"):
         from tempfile import mkstemp
@@ -621,7 +638,7 @@ def get_ar_version(env):
         print_warning("Couldn't check version of `ar`.")
         return ret
 
-    match = re.search(r"GNU ar(?: \(GNU Binutils\)| version) (\d+)\.(\d+)(?:\.(\d+))?", output)
+    match = re.search(r"GNU ar \(GNU Binutils\) (\d+)\.(\d+)(?:\.(\d+))?", output)
     if match:
         ret["major"] = int(match[1])
         ret["minor"] = int(match[2])
@@ -701,11 +718,7 @@ def configure_mingw(env: "SConsEnvironment"):
         print("Detected GCC to be a wrapper for Clang.")
         env["use_llvm"] = True
 
-    # TODO: Re-evaluate the need for this / streamline with common config.
-    if env["target"] == "template_release":
-        if env["arch"] not in ["arm64", "arm32"]:
-            env.Append(CCFLAGS=["-msse2"])
-    elif env.dev_build:
+    if env.dev_build:
         # Allow big objects. It's supposed not to have drawbacks but seems to break
         # GCC LTO, so enabling for debug builds only (which are not built with LTO
         # and are the only ones with too big objects).
@@ -811,7 +824,7 @@ def configure_mingw(env: "SConsEnvironment"):
         env.Append(CCFLAGS=san_flags)
         env.Append(LINKFLAGS=san_flags)
 
-    if env["use_llvm"] and os.name == "nt" and methods._colorize:
+    if env["use_llvm"] and os.name == "nt" and methods._can_color:
         env.Append(CCFLAGS=["$(-fansi-escape-codes$)", "$(-fcolor-diagnostics$)"])
 
     if get_is_ar_thin_supported(env):
@@ -903,12 +916,7 @@ def configure_mingw(env: "SConsEnvironment"):
 def configure(env: "SConsEnvironment"):
     # Validate arch.
     supported_arches = ["x86_32", "x86_64", "arm32", "arm64"]
-    if env["arch"] not in supported_arches:
-        print_error(
-            'Unsupported CPU architecture "%s" for Windows. Supported architectures are: %s.'
-            % (env["arch"], ", ".join(supported_arches))
-        )
-        sys.exit(255)
+    validate_arch(env["arch"], get_name(), supported_arches)
 
     # At this point the env has been set up with basic tools/compilers.
     env.Prepend(CPPPATH=["#platform/windows"])

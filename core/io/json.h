@@ -94,6 +94,9 @@ public:
 	void set_data(const Variant &p_data);
 	inline int get_error_line() const { return err_line; }
 	inline String get_error_message() const { return err_str; }
+
+	static Variant from_native(const Variant &p_variant, bool p_allow_classes = false, bool p_allow_scripts = false);
+	static Variant to_native(const Variant &p_json, bool p_allow_classes = false, bool p_allow_scripts = false);
 };
 
 class ResourceFormatLoaderJSON : public ResourceFormatLoader {
@@ -102,6 +105,10 @@ public:
 	virtual void get_recognized_extensions(List<String> *p_extensions) const override;
 	virtual bool handles_type(const String &p_type) const override;
 	virtual String get_resource_type(const String &p_path) const override;
+
+	// Treat JSON as a text file, do not generate a `*.json.uid` file.
+	virtual ResourceUID::ID get_resource_uid(const String &p_path) const override { return ResourceUID::INVALID_ID; }
+	virtual bool has_custom_uid_support() const override { return true; }
 };
 
 class ResourceFormatSaverJSON : public ResourceFormatSaver {

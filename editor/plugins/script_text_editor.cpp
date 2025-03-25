@@ -31,10 +31,12 @@
 #include "script_text_editor.h"
 
 #include "core/config/project_settings.h"
+#include "core/io/json.h"
 #include "core/math/expression.h"
 #include "core/os/keyboard.h"
 #include "editor/debugger/editor_debugger_node.h"
 #include "editor/editor_command_palette.h"
+#include "editor/editor_help.h"
 #include "editor/editor_node.h"
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
@@ -288,7 +290,7 @@ void ScriptTextEditor::_warning_clicked(const Variant &p_line) {
 		CodeEdit *text_editor = code_editor->get_text_editor();
 		String prev_line = line > 0 ? text_editor->get_line(line - 1) : "";
 		if (prev_line.contains("@warning_ignore")) {
-			const int closing_bracket_idx = prev_line.find(")");
+			const int closing_bracket_idx = prev_line.find_char(')');
 			const String text_to_insert = ", " + code.quote(quote_style);
 			text_editor->insert_text(text_to_insert, line - 1, closing_bracket_idx);
 		} else {
@@ -458,6 +460,7 @@ void ScriptTextEditor::convert_indent() {
 
 void ScriptTextEditor::tag_saved_version() {
 	code_editor->get_text_editor()->tag_saved_version();
+	edited_file_data.last_modified_time = FileAccess::get_modified_time(edited_file_data.path);
 }
 
 void ScriptTextEditor::goto_line(int p_line, int p_column) {
@@ -932,6 +935,9 @@ void ScriptTextEditor::_breakpoint_toggled(int p_row) {
 }
 
 void ScriptTextEditor::_on_caret_moved() {
+	if (code_editor->is_previewing_navigation_change()) {
+		return;
+	}
 	int current_line = code_editor->get_text_editor()->get_caret_line();
 	if (ABS(current_line - previous_line) >= 10) {
 		Dictionary nav_state = get_navigation_state();
@@ -957,7 +963,7 @@ void ScriptTextEditor::_lookup_symbol(const String &p_symbol, int p_row, int p_c
 	} else if (p_symbol.is_resource_file() || p_symbol.begins_with("uid://")) {
 		String symbol = p_symbol;
 		if (symbol.begins_with("uid://")) {
-			symbol = ResourceUID::get_singleton()->get_id_path(ResourceUID::get_singleton()->text_to_id(symbol));
+			symbol = ResourceUID::uid_to_path(symbol);
 		}
 
 		List<String> scene_extensions;
@@ -968,95 +974,88 @@ void ScriptTextEditor::_lookup_symbol(const String &p_symbol, int p_row, int p_c
 		} else {
 			EditorNode::get_singleton()->load_resource(symbol);
 		}
-
 	} else if (lc_error == OK) {
 		_goto_line(p_row);
 
-		switch (result.type) {
-			case ScriptLanguage::LOOKUP_RESULT_SCRIPT_LOCATION: {
-				if (result.script.is_valid()) {
-					emit_signal(SNAME("request_open_script_at_line"), result.script, result.location - 1);
-				} else {
-					emit_signal(SNAME("request_save_history"));
-					goto_line_centered(result.location - 1);
-				}
-			} break;
-			case ScriptLanguage::LOOKUP_RESULT_CLASS: {
-				emit_signal(SNAME("go_to_help"), "class_name:" + result.class_name);
-			} break;
-			case ScriptLanguage::LOOKUP_RESULT_CLASS_CONSTANT: {
-				StringName cname = result.class_name;
-				bool success;
-				while (true) {
-					ClassDB::get_integer_constant(cname, result.class_member, &success);
-					if (success) {
-						result.class_name = cname;
+		if (!result.class_name.is_empty() && EditorHelp::get_doc_data()->class_list.has(result.class_name) && !EditorHelp::get_doc_data()->class_list[result.class_name].is_script_doc) {
+			switch (result.type) {
+				case ScriptLanguage::LOOKUP_RESULT_CLASS: {
+					emit_signal(SNAME("go_to_help"), "class_name:" + result.class_name);
+				} break;
+				case ScriptLanguage::LOOKUP_RESULT_CLASS_CONSTANT: {
+					StringName cname = result.class_name;
+					while (ClassDB::class_exists(cname)) {
+						if (ClassDB::has_integer_constant(cname, result.class_member, true)) {
+							result.class_name = cname;
+							break;
+						}
 						cname = ClassDB::get_parent_class(cname);
-					} else {
-						break;
 					}
-				}
-
-				emit_signal(SNAME("go_to_help"), "class_constant:" + result.class_name + ":" + result.class_member);
-
-			} break;
-			case ScriptLanguage::LOOKUP_RESULT_CLASS_PROPERTY: {
-				emit_signal(SNAME("go_to_help"), "class_property:" + result.class_name + ":" + result.class_member);
-
-			} break;
-			case ScriptLanguage::LOOKUP_RESULT_CLASS_METHOD: {
-				StringName cname = result.class_name;
-
-				while (true) {
-					if (ClassDB::has_method(cname, result.class_member)) {
-						result.class_name = cname;
+					emit_signal(SNAME("go_to_help"), "class_constant:" + result.class_name + ":" + result.class_member);
+				} break;
+				case ScriptLanguage::LOOKUP_RESULT_CLASS_PROPERTY: {
+					StringName cname = result.class_name;
+					while (ClassDB::class_exists(cname)) {
+						if (ClassDB::has_property(cname, result.class_member, true)) {
+							result.class_name = cname;
+							break;
+						}
 						cname = ClassDB::get_parent_class(cname);
-					} else {
-						break;
 					}
-				}
-
-				emit_signal(SNAME("go_to_help"), "class_method:" + result.class_name + ":" + result.class_member);
-
-			} break;
-			case ScriptLanguage::LOOKUP_RESULT_CLASS_SIGNAL: {
-				StringName cname = result.class_name;
-
-				while (true) {
-					if (ClassDB::has_signal(cname, result.class_member)) {
-						result.class_name = cname;
+					emit_signal(SNAME("go_to_help"), "class_property:" + result.class_name + ":" + result.class_member);
+				} break;
+				case ScriptLanguage::LOOKUP_RESULT_CLASS_METHOD: {
+					StringName cname = result.class_name;
+					while (ClassDB::class_exists(cname)) {
+						if (ClassDB::has_method(cname, result.class_member, true)) {
+							result.class_name = cname;
+							break;
+						}
 						cname = ClassDB::get_parent_class(cname);
-					} else {
-						break;
 					}
-				}
-
-				emit_signal(SNAME("go_to_help"), "class_signal:" + result.class_name + ":" + result.class_member);
-
-			} break;
-			case ScriptLanguage::LOOKUP_RESULT_CLASS_ENUM: {
-				StringName cname = result.class_name;
-				StringName success;
-				while (true) {
-					success = ClassDB::get_integer_constant_enum(cname, result.class_member, true);
-					if (success != StringName()) {
-						result.class_name = cname;
+					emit_signal(SNAME("go_to_help"), "class_method:" + result.class_name + ":" + result.class_member);
+				} break;
+				case ScriptLanguage::LOOKUP_RESULT_CLASS_SIGNAL: {
+					StringName cname = result.class_name;
+					while (ClassDB::class_exists(cname)) {
+						if (ClassDB::has_signal(cname, result.class_member, true)) {
+							result.class_name = cname;
+							break;
+						}
 						cname = ClassDB::get_parent_class(cname);
-					} else {
-						break;
 					}
-				}
-
-				emit_signal(SNAME("go_to_help"), "class_enum:" + result.class_name + ":" + result.class_member);
-
-			} break;
-			case ScriptLanguage::LOOKUP_RESULT_CLASS_ANNOTATION: {
-				emit_signal(SNAME("go_to_help"), "class_annotation:" + result.class_name + ":" + result.class_member);
-			} break;
-			case ScriptLanguage::LOOKUP_RESULT_CLASS_TBD_GLOBALSCOPE: {
-				emit_signal(SNAME("go_to_help"), "class_global:" + result.class_name + ":" + result.class_member);
-			} break;
-			default: {
+					emit_signal(SNAME("go_to_help"), "class_signal:" + result.class_name + ":" + result.class_member);
+				} break;
+				case ScriptLanguage::LOOKUP_RESULT_CLASS_ENUM: {
+					StringName cname = result.class_name;
+					while (ClassDB::class_exists(cname)) {
+						if (ClassDB::has_enum(cname, result.class_member, true)) {
+							result.class_name = cname;
+							break;
+						}
+						cname = ClassDB::get_parent_class(cname);
+					}
+					emit_signal(SNAME("go_to_help"), "class_enum:" + result.class_name + ":" + result.class_member);
+				} break;
+				case ScriptLanguage::LOOKUP_RESULT_CLASS_ANNOTATION: {
+					emit_signal(SNAME("go_to_help"), "class_annotation:" + result.class_name + ":" + result.class_member);
+				} break;
+				case ScriptLanguage::LOOKUP_RESULT_CLASS_TBD_GLOBALSCOPE: { // Deprecated.
+					emit_signal(SNAME("go_to_help"), "class_global:" + result.class_name + ":" + result.class_member);
+				} break;
+				case ScriptLanguage::LOOKUP_RESULT_SCRIPT_LOCATION:
+				case ScriptLanguage::LOOKUP_RESULT_LOCAL_CONSTANT:
+				case ScriptLanguage::LOOKUP_RESULT_LOCAL_VARIABLE:
+				case ScriptLanguage::LOOKUP_RESULT_MAX: {
+					// Nothing to do.
+				} break;
+			}
+		} else if (result.location >= 0) {
+			if (result.script.is_valid()) {
+				emit_signal(SNAME("request_open_script_at_line"), result.script, result.location - 1);
+			} else {
+				emit_signal(SNAME("request_save_history"));
+				goto_line_centered(result.location - 1);
 			}
 		}
 	} else if (ProjectSettings::get_singleton()->has_autoload(p_symbol)) {
@@ -1104,6 +1103,126 @@ void ScriptTextEditor::_validate_symbol(const String &p_symbol) {
 		}
 	} else {
 		text_edit->set_symbol_lookup_word_as_valid(false);
+	}
+}
+
+void ScriptTextEditor::_show_symbol_tooltip(const String &p_symbol, int p_row, int p_column) {
+	if (!EDITOR_GET("text_editor/behavior/documentation/enable_tooltips").booleanize()) {
+		return;
+	}
+
+	if (p_symbol.begins_with("res://") || p_symbol.begins_with("uid://")) {
+		EditorHelpBitTooltip::show_tooltip(code_editor->get_text_editor(), "resource||" + p_symbol);
+		return;
+	}
+
+	Node *base = get_tree()->get_edited_scene_root();
+	if (base) {
+		base = _find_node_for_script(base, base, script);
+	}
+
+	ScriptLanguage::LookupResult result;
+	String doc_symbol;
+	const String code_text = code_editor->get_text_editor()->get_text_with_cursor_char(p_row, p_column);
+	const Error lc_error = script->get_language()->lookup_code(code_text, p_symbol, script->get_path(), base, result);
+	if (lc_error == OK) {
+		switch (result.type) {
+			case ScriptLanguage::LOOKUP_RESULT_CLASS: {
+				doc_symbol = "class|" + result.class_name + "|";
+			} break;
+			case ScriptLanguage::LOOKUP_RESULT_CLASS_CONSTANT: {
+				StringName cname = result.class_name;
+				while (ClassDB::class_exists(cname)) {
+					if (ClassDB::has_integer_constant(cname, result.class_member, true)) {
+						result.class_name = cname;
+						break;
+					}
+					cname = ClassDB::get_parent_class(cname);
+				}
+				doc_symbol = "constant|" + result.class_name + "|" + result.class_member;
+			} break;
+			case ScriptLanguage::LOOKUP_RESULT_CLASS_PROPERTY: {
+				StringName cname = result.class_name;
+				while (ClassDB::class_exists(cname)) {
+					if (ClassDB::has_property(cname, result.class_member, true)) {
+						result.class_name = cname;
+						break;
+					}
+					cname = ClassDB::get_parent_class(cname);
+				}
+				doc_symbol = "property|" + result.class_name + "|" + result.class_member;
+			} break;
+			case ScriptLanguage::LOOKUP_RESULT_CLASS_METHOD: {
+				StringName cname = result.class_name;
+				while (ClassDB::class_exists(cname)) {
+					if (ClassDB::has_method(cname, result.class_member, true)) {
+						result.class_name = cname;
+						break;
+					}
+					cname = ClassDB::get_parent_class(cname);
+				}
+				doc_symbol = "method|" + result.class_name + "|" + result.class_member;
+			} break;
+			case ScriptLanguage::LOOKUP_RESULT_CLASS_SIGNAL: {
+				StringName cname = result.class_name;
+				while (ClassDB::class_exists(cname)) {
+					if (ClassDB::has_signal(cname, result.class_member, true)) {
+						result.class_name = cname;
+						break;
+					}
+					cname = ClassDB::get_parent_class(cname);
+				}
+				doc_symbol = "signal|" + result.class_name + "|" + result.class_member;
+			} break;
+			case ScriptLanguage::LOOKUP_RESULT_CLASS_ENUM: {
+				StringName cname = result.class_name;
+				while (ClassDB::class_exists(cname)) {
+					if (ClassDB::has_enum(cname, result.class_member, true)) {
+						result.class_name = cname;
+						break;
+					}
+					cname = ClassDB::get_parent_class(cname);
+				}
+				doc_symbol = "enum|" + result.class_name + "|" + result.class_member;
+			} break;
+			case ScriptLanguage::LOOKUP_RESULT_CLASS_ANNOTATION: {
+				doc_symbol = "annotation|" + result.class_name + "|" + result.class_member;
+			} break;
+			case ScriptLanguage::LOOKUP_RESULT_LOCAL_CONSTANT:
+			case ScriptLanguage::LOOKUP_RESULT_LOCAL_VARIABLE: {
+				const String item_type = (result.type == ScriptLanguage::LOOKUP_RESULT_LOCAL_CONSTANT) ? "local_constant" : "local_variable";
+				Dictionary item_data;
+				item_data["description"] = result.description;
+				item_data["is_deprecated"] = result.is_deprecated;
+				item_data["deprecated_message"] = result.deprecated_message;
+				item_data["is_experimental"] = result.is_experimental;
+				item_data["experimental_message"] = result.experimental_message;
+				item_data["doc_type"] = result.doc_type;
+				item_data["enumeration"] = result.enumeration;
+				item_data["is_bitfield"] = result.is_bitfield;
+				item_data["value"] = result.value;
+				doc_symbol = item_type + "||" + p_symbol + "|" + JSON::stringify(item_data);
+			} break;
+			case ScriptLanguage::LOOKUP_RESULT_SCRIPT_LOCATION:
+			case ScriptLanguage::LOOKUP_RESULT_CLASS_TBD_GLOBALSCOPE: // Deprecated.
+			case ScriptLanguage::LOOKUP_RESULT_MAX: {
+				// Nothing to do.
+			} break;
+		}
+	}
+
+	// NOTE: See also `ScriptEditor::_get_debug_tooltip()` for documentation tooltips disabled.
+	String debug_value = EditorDebuggerNode::get_singleton()->get_var_value(p_symbol);
+	if (!debug_value.is_empty()) {
+		constexpr int DISPLAY_LIMIT = 1024;
+		if (debug_value.size() > DISPLAY_LIMIT) {
+			debug_value = debug_value.left(DISPLAY_LIMIT) + "... " + TTR("(truncated)");
+		}
+		debug_value = TTR("Current value: ") + debug_value.replace("[", "[lb]");
+	}
+
+	if (!doc_symbol.is_empty() || !debug_value.is_empty()) {
+		EditorHelpBitTooltip::show_tooltip(code_editor->get_text_editor(), doc_symbol, debug_value, true);
 	}
 }
 
@@ -1211,7 +1330,7 @@ void ScriptTextEditor::_update_connected_methods() {
 
 		// Account for inner classes by stripping the class names from the method,
 		// starting from the right since our inner class might be inside of another inner class.
-		int pos = raw_name.rfind(".");
+		int pos = raw_name.rfind_char('.');
 		if (pos != -1) {
 			name = raw_name.substr(pos + 1);
 		}
@@ -1524,7 +1643,7 @@ void ScriptTextEditor::_edit_option(int p_op) {
 			quick_open->set_title(TTR("Go to Function"));
 		} break;
 		case SEARCH_GOTO_LINE: {
-			goto_line_dialog->popup_find_line(tx);
+			goto_line_popup->popup_find_line(code_editor);
 		} break;
 		case BOOKMARK_TOGGLE: {
 			code_editor->toggle_bookmark();
@@ -1641,7 +1760,7 @@ void ScriptTextEditor::_edit_option_toggle_inline_comment() {
 	script->get_language()->get_comment_delimiters(&comment_delimiters);
 
 	for (const String &script_delimiter : comment_delimiters) {
-		if (!script_delimiter.contains(" ")) {
+		if (!script_delimiter.contains_char(' ')) {
 			delimiter = script_delimiter;
 			break;
 		}
@@ -1819,9 +1938,9 @@ static String _get_dropped_resource_line(const Ref<Resource> &p_resource, bool p
 	}
 
 	if (is_script) {
-		variable_name = variable_name.to_pascal_case().validate_ascii_identifier();
+		variable_name = variable_name.to_pascal_case().validate_unicode_identifier();
 	} else {
-		variable_name = variable_name.to_snake_case().to_upper().validate_ascii_identifier();
+		variable_name = variable_name.to_snake_case().to_upper().validate_unicode_identifier();
 	}
 	return vformat("const %s = preload(%s)", variable_name, _quote_drop_data(path));
 }
@@ -1933,13 +2052,13 @@ void ScriptTextEditor::drop_data_fw(const Point2 &p_point, const Variant &p_data
 					path = sn->get_path_to(node);
 				}
 				for (const String &segment : path.split("/")) {
-					if (!segment.is_valid_ascii_identifier()) {
+					if (!segment.is_valid_unicode_identifier()) {
 						path = _quote_drop_data(path);
 						break;
 					}
 				}
 
-				String variable_name = String(node->get_name()).to_snake_case().validate_ascii_identifier();
+				String variable_name = String(node->get_name()).to_snake_case().validate_unicode_identifier();
 				if (use_type) {
 					StringName class_name = node->get_class_name();
 					Ref<Script> node_script = node->get_script();
@@ -2240,6 +2359,7 @@ void ScriptTextEditor::_enable_code_editor() {
 	code_editor->connect("validate_script", callable_mp(this, &ScriptTextEditor::_validate_script));
 	code_editor->connect("load_theme_settings", callable_mp(this, &ScriptTextEditor::_load_theme_settings));
 	code_editor->get_text_editor()->connect("symbol_lookup", callable_mp(this, &ScriptTextEditor::_lookup_symbol));
+	code_editor->get_text_editor()->connect("symbol_hovered", callable_mp(this, &ScriptTextEditor::_show_symbol_tooltip));
 	code_editor->get_text_editor()->connect("symbol_validate", callable_mp(this, &ScriptTextEditor::_validate_symbol));
 	code_editor->get_text_editor()->connect("gutter_added", callable_mp(this, &ScriptTextEditor::_update_gutter_indexes));
 	code_editor->get_text_editor()->connect("gutter_removed", callable_mp(this, &ScriptTextEditor::_update_gutter_indexes));
@@ -2278,8 +2398,8 @@ void ScriptTextEditor::_enable_code_editor() {
 	quick_open->connect("goto_line", callable_mp(this, &ScriptTextEditor::_goto_line));
 	add_child(quick_open);
 
-	goto_line_dialog = memnew(GotoLineDialog);
-	add_child(goto_line_dialog);
+	goto_line_popup = memnew(GotoLinePopup);
+	add_child(goto_line_popup);
 
 	add_child(connection_info_dialog);
 
@@ -2387,6 +2507,7 @@ ScriptTextEditor::ScriptTextEditor() {
 	code_editor->get_text_editor()->set_draw_executing_lines_gutter(true);
 	code_editor->get_text_editor()->connect("breakpoint_toggled", callable_mp(this, &ScriptTextEditor::_breakpoint_toggled));
 	code_editor->get_text_editor()->connect("caret_changed", callable_mp(this, &ScriptTextEditor::_on_caret_moved));
+	code_editor->connect("navigation_preview_ended", callable_mp(this, &ScriptTextEditor::_on_caret_moved));
 
 	connection_gutter = 1;
 	code_editor->get_text_editor()->add_gutter(connection_gutter);
@@ -2416,6 +2537,7 @@ ScriptTextEditor::ScriptTextEditor() {
 	update_settings();
 
 	code_editor->get_text_editor()->set_symbol_lookup_on_click_enabled(true);
+	code_editor->get_text_editor()->set_symbol_tooltip_on_hover_enabled(true);
 	code_editor->get_text_editor()->set_context_menu_enabled(false);
 
 	context_menu = memnew(PopupMenu);
@@ -2486,70 +2608,70 @@ static ScriptEditorBase *create_editor(const Ref<Resource> &p_resource) {
 }
 
 void ScriptTextEditor::register_editor() {
-	ED_SHORTCUT("script_text_editor/move_up", TTR("Move Up"), KeyModifierMask::ALT | Key::UP);
-	ED_SHORTCUT("script_text_editor/move_down", TTR("Move Down"), KeyModifierMask::ALT | Key::DOWN);
-	ED_SHORTCUT("script_text_editor/delete_line", TTR("Delete Line"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::K);
+	ED_SHORTCUT("script_text_editor/move_up", TTRC("Move Up"), KeyModifierMask::ALT | Key::UP);
+	ED_SHORTCUT("script_text_editor/move_down", TTRC("Move Down"), KeyModifierMask::ALT | Key::DOWN);
+	ED_SHORTCUT("script_text_editor/delete_line", TTRC("Delete Line"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::K);
 
 	// Leave these at zero, same can be accomplished with tab/shift-tab, including selection.
 	// The next/previous in history shortcut in this case makes a lot more sense.
 
-	ED_SHORTCUT("script_text_editor/indent", TTR("Indent"), Key::NONE);
-	ED_SHORTCUT("script_text_editor/unindent", TTR("Unindent"), KeyModifierMask::SHIFT | Key::TAB);
-	ED_SHORTCUT_ARRAY("script_text_editor/toggle_comment", TTR("Toggle Comment"), { int32_t(KeyModifierMask::CMD_OR_CTRL | Key::K), int32_t(KeyModifierMask::CMD_OR_CTRL | Key::SLASH), int32_t(KeyModifierMask::CMD_OR_CTRL | Key::KP_DIVIDE), int32_t(KeyModifierMask::CMD_OR_CTRL | Key::NUMBERSIGN) });
-	ED_SHORTCUT("script_text_editor/toggle_fold_line", TTR("Fold/Unfold Line"), KeyModifierMask::ALT | Key::F);
+	ED_SHORTCUT("script_text_editor/indent", TTRC("Indent"), Key::NONE);
+	ED_SHORTCUT("script_text_editor/unindent", TTRC("Unindent"), KeyModifierMask::SHIFT | Key::TAB);
+	ED_SHORTCUT_ARRAY("script_text_editor/toggle_comment", TTRC("Toggle Comment"), { int32_t(KeyModifierMask::CMD_OR_CTRL | Key::K), int32_t(KeyModifierMask::CMD_OR_CTRL | Key::SLASH), int32_t(KeyModifierMask::CMD_OR_CTRL | Key::KP_DIVIDE), int32_t(KeyModifierMask::CMD_OR_CTRL | Key::NUMBERSIGN) });
+	ED_SHORTCUT("script_text_editor/toggle_fold_line", TTRC("Fold/Unfold Line"), KeyModifierMask::ALT | Key::F);
 	ED_SHORTCUT_OVERRIDE("script_text_editor/toggle_fold_line", "macos", KeyModifierMask::CTRL | KeyModifierMask::META | Key::F);
-	ED_SHORTCUT("script_text_editor/fold_all_lines", TTR("Fold All Lines"), Key::NONE);
-	ED_SHORTCUT("script_text_editor/create_code_region", TTR("Create Code Region"), KeyModifierMask::ALT | Key::R);
-	ED_SHORTCUT("script_text_editor/unfold_all_lines", TTR("Unfold All Lines"), Key::NONE);
-	ED_SHORTCUT("script_text_editor/duplicate_selection", TTR("Duplicate Selection"), KeyModifierMask::SHIFT | KeyModifierMask::CTRL | Key::D);
+	ED_SHORTCUT("script_text_editor/fold_all_lines", TTRC("Fold All Lines"), Key::NONE);
+	ED_SHORTCUT("script_text_editor/create_code_region", TTRC("Create Code Region"), KeyModifierMask::ALT | Key::R);
+	ED_SHORTCUT("script_text_editor/unfold_all_lines", TTRC("Unfold All Lines"), Key::NONE);
+	ED_SHORTCUT("script_text_editor/duplicate_selection", TTRC("Duplicate Selection"), KeyModifierMask::SHIFT | KeyModifierMask::CTRL | Key::D);
 	ED_SHORTCUT_OVERRIDE("script_text_editor/duplicate_selection", "macos", KeyModifierMask::SHIFT | KeyModifierMask::META | Key::C);
-	ED_SHORTCUT("script_text_editor/duplicate_lines", TTR("Duplicate Lines"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::ALT | Key::DOWN);
+	ED_SHORTCUT("script_text_editor/duplicate_lines", TTRC("Duplicate Lines"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::ALT | Key::DOWN);
 	ED_SHORTCUT_OVERRIDE("script_text_editor/duplicate_lines", "macos", KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::DOWN);
-	ED_SHORTCUT("script_text_editor/evaluate_selection", TTR("Evaluate Selection"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::E);
-	ED_SHORTCUT("script_text_editor/toggle_word_wrap", TTR("Toggle Word Wrap"), KeyModifierMask::ALT | Key::Z);
-	ED_SHORTCUT("script_text_editor/trim_trailing_whitespace", TTR("Trim Trailing Whitespace"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::ALT | Key::T);
-	ED_SHORTCUT("script_text_editor/trim_final_newlines", TTR("Trim Final Newlines"), Key::NONE);
-	ED_SHORTCUT("script_text_editor/convert_indent_to_spaces", TTR("Convert Indent to Spaces"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::Y);
-	ED_SHORTCUT("script_text_editor/convert_indent_to_tabs", TTR("Convert Indent to Tabs"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::I);
-	ED_SHORTCUT("script_text_editor/auto_indent", TTR("Auto Indent"), KeyModifierMask::CMD_OR_CTRL | Key::I);
+	ED_SHORTCUT("script_text_editor/evaluate_selection", TTRC("Evaluate Selection"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::E);
+	ED_SHORTCUT("script_text_editor/toggle_word_wrap", TTRC("Toggle Word Wrap"), KeyModifierMask::ALT | Key::Z);
+	ED_SHORTCUT("script_text_editor/trim_trailing_whitespace", TTRC("Trim Trailing Whitespace"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::ALT | Key::T);
+	ED_SHORTCUT("script_text_editor/trim_final_newlines", TTRC("Trim Final Newlines"), Key::NONE);
+	ED_SHORTCUT("script_text_editor/convert_indent_to_spaces", TTRC("Convert Indent to Spaces"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::Y);
+	ED_SHORTCUT("script_text_editor/convert_indent_to_tabs", TTRC("Convert Indent to Tabs"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::I);
+	ED_SHORTCUT("script_text_editor/auto_indent", TTRC("Auto Indent"), KeyModifierMask::CMD_OR_CTRL | Key::I);
 
-	ED_SHORTCUT_AND_COMMAND("script_text_editor/find", TTR("Find..."), KeyModifierMask::CMD_OR_CTRL | Key::F);
+	ED_SHORTCUT_AND_COMMAND("script_text_editor/find", TTRC("Find..."), KeyModifierMask::CMD_OR_CTRL | Key::F);
 
-	ED_SHORTCUT("script_text_editor/find_next", TTR("Find Next"), Key::F3);
+	ED_SHORTCUT("script_text_editor/find_next", TTRC("Find Next"), Key::F3);
 	ED_SHORTCUT_OVERRIDE("script_text_editor/find_next", "macos", KeyModifierMask::META | Key::G);
 
-	ED_SHORTCUT("script_text_editor/find_previous", TTR("Find Previous"), KeyModifierMask::SHIFT | Key::F3);
+	ED_SHORTCUT("script_text_editor/find_previous", TTRC("Find Previous"), KeyModifierMask::SHIFT | Key::F3);
 	ED_SHORTCUT_OVERRIDE("script_text_editor/find_previous", "macos", KeyModifierMask::META | KeyModifierMask::SHIFT | Key::G);
 
-	ED_SHORTCUT_AND_COMMAND("script_text_editor/replace", TTR("Replace..."), KeyModifierMask::CTRL | Key::R);
+	ED_SHORTCUT_AND_COMMAND("script_text_editor/replace", TTRC("Replace..."), KeyModifierMask::CTRL | Key::R);
 	ED_SHORTCUT_OVERRIDE("script_text_editor/replace", "macos", KeyModifierMask::ALT | KeyModifierMask::META | Key::F);
 
-	ED_SHORTCUT("script_text_editor/find_in_files", TTR("Find in Files..."), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::F);
-	ED_SHORTCUT("script_text_editor/replace_in_files", TTR("Replace in Files..."), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::R);
+	ED_SHORTCUT("script_text_editor/find_in_files", TTRC("Find in Files..."), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::F);
+	ED_SHORTCUT("script_text_editor/replace_in_files", TTRC("Replace in Files..."), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::R);
 
-	ED_SHORTCUT("script_text_editor/contextual_help", TTR("Contextual Help"), KeyModifierMask::ALT | Key::F1);
+	ED_SHORTCUT("script_text_editor/contextual_help", TTRC("Contextual Help"), KeyModifierMask::ALT | Key::F1);
 	ED_SHORTCUT_OVERRIDE("script_text_editor/contextual_help", "macos", KeyModifierMask::ALT | KeyModifierMask::SHIFT | Key::SPACE);
 
-	ED_SHORTCUT("script_text_editor/toggle_bookmark", TTR("Toggle Bookmark"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::ALT | Key::B);
+	ED_SHORTCUT("script_text_editor/toggle_bookmark", TTRC("Toggle Bookmark"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::ALT | Key::B);
 
-	ED_SHORTCUT("script_text_editor/goto_next_bookmark", TTR("Go to Next Bookmark"), KeyModifierMask::CMD_OR_CTRL | Key::B);
+	ED_SHORTCUT("script_text_editor/goto_next_bookmark", TTRC("Go to Next Bookmark"), KeyModifierMask::CMD_OR_CTRL | Key::B);
 	ED_SHORTCUT_OVERRIDE("script_text_editor/goto_next_bookmark", "macos", KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | KeyModifierMask::ALT | Key::B);
 
-	ED_SHORTCUT("script_text_editor/goto_previous_bookmark", TTR("Go to Previous Bookmark"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::B);
-	ED_SHORTCUT("script_text_editor/remove_all_bookmarks", TTR("Remove All Bookmarks"), Key::NONE);
+	ED_SHORTCUT("script_text_editor/goto_previous_bookmark", TTRC("Go to Previous Bookmark"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::B);
+	ED_SHORTCUT("script_text_editor/remove_all_bookmarks", TTRC("Remove All Bookmarks"), Key::NONE);
 
-	ED_SHORTCUT("script_text_editor/goto_function", TTR("Go to Function..."), KeyModifierMask::ALT | KeyModifierMask::CTRL | Key::F);
+	ED_SHORTCUT("script_text_editor/goto_function", TTRC("Go to Function..."), KeyModifierMask::ALT | KeyModifierMask::CTRL | Key::F);
 	ED_SHORTCUT_OVERRIDE("script_text_editor/goto_function", "macos", KeyModifierMask::CTRL | KeyModifierMask::META | Key::J);
 
-	ED_SHORTCUT("script_text_editor/goto_line", TTR("Go to Line..."), KeyModifierMask::CMD_OR_CTRL | Key::L);
+	ED_SHORTCUT("script_text_editor/goto_line", TTRC("Go to Line..."), KeyModifierMask::CMD_OR_CTRL | Key::L);
 
-	ED_SHORTCUT("script_text_editor/toggle_breakpoint", TTR("Toggle Breakpoint"), Key::F9);
+	ED_SHORTCUT("script_text_editor/toggle_breakpoint", TTRC("Toggle Breakpoint"), Key::F9);
 	ED_SHORTCUT_OVERRIDE("script_text_editor/toggle_breakpoint", "macos", KeyModifierMask::META | KeyModifierMask::SHIFT | Key::B);
 
-	ED_SHORTCUT("script_text_editor/remove_all_breakpoints", TTR("Remove All Breakpoints"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::F9);
+	ED_SHORTCUT("script_text_editor/remove_all_breakpoints", TTRC("Remove All Breakpoints"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::F9);
 	// Using Control for these shortcuts even on macOS because Command+Comma is taken for opening Editor Settings.
-	ED_SHORTCUT("script_text_editor/goto_next_breakpoint", TTR("Go to Next Breakpoint"), KeyModifierMask::CTRL | Key::PERIOD);
-	ED_SHORTCUT("script_text_editor/goto_previous_breakpoint", TTR("Go to Previous Breakpoint"), KeyModifierMask::CTRL | Key::COMMA);
+	ED_SHORTCUT("script_text_editor/goto_next_breakpoint", TTRC("Go to Next Breakpoint"), KeyModifierMask::CTRL | Key::PERIOD);
+	ED_SHORTCUT("script_text_editor/goto_previous_breakpoint", TTRC("Go to Previous Breakpoint"), KeyModifierMask::CTRL | Key::COMMA);
 
 	ScriptEditor::register_create_script_editor_function(create_editor);
 }

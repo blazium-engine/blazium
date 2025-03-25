@@ -46,7 +46,7 @@ class FileAccess : public RefCounted {
 	GDCLASS(FileAccess, RefCounted);
 
 public:
-	enum AccessType {
+	enum AccessType : int32_t {
 		ACCESS_RESOURCES,
 		ACCESS_USERDATA,
 		ACCESS_FILESYSTEM,
@@ -54,14 +54,14 @@ public:
 		ACCESS_MAX
 	};
 
-	enum ModeFlags {
+	enum ModeFlags : int32_t {
 		READ = 1,
 		WRITE = 2,
 		READ_WRITE = 3,
 		WRITE_READ = 7,
 	};
 
-	enum UnixPermissionFlags {
+	enum UnixPermissionFlags : int32_t {
 		UNIX_EXECUTE_OTHER = 0x001,
 		UNIX_WRITE_OTHER = 0x002,
 		UNIX_READ_OTHER = 0x004,
@@ -76,7 +76,7 @@ public:
 		UNIX_SET_USER_ID = 0x800,
 	};
 
-	enum CompressionMode {
+	enum CompressionMode : int32_t {
 		COMPRESSION_FASTLZ = Compression::MODE_FASTLZ,
 		COMPRESSION_DEFLATE = Compression::MODE_DEFLATE,
 		COMPRESSION_ZSTD = Compression::MODE_ZSTD,
@@ -122,6 +122,13 @@ private:
 
 	static Ref<FileAccess> _open(const String &p_path, ModeFlags p_mode_flags);
 
+	bool _is_temp_file = false;
+	bool _temp_keep_after_use = false;
+	String _temp_path;
+	void _delete_temp();
+
+	static Ref<FileAccess> _create_temp(int p_mode_flags, const String &p_prefix = "", const String &p_extension = "", bool p_keep = false);
+
 public:
 	static void set_file_close_fail_notify_callback(FileCloseFailNotify p_cbk) { close_fail_notify = p_cbk; }
 
@@ -142,6 +149,7 @@ public:
 	virtual uint32_t get_32() const; ///< get 32 bits uint
 	virtual uint64_t get_64() const; ///< get 64 bits uint
 
+	virtual float get_half() const;
 	virtual float get_float() const;
 	virtual double get_double() const;
 	virtual real_t get_real() const;
@@ -173,6 +181,7 @@ public:
 	virtual void store_32(uint32_t p_dest); ///< store 32 bits uint
 	virtual void store_64(uint64_t p_dest); ///< store 64 bits uint
 
+	virtual void store_half(float p_dest);
 	virtual void store_float(float p_dest);
 	virtual void store_double(double p_dest);
 	virtual void store_real(real_t p_real);
@@ -198,6 +207,7 @@ public:
 	static Ref<FileAccess> create(AccessType p_access); /// Create a file access (for the current platform) this is the only portable way of accessing files.
 	static Ref<FileAccess> create_for_path(const String &p_path);
 	static Ref<FileAccess> open(const String &p_path, int p_mode_flags, Error *r_error = nullptr); /// Create a file access (for the current platform) this is the only portable way of accessing files.
+	static Ref<FileAccess> create_temp(int p_mode_flags, const String &p_prefix = "", const String &p_extension = "", bool p_keep = false, Error *r_error = nullptr);
 
 	static Ref<FileAccess> open_encrypted(const String &p_path, ModeFlags p_mode_flags, const Vector<uint8_t> &p_key);
 	static Ref<FileAccess> open_encrypted_pass(const String &p_path, ModeFlags p_mode_flags, const String &p_pass);
@@ -215,8 +225,8 @@ public:
 	static bool get_read_only_attribute(const String &p_file);
 	static Error set_read_only_attribute(const String &p_file, bool p_ro);
 
-	static void set_backup_save(bool p_enable) { backup_save = p_enable; };
-	static bool is_backup_save_enabled() { return backup_save; };
+	static void set_backup_save(bool p_enable) { backup_save = p_enable; }
+	static bool is_backup_save_enabled() { return backup_save; }
 
 	static String get_md5(const String &p_file);
 	static String get_sha256(const String &p_file);
@@ -233,8 +243,9 @@ public:
 		create_func[p_access] = _create_builtin<T>;
 	}
 
+public:
 	FileAccess() {}
-	virtual ~FileAccess() {}
+	virtual ~FileAccess();
 };
 
 VARIANT_ENUM_CAST(FileAccess::CompressionMode);

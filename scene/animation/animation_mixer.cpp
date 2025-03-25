@@ -33,6 +33,8 @@
 
 #include "core/config/engine.h"
 #include "core/config/project_settings.h"
+#include "core/string/print_string.h"
+#include "core/string/string_name.h"
 #include "scene/2d/audio_stream_player_2d.h"
 #include "scene/animation/animation_player.h"
 #include "scene/audio/audio_stream_player.h"
@@ -81,9 +83,8 @@ bool AnimationMixer::_set(const StringName &p_name, const Variant &p_value) {
 		List<Variant> keys;
 		d.get_key_list(&keys);
 		for (const Variant &K : keys) {
-			StringName lib_name = K;
-			Ref<AnimationLibrary> lib = d[lib_name];
-			add_animation_library(lib_name, lib);
+			Ref<AnimationLibrary> lib = d[K];
+			add_animation_library(K, lib);
 		}
 		emit_signal(SNAME("animation_libraries_updated"));
 
@@ -128,6 +129,9 @@ void AnimationMixer::_validate_property(PropertyInfo &p_property) const {
 		p_property.usage |= PROPERTY_USAGE_READ_ONLY;
 	}
 #endif // TOOLS_ENABLED
+	if (root_motion_track.is_empty() && p_property.name == "root_motion_local") {
+		p_property.usage = PROPERTY_USAGE_NONE;
+	}
 }
 
 /* -------------------------------------------- */
@@ -268,6 +272,16 @@ bool AnimationMixer::has_animation_library(const StringName &p_name) const {
 	return false;
 }
 
+StringName AnimationMixer::get_animation_library_name(const Ref<AnimationLibrary> &p_animation_library) const {
+	ERR_FAIL_COND_V(p_animation_library.is_null(), StringName());
+	for (const AnimationLibraryData &lib : animation_libraries) {
+		if (lib.library == p_animation_library) {
+			return lib.name;
+		}
+	}
+	return StringName();
+}
+
 StringName AnimationMixer::find_animation_library(const Ref<Animation> &p_animation) const {
 	for (const KeyValue<StringName, AnimationData> &E : animation_set) {
 		if (E.value.animation == p_animation) {
@@ -280,7 +294,7 @@ StringName AnimationMixer::find_animation_library(const Ref<Animation> &p_animat
 Error AnimationMixer::add_animation_library(const StringName &p_name, const Ref<AnimationLibrary> &p_animation_library) {
 	ERR_FAIL_COND_V(p_animation_library.is_null(), ERR_INVALID_PARAMETER);
 #ifdef DEBUG_ENABLED
-	ERR_FAIL_COND_V_MSG(String(p_name).contains("/") || String(p_name).contains(":") || String(p_name).contains(",") || String(p_name).contains("["), ERR_INVALID_PARAMETER, "Invalid animation name: " + String(p_name) + ".");
+	ERR_FAIL_COND_V_MSG(String(p_name).contains_char('/') || String(p_name).contains_char(':') || String(p_name).contains_char(',') || String(p_name).contains_char('['), ERR_INVALID_PARAMETER, "Invalid animation name: " + String(p_name) + ".");
 #endif
 
 	int insert_pos = 0;
@@ -342,7 +356,7 @@ void AnimationMixer::rename_animation_library(const StringName &p_name, const St
 		return;
 	}
 #ifdef DEBUG_ENABLED
-	ERR_FAIL_COND_MSG(String(p_new_name).contains("/") || String(p_new_name).contains(":") || String(p_new_name).contains(",") || String(p_new_name).contains("["), "Invalid animation library name: " + String(p_new_name) + ".");
+	ERR_FAIL_COND_MSG(String(p_new_name).contains_char('/') || String(p_new_name).contains_char(':') || String(p_new_name).contains_char(',') || String(p_new_name).contains_char('['), "Invalid animation library name: " + String(p_new_name) + ".");
 #endif
 
 	bool found = false;
@@ -734,6 +748,15 @@ bool AnimationMixer::_update_caches() {
 							}
 						}
 
+						if (is_value && callback_mode_discrete == ANIMATION_CALLBACK_MODE_DISCRETE_FORCE_CONTINUOUS) {
+							if (child) {
+								PropertyInfo prop_info;
+								ClassDB::get_property_info(child->get_class_name(), path.get_concatenated_subnames(), &prop_info);
+								if (prop_info.hint == PROPERTY_HINT_ONESHOT) {
+									WARN_PRINT_ED(vformat("%s: '%s', Value Track: '%s' is oneshot property, but will be continuously updated. Consider setting a value other than ANIMATION_CALLBACK_MODE_DISCRETE_FORCE_CONTINUOUS to AnimationMixer.callback_mode_dominant.", mixer_name, String(E), String(path)));
+								}
+							}
+						}
 					} break;
 					case Animation::TYPE_POSITION_3D:
 					case Animation::TYPE_ROTATION_3D:
@@ -1152,6 +1175,8 @@ void AnimationMixer::_blend_process(double p_delta, bool p_update_only) {
 		Ref<Animation> a = ai.animation_data.animation;
 		double time = ai.playback_info.time;
 		double delta = ai.playback_info.delta;
+		double start = ai.playback_info.start;
+		double end = ai.playback_info.end;
 		bool seeked = ai.playback_info.seeked;
 		Animation::LoopedFlag looped_flag = ai.playback_info.looped_flag;
 		bool is_external_seeking = ai.playback_info.is_external_seeking;
@@ -1199,75 +1224,130 @@ void AnimationMixer::_blend_process(double p_delta, bool p_update_only) {
 					}
 					TrackCacheTransform *t = static_cast<TrackCacheTransform *>(track);
 					if (track->root_motion && calc_root) {
+						int rot_track = -1;
+						if (root_motion_local) {
+							rot_track = a->find_track(a->track_get_path(i), Animation::TYPE_ROTATION_3D);
+						}
 						double prev_time = time - delta;
 						if (!backward) {
-							if (Animation::is_less_approx(prev_time, 0)) {
+							if (Animation::is_less_approx(prev_time, start)) {
 								switch (a->get_loop_mode()) {
 									case Animation::LOOP_NONE: {
-										prev_time = 0;
+										prev_time = start;
 									} break;
 									case Animation::LOOP_LINEAR: {
-										prev_time = Math::fposmod(prev_time, (double)a_length);
+										prev_time = Math::fposmod(prev_time - start, end - start) + start;
 									} break;
 									case Animation::LOOP_PINGPONG: {
-										prev_time = Math::pingpong(prev_time, (double)a_length);
+										prev_time = Math::pingpong(prev_time - start, end - start) + start;
 									} break;
 									default:
 										break;
 								}
 							}
 						} else {
-							if (Animation::is_greater_approx(prev_time, (double)a_length)) {
+							if (Animation::is_greater_approx(prev_time, end)) {
 								switch (a->get_loop_mode()) {
 									case Animation::LOOP_NONE: {
-										prev_time = (double)a_length;
+										prev_time = end;
 									} break;
 									case Animation::LOOP_LINEAR: {
-										prev_time = Math::fposmod(prev_time, (double)a_length);
+										prev_time = Math::fposmod(prev_time - start, end - start) + start;
 									} break;
 									case Animation::LOOP_PINGPONG: {
-										prev_time = Math::pingpong(prev_time, (double)a_length);
+										prev_time = Math::pingpong(prev_time - start, end - start) + start;
 									} break;
 									default:
 										break;
 								}
 							}
 						}
-						Vector3 loc[2];
-						if (!backward) {
-							if (Animation::is_greater_approx(prev_time, time)) {
-								Error err = a->try_position_track_interpolate(i, prev_time, &loc[0]);
-								if (err != OK) {
-									continue;
+						if (rot_track >= 0) {
+							Vector3 loc[2];
+							Quaternion rot;
+							if (!backward) {
+								if (Animation::is_greater_approx(prev_time, time)) {
+									Error err = a->try_position_track_interpolate(i, prev_time, &loc[0]);
+									if (err != OK) {
+										continue;
+									}
+									loc[0] = post_process_key_value(a, i, loc[0], t->object_id, t->bone_idx);
+									a->try_position_track_interpolate(i, end, &loc[1]);
+									loc[1] = post_process_key_value(a, i, loc[1], t->object_id, t->bone_idx);
+
+									a->try_rotation_track_interpolate(rot_track, end, &rot);
+									rot = post_process_key_value(a, rot_track, rot, t->object_id, t->bone_idx);
+
+									root_motion_cache.loc += rot.xform_inv(loc[1] - loc[0]) * blend;
+									prev_time = start;
 								}
-								loc[0] = post_process_key_value(a, i, loc[0], t->object_id, t->bone_idx);
-								a->try_position_track_interpolate(i, (double)a_length, &loc[1]);
-								loc[1] = post_process_key_value(a, i, loc[1], t->object_id, t->bone_idx);
-								root_motion_cache.loc += (loc[1] - loc[0]) * blend;
-								prev_time = 0;
+							} else {
+								if (Animation::is_less_approx(prev_time, time)) {
+									Error err = a->try_position_track_interpolate(i, prev_time, &loc[0]);
+									if (err != OK) {
+										continue;
+									}
+									loc[0] = post_process_key_value(a, i, loc[0], t->object_id, t->bone_idx);
+									a->try_position_track_interpolate(i, start, &loc[1]);
+									loc[1] = post_process_key_value(a, i, loc[1], t->object_id, t->bone_idx);
+
+									a->try_rotation_track_interpolate(rot_track, start, &rot);
+									rot = post_process_key_value(a, rot_track, rot, t->object_id, t->bone_idx);
+
+									root_motion_cache.loc += rot.xform_inv(loc[1] - loc[0]) * blend;
+									prev_time = end;
+								}
 							}
+							Error err = a->try_position_track_interpolate(i, prev_time, &loc[0]);
+							if (err != OK) {
+								continue;
+							}
+							loc[0] = post_process_key_value(a, i, loc[0], t->object_id, t->bone_idx);
+							a->try_position_track_interpolate(i, time, &loc[1]);
+							loc[1] = post_process_key_value(a, i, loc[1], t->object_id, t->bone_idx);
+
+							a->try_rotation_track_interpolate(rot_track, time, &rot);
+							rot = post_process_key_value(a, rot_track, rot, t->object_id, t->bone_idx);
+
+							root_motion_cache.loc += rot.xform_inv(loc[1] - loc[0]) * blend;
+							prev_time = !backward ? start : end;
 						} else {
-							if (Animation::is_less_approx(prev_time, time)) {
-								Error err = a->try_position_track_interpolate(i, prev_time, &loc[0]);
-								if (err != OK) {
-									continue;
+							Vector3 loc[2];
+							if (!backward) {
+								if (Animation::is_greater_approx(prev_time, time)) {
+									Error err = a->try_position_track_interpolate(i, prev_time, &loc[0]);
+									if (err != OK) {
+										continue;
+									}
+									loc[0] = post_process_key_value(a, i, loc[0], t->object_id, t->bone_idx);
+									a->try_position_track_interpolate(i, end, &loc[1]);
+									loc[1] = post_process_key_value(a, i, loc[1], t->object_id, t->bone_idx);
+									root_motion_cache.loc += (loc[1] - loc[0]) * blend;
+									prev_time = start;
 								}
-								loc[0] = post_process_key_value(a, i, loc[0], t->object_id, t->bone_idx);
-								a->try_position_track_interpolate(i, 0, &loc[1]);
-								loc[1] = post_process_key_value(a, i, loc[1], t->object_id, t->bone_idx);
-								root_motion_cache.loc += (loc[1] - loc[0]) * blend;
-								prev_time = (double)a_length;
+							} else {
+								if (Animation::is_less_approx(prev_time, time)) {
+									Error err = a->try_position_track_interpolate(i, prev_time, &loc[0]);
+									if (err != OK) {
+										continue;
+									}
+									loc[0] = post_process_key_value(a, i, loc[0], t->object_id, t->bone_idx);
+									a->try_position_track_interpolate(i, start, &loc[1]);
+									loc[1] = post_process_key_value(a, i, loc[1], t->object_id, t->bone_idx);
+									root_motion_cache.loc += (loc[1] - loc[0]) * blend;
+									prev_time = end;
+								}
 							}
+							Error err = a->try_position_track_interpolate(i, prev_time, &loc[0]);
+							if (err != OK) {
+								continue;
+							}
+							loc[0] = post_process_key_value(a, i, loc[0], t->object_id, t->bone_idx);
+							a->try_position_track_interpolate(i, time, &loc[1]);
+							loc[1] = post_process_key_value(a, i, loc[1], t->object_id, t->bone_idx);
+							root_motion_cache.loc += (loc[1] - loc[0]) * blend;
+							prev_time = !backward ? start : end;
 						}
-						Error err = a->try_position_track_interpolate(i, prev_time, &loc[0]);
-						if (err != OK) {
-							continue;
-						}
-						loc[0] = post_process_key_value(a, i, loc[0], t->object_id, t->bone_idx);
-						a->try_position_track_interpolate(i, time, &loc[1]);
-						loc[1] = post_process_key_value(a, i, loc[1], t->object_id, t->bone_idx);
-						root_motion_cache.loc += (loc[1] - loc[0]) * blend;
-						prev_time = !backward ? 0 : (double)a_length;
 					}
 					{
 						Vector3 loc;
@@ -1289,32 +1369,32 @@ void AnimationMixer::_blend_process(double p_delta, bool p_update_only) {
 					if (track->root_motion && calc_root) {
 						double prev_time = time - delta;
 						if (!backward) {
-							if (Animation::is_less_approx(prev_time, 0)) {
+							if (Animation::is_less_approx(prev_time, start)) {
 								switch (a->get_loop_mode()) {
 									case Animation::LOOP_NONE: {
-										prev_time = 0;
+										prev_time = start;
 									} break;
 									case Animation::LOOP_LINEAR: {
-										prev_time = Math::fposmod(prev_time, (double)a_length);
+										prev_time = Math::fposmod(prev_time - start, end - start) + start;
 									} break;
 									case Animation::LOOP_PINGPONG: {
-										prev_time = Math::pingpong(prev_time, (double)a_length);
+										prev_time = Math::pingpong(prev_time - start, end - start) + start;
 									} break;
 									default:
 										break;
 								}
 							}
 						} else {
-							if (Animation::is_greater_approx(prev_time, (double)a_length)) {
+							if (Animation::is_greater_approx(prev_time, end)) {
 								switch (a->get_loop_mode()) {
 									case Animation::LOOP_NONE: {
-										prev_time = (double)a_length;
+										prev_time = end;
 									} break;
 									case Animation::LOOP_LINEAR: {
-										prev_time = Math::fposmod(prev_time, (double)a_length);
+										prev_time = Math::fposmod(prev_time - start, end - start) + start;
 									} break;
 									case Animation::LOOP_PINGPONG: {
-										prev_time = Math::pingpong(prev_time, (double)a_length);
+										prev_time = Math::pingpong(prev_time - start, end - start) + start;
 									} break;
 									default:
 										break;
@@ -1329,10 +1409,10 @@ void AnimationMixer::_blend_process(double p_delta, bool p_update_only) {
 									continue;
 								}
 								rot[0] = post_process_key_value(a, i, rot[0], t->object_id, t->bone_idx);
-								a->try_rotation_track_interpolate(i, (double)a_length, &rot[1]);
+								a->try_rotation_track_interpolate(i, end, &rot[1]);
 								rot[1] = post_process_key_value(a, i, rot[1], t->object_id, t->bone_idx);
 								root_motion_cache.rot = (root_motion_cache.rot * Quaternion().slerp(rot[0].inverse() * rot[1], blend)).normalized();
-								prev_time = 0;
+								prev_time = start;
 							}
 						} else {
 							if (Animation::is_less_approx(prev_time, time)) {
@@ -1341,9 +1421,10 @@ void AnimationMixer::_blend_process(double p_delta, bool p_update_only) {
 									continue;
 								}
 								rot[0] = post_process_key_value(a, i, rot[0], t->object_id, t->bone_idx);
-								a->try_rotation_track_interpolate(i, 0, &rot[1]);
+								a->try_rotation_track_interpolate(i, start, &rot[1]);
+								rot[1] = post_process_key_value(a, i, rot[1], t->object_id, t->bone_idx);
 								root_motion_cache.rot = (root_motion_cache.rot * Quaternion().slerp(rot[0].inverse() * rot[1], blend)).normalized();
-								prev_time = (double)a_length;
+								prev_time = end;
 							}
 						}
 						Error err = a->try_rotation_track_interpolate(i, prev_time, &rot[0]);
@@ -1354,7 +1435,7 @@ void AnimationMixer::_blend_process(double p_delta, bool p_update_only) {
 						a->try_rotation_track_interpolate(i, time, &rot[1]);
 						rot[1] = post_process_key_value(a, i, rot[1], t->object_id, t->bone_idx);
 						root_motion_cache.rot = (root_motion_cache.rot * Quaternion().slerp(rot[0].inverse() * rot[1], blend)).normalized();
-						prev_time = !backward ? 0 : (double)a_length;
+						prev_time = !backward ? start : end;
 					}
 					{
 						Quaternion rot;
@@ -1376,32 +1457,32 @@ void AnimationMixer::_blend_process(double p_delta, bool p_update_only) {
 					if (track->root_motion && calc_root) {
 						double prev_time = time - delta;
 						if (!backward) {
-							if (Animation::is_less_approx(prev_time, 0)) {
+							if (Animation::is_less_approx(prev_time, start)) {
 								switch (a->get_loop_mode()) {
 									case Animation::LOOP_NONE: {
-										prev_time = 0;
+										prev_time = start;
 									} break;
 									case Animation::LOOP_LINEAR: {
-										prev_time = Math::fposmod(prev_time, (double)a_length);
+										prev_time = Math::fposmod(prev_time - start, end - start) + start;
 									} break;
 									case Animation::LOOP_PINGPONG: {
-										prev_time = Math::pingpong(prev_time, (double)a_length);
+										prev_time = Math::pingpong(prev_time - start, end - start) + start;
 									} break;
 									default:
 										break;
 								}
 							}
 						} else {
-							if (Animation::is_greater_approx(prev_time, (double)a_length)) {
+							if (Animation::is_greater_approx(prev_time, end)) {
 								switch (a->get_loop_mode()) {
 									case Animation::LOOP_NONE: {
-										prev_time = (double)a_length;
+										prev_time = end;
 									} break;
 									case Animation::LOOP_LINEAR: {
-										prev_time = Math::fposmod(prev_time, (double)a_length);
+										prev_time = Math::fposmod(prev_time - start, end - start) + start;
 									} break;
 									case Animation::LOOP_PINGPONG: {
-										prev_time = Math::pingpong(prev_time, (double)a_length);
+										prev_time = Math::pingpong(prev_time - start, end - start) + start;
 									} break;
 									default:
 										break;
@@ -1416,10 +1497,10 @@ void AnimationMixer::_blend_process(double p_delta, bool p_update_only) {
 									continue;
 								}
 								scale[0] = post_process_key_value(a, i, scale[0], t->object_id, t->bone_idx);
-								a->try_scale_track_interpolate(i, (double)a_length, &scale[1]);
-								root_motion_cache.scale += (scale[1] - scale[0]) * blend;
+								a->try_scale_track_interpolate(i, end, &scale[1]);
 								scale[1] = post_process_key_value(a, i, scale[1], t->object_id, t->bone_idx);
-								prev_time = 0;
+								root_motion_cache.scale += (scale[1] - scale[0]) * blend;
+								prev_time = start;
 							}
 						} else {
 							if (Animation::is_less_approx(prev_time, time)) {
@@ -1428,10 +1509,10 @@ void AnimationMixer::_blend_process(double p_delta, bool p_update_only) {
 									continue;
 								}
 								scale[0] = post_process_key_value(a, i, scale[0], t->object_id, t->bone_idx);
-								a->try_scale_track_interpolate(i, 0, &scale[1]);
+								a->try_scale_track_interpolate(i, start, &scale[1]);
 								scale[1] = post_process_key_value(a, i, scale[1], t->object_id, t->bone_idx);
 								root_motion_cache.scale += (scale[1] - scale[0]) * blend;
-								prev_time = (double)a_length;
+								prev_time = end;
 							}
 						}
 						Error err = a->try_scale_track_interpolate(i, prev_time, &scale[0]);
@@ -1442,7 +1523,7 @@ void AnimationMixer::_blend_process(double p_delta, bool p_update_only) {
 						a->try_scale_track_interpolate(i, time, &scale[1]);
 						scale[1] = post_process_key_value(a, i, scale[1], t->object_id, t->bone_idx);
 						root_motion_cache.scale += (scale[1] - scale[0]) * blend;
-						prev_time = !backward ? 0 : (double)a_length;
+						prev_time = !backward ? start : end;
 					}
 					{
 						Vector3 scale;
@@ -1704,6 +1785,7 @@ void AnimationMixer::_blend_process(double p_delta, bool p_update_only) {
 					if (!player2) {
 						continue;
 					}
+					// TODO: Make it possible to embed section info in animation track keys.
 					if (seeked) {
 						// Seek.
 						int idx = a->track_find_key(i, time, Animation::FIND_MODE_NEAREST, true);
@@ -1716,19 +1798,19 @@ void AnimationMixer::_blend_process(double p_delta, bool p_update_only) {
 							continue;
 						}
 						Ref<Animation> anim = player2->get_animation(anim_name);
-						double at_anim_pos = 0.0;
+						double at_anim_pos = start;
 						switch (anim->get_loop_mode()) {
 							case Animation::LOOP_NONE: {
-								if (!is_external_seeking && ((!backward && Animation::is_greater_or_equal_approx(time, pos + (double)anim->get_length())) || (backward && Animation::is_less_or_equal_approx(time, pos)))) {
+								if (!is_external_seeking && ((!backward && Animation::is_greater_or_equal_approx(time, pos + end)) || (backward && Animation::is_less_or_equal_approx(time, pos + start)))) {
 									continue; // Do nothing if current time is outside of length when started.
 								}
-								at_anim_pos = MIN((double)anim->get_length(), time - pos); // Seek to end.
+								at_anim_pos = MIN(end, time - pos); // Seek to end.
 							} break;
 							case Animation::LOOP_LINEAR: {
-								at_anim_pos = Math::fposmod(time - pos, (double)anim->get_length()); // Seek to loop.
+								at_anim_pos = Math::fposmod(time - pos - start, end - start) + start; // Seek to loop.
 							} break;
 							case Animation::LOOP_PINGPONG: {
-								at_anim_pos = Math::pingpong(time - pos, (double)a_length);
+								at_anim_pos = Math::pingpong(time - pos - start, end - start) + start;
 							} break;
 							default:
 								break;
@@ -1988,10 +2070,19 @@ void AnimationMixer::clear_caches() {
 
 void AnimationMixer::set_root_motion_track(const NodePath &p_track) {
 	root_motion_track = p_track;
+	notify_property_list_changed();
 }
 
 NodePath AnimationMixer::get_root_motion_track() const {
 	return root_motion_track;
+}
+
+void AnimationMixer::set_root_motion_local(bool p_enabled) {
+	root_motion_local = p_enabled;
+}
+
+bool AnimationMixer::is_root_motion_local() const {
+	return root_motion_local;
 }
 
 Vector3 AnimationMixer::get_root_motion_position() const {
@@ -2125,6 +2216,8 @@ Ref<AnimatedValuesBackup> AnimationMixer::make_backup() {
 	PlaybackInfo pi;
 	pi.time = 0;
 	pi.delta = 0;
+	pi.start = 0;
+	pi.end = reset_anim->get_length();
 	pi.seeked = true;
 	pi.weight = 1.0;
 	make_animation_instance(SceneStringName(RESET), pi);
@@ -2337,6 +2430,8 @@ void AnimationMixer::_bind_methods() {
 	/* ---- Root motion accumulator for Skeleton3D ---- */
 	ClassDB::bind_method(D_METHOD("set_root_motion_track", "path"), &AnimationMixer::set_root_motion_track);
 	ClassDB::bind_method(D_METHOD("get_root_motion_track"), &AnimationMixer::get_root_motion_track);
+	ClassDB::bind_method(D_METHOD("set_root_motion_local", "enabled"), &AnimationMixer::set_root_motion_local);
+	ClassDB::bind_method(D_METHOD("is_root_motion_local"), &AnimationMixer::is_root_motion_local);
 
 	ClassDB::bind_method(D_METHOD("get_root_motion_position"), &AnimationMixer::get_root_motion_position);
 	ClassDB::bind_method(D_METHOD("get_root_motion_rotation"), &AnimationMixer::get_root_motion_rotation);
@@ -2364,6 +2459,7 @@ void AnimationMixer::_bind_methods() {
 
 	ADD_GROUP("Root Motion", "root_motion_");
 	ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "root_motion_track"), "set_root_motion_track", "get_root_motion_track");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "root_motion_local"), "set_root_motion_local", "is_root_motion_local");
 
 	ADD_GROUP("Audio", "audio_");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "audio_max_polyphony", PROPERTY_HINT_RANGE, "1,127,1"), "set_audio_max_polyphony", "get_audio_max_polyphony");
