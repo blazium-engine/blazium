@@ -4399,9 +4399,12 @@ Point2 TextEdit::get_local_mouse_pos() const {
 }
 
 String TextEdit::get_word_at_pos(const Vector2 &p_pos) const {
-	Point2i pos = get_line_column_at_pos(p_pos);
+	Point2i pos = _get_line_column_at_pos(p_pos, false, false);
 	int row = pos.y;
 	int col = pos.x;
+	if (row < 0 || col < 0) {
+		return "";
+	}
 
 	String s = text[row];
 	if (s.length() == 0) {
@@ -4438,6 +4441,10 @@ String TextEdit::get_word_at_pos(const Vector2 &p_pos) const {
 }
 
 Point2i TextEdit::get_line_column_at_pos(const Point2i &p_pos, bool p_allow_out_of_bounds) const {
+	return _get_line_column_at_pos(p_pos, p_allow_out_of_bounds);
+}
+
+Point2i TextEdit::_get_line_column_at_pos(const Point2i &p_pos, bool p_clamp_line, bool p_clamp_column) const {
 	float rows = p_pos.y - theme_cache.style_normal->get_margin(SIDE_TOP);
 	if (!editable) {
 		rows -= theme_cache.style_readonly->get_offset().y / 2;
@@ -4464,10 +4471,10 @@ Point2i TextEdit::get_line_column_at_pos(const Point2i &p_pos, bool p_allow_out_
 
 	int visible_lines = get_visible_line_count_in_range(first_vis_line, row);
 	if (rows > visible_lines) {
-		if (!p_allow_out_of_bounds) {
-			return Point2i(-1, -1);
+		if (p_clamp_line) {
+			return Point2i(text[row].length(), row);
 		}
-		return Point2i(text[row].length(), row);
+		return Point2i(-1, -1);
 	}
 
 	int colx = p_pos.x - (theme_cache.style_normal->get_margin(SIDE_LEFT) + gutters_width + gutter_padding);
@@ -4490,6 +4497,11 @@ Point2i TextEdit::get_line_column_at_pos(const Point2i &p_pos, bool p_allow_out_
 	} else {
 		colx -= wrap_indent;
 	}
+
+	if (!p_clamp_column && (colx < 0 || colx > TS->shaped_text_get_size(text_rid).x)) {
+		return Point2i(-1, -1);
+	}
+
 	int col = TS->shaped_text_hit_test_position(text_rid, colx);
 	if (!caret_mid_grapheme_enabled) {
 		col = TS->shaped_text_closest_character_pos(text_rid, col);
