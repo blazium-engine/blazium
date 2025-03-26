@@ -1,10 +1,6 @@
 blank_issues_enabled: false
 
 contact_links:
-  - name: Blazium proposals
-    url: https://chat.blazium.app
-    about: Please submit feature proposals on the Blazium Discord server, not here.
-
   - name: Blazium documentation repository
     url: https://github.com/blazium-engine/blazium-docs
     about: Please report issues with documentation on the Blazium documentation repository, not here.
