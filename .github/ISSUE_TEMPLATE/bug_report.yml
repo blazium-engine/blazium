@@ -20,6 +20,10 @@ body:
       - If you can, **please test earlier Blazium versions** (previous stable branch, and development snapshots of the current feature release) and, if applicable, newer versions (development snapshots for the next feature release). Mention whether the bug is reproducible or not in the versions you tested.
       - The aim is for us to identify whether a bug is a **regression**, i.e. an issue that didn't exist in a previous version, but was introduced later on, breaking existing functionality. For example, if a bug is reproducible in 1.2.0.release but not in 1.1.0.release, we would like you to test intermediate 1.2.0 nightly and pre-release builds to find which build is the first one where the issue can be reproduced.
     placeholder: |
+      - Reproducible in: 1.0.0.nightly [42l3etb0], 1.0.0.release, 1.1.0.nightly and later builds.
+      - Not reproducible in: 0.4.10.release, 0.5.42.pre-release and earlier builds.
+  validations:
+    required: true
 
 - type: input
   attributes:
