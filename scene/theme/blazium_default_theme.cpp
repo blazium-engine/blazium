@@ -1016,10 +1016,10 @@ void update_theme_padding(Ref<Theme> &p_theme, int p_padding) {
 	flat_foldable_panel_style->set_content_margin(SIDE_TOP, padding);
 	graph_title_style->set_content_margin_individual(12 * base_scale, padding, padding, padding);
 	graph_title_selected_style->set_content_margin_individual(12 * base_scale, padding, padding, padding);
-	p_theme->set_constant("margin_left", "MarginContainer", padding);
-	p_theme->set_constant("margin_top", "MarginContainer", padding);
-	p_theme->set_constant("margin_right", "MarginContainer", padding);
-	p_theme->set_constant("margin_bottom", "MarginContainer", padding);
+	p_theme->set_constant("margin_left", "PaddedMarginContainer", padding);
+	p_theme->set_constant("margin_top", "PaddedMarginContainer", padding);
+	p_theme->set_constant("margin_right", "PaddedMarginContainer", padding);
+	p_theme->set_constant("margin_bottom", "PaddedMarginContainer", padding);
 	p_theme->set_constant("item_start_padding", "PopupMenu", padding);
 	p_theme->set_constant("item_end_padding", "PopupMenu", padding);
 
@@ -1258,6 +1258,7 @@ void make_default_theme(Ref<Font> p_font, float p_scale, TextServer::SubpixelPos
 	t->set_type_variation("FlatSplitContainer", "SplitContainer");
 	t->set_type_variation("FlatHSplitContainer", "HSplitContainer");
 	t->set_type_variation("FlatVSplitContainer", "VSplitContainer");
+	t->set_type_variation("PaddedMarginContainer", "MarginContainer");
 
 	Ref<StyleBoxEmpty> empty_style(memnew(StyleBoxEmpty));
 
