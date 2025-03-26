@@ -18,21 +18,8 @@ body:
       To properly fix a bug, we need to identify if the bug was recently introduced in the engine, or if it was always present.
       - Please specify the Blazium version you found the issue in, including the **Git commit hash** if using a development or non-official build. The exact Blazium version (including the commit hash) can be copied by clicking the version shown in the editor (bottom bar) or in the project manager (top bar).
       - If you can, **please test earlier Blazium versions** (previous stable branch, and development snapshots of the current feature release) and, if applicable, newer versions (development snapshots for the next feature release). Mention whether the bug is reproducible or not in the versions you tested.
-      - The aim is for us to identify whether a bug is a **regression**, i.e. an issue that didn't exist in a previous version, but was introduced later on, breaking existing functionality. For example, if a bug is reproducible in 4.2.stable but not in 4.1.stable, we would like you to test intermediate 4.2 dev and beta snapshots to find which snapshot is the first one where the issue can be reproduced.
+      - The aim is for us to identify whether a bug is a **regression**, i.e. an issue that didn't exist in a previous version, but was introduced later on, breaking existing functionality. For example, if a bug is reproducible in 1.2.0.release but not in 1.1.0.release, we would like you to test intermediate 1.2.0 nightly and pre-release builds to find which build is the first one where the issue can be reproduced.
     placeholder: |
-
-  - type: input
-    attributes:
-      label: System information
-      description: |
-        - Specify the OS version, and when relevant hardware information.
-        - For issues that are likely OS-specific and/or graphics-related, please specify the CPU model and architecture.
-        - For graphics-related issues, specify the GPU model, driver version, and the rendering backend (GLES2, GLES3, Vulkan).
-        - **Bug reports not including the required information may be closed at the maintainers' discretion.** If in doubt, always include all the requested information; it's better to include too much information than not enough information.
-        - **Starting from Godot 4.1, you can copy this information to your clipboard by using *Help > Copy System Info* at the top of the editor window.**
-      placeholder: Windows 10 - Godot v4.0.3.stable - Vulkan (Forward+) - dedicated NVIDIA GeForce GTX 970 (nvidia, 510.85.02) - Intel Core i7-10700KF CPU @ 3.80GHz (16 Threads)
-    validations:
-      required: true
 
 - type: input
   attributes:
@@ -43,18 +30,9 @@ body:
       - For graphics-related issues, specify the GPU model, driver version, and the rendering backend (GLES2, GLES3, Vulkan).
       - **Bug reports not including the required information may be closed at the maintainers' discretion.** If in doubt, always include all the requested information; it's better to include too much information than not enough information.
       - **You can copy this information to your clipboard by using *Help > Copy System Info* at the top of the editor window.**
-    placeholder: Windows 10 - Blazium v4.0.3.stable - Vulkan (Forward+) - dedicated NVIDIA GeForce GTX 970 (nvidia, 510.85.02) - Intel Core i7-10700KF CPU @ 3.80GHz (16 Threads)
+    placeholder: Blazium Engine v0.4.4.nightly (4.3.stable.blazium) (4d632e835) - Windows 10 (build 19045) - Multi-window, 1 monitor - OpenGL 3 (Compatibility) - NVIDIA GeForce GTX 970 (NVIDIA; 32.0.15.6094) - Intel(R) Core(TM) i3-6100 CPU @ 3.70GHz (4 threads)
   validations:
     required: true
-
-  - type: textarea
-    attributes:
-      label: Steps to reproduce
-      description: |
-        List of steps or sample code that reproduces the issue. Having reproducible issues is a prerequisite for contributors to be able to solve them.
-        If you include a minimal reproduction project below, you can detail how to use it here.
-    validations:
-      required: true
 
 - type: textarea
   attributes:
