@@ -164,7 +164,7 @@ void EditorPlugin::remove_control_from_container(CustomControlContainer p_locati
 
 	switch (p_location) {
 		case CONTAINER_TOOLBAR: {
-			EditorNode::get_title_bar()->remove_child(p_control);
+			EditorNode::get_title_right_hbox()->remove_child(p_control);
 		} break;
 
 		case CONTAINER_SPATIAL_EDITOR_MENU: {
