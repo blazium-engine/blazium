@@ -367,7 +367,7 @@ prepareDirectory(mainPath)
 
 # Compose the images
 # NOTE: the last entry can be anything as long it is different from the first three
-status_list = ["dev", "nightly", "pre-release", "release"]
+status_list = ["dev", "nightly", "prerelease", "release"]
 not_stable_list = status_list[:-1]
 for build_status in status_list:
     print("\nComposing " + build_status + " status images...")
