@@ -874,8 +874,7 @@ static void _get_directory_contents(EditorFileSystemDirectory *p_dir, HashMap<St
 		if (requires_type && !ClassDB::is_parent_class(p_dir->get_file_type(i), p_required_type)) {
 			continue;
 		}
-		ScriptLanguage::CodeCompletionOption option(p_dir->get_file_path(i), ScriptLanguage::CODE_COMPLETION_KIND_FILE_PATH);
-		option.insert_text = option.display.quote(quote_style);
+		ScriptLanguage::CodeCompletionOption option(p_dir->get_file_path(i).quote(quote_style), ScriptLanguage::CODE_COMPLETION_KIND_FILE_PATH);
 		r_list.insert(option.display, option);
 	}
 
@@ -885,7 +884,11 @@ static void _get_directory_contents(EditorFileSystemDirectory *p_dir, HashMap<St
 }
 
 static void _find_annotation_arguments(const GDScriptParser::AnnotationNode *p_annotation, int p_argument, const String p_quote_style, HashMap<String, ScriptLanguage::CodeCompletionOption> &r_result, String &r_arghint) {
-	r_arghint = _make_arguments_hint(p_annotation->info->info, p_argument, true);
+	ERR_FAIL_NULL(p_annotation);
+
+	if (p_annotation->info != nullptr) {
+		r_arghint = _make_arguments_hint(p_annotation->info->info, p_argument, true);
+	}
 	if (p_annotation->name == SNAME("@export_range")) {
 		if (p_argument == 3 || p_argument == 4 || p_argument == 5) {
 			// Slider hint.
@@ -2830,9 +2833,9 @@ static void _find_call_arguments(GDScriptParser::CompletionContext &p_context, c
 								// Handle user preference.
 								if (opt.is_quoted()) {
 									opt = opt.unquote().quote(quote_style);
-									if (use_string_names && info.arguments.get(p_argidx).type == Variant::STRING_NAME) {
+									if (use_string_names && info.arguments[p_argidx].type == Variant::STRING_NAME) {
 										opt = "&" + opt;
-									} else if (use_node_paths && info.arguments.get(p_argidx).type == Variant::NODE_PATH) {
+									} else if (use_node_paths && info.arguments[p_argidx].type == Variant::NODE_PATH) {
 										opt = "^" + opt;
 									}
 								}
@@ -2843,7 +2846,7 @@ static void _find_call_arguments(GDScriptParser::CompletionContext &p_context, c
 					}
 
 					if (p_argidx < method_args) {
-						const PropertyInfo &arg_info = info.arguments.get(p_argidx);
+						const PropertyInfo &arg_info = info.arguments[p_argidx];
 						if (arg_info.usage & (PROPERTY_USAGE_CLASS_IS_ENUM | PROPERTY_USAGE_CLASS_IS_BITFIELD)) {
 							_find_enumeration_candidates(p_context, arg_info.class_name, r_result);
 						}
@@ -3483,17 +3486,17 @@ static void _find_call_arguments(GDScriptParser::CompletionContext &p_context, c
 				}
 				method_hint += "(";
 
-				for (List<PropertyInfo>::ConstIterator arg_itr = mi.arguments.begin(); arg_itr != mi.arguments.end(); ++arg_itr) {
-					if (arg_itr != mi.arguments.begin()) {
+				for (int64_t i = 0; i < mi.arguments.size(); ++i) {
+					if (i > 0) {
 						method_hint += ", ";
 					}
-					String arg = arg_itr->name;
+					String arg = mi.arguments[i].name;
 					if (arg.contains_char(':')) {
 						arg = arg.substr(0, arg.find_char(':'));
 					}
 					method_hint += arg;
 					if (use_type_hint) {
-						method_hint += ": " + _get_visual_datatype(*arg_itr, true, class_name);
+						method_hint += ": " + _get_visual_datatype(mi.arguments[i], true, class_name);
 					}
 				}
 				method_hint += ")";

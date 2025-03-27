@@ -223,15 +223,17 @@ void initialize_openxr_module(ModuleInitializationLevel p_level) {
 				openxr_interface->initialize();
 			}
 		}
+	}
 
 #ifdef TOOLS_ENABLED
+	if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR) {
 		GDREGISTER_ABSTRACT_CLASS(OpenXRInteractionProfileEditorBase);
 		GDREGISTER_CLASS(OpenXRInteractionProfileEditor);
 		GDREGISTER_CLASS(OpenXRBindingModifierEditor);
 
 		EditorNode::add_init_callback(_editor_init);
-#endif
 	}
+#endif
 }
 
 void uninitialize_openxr_module(ModuleInitializationLevel p_level) {
