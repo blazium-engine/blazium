@@ -446,8 +446,8 @@ public:
 	void space_dump_debug_snapshot(RID p_space, const String &p_dir);
 #endif
 
-	bool joint_get_enabled(RID p_joint) const;
-	void joint_set_enabled(RID p_joint, bool p_enabled);
+	virtual void joint_set_enabled(RID p_joint, bool p_enabled) override;
+	virtual bool joint_is_enabled(RID p_joint) const override;
 
 	int joint_get_solver_velocity_iterations(RID p_joint);
 	void joint_set_solver_velocity_iterations(RID p_joint, int p_value);

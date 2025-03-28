@@ -1706,7 +1706,7 @@ void JoltPhysicsServer3D::space_dump_debug_snapshot(RID p_space, const String &p
 
 #endif
 
-bool JoltPhysicsServer3D::joint_get_enabled(RID p_joint) const {
+bool JoltPhysicsServer3D::joint_is_enabled(RID p_joint) const {
 	JoltJoint3D *joint = joint_owner.get_or_null(p_joint);
 	ERR_FAIL_NULL_V(joint, false);
 
