@@ -248,10 +248,10 @@ bool GodotPhysicsServer2D::space_is_active(RID p_space) const {
 void GodotPhysicsServer2D::space_step(RID p_space, real_t p_delta) {
 	GodotSpace2D *space = space_owner.get_or_null(p_space);
 	ERR_FAIL_NULL(space);
+	ERR_FAIL_COND_MSG(active_spaces.has(space), "A activate godot space can't be stepped manually.");
 
-	// TODO:
 	// May be let pending_shape_update_list as a member of GodotSpaces3D and update shapes by themselves.
-	// To avoid effecting Spces which are handled by developer (for lockstep/rollback netcode, it is particularly sensitive).
+	// To avoid effecting Spaces which are handled by developer (for lockstep/rollback netcode, it is particularly sensitive).
 	// Otherwise, call _update_shapes() directly.
 	SelfList<GodotCollisionObject2D> *collision_object_self = pending_shape_update_list.first();
 	while (collision_object_self) {
@@ -271,13 +271,13 @@ void GodotPhysicsServer2D::space_step(RID p_space, real_t p_delta) {
 }
 
 void GodotPhysicsServer2D::space_flush_queries(RID p_space) {
-	// TODO::
 	// Like _update_shapes(), to provide controllability for developers, flushing_queries flag should active as a member of space and check it for each space.
 	// But I'm not sure about that, I am not familiar with multi-threads and the architecture of GodotPhysics.
 	flushing_queries = true;
 
 	GodotSpace2D *space = space_owner.get_or_null(p_space);
 	ERR_FAIL_NULL(space);
+	ERR_FAIL_COND_MSG(active_spaces.has(space), "A activate godot space should not flush queries manually.");
 	space->call_queries();
 
 	flushing_queries = false;
