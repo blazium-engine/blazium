@@ -36,31 +36,31 @@ import app.blazium.godot.xr.XRMode
 /**
  * Provide support for running XR apps / games from the editor window.
  */
-open class GodotXRGame: GodotGame() {
+open class GodotXRGame: BaseGodotGame() {
 
 	override fun overrideOrientationRequest() = true
 
-	override fun updateCommandLineParams(args: List<String>) {
-		val updatedArgs = ArrayList<String>()
-		if (!args.contains(XRMode.OPENXR.cmdLineArg)) {
+	override fun getCommandLine(): MutableList<String> {
+		val updatedArgs = super.getCommandLine()
+		if (!updatedArgs.contains(XRMode.OPENXR.cmdLineArg)) {
 			updatedArgs.add(XRMode.OPENXR.cmdLineArg)
 		}
-		if (!args.contains(XR_MODE_ARG)) {
+		if (!updatedArgs.contains(XR_MODE_ARG)) {
 			updatedArgs.add(XR_MODE_ARG)
 			updatedArgs.add("on")
 		}
-		updatedArgs.addAll(args)
-
-		super.updateCommandLineParams(updatedArgs)
+		return updatedArgs
 	}
 
 	override fun getEditorWindowInfo() = XR_RUN_GAME_INFO
 
+	override fun getGodotAppLayout() = R.layout.godot_xr_game_layout
+
 	override fun getProjectPermissionsToEnable(): MutableList<String> {
 		val permissionsToEnable = super.getProjectPermissionsToEnable()
 
-		val openxrEnabled = GodotLib.getGlobal("xr/openxr/enabled").toBoolean()
-		if (openxrEnabled) {
+		val xrRuntimePermission = getXRRuntimePermissions()
+		if (xrRuntimePermission.isNotEmpty() && GodotLib.getGlobal("xr/openxr/enabled").toBoolean()) {
 			// We only request permissions when the `automatically_request_runtime_permissions`
 			// project setting is enabled.
 			// If the project setting is not defined, we fall-back to the default behavior which is
@@ -69,7 +69,7 @@ open class GodotXRGame: GodotGame() {
 			val automaticPermissionsRequestEnabled = automaticallyRequestPermissionsSetting.isNullOrEmpty() ||
 				automaticallyRequestPermissionsSetting.toBoolean()
 			if (automaticPermissionsRequestEnabled) {
-				permissionsToEnable.addAll(USE_SCENE_PERMISSIONS)
+				permissionsToEnable.addAll(xrRuntimePermission)
 			}
 		}
 

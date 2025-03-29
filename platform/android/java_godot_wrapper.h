@@ -60,6 +60,7 @@ private:
 	jmethodID _get_clipboard = nullptr;
 	jmethodID _set_clipboard = nullptr;
 	jmethodID _has_clipboard = nullptr;
+	jmethodID _show_dialog = nullptr;
 	jmethodID _show_input_dialog = nullptr;
 	jmethodID _show_file_picker = nullptr;
 	jmethodID _request_permission = nullptr;
@@ -83,6 +84,7 @@ private:
 	jmethodID _verify_apk = nullptr;
 	jmethodID _enable_immersive_mode = nullptr;
 	jmethodID _is_in_immersive_mode = nullptr;
+	jmethodID _on_editor_workspace_selected = nullptr;
 
 public:
 	GodotJavaWrapper(JNIEnv *p_env, jobject p_activity, jobject p_godot_instance);
@@ -109,6 +111,7 @@ public:
 	void set_clipboard(const String &p_text);
 	bool has_has_clipboard();
 	bool has_clipboard();
+	Error show_dialog(const String &p_title, const String &p_description, const Vector<String> &p_buttons);
 	Error show_input_dialog(const String &p_title, const String &p_message, const String &p_existing_text);
 	Error show_file_picker(const String &p_current_directory, const String &p_filename, int p_mode, const Vector<String> &p_filters);
 	bool request_permission(const String &p_name);
@@ -135,6 +138,8 @@ public:
 
 	void enable_immersive_mode(bool p_enabled);
 	bool is_in_immersive_mode();
+
+	void on_editor_workspace_selected(const String &p_workspace);
 };
 
 #endif // JAVA_GODOT_WRAPPER_H
