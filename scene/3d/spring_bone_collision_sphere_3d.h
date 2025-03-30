@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  skeleton_modifier_3d.h                                                */
+/*  spring_bone_collision_sphere_3d.h                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,77 +28,32 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef SKELETON_MODIFIER_3D_H
-#define SKELETON_MODIFIER_3D_H
+#ifndef SPRING_BONE_COLLISION_SPHERE_3D_H
+#define SPRING_BONE_COLLISION_SPHERE_3D_H
 
-#include "scene/3d/node_3d.h"
+#include "scene/3d/spring_bone_collision_3d.h"
 
-#include "scene/3d/skeleton_3d.h"
-#include "scene/animation/animation_mixer.h"
+class SpringBoneCollisionCapsule3D;
 
-class SkeletonModifier3D : public Node3D {
-	GDCLASS(SkeletonModifier3D, Node3D);
+class SpringBoneCollisionSphere3D : public SpringBoneCollision3D {
+	GDCLASS(SpringBoneCollisionSphere3D, SpringBoneCollision3D);
 
-	void rebind();
+	friend class SpringBoneCollisionCapsule3D;
 
-public:
-	enum BoneAxis {
-		BONE_AXIS_PLUS_X,
-		BONE_AXIS_MINUS_X,
-		BONE_AXIS_PLUS_Y,
-		BONE_AXIS_MINUS_Y,
-		BONE_AXIS_PLUS_Z,
-		BONE_AXIS_MINUS_Z,
-	};
+	float radius = 0.1;
+	bool inside = false;
 
 protected:
-	bool active = true;
-	real_t influence = 1.0;
-
-	// Cache them for the performance reason since finding node with NodePath is slow.
-	ObjectID skeleton_id;
-
-	void _update_skeleton();
-	void _update_skeleton_path();
-	void _force_update_skeleton_skin();
-
-	virtual void _skeleton_changed(Skeleton3D *p_old, Skeleton3D *p_new);
-
-	void _validate_property(PropertyInfo &p_property) const;
-	void _notification(int p_what);
 	static void _bind_methods();
 
-	virtual void _set_active(bool p_active);
-
-	virtual void _process_modification();
-	GDVIRTUAL0(_process_modification);
+	static Vector3 _collide_sphere(const Vector3 &p_origin, float p_radius, bool p_inside, float p_bone_radius, float p_bone_length, const Vector3 &p_current);
+	virtual Vector3 _collide(const Transform3D &p_center, float p_bone_radius, float p_bone_length, const Vector3 &p_current) const override;
 
 public:
-	virtual PackedStringArray get_configuration_warnings() const override;
-	virtual bool has_process() const { return false; } // Return true if modifier needs to modify bone pose without external animation such as physics, jiggle and etc.
-
-	void set_active(bool p_active);
-	bool is_active() const;
-
-	void set_influence(real_t p_influence);
-	real_t get_influence() const;
-
-	Skeleton3D *get_skeleton() const;
-
-	void process_modification();
-
-	// Utility APIs.
-	static Vector3 get_vector_from_bone_axis(BoneAxis p_axis);
-	static Vector3 get_vector_from_axis(Vector3::Axis p_axis);
-	static Vector3::Axis get_axis_from_bone_axis(BoneAxis p_axis);
-
-#ifdef TOOLS_ENABLED
-	virtual bool is_processed_on_saving() const { return false; }
-#endif
-
-	SkeletonModifier3D();
+	void set_radius(float p_radius);
+	float get_radius() const;
+	void set_inside(bool p_enabled);
+	bool is_inside() const;
 };
 
-VARIANT_ENUM_CAST(SkeletonModifier3D::BoneAxis);
-
-#endif // SKELETON_MODIFIER_3D_H
+#endif // SPRING_BONE_COLLISION_SPHERE_3D_H

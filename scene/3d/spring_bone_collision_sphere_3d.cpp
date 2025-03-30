@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  skeleton_modifier_3d.h                                                */
+/*  spring_bone_collision_sphere_3d.cpp                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,77 +28,51 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef SKELETON_MODIFIER_3D_H
-#define SKELETON_MODIFIER_3D_H
+#include "spring_bone_collision_sphere_3d.h"
 
-#include "scene/3d/node_3d.h"
-
-#include "scene/3d/skeleton_3d.h"
-#include "scene/animation/animation_mixer.h"
-
-class SkeletonModifier3D : public Node3D {
-	GDCLASS(SkeletonModifier3D, Node3D);
-
-	void rebind();
-
-public:
-	enum BoneAxis {
-		BONE_AXIS_PLUS_X,
-		BONE_AXIS_MINUS_X,
-		BONE_AXIS_PLUS_Y,
-		BONE_AXIS_MINUS_Y,
-		BONE_AXIS_PLUS_Z,
-		BONE_AXIS_MINUS_Z,
-	};
-
-protected:
-	bool active = true;
-	real_t influence = 1.0;
-
-	// Cache them for the performance reason since finding node with NodePath is slow.
-	ObjectID skeleton_id;
-
-	void _update_skeleton();
-	void _update_skeleton_path();
-	void _force_update_skeleton_skin();
-
-	virtual void _skeleton_changed(Skeleton3D *p_old, Skeleton3D *p_new);
-
-	void _validate_property(PropertyInfo &p_property) const;
-	void _notification(int p_what);
-	static void _bind_methods();
-
-	virtual void _set_active(bool p_active);
-
-	virtual void _process_modification();
-	GDVIRTUAL0(_process_modification);
-
-public:
-	virtual PackedStringArray get_configuration_warnings() const override;
-	virtual bool has_process() const { return false; } // Return true if modifier needs to modify bone pose without external animation such as physics, jiggle and etc.
-
-	void set_active(bool p_active);
-	bool is_active() const;
-
-	void set_influence(real_t p_influence);
-	real_t get_influence() const;
-
-	Skeleton3D *get_skeleton() const;
-
-	void process_modification();
-
-	// Utility APIs.
-	static Vector3 get_vector_from_bone_axis(BoneAxis p_axis);
-	static Vector3 get_vector_from_axis(Vector3::Axis p_axis);
-	static Vector3::Axis get_axis_from_bone_axis(BoneAxis p_axis);
-
+void SpringBoneCollisionSphere3D::set_radius(float p_radius) {
+	radius = p_radius;
 #ifdef TOOLS_ENABLED
-	virtual bool is_processed_on_saving() const { return false; }
-#endif
+	update_gizmos();
+#endif // TOOLS_ENABLED
+}
 
-	SkeletonModifier3D();
-};
+float SpringBoneCollisionSphere3D::get_radius() const {
+	return radius;
+}
 
-VARIANT_ENUM_CAST(SkeletonModifier3D::BoneAxis);
+void SpringBoneCollisionSphere3D::set_inside(bool p_enabled) {
+	inside = p_enabled;
+#ifdef TOOLS_ENABLED
+	update_gizmos();
+#endif // TOOLS_ENABLED
+}
 
-#endif // SKELETON_MODIFIER_3D_H
+bool SpringBoneCollisionSphere3D::is_inside() const {
+	return inside;
+}
+
+void SpringBoneCollisionSphere3D::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_radius", "radius"), &SpringBoneCollisionSphere3D::set_radius);
+	ClassDB::bind_method(D_METHOD("get_radius"), &SpringBoneCollisionSphere3D::get_radius);
+	ClassDB::bind_method(D_METHOD("set_inside", "enabled"), &SpringBoneCollisionSphere3D::set_inside);
+	ClassDB::bind_method(D_METHOD("is_inside"), &SpringBoneCollisionSphere3D::is_inside);
+
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "radius", PROPERTY_HINT_RANGE, "0,1,0.001,or_greater,suffix:m"), "set_radius", "get_radius");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "inside"), "set_inside", "is_inside");
+}
+
+Vector3 SpringBoneCollisionSphere3D::_collide_sphere(const Vector3 &p_origin, float p_radius, bool p_inside, float p_bone_radius, float p_bone_length, const Vector3 &p_current) {
+	Vector3 diff = p_current - p_origin;
+	float length = diff.length();
+	float r = p_inside ? p_radius - p_bone_radius : p_bone_radius + p_radius;
+	float distance = p_inside ? r - length : length - r;
+	if (distance > 0) {
+		return p_current;
+	}
+	return p_origin + diff.normalized() * r;
+}
+
+Vector3 SpringBoneCollisionSphere3D::_collide(const Transform3D &p_center, float p_bone_radius, float p_bone_length, const Vector3 &p_current) const {
+	return _collide_sphere(get_transform_from_skeleton(p_center).origin, radius, inside, p_bone_radius, p_bone_length, p_current);
+}
