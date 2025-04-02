@@ -12,7 +12,7 @@ func _init() -> void:
 
 func request_login_and_open() -> void:
 	# Get Login URL
-	var login_result :LoginResult = await request_login_info("discord").finished
+	var login_result :LoginURLResult = await request_login_info("discord").finished
 	if login_result.has_error():
 		push_error(login_result.error)
 		return
