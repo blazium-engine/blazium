@@ -32,7 +32,7 @@
 
 #include "core/config/engine.h"
 #include "core/extension/gdextension.h"
-#include "core/extension/gdextension_compat_hashes.h"
+#include "core/extension/gdextension_special_compat_hashes.h"
 #include "core/io/file_access.h"
 #include "core/io/image.h"
 #include "core/io/xml_parser.h"
@@ -241,10 +241,24 @@ GDExtensionInterfaceFunctionPtr gdextension_get_proc_address(const char *p_name)
 	return GDExtension::get_interface_function(p_name);
 }
 
+#ifndef DISABLE_DEPRECATED
 static void gdextension_get_godot_version(GDExtensionGodotVersion *r_godot_version) {
 	r_godot_version->major = VERSION_MAJOR;
 	r_godot_version->minor = VERSION_MINOR;
 	r_godot_version->patch = VERSION_PATCH;
+	r_godot_version->string = VERSION_FULL_NAME;
+}
+#endif
+
+static void gdextension_get_godot_version2(GDExtensionGodotVersion2 *r_godot_version) {
+	r_godot_version->major = VERSION_MAJOR;
+	r_godot_version->minor = VERSION_MINOR;
+	r_godot_version->patch = VERSION_PATCH;
+	r_godot_version->hex = VERSION_HEX;
+	r_godot_version->status = VERSION_STATUS;
+	r_godot_version->build = VERSION_BUILD;
+	r_godot_version->hash = VERSION_HASH;
+	r_godot_version->timestamp = VERSION_TIMESTAMP;
 	r_godot_version->string = VERSION_FULL_NAME;
 }
 
@@ -1563,6 +1577,15 @@ static GDExtensionScriptInstancePtr gdextension_object_get_script_instance(GDExt
 	return script_instance_extension->instance;
 }
 
+static void gdextension_object_set_script_instance(GDExtensionObjectPtr p_object, GDExtensionScriptInstancePtr p_script_instance) {
+	ERR_FAIL_NULL(p_object);
+
+	Object *o = (Object *)p_object;
+	ScriptInstance *script_instance = (ScriptInstanceExtension *)p_script_instance;
+
+	o->set_script_instance(script_instance);
+}
+
 #ifndef DISABLE_DEPRECATED
 static void gdextension_callable_custom_create(GDExtensionUninitializedTypePtr r_callable, GDExtensionCallableCustomInfo *p_custom_callable_info) {
 	memnew_placement(r_callable, Callable(memnew(CallableCustomExtension(p_custom_callable_info))));
@@ -1595,7 +1618,7 @@ static GDExtensionMethodBindPtr gdextension_classdb_get_method_bind(GDExtensionC
 	// If lookup failed, see if this is one of the broken hashes from issue #81386.
 	if (!mb && exists) {
 		uint32_t mapped_hash;
-		if (GDExtensionCompatHashes::lookup_current_hash(classname, methodname, p_hash, &mapped_hash)) {
+		if (GDExtensionSpecialCompatHashes::lookup_current_hash(classname, methodname, p_hash, &mapped_hash)) {
 			mb = ClassDB::get_method_with_compatibility(classname, methodname, mapped_hash, &exists);
 		}
 	}
@@ -1657,7 +1680,10 @@ static void gdextension_editor_help_load_xml_from_utf8_chars(const char *p_data)
 #define REGISTER_INTERFACE_FUNC(m_name) GDExtension::register_interface_function(#m_name, (GDExtensionInterfaceFunctionPtr) & gdextension_##m_name)
 
 void gdextension_setup_interface() {
+#ifndef DISABLE_DEPRECATED
 	REGISTER_INTERFACE_FUNC(get_godot_version);
+#endif // DISABLE_DEPRECATED
+	REGISTER_INTERFACE_FUNC(get_godot_version2);
 	REGISTER_INTERFACE_FUNC(mem_alloc);
 	REGISTER_INTERFACE_FUNC(mem_realloc);
 	REGISTER_INTERFACE_FUNC(mem_free);
@@ -1799,6 +1825,7 @@ void gdextension_setup_interface() {
 	REGISTER_INTERFACE_FUNC(placeholder_script_instance_create);
 	REGISTER_INTERFACE_FUNC(placeholder_script_instance_update);
 	REGISTER_INTERFACE_FUNC(object_get_script_instance);
+	REGISTER_INTERFACE_FUNC(object_set_script_instance);
 #ifndef DISABLE_DEPRECATED
 	REGISTER_INTERFACE_FUNC(callable_custom_create);
 #endif // DISABLE_DEPRECATED
