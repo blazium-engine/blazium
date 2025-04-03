@@ -269,7 +269,8 @@ Error EditorExportPlatformWeb::_build_js_files(const Ref<EditorExportPreset> &p_
 
 	// Get discord.embed.js file contents
 	String discord_embed_path = dir.path_join(name + ".discord.embed.js");
-	if (p_preset->get("blazium/discord_embed/enabled")) {
+	bool discord_embed = p_preset->get("blazium/discord_embed/enabled");
+	if (discord_embed) {
 		Vector<uint8_t> discord_embed_js;
 		Ref<FileAccess> f = FileAccess::open(discord_embed_path, FileAccess::READ);
 		if (f.is_null()) {
@@ -288,7 +289,8 @@ Error EditorExportPlatformWeb::_build_js_files(const Ref<EditorExportPreset> &p_
 
 	// Get youtube.playables.js file contents
 	String youtube_playables_path = dir.path_join(name + ".youtube.playables.js");
-	if (p_preset->get("blazium/youtube_playable/enabled")) {
+	bool youtube_playable = p_preset->get("blazium/youtube_playable/enabled");
+	if (youtube_playable) {
 		Vector<uint8_t> youtube_playables_js;
 		Ref<FileAccess> f = FileAccess::open(youtube_playables_path, FileAccess::READ);
 		if (f.is_null()) {
@@ -302,10 +304,12 @@ Error EditorExportPlatformWeb::_build_js_files(const Ref<EditorExportPreset> &p_
 	}
 	DirAccess::remove_file_or_error(youtube_playables_path);
 
-	// Write third party js file
-	Error err = _write_or_error(third_party_js.ptr(), third_party_js.size(), dir.path_join(name + ".third.party.js"), "Export", false);
-	if (err != OK) {
-		return err;
+	if (youtube_playable || discord_embed) {
+		// Write third party js file
+		Error err = _write_or_error(third_party_js.ptr(), third_party_js.size(), dir.path_join(name + ".third.party.js"), "Export", false);
+		if (err != OK) {
+			return err;
+		}
 	}
 
 	// Get engine.starter.js file contents
@@ -356,7 +360,7 @@ Error EditorExportPlatformWeb::_build_js_files(const Ref<EditorExportPreset> &p_
 	_replace_strings(replaces, engine_starter_js);
 
 	// Write enigine starter js file
-	err = _write_or_error(engine_starter_js.ptr(), engine_starter_js.size(), engine_starter_path, "Export", false);
+	Error err = _write_or_error(engine_starter_js.ptr(), engine_starter_js.size(), engine_starter_path, "Export", false);
 	if (err != OK) {
 		return err;
 	}
