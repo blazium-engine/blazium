@@ -67,7 +67,7 @@ protected:
 
 public:
 	void set_control(Control *p_control);
-	Control *get_control() const { return control; };
+	Control *get_control() const { return control; }
 	bool has_control() const;
 
 	void ensure_control_visible(Control *p_control);

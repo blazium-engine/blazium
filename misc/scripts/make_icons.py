@@ -108,7 +108,7 @@ def assemble_icon_image(base_icon_image: ImageFile, badges: List[badge_descripto
     return icon_result
 
 
-def compose_windows_icon(build_status: str, out_path: str, not_stable_list: list[str], is_console: bool = False):
+def compose_windows_icon(build_status: str, out_path: str, not_stable_list: List[str], is_console: bool = False):
     base_icon_svg_bytes = load_file_bytes(icon_path)
 
     # Not including biggest ones (512, 1024) or it blows up in size
@@ -162,7 +162,7 @@ def compose_windows_icon(build_status: str, out_path: str, not_stable_list: list
     )
 
 
-def compose_android_icons(build_status: str, out_base_path: str, not_stable_list: list[str], bg_color: str):
+def compose_android_icons(build_status: str, out_base_path: str, not_stable_list: List[str], bg_color: str):
     base_icon_svg_bytes = load_file_bytes(icon_path)
 
     icon_descriptors: Dict[str, android_icon_descriptor] = {
@@ -251,7 +251,7 @@ def compose_android_icons(build_status: str, out_base_path: str, not_stable_list
     copytree(f"{out_base_path}/mipmap-mdpi", f"{out_base_path}/mipmap", dirs_exist_ok=True)
 
 
-def compose_macos_icons(build_status: str, out_base_path: str, not_stable_list: list[str]):
+def compose_macos_icons(build_status: str, out_base_path: str, not_stable_list: List[str]):
     # Icns contains only some sizes: https://iconhandbook.co.uk/reference/chart/osx/
     # Needs macos-compliant background which can't be plainly bundled in the repo,
     # so use the already provided godot icon and add some badges to it
@@ -304,7 +304,7 @@ def compose_macos_icons(build_status: str, out_base_path: str, not_stable_list: 
     icns_file.write(f"{out_base_path}/Blazium_{build_status}.icns")
 
 
-def compose_linux_icons(build_status: str, out_base_path: str, not_stable_list: list[str]):
+def compose_linux_icons(build_status: str, out_base_path: str, not_stable_list: List[str]):
     base_icon_svg_bytes = load_file_bytes(icon_path)
 
     # generate SVG variant
