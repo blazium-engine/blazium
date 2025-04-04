@@ -126,6 +126,7 @@ protected:
 public:
 	void set_split_offset(int p_offset);
 	int get_split_offset() const;
+	void clamp_split_offset();
 
 	void set_collapsed(bool p_collapsed);
 	bool is_collapsed() const;
@@ -144,8 +145,6 @@ public:
 
 	void set_show_drag_area(bool p_enabled);
 	bool is_showing_drag_area() const;
-
-	void clamp_split_offset();
 
 	virtual Size2 get_minimum_size() const override;
 
