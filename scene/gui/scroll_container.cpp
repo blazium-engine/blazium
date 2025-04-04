@@ -311,7 +311,7 @@ void ScrollContainer::_reposition_children() {
 	}
 
 	if (v_scroll->get_parent() == this) {
-		if (v_scroll->is_visible() && v_scroll->get_parent() == this) {
+		if (v_scroll->is_visible() || vertical_scroll_mode == SCROLL_MODE_RESERVE) {
 			size.x -= theme_cache.h_separation + v_scroll->get_minimum_size().x;
 		}
 	}
