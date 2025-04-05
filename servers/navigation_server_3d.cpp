@@ -244,6 +244,8 @@ NavigationServer3D::NavigationServer3D() {
 	GLOBAL_DEF("navigation/avoidance/thread_model/avoidance_use_multiple_threads", true);
 	GLOBAL_DEF("navigation/avoidance/thread_model/avoidance_use_high_priority_threads", true);
 
+	GLOBAL_DEF("navigation/pathfinding/max_threads", 4);
+
 	GLOBAL_DEF("navigation/baking/use_crash_prevention_checks", true);
 	GLOBAL_DEF("navigation/baking/thread_model/baking_use_multiple_threads", true);
 	GLOBAL_DEF("navigation/baking/thread_model/baking_use_high_priority_threads", true);
@@ -931,18 +933,6 @@ bool NavigationServer3D::get_debug_avoidance_enabled() const {
 }
 
 #endif // DEBUG_ENABLED
-
-void NavigationServer3D::query_path(const Ref<NavigationPathQueryParameters3D> &p_query_parameters, Ref<NavigationPathQueryResult3D> p_query_result) const {
-	ERR_FAIL_COND(!p_query_parameters.is_valid());
-	ERR_FAIL_COND(!p_query_result.is_valid());
-
-	const NavigationUtilities::PathQueryResult _query_result = _query_path(p_query_parameters->get_parameters());
-
-	p_query_result->set_path(_query_result.path);
-	p_query_result->set_path_types(_query_result.path_types);
-	p_query_result->set_path_rids(_query_result.path_rids);
-	p_query_result->set_path_owner_ids(_query_result.path_owner_ids);
-}
 
 ///////////////////////////////////////////////////////
 
