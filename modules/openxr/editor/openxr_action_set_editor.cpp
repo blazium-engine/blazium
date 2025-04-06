@@ -209,7 +209,7 @@ void OpenXRActionSetEditor::remove_all_actions() {
 
 void OpenXRActionSetEditor::set_focus_on_entry() {
 	ERR_FAIL_NULL(action_set_name);
-	action_set_name->grab_focus();
+	action_set_name->edit();
 }
 
 OpenXRActionSetEditor::OpenXRActionSetEditor(Ref<OpenXRActionMap> p_action_map, Ref<OpenXRActionSet> p_action_set) {

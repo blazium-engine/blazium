@@ -145,7 +145,7 @@ bool FileSystemList::edit_selected() {
 	popup_edit_commited = false; // Start edit popup processing.
 	popup_editor->popup();
 	popup_editor->child_controls_changed();
-	line_editor->grab_focus();
+	line_editor->edit();
 	return true;
 }
 
@@ -2734,7 +2734,7 @@ void FileSystemDock::update_all() {
 }
 
 void FileSystemDock::focus_on_path() {
-	current_path_line_edit->grab_focus();
+	current_path_line_edit->edit();
 	current_path_line_edit->select_all();
 }
 
@@ -2747,7 +2747,7 @@ void FileSystemDock::focus_on_filter() {
 	}
 
 	if (current_search_box) {
-		current_search_box->grab_focus();
+		current_search_box->edit();
 		current_search_box->select_all();
 	}
 }

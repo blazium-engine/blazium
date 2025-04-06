@@ -482,7 +482,7 @@ void GroupSettingsEditor::_show_rename_dialog() {
 	rename_group_dialog->reset_size();
 	rename_group_dialog->popup_centered();
 	rename_group->select_all();
-	rename_group->grab_focus();
+	rename_group->edit();
 }
 
 LineEdit *GroupSettingsEditor::get_name_box() const {

@@ -3073,7 +3073,7 @@ void VisualShaderEditor::_frame_title_popup_show(const Point2 &p_position, int p
 	frame_title_change_popup->popup();
 
 	// Select current text.
-	frame_title_change_edit->grab_focus();
+	frame_title_change_edit->edit();
 }
 
 void VisualShaderEditor::_frame_title_text_changed(const String &p_new_text) {
@@ -5029,7 +5029,7 @@ void VisualShaderEditor::_show_members_dialog(bool at_mouse_pos, VisualShaderNod
 	Vector2 difference = (dialog_rect.get_end() - window_rect.get_end()).maxf(0);
 	members_dialog->set_position(members_dialog->get_position() - difference);
 
-	node_filter->grab_focus();
+	node_filter->edit();
 	node_filter->select_all();
 }
 
@@ -5052,7 +5052,7 @@ void VisualShaderEditor::_show_add_varying_dialog() {
 	add_varying_dialog->set_position(graph->get_screen_position() + varying_button->get_position() + Point2(5 * EDSCALE, 65 * EDSCALE));
 	add_varying_dialog->popup();
 
-	varying_name->grab_focus();
+	varying_name->edit();
 
 	// Keep dialog within window bounds.
 	Rect2 window_rect = Rect2(DisplayServer::get_singleton()->window_get_position(), DisplayServer::get_singleton()->window_get_size());

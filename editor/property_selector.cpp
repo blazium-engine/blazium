@@ -508,8 +508,8 @@ void PropertySelector::select_method_from_base_type(const String &p_base, const 
 	virtuals_only = p_virtuals_only;
 
 	popup_centered_ratio(0.6);
-	search_box->set_text("");
-	search_box->grab_focus();
+	search_box->clear();
+	search_box->edit();
 	_update_search();
 }
 
@@ -524,8 +524,8 @@ void PropertySelector::select_method_from_script(const Ref<Script> &p_script, co
 	virtuals_only = false;
 
 	popup_centered_ratio(0.6);
-	search_box->set_text("");
-	search_box->grab_focus();
+	search_box->clear();
+	search_box->edit();
 	_update_search();
 }
 
@@ -540,8 +540,8 @@ void PropertySelector::select_method_from_basic_type(Variant::Type p_type, const
 	virtuals_only = false;
 
 	popup_centered_ratio(0.6);
-	search_box->set_text("");
-	search_box->grab_focus();
+	search_box->clear();
+	search_box->edit();
 	_update_search();
 }
 
@@ -561,8 +561,8 @@ void PropertySelector::select_method_from_instance(Object *p_instance, const Str
 	virtuals_only = false;
 
 	popup_centered_ratio(0.6);
-	search_box->set_text("");
-	search_box->grab_focus();
+	search_box->clear();
+	search_box->edit();
 	_update_search();
 }
 
@@ -576,8 +576,8 @@ void PropertySelector::select_property_from_base_type(const String &p_base, cons
 	virtuals_only = false;
 
 	popup_centered_ratio(0.6);
-	search_box->set_text("");
-	search_box->grab_focus();
+	search_box->clear();
+	search_box->edit();
 	_update_search();
 }
 
@@ -593,8 +593,8 @@ void PropertySelector::select_property_from_script(const Ref<Script> &p_script, 
 	virtuals_only = false;
 
 	popup_centered_ratio(0.6);
-	search_box->set_text("");
-	search_box->grab_focus();
+	search_box->clear();
+	search_box->edit();
 	_update_search();
 }
 
@@ -609,8 +609,8 @@ void PropertySelector::select_property_from_basic_type(Variant::Type p_type, con
 	virtuals_only = false;
 
 	popup_centered_ratio(0.6);
-	search_box->set_text("");
-	search_box->grab_focus();
+	search_box->clear();
+	search_box->edit();
 	_update_search();
 }
 
@@ -624,8 +624,8 @@ void PropertySelector::select_property_from_instance(Object *p_instance, const S
 	virtuals_only = false;
 
 	popup_centered_ratio(0.6);
-	search_box->set_text("");
-	search_box->grab_focus();
+	search_box->clear();
+	search_box->edit();
 	_update_search();
 }
 

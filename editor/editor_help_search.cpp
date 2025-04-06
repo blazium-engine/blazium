@@ -311,7 +311,7 @@ void EditorHelpSearch::popup_dialog(const String &p_term) {
 		search_box->set_text(p_term);
 		search_box->select_all();
 	}
-	search_box->grab_focus();
+	search_box->edit();
 	_update_results();
 }
 

@@ -59,7 +59,7 @@ void FileDialog::_focus_file_text() {
 	if (lp != -1) {
 		file->select(0, lp);
 		if (file->is_inside_tree() && !is_part_of_edited_scene()) {
-			file->grab_focus();
+			file->edit();
 		}
 	}
 }
@@ -327,7 +327,7 @@ void FileDialog::shortcut_input(const Ref<InputEvent> &p_event) {
 				// Cmd + Shift + G (matches Finder's "Go To" shortcut).
 				case Key::G: {
 					if (k->is_command_or_control_pressed() && k->is_shift_pressed()) {
-						dir->grab_focus();
+						dir->edit();
 						dir->select_all();
 					} else {
 						handled = false;
@@ -338,7 +338,7 @@ void FileDialog::shortcut_input(const Ref<InputEvent> &p_event) {
 				// plus macOS Safari's "focus on address bar" shortcut).
 				case Key::L: {
 					if (k->is_command_or_control_pressed()) {
-						dir->grab_focus();
+						dir->edit();
 						dir->select_all();
 					} else {
 						handled = false;
@@ -425,7 +425,7 @@ void FileDialog::_save_confirm_pressed() {
 void FileDialog::_post_popup() {
 	ConfirmationDialog::_post_popup();
 	if (mode == FILE_MODE_SAVE_FILE) {
-		file->grab_focus();
+		file->edit();
 	} else {
 		tree->grab_focus();
 	}
@@ -1267,7 +1267,7 @@ void FileDialog::_make_dir_confirm() {
 
 void FileDialog::_make_dir() {
 	makedialog->popup_centered(Size2(250, 80));
-	makedirname->grab_focus();
+	makedirname->edit();
 }
 
 void FileDialog::_select_drive(int p_idx) {
@@ -1593,7 +1593,7 @@ void FileDialog::set_show_filename_filter(bool p_show) {
 		return;
 	}
 	if (p_show) {
-		filename_filter->grab_focus();
+		filename_filter->edit();
 	} else {
 		if (filename_filter->has_focus()) {
 			tree->call_deferred("grab_focus");

@@ -1775,7 +1775,7 @@ void ThemeItemEditorDialog::_open_add_theme_item_dialog(int p_data_type) {
 	edit_theme_item_old_vb->hide();
 	theme_item_name->clear();
 	edit_theme_item_dialog->popup_centered(Size2(380, 110) * EDSCALE);
-	theme_item_name->grab_focus();
+	theme_item_name->edit();
 }
 
 void ThemeItemEditorDialog::_open_rename_theme_item_dialog(Theme::DataType p_data_type, String p_item_name) {
@@ -1812,7 +1812,7 @@ void ThemeItemEditorDialog::_open_rename_theme_item_dialog(Theme::DataType p_dat
 	theme_item_old_name->set_text(p_item_name);
 	theme_item_name->set_text(p_item_name);
 	edit_theme_item_dialog->popup_centered(Size2(380, 140) * EDSCALE);
-	theme_item_name->grab_focus();
+	theme_item_name->edit();
 }
 
 void ThemeItemEditorDialog::_confirm_edit_theme_item() {
@@ -2133,7 +2133,7 @@ ThemeItemEditorDialog::ThemeItemEditorDialog(ThemeTypeEditor *p_theme_type_edito
 
 void ThemeTypeDialog::_dialog_about_to_show() {
 	add_type_filter->set_text("");
-	add_type_filter->grab_focus();
+	add_type_filter->edit();
 
 	_update_add_type_options();
 }
@@ -2231,7 +2231,7 @@ void ThemeTypeDialog::_notification(int p_what) {
 
 		case NOTIFICATION_VISIBILITY_CHANGED: {
 			if (is_visible()) {
-				add_type_filter->grab_focus();
+				add_type_filter->edit();
 			}
 		} break;
 	}

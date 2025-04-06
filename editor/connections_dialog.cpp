@@ -430,7 +430,7 @@ void ConnectDialog::_method_check_button_pressed(const CheckButton *p_button) {
 void ConnectDialog::_open_method_popup() {
 	method_popup->popup_centered();
 	method_search->clear();
-	method_search->grab_focus();
+	method_search->edit();
 }
 
 /*
@@ -471,7 +471,7 @@ void ConnectDialog::_update_warning_label() {
 }
 
 void ConnectDialog::_post_popup() {
-	callable_mp((Control *)dst_method, &Control::grab_focus).call_deferred();
+	callable_mp(dst_method, &LineEdit::edit).call_deferred();
 	callable_mp(dst_method, &LineEdit::select_all).call_deferred();
 }
 
@@ -615,7 +615,7 @@ void ConnectDialog::shortcut_input(const Ref<InputEvent> &p_event) {
 
 	if (key.is_valid() && key->is_pressed() && !key->is_echo()) {
 		if (ED_IS_SHORTCUT("editor/open_search", p_event)) {
-			filter_nodes->grab_focus();
+			filter_nodes->edit();
 			filter_nodes->select_all();
 			filter_nodes->accept_event();
 		}
@@ -1286,7 +1286,7 @@ void ConnectionsDock::_tree_gui_input(const Ref<InputEvent> &p_event) {
 				return;
 			}
 		} else if (ED_IS_SHORTCUT("editor/open_search", p_event)) {
-			search_box->grab_focus();
+			search_box->edit();
 			search_box->select_all();
 
 			accept_event();

@@ -4293,7 +4293,7 @@ bool Tree::edit_selected(bool p_force_edit) {
 		popup_editor->popup();
 		popup_editor->child_controls_changed();
 
-		line_editor->grab_focus();
+		line_editor->edit();
 
 		return true;
 	} else if (c.mode == TreeItem::CELL_MODE_STRING && c.edit_multiline) {

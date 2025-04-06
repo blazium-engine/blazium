@@ -341,7 +341,7 @@ void ProjectManager::_select_main_view(int p_id) {
 	if (current_main_view == MAIN_VIEW_PROJECTS && search_box->is_inside_tree()) {
 		// Automatically grab focus when the user moves from the Templates tab
 		// back to the Projects tab.
-		search_box->grab_focus();
+		search_box->edit();
 	}
 
 	// The Templates tab's search field is focused on display in the asset
@@ -1014,7 +1014,7 @@ void ProjectManager::shortcut_input(const Ref<InputEvent> &p_ev) {
 			} break;
 			case Key::F: {
 				if (k->is_command_or_control_pressed()) {
-					search_box->grab_focus();
+					search_box->edit();
 				} else {
 					keycode_handled = false;
 				}
@@ -1587,7 +1587,7 @@ ProjectManager::ProjectManager() {
 		new_tag_name->connect(SceneStringName(text_changed), callable_mp(this, &ProjectManager::_set_new_tag_name));
 		new_tag_name->connect(SceneStringName(text_submitted), callable_mp(this, &ProjectManager::_create_new_tag).unbind(1));
 		create_tag_dialog->connect("about_to_popup", callable_mp(new_tag_name, &LineEdit::clear));
-		create_tag_dialog->connect("about_to_popup", callable_mp((Control *)new_tag_name, &Control::grab_focus), CONNECT_DEFERRED);
+		create_tag_dialog->connect("about_to_popup", callable_mp(new_tag_name, &LineEdit::edit), CONNECT_DEFERRED);
 
 		tag_error = memnew(Label);
 		tag_vb->add_child(tag_error);

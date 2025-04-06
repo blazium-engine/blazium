@@ -851,7 +851,7 @@ void EditorSettingsDialog::_focus_current_search_box() {
 	}
 
 	if (current_search_box) {
-		current_search_box->grab_focus();
+		current_search_box->edit();
 		current_search_box->select_all();
 	}
 }

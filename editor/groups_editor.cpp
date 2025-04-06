@@ -675,7 +675,7 @@ void GroupsEditor::_show_add_group_dialog() {
 	add_validation_panel->update();
 
 	add_group_dialog->popup_centered();
-	add_group_name->grab_focus();
+	add_group_name->edit();
 }
 
 void GroupsEditor::_show_rename_group_dialog() {
@@ -731,8 +731,8 @@ void GroupsEditor::_show_rename_group_dialog() {
 
 	rename_group_dialog->reset_size();
 	rename_group_dialog->popup_centered();
+	rename_group->edit();
 	rename_group->select_all();
-	rename_group->grab_focus();
 }
 
 void GroupsEditor::_show_remove_group_dialog() {
@@ -798,7 +798,7 @@ void GroupsEditor::_groups_gui_input(Ref<InputEvent> p_event) {
 		} else if (ED_IS_SHORTCUT("groups_editor/rename", p_event)) {
 			_menu_id_pressed(RENAME_GROUP);
 		} else if (ED_IS_SHORTCUT("editor/open_search", p_event)) {
-			filter->grab_focus();
+			filter->edit();
 			filter->select_all();
 		} else {
 			return;

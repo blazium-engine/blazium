@@ -154,7 +154,7 @@ void EditorQuickOpenDialog::popup_dialog(const Vector<StringName> &p_base_types,
 
 	set_title(get_dialog_title(p_base_types));
 	popup_centered_clamped(Size2(780, 650) * EDSCALE, 0.8f);
-	search_box->grab_focus();
+	search_box->edit();
 }
 
 void EditorQuickOpenDialog::ok_pressed() {

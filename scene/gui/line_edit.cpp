@@ -53,7 +53,6 @@ void LineEdit::edit() {
 
 	if (!has_focus()) {
 		grab_focus();
-		return;
 	}
 
 	if (!editable || editing) {
@@ -74,6 +73,8 @@ void LineEdit::edit() {
 
 	show_virtual_keyboard();
 	queue_redraw();
+
+	emit_signal(SNAME("editing_toggled"), true);
 }
 
 void LineEdit::unedit() {
@@ -94,6 +95,8 @@ void LineEdit::unedit() {
 	if (deselect_on_focus_loss_enabled && !selection.drag_attempt) {
 		deselect();
 	}
+
+	emit_signal(SNAME("editing_toggled"), false);
 }
 
 bool LineEdit::is_editing() const {
@@ -409,7 +412,6 @@ void LineEdit::gui_input(const Ref<InputEvent> &p_event) {
 
 			if (editable && !editing) {
 				edit();
-				emit_signal(SNAME("editing_toggled"), true);
 			}
 
 			accept_event();
@@ -426,7 +428,6 @@ void LineEdit::gui_input(const Ref<InputEvent> &p_event) {
 
 			if (!editing) {
 				edit();
-				emit_signal(SNAME("editing_toggled"), true);
 			}
 
 			if (!paste_buffer.is_empty()) {
@@ -527,7 +528,6 @@ void LineEdit::gui_input(const Ref<InputEvent> &p_event) {
 
 			if (editable && !editing) {
 				edit();
-				emit_signal(SNAME("editing_toggled"), true);
 				return;
 			}
 			queue_redraw();
@@ -623,7 +623,6 @@ void LineEdit::gui_input(const Ref<InputEvent> &p_event) {
 
 	if (editable && !editing && k->is_action_pressed("ui_text_submit", false)) {
 		edit();
-		emit_signal(SNAME("editing_toggled"), true);
 		accept_event();
 		return;
 	}
@@ -784,7 +783,6 @@ void LineEdit::gui_input(const Ref<InputEvent> &p_event) {
 
 		if (editing && !keep_editing_on_text_submit) {
 			unedit();
-			emit_signal(SNAME("editing_toggled"), false);
 		}
 
 		accept_event();
@@ -794,7 +792,6 @@ void LineEdit::gui_input(const Ref<InputEvent> &p_event) {
 	if (k->is_action("ui_cancel")) {
 		if (editing) {
 			unedit();
-			emit_signal(SNAME("editing_toggled"), false);
 		}
 
 		accept_event();
@@ -1364,17 +1361,14 @@ void LineEdit::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_FOCUS_ENTER: {
-			// Only allow editing if the LineEdit is not focused with arrow keys.
-			if (!(Input::get_singleton()->is_action_pressed("ui_up") || Input::get_singleton()->is_action_pressed("ui_down") || Input::get_singleton()->is_action_pressed("ui_left") || Input::get_singleton()->is_action_pressed("ui_right"))) {
+			if (Input::get_singleton()->is_mouse_button_pressed(MouseButton::LEFT) || Input::get_singleton()->is_mouse_button_pressed(MouseButton::RIGHT) || Input::get_singleton()->is_mouse_button_pressed(MouseButton::MIDDLE)) {
 				edit();
-				emit_signal(SNAME("editing_toggled"), true);
 			}
 		} break;
 
 		case NOTIFICATION_FOCUS_EXIT: {
 			if (editing) {
 				unedit();
-				emit_signal(SNAME("editing_toggled"), false);
 			}
 		} break;
 
@@ -2168,7 +2162,6 @@ void LineEdit::set_editable(bool p_editable) {
 
 	if (!editable && editing) {
 		unedit();
-		emit_signal(SNAME("editing_toggled"), false);
 	}
 	_validate_caret_can_draw();
 

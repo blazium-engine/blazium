@@ -66,7 +66,7 @@ void GotoLinePopup::popup_find_line(CodeTextEditor *p_text_editor) {
 	Point2i centered_pos(parent_rect.get_center().x - get_contents_minimum_size().x / 2.0, parent_rect.position.y);
 	popup_on_parent(Rect2i(centered_pos, Size2()));
 	reset_size();
-	line_input->grab_focus();
+	line_input->edit();
 }
 
 void GotoLinePopup::_goto_line() {
@@ -601,10 +601,10 @@ void FindReplaceBar::_show_search(bool p_with_replace, bool p_show_only) {
 
 	if (focus_replace) {
 		search_text->deselect();
-		callable_mp((Control *)replace_text, &Control::grab_focus).call_deferred();
+		callable_mp(replace_text, &LineEdit::edit).call_deferred();
 	} else {
 		replace_text->deselect();
-		callable_mp((Control *)search_text, &Control::grab_focus).call_deferred();
+		callable_mp(search_text, &LineEdit::edit).call_deferred();
 	}
 
 	if (on_one_line) {

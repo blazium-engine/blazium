@@ -281,7 +281,7 @@ void EditorPropertyTextEnum::_option_selected(int p_which) {
 void EditorPropertyTextEnum::_edit_custom_value() {
 	default_layout->hide();
 	edit_custom_layout->show();
-	custom_value_edit->grab_focus();
+	custom_value_edit->edit();
 }
 
 void EditorPropertyTextEnum::_custom_value_submitted(const String &p_value) {
@@ -837,7 +837,7 @@ void EditorPropertyLayersGrid::_rename_pressed(int p_menu) {
 	rename_dialog_text->set_text(name);
 	rename_dialog_text->select(0, name.length());
 	rename_dialog->popup_centered(Size2(300, 80) * EDSCALE);
-	rename_dialog_text->grab_focus();
+	rename_dialog_text->edit();
 }
 
 void EditorPropertyLayersGrid::_rename_operation_confirm() {
@@ -1981,12 +1981,12 @@ void EditorPropertyQuaternion::_edit_custom_value() {
 	if (edit_button->is_pressed()) {
 		edit_custom_bc->show();
 		for (int i = 0; i < 3; i++) {
-			euler[i]->grab_focus();
+			euler[i]->get_line_edit()->edit();
 		}
 	} else {
 		edit_custom_bc->hide();
 		for (int i = 0; i < 4; i++) {
-			spin[i]->grab_focus();
+			spin[i]->get_line_edit()->edit();
 		}
 	}
 	update_property();
@@ -2766,7 +2766,7 @@ void EditorPropertyNodePath::_menu_option(int p_idx) {
 			const NodePath &np = _get_node_path();
 			edit->set_text(np);
 			edit->show();
-			callable_mp((Control *)edit, &Control::grab_focus).call_deferred();
+			callable_mp(edit, &LineEdit::edit).call_deferred();
 		} break;
 
 		case ACTION_SELECT: {

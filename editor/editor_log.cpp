@@ -419,7 +419,7 @@ void EditorLog::_set_filter_active(bool p_active, MessageType p_message_type) {
 void EditorLog::_set_search_visible(bool p_visible) {
 	search_box->set_visible(p_visible);
 	if (p_visible) {
-		search_box->grab_focus();
+		search_box->edit();
 	}
 	_start_state_save_timer();
 }

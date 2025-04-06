@@ -118,7 +118,7 @@ void ReplicationEditor::_pick_new_property() {
 	}
 	pick_node->popup_scenetree_dialog(nullptr, current);
 	pick_node->get_filter_line_edit()->clear();
-	pick_node->get_filter_line_edit()->grab_focus();
+	pick_node->get_filter_line_edit()->edit();
 }
 
 void ReplicationEditor::_add_sync_property(String p_path) {

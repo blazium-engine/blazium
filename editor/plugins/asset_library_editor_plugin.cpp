@@ -664,7 +664,7 @@ void EditorAssetLibrary::_notification(int p_what) {
 				// Focus the search box automatically when switching to the Templates tab (in the Project Manager)
 				// or switching to the AssetLib tab (in the editor).
 				// The Project Manager's project filter box is automatically focused in the project manager code.
-				filter->grab_focus();
+				filter->edit();
 #endif
 
 				if (initial_loading) {
@@ -732,7 +732,7 @@ void EditorAssetLibrary::shortcut_input(const Ref<InputEvent> &p_event) {
 
 	if (key.is_valid() && key->is_pressed()) {
 		if (key->is_match(InputEventKey::create_reference(KeyModifierMask::CMD_OR_CTRL | Key::F)) && is_visible_in_tree()) {
-			filter->grab_focus();
+			filter->edit();
 			filter->select_all();
 			accept_event();
 		}
