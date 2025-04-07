@@ -78,6 +78,8 @@ private:
 	bool interpolate = true;
 	NodePath sub_emitter;
 	real_t collision_base_size = 0.01;
+	uint32_t seed = 0;
+	bool use_fixed_seed = false;
 
 	bool trail_enabled = false;
 	double trail_lifetime = 0.3;
@@ -176,6 +178,14 @@ public:
 	TransformAlign get_transform_align() const;
 
 	void restart();
+	void _restart(bool p_keep_seed = false);
+
+	void set_use_fixed_seed(bool p_use_fixed_seed);
+	bool get_use_fixed_seed() const;
+
+	void set_seed(uint32_t p_seed);
+	uint32_t get_seed() const;
+	void request_particles_process(real_t p_requested_process_time);
 
 	enum EmitFlags {
 		EMIT_FLAG_POSITION = RS::PARTICLES_EMIT_FLAG_POSITION,
