@@ -1,5 +1,5 @@
 def can_build(env, platform):
-    return True
+    return platform == "macos" or platform == "windows" or platform == "linuxbsd"
 
 
 def configure(env):
