@@ -551,8 +551,10 @@ void update_theme_colors(Ref<Theme> &p_theme, const Color &p_base_color, const C
 	p_theme->set_color("font_pressed_color", "MenuButton", accent_color);
 	p_theme->set_color("font_pressed_color", "CheckBox", accent_color);
 	p_theme->set_color("font_hover_pressed_color", "CheckBox", accent_color);
+	p_theme->set_color("checkbox_checked_color", "CheckBox", accent_color);
 	p_theme->set_color("font_pressed_color", "CheckButton", accent_color);
 	p_theme->set_color("font_hover_pressed_color", "CheckButton", accent_color);
+	p_theme->set_color("button_checked_color", "CheckButton", accent_color);
 	p_theme->set_color("down_pressed_icon_modulate", "SpinBox", accent_color);
 	p_theme->set_color("up_pressed_icon_modulate", "SpinBox", accent_color);
 	p_theme->set_color("selection_stroke", "GraphEdit", accent_color);
@@ -654,7 +656,9 @@ void update_font_color(Ref<Theme> &p_theme, const Color &p_color) {
 	p_theme->set_color("font_hover_color", "OptionButton", font_color);
 	p_theme->set_color("font_hover_pressed_color", "OptionButton", font_color);
 	p_theme->set_color("font_hover_color", "MenuButton", font_color);
+	p_theme->set_color("checkbox_unchecked_color", "CheckBox", font_color);
 	p_theme->set_color("font_hover_color", "CheckBox", font_color);
+	p_theme->set_color("button_unchecked_color", "CheckButton", font_color);
 	p_theme->set_color("font_hover_color", "CheckButton", font_color);
 	p_theme->set_color("drop_position_color", "Tree", font_color);
 	p_theme->set_color("up_hover_icon_modulate", "SpinBox", font_color);
