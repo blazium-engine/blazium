@@ -77,7 +77,7 @@ String ProjectSettings::get_imported_files_path() const {
 // This is used by the project manager to provide the initial_settings for config/features.
 const PackedStringArray ProjectSettings::get_required_features() {
 	PackedStringArray features;
-	features.append(VERSION_BRANCH);
+	features.append(VERSION_NUMBER);
 #ifdef REAL_T_IS_DOUBLE
 	features.append("Double Precision");
 #endif

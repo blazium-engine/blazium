@@ -98,7 +98,7 @@ UIDUpgradeTool::~UIDUpgradeTool() {
 }
 
 void UIDUpgradeDialog::popup_on_demand() {
-	const String confirmation_message = TTR("As of Godot 4.4, scenes and resources use UIDs to reference scripts and shaders. Upgrades apply on the next save of each scene/resource.\n\nTo save time, this tool can open and save each of these files. Depending on the project size, it may take several minutes.");
+	const String confirmation_message = TTR("Blazium scenes and resources use UIDs to reference scripts and shaders. Upgrades apply on the next save of each scene/resource.\n\nTo save time, this tool can open and save each of these files. Depending on the project size, it may take several minutes.");
 	set_text(confirmation_message);
 	get_ok_button()->set_text("Restart & Upgrade");
 	popup_centered(Size2(750 * EDSCALE, 0));

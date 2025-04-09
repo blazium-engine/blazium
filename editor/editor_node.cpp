@@ -749,12 +749,21 @@ void EditorNode::_notification(int p_what) {
 				PackedStringArray features = ProjectSettings::get_singleton()->get_setting("application/config/features");
 				if (!features.is_empty()) {
 					String version_str = features[0];
-					PackedStringArray version_parts = version_str.split(".", true, 1);
-					if (version_parts.size() >= 2) {
+					PackedStringArray version_parts = version_str.split(".", true, 2);
+					if (version_parts.size() == 2) {
 						if (version_parts[0].is_valid_int() && version_parts[1].is_valid_int()) {
 							int major_ver = version_parts[0].to_int();
 							int minor_ver = version_parts[1].to_int();
-							if (major_ver < 4 || (major_ver == 4 && minor_ver < 4)) {
+							if (major_ver < 4 || (major_ver == 4 && minor_ver <= 3)) {
+								should_prompt_uid_upgrade_tool = true;
+							}
+						}
+					} else if (version_parts.size() == 3) {
+						if (version_parts[0].is_valid_int() && version_parts[1].is_valid_int() && version_parts[2].is_valid_int()) {
+							int major_ver = version_parts[0].to_int();
+							int minor_ver = version_parts[1].to_int();
+							int patch_ver = version_parts[2].to_int();
+							if (major_ver < 4 || (major_ver == 4 && minor_ver <= 3 && patch_ver < 2)) {
 								should_prompt_uid_upgrade_tool = true;
 							}
 						}
