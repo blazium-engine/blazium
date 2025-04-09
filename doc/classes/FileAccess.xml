@@ -334,6 +334,19 @@
 				Returns [code]null[/code] if opening the file failed. You can use [method get_open_error] to check the error that occurred.
 			</description>
 		</method>
+		<method name="open_encrypted2" qualifiers="static">
+			<return type="FileAccess" />
+			<param index="0" name="path" type="String" />
+			<param index="1" name="mode_flags" type="int" enum="FileAccess.ModeFlags" />
+			<param index="2" name="key" type="PackedByteArray" />
+			<param index="3" name="iv" type="PackedByteArray" default="PackedByteArray()" />
+			<description>
+				[b]Note:[/b] Compatibility method added from Godot 4.4.
+				Creates a new [FileAccess] object and opens an encrypted file in write or read mode. You need to pass a binary key to encrypt/decrypt it.
+				[b]Note:[/b] The provided key must be 32 bytes long.
+				Returns [code]null[/code] if opening the file failed. You can use [method get_open_error] to check the error that occurred.
+			</description>
+		</method>
 		<method name="open_encrypted_with_pass" qualifiers="static">
 			<return type="FileAccess" />
 			<param index="0" name="path" type="String" />
