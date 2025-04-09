@@ -1289,13 +1289,19 @@ bool Semaphore::try_wait() {
 }
 
 void Semaphore::post() {
-	semaphore.post();
+	_post(1);
+}
+
+void Semaphore::_post(int p_count) {
+	ERR_FAIL_COND(p_count <= 0);
+	semaphore.post(p_count);
 }
 
 void Semaphore::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("wait"), &Semaphore::wait);
 	ClassDB::bind_method(D_METHOD("try_wait"), &Semaphore::try_wait);
 	ClassDB::bind_method(D_METHOD("post"), &Semaphore::post);
+	ClassDB::bind_method(D_METHOD("post2", "count"), &Semaphore::_post, DEFVAL(1));
 }
 
 ////// Mutex //////

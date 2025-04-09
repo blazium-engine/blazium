@@ -411,12 +411,14 @@ class Semaphore : public RefCounted {
 	GDCLASS(Semaphore, RefCounted);
 	::Semaphore semaphore;
 
+protected:
 	static void _bind_methods();
 
 public:
 	void wait();
 	bool try_wait();
 	void post();
+	void _post(int p_count = 1);
 };
 
 class Thread : public RefCounted {
