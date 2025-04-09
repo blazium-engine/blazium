@@ -132,8 +132,6 @@
 			<param index="3" name="to_port" type="int" />
 			<description>
 				Create a connection between the [param from_port] of the [param from_node] [GraphNode] and the [param to_port] of the [param to_node] [GraphNode]. If the connection already exists, no connection is created.
-				Connections with [param keep_alive] set to [code]false[/code] may be deleted automatically if invalid during a redraw.
-				Note: Check [method connect_node2] which has the 4.4 breaking change for this method.
 			</description>
 		</method>
 		<method name="connect_node2">
@@ -144,8 +142,8 @@
 			<param index="3" name="to_port" type="int" />
 			<param index="4" name="keep_alive" type="bool" default="false" />
 			<description>
+				[b]Note:[/b] Compatibility method added from Godot 4.4.
 				Create a connection between the [param from_port] of the [param from_node] [GraphNode] and the [param to_port] of the [param to_node] [GraphNode]. If the connection already exists, no connection is created.
-				Connections with [param keep_alive] set to [code]false[/code] may be deleted automatically if invalid during a redraw.
 				Connections with [param keep_alive] set to [code]false[/code] may be deleted automatically if invalid during a redraw.
 			</description>
 		</method>

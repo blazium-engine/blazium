@@ -823,49 +823,55 @@ struct VariantIndexedSetGet_String {
 	static uint64_t get_indexed_size(const Variant *base) { return VariantInternal::get_string(base)->length(); }
 };
 
-#define INDEXED_SETGET_STRUCT_DICT(m_base_type)                                                                                     \
-	struct VariantIndexedSetGet_##m_base_type {                                                                                     \
-		static void get(const Variant *base, int64_t index, Variant *value, bool *oob) {                                            \
-			const Variant *ptr = VariantGetInternalPtr<m_base_type>::get_ptr(base)->getptr(index);                                  \
-			if (!ptr) {                                                                                                             \
-				*oob = true;                                                                                                        \
-				return;                                                                                                             \
-			}                                                                                                                       \
-			*value = *ptr;                                                                                                          \
-			*oob = false;                                                                                                           \
-		}                                                                                                                           \
-		static void ptr_get(const void *base, int64_t index, void *member) {                                                        \
-			/* avoid ptrconvert for performance*/                                                                                   \
-			const m_base_type &v = *reinterpret_cast<const m_base_type *>(base);                                                    \
-			const Variant *ptr = v.getptr(index);                                                                                   \
-			NULL_TEST(ptr);                                                                                                         \
-			PtrToArg<Variant>::encode(*ptr, member);                                                                                \
-		}                                                                                                                           \
-		static void set(Variant *base, int64_t index, const Variant *value, bool *valid, bool *oob) {                               \
-			if (VariantGetInternalPtr<m_base_type>::get_ptr(base)->is_read_only()) {                                                \
-				*valid = false;                                                                                                     \
-				*oob = true;                                                                                                        \
-				return;                                                                                                             \
-			}                                                                                                                       \
-			(*VariantGetInternalPtr<m_base_type>::get_ptr(base))[index] = *value;                                                   \
-			*oob = false;                                                                                                           \
-			*valid = true;                                                                                                          \
-		}                                                                                                                           \
-		static void validated_set(Variant *base, int64_t index, const Variant *value, bool *oob) {                                  \
-			if (VariantGetInternalPtr<m_base_type>::get_ptr(base)->is_read_only()) {                                                \
-				*oob = true;                                                                                                        \
-				return;                                                                                                             \
-			}                                                                                                                       \
-			(*VariantGetInternalPtr<m_base_type>::get_ptr(base))[index] = *value;                                                   \
-			*oob = false;                                                                                                           \
-		}                                                                                                                           \
-		static void ptr_set(void *base, int64_t index, const void *member) {                                                        \
-			m_base_type &v = *reinterpret_cast<m_base_type *>(base);                                                                \
-			v[index] = PtrToArg<Variant>::convert(member);                                                                          \
-		}                                                                                                                           \
-		static Variant::Type get_index_type() { return Variant::NIL; }                                                              \
-		static uint32_t get_index_usage() { return PROPERTY_USAGE_DEFAULT; }                                                        \
-		static uint64_t get_indexed_size(const Variant *base) { return VariantGetInternalPtr<m_base_type>::get_ptr(base)->size(); } \
+#define INDEXED_SETGET_STRUCT_DICT(m_base_type)                                                       \
+	struct VariantIndexedSetGet_##m_base_type {                                                       \
+		static void get(const Variant *base, int64_t index, Variant *value, bool *oob) {              \
+			const Variant *ptr = VariantGetInternalPtr<m_base_type>::get_ptr(base)->getptr(index);    \
+			if (!ptr) {                                                                               \
+				*oob = true;                                                                          \
+				return;                                                                               \
+			}                                                                                         \
+			*value = *ptr;                                                                            \
+			*oob = false;                                                                             \
+		}                                                                                             \
+		static void ptr_get(const void *base, int64_t index, void *member) {                          \
+			/* avoid ptrconvert for performance*/                                                     \
+			const m_base_type &v = *reinterpret_cast<const m_base_type *>(base);                      \
+			const Variant *ptr = v.getptr(index);                                                     \
+			NULL_TEST(ptr);                                                                           \
+			PtrToArg<Variant>::encode(*ptr, member);                                                  \
+		}                                                                                             \
+		static void set(Variant *base, int64_t index, const Variant *value, bool *valid, bool *oob) { \
+			if (VariantGetInternalPtr<m_base_type>::get_ptr(base)->is_read_only()) {                  \
+				*valid = false;                                                                       \
+				*oob = true;                                                                          \
+				return;                                                                               \
+			}                                                                                         \
+			(*VariantGetInternalPtr<m_base_type>::get_ptr(base))[index] = *value;                     \
+			*oob = false;                                                                             \
+			*valid = true;                                                                            \
+		}                                                                                             \
+		static void validated_set(Variant *base, int64_t index, const Variant *value, bool *oob) {    \
+			if (VariantGetInternalPtr<m_base_type>::get_ptr(base)->is_read_only()) {                  \
+				*oob = true;                                                                          \
+				return;                                                                               \
+			}                                                                                         \
+			(*VariantGetInternalPtr<m_base_type>::get_ptr(base))[index] = *value;                     \
+			*oob = false;                                                                             \
+		}                                                                                             \
+		static void ptr_set(void *base, int64_t index, const void *member) {                          \
+			m_base_type &v = *reinterpret_cast<m_base_type *>(base);                                  \
+			v[index] = PtrToArg<Variant>::convert(member);                                            \
+		}                                                                                             \
+		static Variant::Type get_index_type() {                                                       \
+			return Variant::NIL;                                                                      \
+		}                                                                                             \
+		static uint32_t get_index_usage() {                                                           \
+			return PROPERTY_USAGE_DEFAULT;                                                            \
+		}                                                                                             \
+		static uint64_t get_indexed_size(const Variant *base) {                                       \
+			return VariantGetInternalPtr<m_base_type>::get_ptr(base)->size();                         \
+		}                                                                                             \
 	};
 
 INDEXED_SETGET_STRUCT_BUILTIN_NUMERIC(Vector2, double, real_t, 2)
