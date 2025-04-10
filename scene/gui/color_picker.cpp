@@ -101,7 +101,7 @@ void ColorPicker::_notification(int p_what) {
 		case NOTIFICATION_THEME_CHANGED: {
 			btn_pick->set_button_icon(theme_cache.screen_picker);
 
-			preset_foldable->set_button_icon(0, theme_cache.add_preset);
+			add_preset_button->set_button_icon(theme_cache.add_preset);
 
 			preset_foldable->begin_bulk_theme_override();
 			preset_foldable->add_theme_icon_override("folded_arrow", theme_cache.folded_arrow);
@@ -1757,7 +1757,7 @@ void ColorPicker::set_can_add_swatches(bool p_enabled) {
 		return;
 	}
 	can_add_swatches = p_enabled;
-	preset_foldable->set_button_visible(0, p_enabled);
+	add_preset_button->set_visible(p_enabled);
 }
 
 bool ColorPicker::are_swatches_enabled() const {
@@ -2080,10 +2080,11 @@ ColorPicker::ColorPicker() {
 
 	preset_foldable = memnew(FoldableContainer);
 	preset_foldable->set_text(ETR("Swatches"));
-	preset_foldable->add_button();
-	preset_foldable->set_button_tooltip(0, ETR("Add current color as a preset."));
-	preset_foldable->set_button_visible(0, can_add_swatches);
-	preset_foldable->connect(SNAME("button_pressed"), callable_mp(this, &ColorPicker::_preset_foldable_button_pressed));
+	add_preset_button = memnew(Button);
+	add_preset_button->set_tooltip_text(ETR("Add current color as a preset."));
+	add_preset_button->set_visible(can_add_swatches);
+	add_preset_button->connect(SNAME("pressed"), callable_mp(this, &ColorPicker::_preset_foldable_button_pressed).bind(0));
+	preset_foldable->add_title_bar_control(add_preset_button);
 
 	ScrollContainer *preset_scroll = memnew(ScrollContainer);
 	preset_scroll->add_theme_constant_override("h_scroll_bar_separation", 4);

@@ -1321,10 +1321,6 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 		foldable_container_panel->set_corner_radius(CORNER_TOP_RIGHT, 0);
 		p_theme->set_stylebox(SceneStringName(panel), "FoldableContainer", foldable_container_panel);
 		p_theme->set_stylebox("focus", "FoldableContainer", p_config.button_style_focus);
-		p_theme->set_stylebox("button_normal_style", "FoldableContainer", make_flat_stylebox(p_config.dark_color_1.lerp(p_config.base_color, 0.4), p_config.base_margin, p_config.base_margin, p_config.base_margin, p_config.base_margin));
-		p_theme->set_stylebox("button_hovered_style", "FoldableContainer", make_flat_stylebox(p_config.dark_color_1.darkened(0.125), p_config.base_margin, p_config.base_margin, p_config.base_margin, p_config.base_margin));
-		p_theme->set_stylebox("button_pressed_style", "FoldableContainer", make_flat_stylebox(p_config.dark_color_1.darkened(0.125), p_config.base_margin, p_config.base_margin, p_config.base_margin, p_config.base_margin));
-		p_theme->set_stylebox("button_disabled_style", "FoldableContainer", make_empty_stylebox(p_config.base_margin, p_config.base_margin, p_config.base_margin, p_config.base_margin));
 
 		p_theme->set_font(SceneStringName(font), "FoldableContainer", p_theme->get_font(SceneStringName(font), SNAME("HeaderSmall")));
 		p_theme->set_font_size(SceneStringName(font_size), "FoldableContainer", p_theme->get_font_size(SceneStringName(font_size), SNAME("HeaderSmall")));
@@ -1333,10 +1329,6 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 		p_theme->set_color("hover_font_color", "FoldableContainer", p_config.font_hover_color);
 		p_theme->set_color("collapsed_font_color", "FoldableContainer", p_config.font_pressed_color);
 		p_theme->set_color("font_outline_color", "FoldableContainer", p_config.font_outline_color);
-		p_theme->set_color("button_icon_normal", "FoldableContainer", p_config.icon_normal_color);
-		p_theme->set_color("button_icon_hovered", "FoldableContainer", p_config.icon_hover_color);
-		p_theme->set_color("button_icon_pressed", "FoldableContainer", p_config.icon_pressed_color);
-		p_theme->set_color("button_icon_disabled", "FoldableContainer", p_config.icon_disabled_color);
 		p_theme->set_color("arrow_normal_color", "FoldableContainer", p_config.icon_normal_color);
 		p_theme->set_color("arrow_hover_color", "FoldableContainer", p_config.icon_hover_color);
 		p_theme->set_color("arrow_collapsed_color", "FoldableContainer", p_config.icon_pressed_color);

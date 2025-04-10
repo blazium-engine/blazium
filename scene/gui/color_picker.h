@@ -129,6 +129,7 @@ private:
 	Control *wheel_uv = nullptr;
 	Control *sample = nullptr;
 	FoldableContainer *preset_foldable = nullptr;
+	Button *add_preset_button = nullptr;
 	FoldableContainer *recent_preset_foldable = nullptr;
 	HBoxContainer *preset_hbc = nullptr;
 	HBoxContainer *recent_preset_hbc = nullptr;
