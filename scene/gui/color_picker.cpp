@@ -759,12 +759,19 @@ void ColorPicker::_update_presets() {
 		}
 	}
 
-	for (int i = 0; i < preset_hbc->get_child_count(); i++) {
-		memdelete(preset_hbc->get_child(0));
+	TypedArray<Node> children = preset_hbc->get_children();
+	for (int i = 0; i < children.size(); i++) {
+		Node *node = Object::cast_to<Node>(children[i]);
+		remove_child(node);
+		memdelete(node);
+	}
+	presets.clear();
+
+	for (const Color &preset : preset_cache) {
+		presets.push_back(preset);
 	}
 
-	presets = preset_cache;
-	for (const Color &preset : preset_cache) {
+	for (const Color &preset : presets) {
 		_add_preset_button(preset);
 	}
 
@@ -773,9 +780,11 @@ void ColorPicker::_update_presets() {
 
 void ColorPicker::_update_recent_presets() {
 	if (editor_settings) {
-		int recent_preset_count = recent_preset_hbc->get_child_count();
-		for (int i = 0; i < recent_preset_count; i++) {
-			memdelete(recent_preset_hbc->get_child(0));
+		TypedArray<Node> children = recent_preset_hbc->get_children();
+		for (int i = 0; i < children.size(); i++) {
+			Node *node = Object::cast_to<Node>(children[i]);
+			remove_child(node);
+			memdelete(node);
 		}
 
 		recent_presets.clear();
@@ -2388,6 +2397,11 @@ void ColorPickerPopupPanel::_input_from_window(const Ref<InputEvent> &p_event) {
 /////////////////
 
 void ColorPickerButton::_about_to_popup() {
+#ifdef TOOLS_ENABLED
+	picker->_update_presets();
+	picker->_update_recent_presets();
+#endif // TOOLS_ENABLED
+
 	set_pressed(true);
 	if (picker) {
 		picker->set_old_color(color);
@@ -2416,11 +2430,6 @@ void ColorPickerButton::pressed() {
 	float viewport_height = get_viewport_rect().size.y;
 
 	popup->reset_size();
-
-#ifdef TOOLS_ENABLED
-	picker->_update_presets();
-	picker->_update_recent_presets();
-#endif // TOOLS_ENABLED
 
 	// Determine in which direction to show the popup. By default popup horizontally centered below the button.
 	// But if the popup doesn't fit below and the button is in the bottom half of the viewport, show above.
