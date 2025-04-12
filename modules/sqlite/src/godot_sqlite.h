@@ -134,8 +134,6 @@ protected:
 public:
 	Array get_arguments() const { return arguments; }
 	TypedArray<Dictionary> get_result() const { return result; }
-	Dictionary get_result_as_dictionary() const {
-	}
 	String get_error() const { return error; }
 	int get_error_code() const { return error_code; }
 	String get_query() const { return query; }
