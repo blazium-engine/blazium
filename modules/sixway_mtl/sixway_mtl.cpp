@@ -59,7 +59,7 @@ void SixWayLightingMaterial::_initialize() {
 				vec4(0.0, 1.0, 0.0, 0.0),
 				vec4(normalize(cross(MAIN_CAM_INV_VIEW_MATRIX[0].xyz, vec3(0.0, 1.0, 0.0))), 0.0),
 				MODEL_MATRIX[3]);
-		}	
+		}
 		if (billboard_mode && !billboard_y_axis_only)
 		{
 			MODELVIEW_MATRIX = VIEW_MATRIX * mat4(
