@@ -1,7 +1,6 @@
 
-/*   Six-Way Volumetric Lighting for Godot v2.0     */
+/*   Six-Way Volumetric Lighting for Blazium v2.0   */
 /*            Developed by Hamid.Memar              */
-/*      License : Creative Commons (CC) BY 4.0      */
 
 #ifndef SIXWAY_MTL_H
 #define SIXWAY_MTL_H
