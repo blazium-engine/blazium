@@ -5,8 +5,6 @@
 
 // Imports
 #include "sixway_mtl.h"
-#include "editor/editor_interface.h"
-#include "editor/themes/editor_theme.h"
 
 // Six-Way Lighting Material Implementation
 void SixWayLightingMaterial::RegisterModule() {
