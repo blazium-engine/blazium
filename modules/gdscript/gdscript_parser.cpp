@@ -3171,6 +3171,19 @@ GDScriptParser::ExpressionNode *GDScriptParser::parse_dictionary(ExpressionNode 
 			if (key != nullptr && value != nullptr) {
 				dictionary->elements.push_back({ key, value });
 			}
+
+			if (!check(GDScriptTokenizer::Token::BRACE_CLOSE)) {
+				switch (current.type) {
+					case GDScriptTokenizer::Token::IDENTIFIER:
+					case GDScriptTokenizer::Token::LITERAL:
+					case GDScriptTokenizer::Token::BRACKET_OPEN:
+					case GDScriptTokenizer::Token::PARENTHESIS_OPEN:
+						push_error(R"(Expected ',' between dictionary entries.)");
+						break;
+					default:
+						break;
+				}
+			}
 		} while (match(GDScriptTokenizer::Token::COMMA) && !is_at_end());
 	}
 	pop_multiline();
