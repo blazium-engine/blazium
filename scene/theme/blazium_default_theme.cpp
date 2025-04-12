@@ -668,9 +668,9 @@ void update_font_color(Ref<Theme> &p_theme, const Color &p_color) {
 	p_theme->set_color("hover_font_color", "FoldableContainer", font_color);
 	p_theme->set_color("button_icon_hovered", "FoldableContainer", font_color);
 	p_theme->set_color("arrow_hover_color", "FoldableContainer", font_color);
-	font_color.a = 0.9;
-	p_theme->set_color("icon_focus_color", "Button", font_color);
+
 	p_theme->set_color("font_focus_color", "Button", font_color);
+	p_theme->set_color("icon_focus_color", "Button", font_color);
 	p_theme->set_color("parent_hl_line_color", "Tree", font_color);
 	p_theme->set_color("font_focus_color", "LinkButton", font_color);
 	p_theme->set_color("font_focus_color", "MenuBar", font_color);
@@ -683,7 +683,7 @@ void update_font_color(Ref<Theme> &p_theme, const Color &p_color) {
 	p_theme->set_color("resizer_color", "GraphEditMinimap", font_color);
 	p_theme->set_color("resizer_color", "GraphNode", font_color);
 	p_theme->set_color("resizer_color", "GraphFrame", font_color);
-	font_color.a = 0.8;
+
 	p_theme->set_color(SceneStringName(font_color), "Button", font_color);
 	p_theme->set_color(SceneStringName(font_color), "Tree", font_color);
 	p_theme->set_color(SceneStringName(font_color), "LinkButton", font_color);

@@ -682,7 +682,7 @@
 		<theme_item name="font_accelerator_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.6)">
 			The text [Color] used for shortcuts and accelerators that show next to the menu item name when defined. See [method get_item_accelerator] for more info on accelerators.
 		</theme_item>
-		<theme_item name="font_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.8)">
+		<theme_item name="font_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			The default text [Color] for menu items' names.
 		</theme_item>
 		<theme_item name="font_disabled_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.6)">

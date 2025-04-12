@@ -478,7 +478,7 @@
 		</constant>
 	</constants>
 	<theme_items>
-		<theme_item name="font_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.8)">
+		<theme_item name="font_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			Default text [Color] of the item.
 		</theme_item>
 		<theme_item name="font_hovered_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">

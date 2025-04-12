@@ -1587,13 +1587,13 @@
 		<theme_item name="caret_background_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			[Color] of the text behind the caret when using a block caret.
 		</theme_item>
-		<theme_item name="caret_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.8)">
+		<theme_item name="caret_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			[Color] of the caret. This can be set to a fully transparent color to hide the caret entirely.
 		</theme_item>
 		<theme_item name="current_line_color" data_type="color" type="Color" default="Color(0.16544, 0.16544, 0.16544, 1)">
 			Background [Color] of the line containing the caret.
 		</theme_item>
-		<theme_item name="font_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.8)">
+		<theme_item name="font_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			Sets the font [Color].
 		</theme_item>
 		<theme_item name="font_outline_color" data_type="color" type="Color" default="Color(0, 0, 0, 1)">
