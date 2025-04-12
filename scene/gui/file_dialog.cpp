@@ -1430,11 +1430,7 @@ void FileDialog::_update_option_controls() {
 	}
 	options_dirty = false;
 
-	while (grid_options->get_child_count() > 0) {
-		Node *child = grid_options->get_child(0);
-		grid_options->remove_child(child);
-		child->queue_free();
-	}
+	grid_options->remove_all_children(true, DELETE_MODE_QUEUE_FREE);
 	selected_options.clear();
 
 	for (const FileDialog::Option &opt : options) {

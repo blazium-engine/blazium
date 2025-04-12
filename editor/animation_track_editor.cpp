@@ -4789,10 +4789,7 @@ bool AnimationTrackEditor::can_add_reset_key() const {
 void AnimationTrackEditor::_update_tracks() {
 	int selected = _get_track_selected();
 
-	while (track_vbox->get_child_count()) {
-		memdelete(track_vbox->get_child(0));
-	}
-
+	track_vbox->remove_all_children();
 	timeline->set_track_edit(nullptr);
 
 	track_edits.clear();

@@ -255,9 +255,7 @@ void EditorPropertyFontMetaOverride::update_property() {
 			vbox->add_child(paginator);
 		} else {
 			// Queue children for deletion, deleting immediately might cause errors.
-			for (int i = property_vbox->get_child_count() - 1; i >= 0; i--) {
-				property_vbox->get_child(i)->queue_free();
-			}
+			property_vbox->remove_all_children(true, DELETE_MODE_QUEUE_FREE);
 			button_add = nullptr;
 		}
 
@@ -446,9 +444,7 @@ void EditorPropertyOTVariation::update_property() {
 			vbox->add_child(paginator);
 		} else {
 			// Queue children for deletion, deleting immediately might cause errors.
-			for (int i = property_vbox->get_child_count() - 1; i >= 0; i--) {
-				property_vbox->get_child(i)->queue_free();
-			}
+			property_vbox->remove_all_children(true, DELETE_MODE_QUEUE_FREE);
 		}
 
 		int size = supported.size();
@@ -665,9 +661,7 @@ void EditorPropertyOTFeatures::update_property() {
 			vbox->add_child(paginator);
 		} else {
 			// Queue children for deletion, deleting immediately might cause errors.
-			for (int i = property_vbox->get_child_count() - 1; i >= 0; i--) {
-				property_vbox->get_child(i)->queue_free();
-			}
+			property_vbox->remove_all_children(true, DELETE_MODE_QUEUE_FREE);
 			button_add = nullptr;
 		}
 

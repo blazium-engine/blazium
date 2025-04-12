@@ -759,12 +759,7 @@ void ColorPicker::_update_presets() {
 		}
 	}
 
-	TypedArray<Node> children = preset_hbc->get_children();
-	for (int i = 0; i < children.size(); i++) {
-		Node *node = Object::cast_to<Node>(children[i]);
-		remove_child(node);
-		memdelete(node);
-	}
+	preset_hbc->remove_all_children();
 	presets.clear();
 
 	for (const Color &preset : preset_cache) {
@@ -780,14 +775,9 @@ void ColorPicker::_update_presets() {
 
 void ColorPicker::_update_recent_presets() {
 	if (editor_settings) {
-		TypedArray<Node> children = recent_preset_hbc->get_children();
-		for (int i = 0; i < children.size(); i++) {
-			Node *node = Object::cast_to<Node>(children[i]);
-			remove_child(node);
-			memdelete(node);
-		}
-
+		recent_preset_hbc->remove_all_children();
 		recent_presets.clear();
+
 		for (const Color &preset : recent_preset_cache) {
 			recent_presets.push_back(preset);
 		}
