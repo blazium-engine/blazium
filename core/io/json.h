@@ -97,6 +97,8 @@ public:
 
 	static Variant from_native(const Variant &p_variant, bool p_allow_classes = false, bool p_allow_scripts = false);
 	static Variant to_native(const Variant &p_json, bool p_allow_classes = false, bool p_allow_scripts = false);
+
+	JSON();
 };
 
 class ResourceFormatLoaderJSON : public ResourceFormatLoader {

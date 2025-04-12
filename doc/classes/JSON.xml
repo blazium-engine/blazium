@@ -91,7 +91,7 @@
 			<param index="3" name="full_precision" type="bool" default="false" />
 			<description>
 				Converts a [Variant] var to JSON text and returns the result. Useful for serializing data to store or send over the network.
-				[b]Note:[/b] The JSON specification does not define integer or float types, but only a [i]number[/i] type. Therefore, converting a Variant to JSON text will convert all numerical values to [float] types.
+				[b]Note:[/b] The JSON specification does not define integer or float types, but only a [i]number[/i] type. If [code]filesystem/import/json/always_parse_numbers_as_double[/code] is [code]true[/code], converting a Variant to JSON text will convert all numerical values to [float] types. Otherwise, it will convert to either [float] or [int].
 				[b]Note:[/b] If [param full_precision] is [code]true[/code], when stringifying floats, the unreliable digits are stringified in addition to the reliable digits to guarantee exact decoding.
 				The [param indent] parameter controls if and how something is indented; its contents will be used where there should be an indent in the output. Even spaces like [code]"   "[/code] will work. [code]\t[/code] and [code]\n[/code] can also be used for a tab indent, or to make a newline for each indent respectively.
 				[b]Example output:[/b]

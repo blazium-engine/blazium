@@ -2523,6 +2523,29 @@ int64_t String::to_int(const wchar_t *p_str, int p_len) {
 	return _to_int<wchar_t>(p_str, to);
 }
 
+bool String::get_int_boundary(const char32_t *p_str, int &out_len) {
+	int idx = 0;
+	if (p_str[idx] != 0) {
+		if (p_str[idx] == '-' || p_str[idx] == '+') {
+			idx++;
+		}
+	}
+	while (p_str[idx] != 0) {
+		// it's a float if it has dot, exponent, f, inv, nan
+		if (p_str[idx] == '.' || p_str[idx] == 'e' || p_str[idx] == 'E' || p_str[idx] == 'f' || p_str[idx] == 'F' || p_str[idx] == 'i' || p_str[idx] == 'n') {
+			out_len = -1;
+			return false;
+		}
+		// end of number
+		if (!is_digit(p_str[idx])) {
+			break;
+		}
+		idx++;
+	}
+	out_len = idx;
+	return true;
+}
+
 bool String::is_numeric() const {
 	if (length() == 0) {
 		return false;

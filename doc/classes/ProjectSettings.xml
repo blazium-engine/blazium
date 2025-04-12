@@ -1058,6 +1058,9 @@
 		<member name="filesystem/import/fbx2gltf/enabled.web" type="bool" setter="" getter="" default="false">
 			Override for [member filesystem/import/fbx2gltf/enabled] on the Web where FBX2glTF can't easily be accessed from Godot.
 		</member>
+		<member name="filesystem/import/json/always_parse_numbers_as_double" type="bool" setter="" getter="" default="true">
+			If [code]true[/code], all numbers in JSON files are parsed as [float] values. If [code]false[/code], all numbers are parsed as [int] values if they are whole numbers, and as [float] otherwise.
+		</member>
 		<member name="gui/common/default_scroll_deadzone" type="int" setter="" getter="" default="0">
 			Default value for [member ScrollContainer.scroll_deadzone], which will be used for all [ScrollContainer]s unless overridden.
 		</member>

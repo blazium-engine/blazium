@@ -458,6 +458,7 @@ public:
 	Vector<uint8_t> hex_decode() const;
 
 	bool is_numeric() const;
+	static bool get_int_boundary(const char32_t *p_str, int &out_len);
 
 	double to_float() const;
 	int64_t hex_to_int() const;

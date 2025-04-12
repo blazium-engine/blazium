@@ -1645,6 +1645,8 @@ ProjectSettings::ProjectSettings() {
 	GLOBAL_DEF_INTERNAL("internationalization/locale/translation_add_builtin_strings_to_pot", false);
 
 	ProjectSettings::get_singleton()->add_hidden_prefix("input/");
+
+	GLOBAL_DEF_BASIC("filesystem/import/json/always_parse_numbers_as_double", true);
 }
 
 ProjectSettings::ProjectSettings(const String &p_path) {
