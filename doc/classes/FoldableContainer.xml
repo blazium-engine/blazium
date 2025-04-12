@@ -293,7 +293,7 @@
 		<theme_item name="arrow_hover_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			The arrow's icon color when hovered and expanded.
 		</theme_item>
-		<theme_item name="arrow_normal_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.8)">
+		<theme_item name="arrow_normal_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			The arrow's icon color expanded.
 		</theme_item>
 		<theme_item name="button_icon_disabled" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.4)">
@@ -302,7 +302,7 @@
 		<theme_item name="button_icon_hovered" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			The title's icon color when hovered.
 		</theme_item>
-		<theme_item name="button_icon_normal" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.8)">
+		<theme_item name="button_icon_normal" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			The title's icon color when normal.
 		</theme_item>
 		<theme_item name="button_icon_pressed" data_type="color" type="Color" default="Color(0.226, 0.478, 0.921, 1)">
@@ -311,7 +311,7 @@
 		<theme_item name="collapsed_font_color" data_type="color" type="Color" default="Color(0.226, 0.478, 0.921, 1)">
 			The title's font color when collapsed.
 		</theme_item>
-		<theme_item name="font_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.8)">
+		<theme_item name="font_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			The title's font color when expanded.
 		</theme_item>
 		<theme_item name="font_outline_color" data_type="color" type="Color" default="Color(0, 0, 0, 1)">

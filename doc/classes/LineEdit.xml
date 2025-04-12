@@ -508,16 +508,16 @@
 		</constant>
 	</constants>
 	<theme_items>
-		<theme_item name="caret_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.8)">
+		<theme_item name="caret_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			Color of the [LineEdit]'s caret (text cursor). This can be set to a fully transparent color to hide the caret entirely.
 		</theme_item>
-		<theme_item name="clear_button_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.8)">
+		<theme_item name="clear_button_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			Color used as default tint for the clear button.
 		</theme_item>
 		<theme_item name="clear_button_color_pressed" data_type="color" type="Color" default="Color(0.226, 0.478, 0.921, 1)">
 			Color used for the clear button when it's pressed.
 		</theme_item>
-		<theme_item name="font_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.8)">
+		<theme_item name="font_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			Default font color.
 		</theme_item>
 		<theme_item name="font_outline_color" data_type="color" type="Color" default="Color(0, 0, 0, 1)">

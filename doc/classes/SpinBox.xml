@@ -76,7 +76,7 @@
 		<theme_item name="down_hover_icon_modulate" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			Down button icon modulation color, when the button is hovered.
 		</theme_item>
-		<theme_item name="down_icon_modulate" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.8)">
+		<theme_item name="down_icon_modulate" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			Down button icon modulation color.
 		</theme_item>
 		<theme_item name="down_pressed_icon_modulate" data_type="color" type="Color" default="Color(0.226, 0.478, 0.921, 1)">
@@ -88,7 +88,7 @@
 		<theme_item name="up_hover_icon_modulate" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			Up button icon modulation color, when the button is hovered.
 		</theme_item>
-		<theme_item name="up_icon_modulate" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.8)">
+		<theme_item name="up_icon_modulate" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			Up button icon modulation color.
 		</theme_item>
 		<theme_item name="up_pressed_icon_modulate" data_type="color" type="Color" default="Color(0.226, 0.478, 0.921, 1)">
