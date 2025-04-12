@@ -124,6 +124,12 @@ public:
 		AUTO_TRANSLATE_MODE_DISABLED,
 	};
 
+	enum DeleteMode {
+		DELETE_MODE_QUEUE_FREE,
+		DELETE_MODE_INSTANT_FREE,
+		DELETE_MODE_KEEP,
+	};
+
 	struct Comparator {
 		bool operator()(const Node *p_a, const Node *p_b) const { return p_b->is_greater_than(p_a); }
 	};
@@ -486,6 +492,7 @@ public:
 	void add_child(Node *p_child, bool p_force_readable_name = false, InternalMode p_internal = INTERNAL_MODE_DISABLED);
 	void add_sibling(Node *p_sibling, bool p_force_readable_name = false);
 	void remove_child(Node *p_child);
+	void remove_all_children(bool p_include_internal = true, DeleteMode free_mode = DELETE_MODE_INSTANT_FREE);
 
 	int get_child_count(bool p_include_internal = true) const;
 	Node *get_child(int p_index, bool p_include_internal = true) const;
