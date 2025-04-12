@@ -142,8 +142,6 @@ bool SixWayLightingMaterial::_can_do_next_pass() const {
 bool SixWayLightingMaterial::_can_use_render_priority() const {
 	return shader.is_valid() && shader->get_mode() == Shader::MODE_SPATIAL;
 }
-void SixWayLightingMaterial::reset_state() {
-}
 void SixWayLightingMaterial::_set_shader_parameter(const StringName &p_param, const Variant &p_value) {
 	if (p_value.get_type() == Variant::NIL) {
 		param_cache.erase(p_param);

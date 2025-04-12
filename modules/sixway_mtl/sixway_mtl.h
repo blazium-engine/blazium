@@ -3,8 +3,8 @@
 /*            Developed by Hamid.Memar              */
 /*      License : Creative Commons (CC) BY 4.0      */
 
-#ifndef HM_SIX_WAY_LIGHTING_SHADER_H
-#define HM_SIX_WAY_LIGHTING_SHADER_H
+#ifndef SIXWAY_MTL_H
+#define SIXWAY_MTL_H
 
 // Imports
 #include "scene/resources/material.h"
@@ -13,19 +13,16 @@
 class SixWayLightingMaterial : public Material {
 	GDCLASS(SixWayLightingMaterial, Material);
 
-// Constructor
 public:
 	SixWayLightingMaterial();
+	static void RegisterModule();
 
-// Base Classes Methods
 public:
 	virtual RID get_shader_rid() const override;
 	virtual Shader::Mode get_shader_mode() const override;
 	virtual bool _can_do_next_pass() const override;
 	virtual bool _can_use_render_priority() const override;
-	virtual void reset_state();
 
-// Internal Methods
 private:
 	void _initialize();
 	void _set_shader_parameter(const StringName &p_param, const Variant &p_value);
@@ -37,15 +34,10 @@ private:
 	bool _property_get_revert(const StringName &p_name, Variant &r_property) const;
 	bool _is_shader_property(const StringName &p_name) const;
 
-// Static Methods
-public:
-	static void RegisterModule();
-
-// Internal Objects
 private:
 	Ref<Shader> shader;
 	mutable HashMap<StringName, StringName> remap_cache;
 	mutable HashMap<StringName, Variant> param_cache;
 };
 
-#endif // HM_SIX_WAY_LIGHTING_SHADER_H
+#endif // SIXWAY_MTL_H
