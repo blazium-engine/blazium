@@ -182,9 +182,9 @@ repos:
         files: \.(h|hpp|hh|hxx)$
         exclude: |
           (?x)^(
-          .*/(dummy|thread|platform_config|platform_gl)\.h$|
-          modules/sixway_mtl/.*
-        )
+            .*/(dummy|thread|platform_config|platform_gl)\.h$|
+            modules/sixway_mtl/.*
+          )
 
       - id: file-format
         name: file-format
