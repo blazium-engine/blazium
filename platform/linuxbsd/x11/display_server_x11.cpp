@@ -137,29 +137,40 @@ bool DisplayServerX11::has_feature(Feature p_feature) const {
 		case FEATURE_WINDOW_TRANSPARENCY:
 		//case FEATURE_HIDPI:
 		case FEATURE_ICON:
-#ifdef DBUS_ENABLED
-		case FEATURE_NATIVE_DIALOG_FILE:
-		case FEATURE_NATIVE_DIALOG_FILE_EXTRA:
-#endif
-		//case FEATURE_NATIVE_DIALOG:
-		//case FEATURE_NATIVE_DIALOG_INPUT:
 		//case FEATURE_NATIVE_ICON:
 		case FEATURE_SWAP_BUFFERS:
 #ifdef DBUS_ENABLED
 		case FEATURE_KEEP_SCREEN_ON:
 #endif
 		case FEATURE_CLIPBOARD_PRIMARY:
-		case FEATURE_TEXT_TO_SPEECH:
 		case FEATURE_WINDOW_EMBEDDING:
-		case FEATURE_WINDOW_DRAG:
+		case FEATURE_WINDOW_DRAG: {
 			return true;
-		case FEATURE_SCREEN_CAPTURE:
+		} break;
+
+		//case FEATURE_NATIVE_DIALOG:
+		//case FEATURE_NATIVE_DIALOG_INPUT:
+#ifdef DBUS_ENABLED
+		case FEATURE_NATIVE_DIALOG_FILE:
+		case FEATURE_NATIVE_DIALOG_FILE_EXTRA:
+		case FEATURE_NATIVE_DIALOG_FILE_MIME: {
+			return (portal_desktop && portal_desktop->is_supported() && portal_desktop->is_file_chooser_supported());
+		} break;
+#endif
+		case FEATURE_SCREEN_CAPTURE: {
 			return !xwayland;
+		} break;
+
+#ifdef SPEECHD_ENABLED
+		case FEATURE_TEXT_TO_SPEECH: {
+			return true;
+		} break;
+#endif
+
 		default: {
+			return false;
 		}
 	}
-
-	return false;
 }
 
 String DisplayServerX11::get_name() const {
@@ -367,10 +378,13 @@ void DisplayServerX11::tts_stop() {
 #ifdef DBUS_ENABLED
 
 bool DisplayServerX11::is_dark_mode_supported() const {
-	return portal_desktop->is_supported();
+	return portal_desktop && portal_desktop->is_supported() && portal_desktop->is_settings_supported();
 }
 
 bool DisplayServerX11::is_dark_mode() const {
+	if (!is_dark_mode_supported()) {
+		return false;
+	}
 	switch (portal_desktop->get_appearance_color_scheme()) {
 		case 1:
 			// Prefers dark theme.
@@ -2549,7 +2563,8 @@ bool DisplayServerX11::_window_maximize_check(WindowID p_window, const char *p_a
 		Atom *atoms = (Atom *)data;
 		Atom wm_act_max_horz;
 		Atom wm_act_max_vert;
-		if (strcmp(p_atom_name, "_NET_WM_STATE") == 0) {
+		bool checking_state = strcmp(p_atom_name, "_NET_WM_STATE") == 0;
+		if (checking_state) {
 			wm_act_max_horz = XInternAtom(x11_display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
 			wm_act_max_vert = XInternAtom(x11_display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
 		} else {
@@ -2567,9 +2582,16 @@ bool DisplayServerX11::_window_maximize_check(WindowID p_window, const char *p_a
 				found_wm_act_max_vert = true;
 			}
 
-			if (found_wm_act_max_horz || found_wm_act_max_vert) {
-				retval = true;
-				break;
+			if (checking_state) {
+				if (found_wm_act_max_horz && found_wm_act_max_vert) {
+					retval = true;
+					break;
+				}
+			} else {
+				if (found_wm_act_max_horz || found_wm_act_max_vert) {
+					retval = true;
+					break;
+				}
 			}
 		}
 
@@ -3588,8 +3610,7 @@ void DisplayServerX11::_handle_key_event(WindowID p_window, XKeyEvent *p_event, 
 	// XLookupString returns keysyms usable as nice keycodes.
 	char str[256] = {};
 	XKeyEvent xkeyevent_no_mod = *xkeyevent;
-	xkeyevent_no_mod.state &= ~ShiftMask;
-	xkeyevent_no_mod.state &= ~ControlMask;
+	xkeyevent_no_mod.state &= 0xFF00;
 	XLookupString(xkeyevent, str, 255, &keysym_unicode, nullptr);
 	XLookupString(&xkeyevent_no_mod, nullptr, 0, &keysym_keycode, nullptr);
 
@@ -3627,7 +3648,17 @@ void DisplayServerX11::_handle_key_event(WindowID p_window, XKeyEvent *p_event, 
 
 		if (status == XLookupChars) {
 			bool keypress = xkeyevent->type == KeyPress;
-			Key keycode = KeyMappingX11::get_keycode(keysym_keycode);
+
+			Key keycode = Key::NONE;
+			if (KeyMappingX11::is_sym_numpad(keysym_unicode)) {
+				// Special case for numpad keys.
+				keycode = KeyMappingX11::get_keycode(keysym_unicode);
+			}
+
+			if (keycode == Key::NONE) {
+				keycode = KeyMappingX11::get_keycode(keysym_keycode);
+			}
+
 			Key physical_keycode = KeyMappingX11::get_scancode(xkeyevent->keycode);
 
 			if (keycode >= Key::A + 32 && keycode <= Key::Z + 32) {
@@ -3695,9 +3726,18 @@ void DisplayServerX11::_handle_key_event(WindowID p_window, XKeyEvent *p_event, 
 		if (res == XKB_COMPOSE_FEED_ACCEPTED) {
 			if (xkb_compose_state_get_status(wd.xkb_state) == XKB_COMPOSE_COMPOSED) {
 				bool keypress = xkeyevent->type == KeyPress;
-				Key keycode = KeyMappingX11::get_keycode(keysym_keycode);
 				Key physical_keycode = KeyMappingX11::get_scancode(xkeyevent->keycode);
 				KeyLocation key_location = KeyMappingX11::get_location(xkeyevent->keycode);
+
+				Key keycode = Key::NONE;
+				if (KeyMappingX11::is_sym_numpad(keysym_unicode)) {
+					// Special case for numpad keys.
+					keycode = KeyMappingX11::get_keycode(keysym_unicode);
+				}
+
+				if (keycode == Key::NONE) {
+					keycode = KeyMappingX11::get_keycode(keysym_keycode);
+				}
 
 				if (keycode >= Key::A + 32 && keycode <= Key::Z + 32) {
 					keycode -= 'a' - 'A';
@@ -3759,7 +3799,16 @@ void DisplayServerX11::_handle_key_event(WindowID p_window, XKeyEvent *p_event, 
 	// KeyMappingX11 just translated the X11 keysym to a PIGUI
 	// keysym, so it works in all platforms the same.
 
-	Key keycode = KeyMappingX11::get_keycode(keysym_keycode);
+	Key keycode = Key::NONE;
+	if (KeyMappingX11::is_sym_numpad(keysym_unicode) || KeyMappingX11::is_sym_numpad(keysym_keycode)) {
+		// Special case for numpad keys.
+		keycode = KeyMappingX11::get_keycode(keysym_unicode);
+	}
+
+	if (keycode == Key::NONE) {
+		keycode = KeyMappingX11::get_keycode(keysym_keycode);
+	}
+
 	Key physical_keycode = KeyMappingX11::get_scancode(xkeyevent->keycode);
 
 	KeyLocation key_location = KeyMappingX11::get_location(xkeyevent->keycode);
@@ -3920,7 +3969,7 @@ Atom DisplayServerX11::_process_selection_request_target(Atom p_target, Window p
 				32,
 				PropModeReplace,
 				(unsigned char *)&data,
-				sizeof(data) / sizeof(data[0]));
+				std::size(data));
 		return p_property;
 	} else if (p_target == XInternAtom(x11_display, "SAVE_TARGETS", 0)) {
 		// Request to check if SAVE_TARGETS is supported, nothing special to do.
@@ -6803,7 +6852,7 @@ DisplayServerX11::DisplayServerX11(const String &p_rendering_driver, WindowMode 
 
 			if (use_prime == -1) {
 				print_verbose("Detecting GPUs, set DRI_PRIME in the environment to override GPU detection logic.");
-				use_prime = detect_prime();
+				use_prime = DetectPrimeX11::detect_prime();
 			}
 
 			if (use_prime) {

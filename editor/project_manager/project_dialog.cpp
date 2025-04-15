@@ -421,7 +421,7 @@ void ProjectDialog::_project_path_selected(const String &p_path) {
 
 	if (install_path->is_visible_in_tree()) {
 		// ZIP is selected; focus install path.
-		install_path->grab_focus();
+		install_path->edit();
 	} else {
 		get_ok_button()->grab_focus();
 	}
@@ -776,7 +776,7 @@ void ProjectDialog::show_dialog(bool p_reset_name) {
 		renderer_container->hide();
 		default_files_container->hide();
 
-		callable_mp((Control *)project_name, &Control::grab_focus).call_deferred();
+		callable_mp(project_name, &LineEdit::edit).call_deferred();
 		callable_mp(project_name, &LineEdit::select_all).call_deferred();
 	} else {
 		if (p_reset_name) {
@@ -821,7 +821,7 @@ void ProjectDialog::show_dialog(bool p_reset_name) {
 			renderer_container->show();
 			default_files_container->show();
 
-			callable_mp((Control *)project_name, &Control::grab_focus).call_deferred();
+			callable_mp(project_name, &LineEdit::edit).call_deferred();
 			callable_mp(project_name, &LineEdit::select_all).call_deferred();
 		} else if (mode == MODE_INSTALL) {
 			set_title(TTR("Install Project:") + " " + zip_title);
@@ -834,7 +834,7 @@ void ProjectDialog::show_dialog(bool p_reset_name) {
 			renderer_container->hide();
 			default_files_container->hide();
 
-			callable_mp((Control *)project_path, &Control::grab_focus).call_deferred();
+			callable_mp(project_path, &LineEdit::edit).call_deferred();
 		}
 
 		auto_dir = "";
@@ -975,7 +975,7 @@ ProjectDialog::ProjectDialog() {
 		default_renderer_type = EditorSettings::get_singleton()->get_setting("project_manager/default_renderer");
 	}
 
-	rendering_device_supported = DisplayServer::can_create_rendering_device();
+	rendering_device_supported = DisplayServer::is_rendering_device_supported();
 
 	if (!rendering_device_supported) {
 		default_renderer_type = "gl_compatibility";

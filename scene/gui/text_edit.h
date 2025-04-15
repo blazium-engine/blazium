@@ -112,6 +112,7 @@ public:
 		MENU_INSERT_ZWNJ,
 		MENU_INSERT_WJ,
 		MENU_INSERT_SHY,
+		MENU_EMOJI_AND_SYMBOL,
 		MENU_MAX
 
 	};
@@ -153,6 +154,9 @@ private:
 			Array bidi_override;
 			Ref<TextParagraph> data_buf;
 
+			String ime_data;
+			Array ime_bidi_override;
+
 			Color background_color = Color(0, 0, 0, 0);
 			bool hidden = false;
 			int line_count = 0;
@@ -192,9 +196,6 @@ private:
 		int gutter_count = 0;
 		bool indent_wrapped_lines = false;
 
-		void _calculate_line_height() const;
-		void _calculate_max_line_width() const;
-
 	public:
 		void set_tab_size(int p_tab_size);
 		int get_tab_size() const;
@@ -217,7 +218,6 @@ private:
 		void set_use_custom_word_separators(bool p_enabled);
 		bool is_custom_word_separators_enabled() const;
 
-		void set_word_separators(const String &p_separators);
 		void set_custom_word_separators(const String &p_separators);
 		String get_enabled_word_separators() const;
 		String get_custom_word_separators() const;
@@ -233,6 +233,7 @@ private:
 		const Ref<TextParagraph> get_line_data(int p_line) const;
 
 		void set(int p_line, const String &p_text, const Array &p_bidi_override);
+		void set_ime(int p_line, const String &p_text, const Array &p_bidi_override);
 		void set_hidden(int p_line, bool p_hidden);
 		bool is_hidden(int p_line) const;
 		void insert(int p_at, const Vector<String> &p_text, const Vector<Array> &p_bidi_override);
@@ -240,12 +241,13 @@ private:
 		int size() const { return text.size(); }
 		void clear();
 
-		void invalidate_cache(int p_line, int p_column = -1, bool p_text_changed = false, const String &p_ime_text = String(), const Array &p_bidi_override = Array());
+		void invalidate_cache(int p_line, bool p_text_changed = false);
 		void invalidate_font();
 		void invalidate_all();
 		void invalidate_all_lines();
 
 		_FORCE_INLINE_ String operator[](int p_line) const;
+		_FORCE_INLINE_ const String &get_text_with_ime(int p_line) const;
 
 		/* Gutters. */
 		void add_gutter(int p_at);
@@ -292,7 +294,7 @@ private:
 	int placeholder_line_height = -1;
 	int placeholder_max_width = -1;
 
-	Vector<String> placeholder_wraped_rows;
+	Vector<String> placeholder_wrapped_rows;
 
 	void _update_placeholder();
 	bool _using_placeholder() const;
@@ -318,6 +320,7 @@ private:
 	// User control.
 	bool overtype_mode = false;
 	bool context_menu_enabled = true;
+	bool emoji_menu_enabled = true;
 	bool shortcut_keys_enabled = true;
 	bool virtual_keyboard_enabled = true;
 	bool middle_mouse_paste_enabled = true;
@@ -537,6 +540,8 @@ private:
 
 	void _scroll_lines_up();
 	void _scroll_lines_down();
+
+	void _adjust_viewport_to_caret_horizontally(int p_caret = 0, bool p_maximize_selection = true);
 
 	// Minimap.
 	bool draw_minimap = false;
@@ -767,6 +772,11 @@ public:
 	void set_context_menu_enabled(bool p_enabled);
 	bool is_context_menu_enabled() const;
 
+	void show_emoji_and_symbol_picker();
+
+	void set_emoji_menu_enabled(bool p_enabled);
+	bool is_emoji_menu_enabled() const;
+
 	void set_shortcut_keys_enabled(bool p_enabled);
 	bool is_shortcut_keys_enabled() const;
 
@@ -792,6 +802,7 @@ public:
 
 	void set_line(int p_line, const String &p_new_text);
 	String get_line(int p_line) const;
+	String get_line_with_ime(int p_line) const;
 
 	int get_line_width(int p_line, int p_wrap_index = -1) const;
 	int get_line_height() const;

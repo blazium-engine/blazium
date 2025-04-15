@@ -31,17 +31,12 @@
 #include "scene_tree.h"
 
 #include "core/config/project_settings.h"
-#include "core/debugger/engine_debugger.h"
 #include "core/input/input.h"
-#include "core/io/dir_access.h"
 #include "core/io/image_loader.h"
-#include "core/io/marshalls.h"
 #include "core/io/resource_loader.h"
 #include "core/object/message_queue.h"
 #include "core/object/worker_thread_pool.h"
-#include "core/os/keyboard.h"
 #include "core/os/os.h"
-#include "core/string/print_string.h"
 #include "node.h"
 #include "scene/animation/tween.h"
 #include "scene/debugger/scene_debugger.h"
@@ -49,14 +44,11 @@
 #include "scene/main/multiplayer_api.h"
 #include "scene/main/viewport.h"
 #include "scene/resources/environment.h"
-#include "scene/resources/font.h"
 #include "scene/resources/image_texture.h"
 #include "scene/resources/material.h"
 #include "scene/resources/mesh.h"
 #include "scene/resources/packed_scene.h"
 #include "scene/resources/world_2d.h"
-#include "servers/display_server.h"
-#include "servers/navigation_server_3d.h"
 #include "servers/physics_server_2d.h"
 #ifndef _3D_DISABLED
 #include "scene/3d/node_3d.h"
@@ -64,8 +56,6 @@
 #include "servers/physics_server_3d.h"
 #endif // _3D_DISABLED
 #include "window.h"
-#include <stdio.h>
-#include <stdlib.h>
 
 void SceneTreeTimer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_time_left", "time"), &SceneTreeTimer::set_time_left);
@@ -104,7 +94,7 @@ void SceneTreeTimer::set_ignore_time_scale(bool p_ignore) {
 	ignore_time_scale = p_ignore;
 }
 
-bool SceneTreeTimer::is_ignore_time_scale() {
+bool SceneTreeTimer::is_ignoring_time_scale() {
 	return ignore_time_scale;
 }
 
@@ -521,13 +511,6 @@ void SceneTree::iteration_prepare() {
 		// are flushed before pumping the interpolation prev and currents.
 		flush_transform_notifications();
 		RenderingServer::get_singleton()->tick();
-
-#ifndef _3D_DISABLED
-		// Any objects performing client physics interpolation
-		// should be given an opportunity to keep their previous transforms
-		// up to date before each new physics tick.
-		_client_physics_interpolation.physics_process();
-#endif
 	}
 }
 
@@ -567,6 +550,13 @@ void SceneTree::iteration_end() {
 	// to be flushed to the RenderingServer before finishing a physics tick.
 	if (_physics_interpolation_enabled) {
 		flush_transform_notifications();
+
+#ifndef _3D_DISABLED
+		// Any objects performing client physics interpolation
+		// should be given an opportunity to keep their previous transforms
+		// up to date.
+		_client_physics_interpolation.physics_process();
+#endif
 	}
 }
 
@@ -659,32 +649,31 @@ bool SceneTree::process(double p_time) {
 
 void SceneTree::process_timers(double p_delta, bool p_physics_frame) {
 	_THREAD_SAFE_METHOD_
-	List<Ref<SceneTreeTimer>>::Element *L = timers.back(); //last element
+	const List<Ref<SceneTreeTimer>>::Element *L = timers.back(); // Last element.
+	const double unscaled_delta = Engine::get_singleton()->get_process_step();
 
 	for (List<Ref<SceneTreeTimer>>::Element *E = timers.front(); E;) {
 		List<Ref<SceneTreeTimer>>::Element *N = E->next();
-		if ((paused && !E->get()->is_process_always()) || (E->get()->is_process_in_physics() != p_physics_frame)) {
+		Ref<SceneTreeTimer> timer = E->get();
+
+		if ((paused && !timer->is_process_always()) || (timer->is_process_in_physics() != p_physics_frame)) {
 			if (E == L) {
-				break; //break on last, so if new timers were added during list traversal, ignore them.
+				break; // Break on last, so if new timers were added during list traversal, ignore them.
 			}
 			E = N;
 			continue;
 		}
 
-		double time_left = E->get()->get_time_left();
-		if (E->get()->is_ignore_time_scale()) {
-			time_left -= Engine::get_singleton()->get_process_step();
-		} else {
-			time_left -= p_delta;
-		}
-		E->get()->set_time_left(time_left);
+		double time_left = timer->get_time_left();
+		time_left -= timer->is_ignoring_time_scale() ? unscaled_delta : p_delta;
+		timer->set_time_left(time_left);
 
 		if (time_left <= 0) {
 			E->get()->emit_signal(SNAME("timeout"));
 			timers.erase(E);
 		}
 		if (E == L) {
-			break; //break on last, so if new timers were added during list traversal, ignore them.
+			break; // Break on last, so if new timers were added during list traversal, ignore them.
 		}
 		E = N;
 	}
@@ -693,12 +682,15 @@ void SceneTree::process_timers(double p_delta, bool p_physics_frame) {
 void SceneTree::process_tweens(double p_delta, bool p_physics) {
 	_THREAD_SAFE_METHOD_
 	// This methods works similarly to how SceneTreeTimers are handled.
-	List<Ref<Tween>>::Element *L = tweens.back();
+	const List<Ref<Tween>>::Element *L = tweens.back();
+	const double unscaled_delta = Engine::get_singleton()->get_process_step();
 
 	for (List<Ref<Tween>>::Element *E = tweens.front(); E;) {
 		List<Ref<Tween>>::Element *N = E->next();
+		Ref<Tween> &tween = E->get();
+
 		// Don't process if paused or process mode doesn't match.
-		if (!E->get()->can_process(paused) || (p_physics == (E->get()->get_process_mode() == Tween::TWEEN_PROCESS_IDLE))) {
+		if (!tween->can_process(paused) || (p_physics == (tween->get_process_mode() == Tween::TWEEN_PROCESS_IDLE))) {
 			if (E == L) {
 				break;
 			}
@@ -706,8 +698,8 @@ void SceneTree::process_tweens(double p_delta, bool p_physics) {
 			continue;
 		}
 
-		if (!E->get()->step(p_delta)) {
-			E->get()->clear();
+		if (!tween->step(tween->is_ignoring_time_scale() ? unscaled_delta : p_delta)) {
+			tween->clear();
 			tweens.erase(E);
 		}
 		if (E == L) {
@@ -1597,9 +1589,20 @@ Ref<SceneTreeTimer> SceneTree::create_timer(double p_delay_sec, bool p_process_a
 
 Ref<Tween> SceneTree::create_tween() {
 	_THREAD_SAFE_METHOD_
-	Ref<Tween> tween = memnew(Tween(true));
+	Ref<Tween> tween;
+	tween.instantiate(this);
 	tweens.push_back(tween);
 	return tween;
+}
+
+void SceneTree::remove_tween(const Ref<Tween> &p_tween) {
+	_THREAD_SAFE_METHOD_
+	for (List<Ref<Tween>>::Element *E = tweens.back(); E; E = E->prev()) {
+		if (E->get() == p_tween) {
+			E->erase();
+			break;
+		}
+	}
 }
 
 TypedArray<Tween> SceneTree::get_processed_tweens() {
@@ -1648,7 +1651,7 @@ Ref<MultiplayerAPI> SceneTree::get_multiplayer(const NodePath &p_for_path) const
 void SceneTree::set_multiplayer(Ref<MultiplayerAPI> p_multiplayer, const NodePath &p_root_path) {
 	ERR_FAIL_COND_MSG(!Thread::is_main_thread(), "Multiplayer can only be manipulated from the main thread.");
 	if (p_root_path.is_empty()) {
-		ERR_FAIL_COND(!p_multiplayer.is_valid());
+		ERR_FAIL_COND(p_multiplayer.is_null());
 		if (multiplayer.is_valid()) {
 			multiplayer->object_configuration_remove(nullptr, NodePath("/" + root->get_name()));
 		}
@@ -1842,7 +1845,7 @@ SceneTree::SceneTree() {
 	debug_collisions_color = GLOBAL_DEF("debug/shapes/collision/shape_color", Color(0.0, 0.6, 0.7, 0.42));
 	debug_collision_contact_color = GLOBAL_DEF("debug/shapes/collision/contact_color", Color(1.0, 0.2, 0.1, 0.8));
 	debug_paths_color = GLOBAL_DEF("debug/shapes/paths/geometry_color", Color(0.1, 1.0, 0.7, 0.4));
-	debug_paths_width = GLOBAL_DEF("debug/shapes/paths/geometry_width", 2.0);
+	debug_paths_width = GLOBAL_DEF(PropertyInfo(Variant::FLOAT, "debug/shapes/paths/geometry_width", PROPERTY_HINT_RANGE, "0.01,10,0.001,or_greater"), 2.0);
 	collision_debug_contacts = GLOBAL_DEF(PropertyInfo(Variant::INT, "debug/shapes/collision/max_contacts_displayed", PROPERTY_HINT_RANGE, "0,20000,1"), 10000);
 
 	GLOBAL_DEF("debug/shapes/collision/draw_2d_outlines", true);
@@ -1864,7 +1867,7 @@ SceneTree::SceneTree() {
 	}
 
 #ifndef _3D_DISABLED
-	if (!root->get_world_3d().is_valid()) {
+	if (root->get_world_3d().is_null()) {
 		root->set_world_3d(Ref<World3D>(memnew(World3D)));
 	}
 	root->set_as_audio_listener_3d(true);
@@ -1894,7 +1897,7 @@ SceneTree::SceneTree() {
 	const bool transparent_background = GLOBAL_DEF("rendering/viewport/transparent_background", false);
 	root->set_transparent_background(transparent_background);
 
-	const bool use_hdr_2d = GLOBAL_DEF_RST_BASIC("rendering/viewport/hdr_2d", false);
+	const bool use_hdr_2d = GLOBAL_DEF_BASIC("rendering/viewport/hdr_2d", false);
 	root->set_use_hdr_2d(use_hdr_2d);
 
 	const int ssaa_mode = GLOBAL_DEF_BASIC(PropertyInfo(Variant::INT, "rendering/anti_aliasing/quality/screen_space_aa", PROPERTY_HINT_ENUM, "Disabled (Fastest),FXAA (Fast)"), 0);

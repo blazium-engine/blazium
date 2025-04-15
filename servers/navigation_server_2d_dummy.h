@@ -51,6 +51,7 @@ public:
 	void map_set_link_connection_radius(RID p_map, real_t p_connection_radius) override {}
 	real_t map_get_link_connection_radius(RID p_map) const override { return 0; }
 	Vector<Vector2> map_get_path(RID p_map, Vector2 p_origin, Vector2 p_destination, bool p_optimize, uint32_t p_navigation_layers = 1) const override { return Vector<Vector2>(); }
+	Vector<Vector2> _map_get_path(RID p_map, Vector2 p_origin, Vector2 p_destination, bool p_optimize, uint32_t p_navigation_layers = 1) override { return Vector<Vector2>(); }
 	Vector2 map_get_closest_point(RID p_map, const Vector2 &p_point) const override { return Vector2(); }
 	RID map_get_closest_point_owner(RID p_map, const Vector2 &p_point) const override { return RID(); }
 	TypedArray<RID> map_get_links(RID p_map) const override { return TypedArray<RID>(); }
@@ -60,6 +61,8 @@ public:
 	void map_force_update(RID p_map) override {}
 	Vector2 map_get_random_point(RID p_map, uint32_t p_naviation_layers, bool p_uniformly) const override { return Vector2(); }
 	uint32_t map_get_iteration_id(RID p_map) const override { return 0; }
+	void map_set_use_async_iterations(RID p_map, bool p_enabled) override {}
+	bool map_get_use_async_iterations(RID p_map) const override { return false; }
 
 	RID region_create() override { return RID(); }
 	void region_set_enabled(RID p_region, bool p_enabled) override {}
@@ -83,7 +86,9 @@ public:
 	int region_get_connections_count(RID p_region) const override { return 0; }
 	Vector2 region_get_connection_pathway_start(RID p_region, int p_connection_id) const override { return Vector2(); }
 	Vector2 region_get_connection_pathway_end(RID p_region, int p_connection_id) const override { return Vector2(); }
+	Vector2 region_get_closest_point(RID p_region, const Vector2 &p_point) const override { return Vector2(); }
 	Vector2 region_get_random_point(RID p_region, uint32_t p_navigation_layers, bool p_uniformly) const override { return Vector2(); }
+	Rect2 region_get_bounds(RID p_region) const override { return Rect2(); }
 
 	RID link_create() override { return RID(); }
 	void link_set_map(RID p_link, RID p_map) override {}
@@ -158,6 +163,7 @@ public:
 	uint32_t obstacle_get_avoidance_layers(RID p_agent) const override { return 0; }
 
 	void query_path(const Ref<NavigationPathQueryParameters2D> &p_query_parameters, Ref<NavigationPathQueryResult2D> p_query_result) const override {}
+	void _query_path(const Ref<NavigationPathQueryParameters2D> &p_query_parameters, Ref<NavigationPathQueryResult2D> p_query_result, const Callable &p_callback = Callable()) override {}
 
 	void init() override {}
 	void sync() override {}

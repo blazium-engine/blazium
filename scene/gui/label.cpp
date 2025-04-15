@@ -30,9 +30,6 @@
 
 #include "label.h"
 
-#include "core/config/project_settings.h"
-#include "core/string/print_string.h"
-#include "core/string/translation.h"
 #include "scene/gui/container.h"
 #include "scene/resources/label_settings.h"
 #include "scene/theme/theme_db.h"
@@ -95,7 +92,15 @@ int Label::get_line_height(int p_line) const {
 	int font_size = settings.is_valid() ? settings->get_font_size() : theme_cache.font_size;
 	int font_h = font->get_height(font_size);
 	if (p_line >= 0 && p_line < total_line_count) {
-		return MAX(font_h, TS->shaped_text_get_size(get_line_rid(p_line)).y);
+		RID rid = get_line_rid(p_line);
+		double asc = TS->shaped_text_get_ascent(rid);
+		double dsc = TS->shaped_text_get_descent(rid);
+		if (asc + dsc < font_h) {
+			double diff = font_h - (asc + dsc);
+			asc += diff / 2;
+			dsc += diff - (diff / 2);
+		}
+		return asc + dsc;
 	} else if (total_line_count > 0) {
 		int h = font_h;
 		for (const Paragraph &para : paragraphs) {
@@ -361,7 +366,14 @@ void Label::_update_visible() const {
 				break;
 			}
 			for (int i = start; i < end; i++) {
-				minsize.height += MAX(font_h, TS->shaped_text_get_size(para.lines_rid[i]).y) + line_spacing;
+				double asc = TS->shaped_text_get_ascent(para.lines_rid[i]);
+				double dsc = TS->shaped_text_get_descent(para.lines_rid[i]);
+				if (asc + dsc < font_h) {
+					double diff = font_h - (asc + dsc);
+					asc += diff / 2;
+					dsc += diff - (diff / 2);
+				}
+				minsize.height += asc + dsc + line_spacing;
 			}
 			minsize.height += paragraph_spacing;
 			line_index += para.lines_rid.size();
@@ -458,8 +470,16 @@ Rect2 Label::_get_line_rect(int p_para, int p_line) const {
 	int font_size = settings.is_valid() ? settings->get_font_size() : theme_cache.font_size;
 	int font_h = font->get_height(font_size);
 	Size2 size = get_size();
-	Size2 line_size = TS->shaped_text_get_size(paragraphs[p_para].lines_rid[p_line]);
-	line_size.y = MAX(font_h, line_size.y);
+	RID rid = paragraphs[p_para].lines_rid[p_line];
+	Size2 line_size = TS->shaped_text_get_size(rid);
+	double asc = TS->shaped_text_get_ascent(rid);
+	double dsc = TS->shaped_text_get_descent(rid);
+	if (asc + dsc < font_h) {
+		double diff = font_h - (asc + dsc);
+		asc += diff / 2;
+		dsc += diff - (diff / 2);
+	}
+	line_size.y = asc + dsc;
 	Vector2 offset;
 	switch (horizontal_alignment) {
 		case HORIZONTAL_ALIGNMENT_FILL:
@@ -512,8 +532,15 @@ int Label::get_layout_data(Vector2 &r_offset, int &r_last_line, int &r_line_spac
 		} else {
 			int start = (line_index < lines_skipped) ? lines_skipped - line_index : 0;
 			for (int i = start; i < para.lines_rid.size(); i++) {
-				total_h += MAX(font_h, TS->shaped_text_get_size(para.lines_rid[i]).y) + line_spacing;
-				if (total_h > (get_size().height - style->get_minimum_size().height + line_spacing)) {
+				double asc = TS->shaped_text_get_ascent(para.lines_rid[i]);
+				double dsc = TS->shaped_text_get_descent(para.lines_rid[i]);
+				if (asc + dsc < font_h) {
+					double diff = font_h - (asc + dsc);
+					asc += diff / 2;
+					dsc += diff - (diff / 2);
+				}
+				total_h += asc + dsc + line_spacing;
+				if (total_h > Math::ceil(get_size().height - style->get_minimum_size().height + line_spacing)) {
 					break;
 				}
 				lines_visible++;
@@ -543,7 +570,14 @@ int Label::get_layout_data(Vector2 &r_offset, int &r_last_line, int &r_line_spac
 				break;
 			}
 			for (int i = start; i < end; i++) {
-				total_h += MAX(font_h, TS->shaped_text_get_size(para.lines_rid[i]).y) + line_spacing;
+				double asc = TS->shaped_text_get_ascent(para.lines_rid[i]);
+				double dsc = TS->shaped_text_get_descent(para.lines_rid[i]);
+				if (asc + dsc < font_h) {
+					double diff = font_h - (asc + dsc);
+					asc += diff / 2;
+					dsc += diff - (diff / 2);
+				}
+				total_h += asc + dsc + line_spacing;
 				total_glyphs += TS->shaped_text_get_glyph_count(para.lines_rid[i]) + TS->shaped_text_get_ellipsis_glyph_count(para.lines_rid[i]);
 			}
 			total_h += paragraph_spacing;
@@ -670,7 +704,6 @@ void Label::_notification(int p_what) {
 
 			bool has_settings = settings.is_valid();
 
-			Size2 string_size;
 			Ref<StyleBox> style = theme_cache.normal_style;
 			Ref<Font> font = (settings.is_valid() && settings->get_font().is_valid()) ? settings->get_font() : theme_cache.font;
 			int font_size = settings.is_valid() ? settings->get_font_size() : theme_cache.font_size;
@@ -714,10 +747,12 @@ void Label::_notification(int p_what) {
 						Vector2 line_offset = _get_line_rect(p, i).position;
 						ofs.x = line_offset.x;
 
-						int asc = TS->shaped_text_get_ascent(line_rid);
-						int dsc = TS->shaped_text_get_descent(line_rid);
+						double asc = TS->shaped_text_get_ascent(line_rid);
+						double dsc = TS->shaped_text_get_descent(line_rid);
 						if (asc + dsc < font_h) {
-							dsc = font_h - asc;
+							double diff = font_h - (asc + dsc);
+							asc += diff / 2;
+							dsc += diff - (diff / 2);
 						}
 
 						const Glyph *glyphs = TS->shaped_text_get_glyphs(line_rid);
@@ -881,7 +916,14 @@ Rect2 Label::get_character_bounds(int p_pos) const {
 					}
 					gl_off += glyphs[j].advance * glyphs[j].repeat;
 				}
-				ofs.y += MAX(font_h, TS->shaped_text_get_ascent(line_rid) + TS->shaped_text_get_descent(line_rid)) + line_spacing;
+				double asc = TS->shaped_text_get_ascent(line_rid);
+				double dsc = TS->shaped_text_get_descent(line_rid);
+				if (asc + dsc < font_h) {
+					double diff = font_h - (asc + dsc);
+					asc += diff / 2;
+					dsc += diff - (diff / 2);
+				}
+				ofs.y += asc + dsc + line_spacing;
 			}
 			ofs.y += paragraph_spacing;
 			line_index += para.lines_rid.size();
@@ -898,7 +940,7 @@ Size2 Label::get_minimum_size() const {
 	const Ref<Font> &font = (settings.is_valid() && settings->get_font().is_valid()) ? settings->get_font() : theme_cache.font;
 	int font_size = settings.is_valid() ? settings->get_font_size() : theme_cache.font_size;
 
-	min_size.height = MAX(min_size.height, font->get_height(font_size) + font->get_spacing(TextServer::SPACING_TOP) + font->get_spacing(TextServer::SPACING_BOTTOM));
+	min_size.height = MAX(min_size.height, font->get_height(font_size));
 
 	Size2 min_style = theme_cache.normal_style->get_minimum_size();
 	if (autowrap_mode != TextServer::AUTOWRAP_OFF) {
@@ -950,8 +992,15 @@ int Label::get_visible_line_count() const {
 		} else {
 			int start = (line_index < lines_skipped) ? lines_skipped - line_index : 0;
 			for (int i = start; i < para.lines_rid.size(); i++) {
-				total_h += MAX(font_h, TS->shaped_text_get_size(para.lines_rid[i]).y) + line_spacing;
-				if (total_h > (get_size().height - style->get_minimum_size().height + line_spacing)) {
+				double asc = TS->shaped_text_get_ascent(para.lines_rid[i]);
+				double dsc = TS->shaped_text_get_descent(para.lines_rid[i]);
+				if (asc + dsc < font_h) {
+					double diff = font_h - (asc + dsc);
+					asc += diff / 2;
+					dsc += diff - (diff / 2);
+				}
+				total_h += asc + dsc + line_spacing;
+				if (total_h > Math::ceil(get_size().height - style->get_minimum_size().height + line_spacing)) {
 					break;
 				}
 				lines_visible++;

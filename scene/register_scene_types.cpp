@@ -116,6 +116,8 @@
 #include "scene/resources/bone_map.h"
 #include "scene/resources/camera_attributes.h"
 #include "scene/resources/camera_texture.h"
+#include "scene/resources/canvas_item_material.h"
+#include "scene/resources/color_palette.h"
 #include "scene/resources/compositor.h"
 #include "scene/resources/compressed_texture.h"
 #include "scene/resources/curve_texture.h"
@@ -147,7 +149,6 @@
 #include "scene/resources/style_box_texture.h"
 #include "scene/resources/surface_tool.h"
 #include "scene/resources/syntax_highlighter.h"
-#include "scene/resources/text_file.h"
 #include "scene/resources/text_line.h"
 #include "scene/resources/text_paragraph.h"
 #include "scene/resources/texture.h"
@@ -514,6 +515,7 @@ void register_scene_types() {
 	GDREGISTER_CLASS(IntervalTweener);
 	GDREGISTER_CLASS(CallbackTweener);
 	GDREGISTER_CLASS(MethodTweener);
+	GDREGISTER_CLASS(SubtweenTweener);
 
 	GDREGISTER_ABSTRACT_CLASS(AnimationMixer);
 	GDREGISTER_CLASS(AnimationPlayer);
@@ -526,9 +528,6 @@ void register_scene_types() {
 	GDREGISTER_CLASS(AnimationNodeStateMachine);
 	GDREGISTER_CLASS(AnimationNodeStateMachinePlayback);
 	GDREGISTER_VIRTUAL_CLASS(AnimationNodeExtension);
-
-	GDREGISTER_INTERNAL_CLASS(AnimationNodeStartState);
-	GDREGISTER_INTERNAL_CLASS(AnimationNodeEndState);
 
 	GDREGISTER_CLASS(AnimationNodeSync);
 	GDREGISTER_CLASS(AnimationNodeStateMachineTransition);
@@ -987,6 +986,7 @@ void register_scene_types() {
 	GDREGISTER_CLASS(FontFile);
 	GDREGISTER_CLASS(FontVariation);
 	GDREGISTER_CLASS(SystemFont);
+	GDREGISTER_CLASS(ColorPalette);
 
 	GDREGISTER_CLASS(Curve);
 
@@ -1040,6 +1040,24 @@ void register_scene_types() {
 	GDREGISTER_CLASS(NavigationAgent2D);
 	GDREGISTER_CLASS(NavigationObstacle2D);
 	GDREGISTER_CLASS(NavigationLink2D);
+
+	OS::get_singleton()->yield(); // may take time to init
+
+	// 2D nodes that support navmesh baking need to server register their source geometry parsers.
+	MeshInstance2D::navmesh_parse_init();
+	MultiMeshInstance2D::navmesh_parse_init();
+	NavigationObstacle2D::navmesh_parse_init();
+	Polygon2D::navmesh_parse_init();
+	TileMap::navmesh_parse_init();
+	TileMapLayer::navmesh_parse_init();
+	StaticBody2D::navmesh_parse_init();
+#ifndef _3D_DISABLED
+	// 3D nodes that support navmesh baking need to server register their source geometry parsers.
+	MeshInstance3D::navmesh_parse_init();
+	MultiMeshInstance3D::navmesh_parse_init();
+	NavigationObstacle3D::navmesh_parse_init();
+	StaticBody3D::navmesh_parse_init();
+#endif
 
 	OS::get_singleton()->yield(); // may take time to init
 

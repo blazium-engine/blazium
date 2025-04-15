@@ -33,6 +33,7 @@
 
 #include "editor/plugins/editor_plugin.h"
 #include "scene/gui/split_container.h"
+#include "scene/resources/image_texture.h"
 
 class AcceptDialog;
 class Button;
@@ -89,12 +90,18 @@ class SpriteFramesEditor : public HSplitContainer {
 		FRAME_ORDER_BOTTOM_TOP_RIGHT_LEFT,
 	};
 
+	enum {
+		MENU_SHOW_IN_FILESYSTEM,
+	};
+
+	int right_clicked_frame = -1;
+
 	bool read_only = false;
 
 	Ref<Texture2D> autoplay_icon;
 	Ref<Texture2D> stop_icon;
 	Ref<Texture2D> pause_icon;
-	Ref<Texture2D> empty_icon;
+	Ref<Texture2D> empty_icon = memnew(ImageTexture);
 
 	HBoxContainer *playback_container = nullptr;
 	Button *stop = nullptr;
@@ -138,6 +145,8 @@ class SpriteFramesEditor : public HSplitContainer {
 	EditorFileDialog *file = nullptr;
 
 	AcceptDialog *dialog = nullptr;
+
+	PopupMenu *menu = nullptr;
 
 	StringName edited_anim;
 
@@ -221,6 +230,8 @@ class SpriteFramesEditor : public HSplitContainer {
 
 	void _frame_list_gui_input(const Ref<InputEvent> &p_event);
 	void _frame_list_item_selected(int p_index, bool p_selected);
+
+	void _menu_selected(int p_index);
 
 	void _zoom_in();
 	void _zoom_out();

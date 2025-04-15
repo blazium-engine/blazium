@@ -339,11 +339,11 @@ float sample_omni_pcf_shadow(texture2D shadow, float blur_scale, vec2 coord, vec
 		vec2 offset = offset_scale * (disk_rotation * scene_data_block.data.soft_shadow_kernel[i].xy);
 		vec2 sample_coord = coord + offset;
 
-		float sample_coord_length_sqaured = dot(sample_coord, sample_coord);
-		bool do_flip = sample_coord_length_sqaured > 1.0;
+		float sample_coord_length_squared = dot(sample_coord, sample_coord);
+		bool do_flip = sample_coord_length_squared > 1.0;
 
 		if (do_flip) {
-			float len = sqrt(sample_coord_length_sqaured);
+			float len = sqrt(sample_coord_length_squared);
 			sample_coord = sample_coord * (2.0 / len - 1.0);
 		}
 
@@ -712,7 +712,7 @@ float light_process_spot_shadow(uint idx, vec3 vertex, vec3 normal, float taa_fr
 		vec4 v = vec4(vertex + normal_bias, 1.0);
 
 		vec4 splane = (spot_lights.data[idx].shadow_matrix * v);
-		splane.z += spot_lights.data[idx].shadow_bias / (light_length * spot_lights.data[idx].inv_radius);
+		splane.z += spot_lights.data[idx].shadow_bias;
 		splane /= splane.w;
 
 		float shadow;

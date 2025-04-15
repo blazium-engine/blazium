@@ -60,6 +60,7 @@
 #include "scene/gui/option_button.h"
 #include "scene/gui/panel.h"
 #include "scene/gui/panel_container.h"
+#include "scene/gui/popup_menu.h"
 #include "scene/gui/rich_text_label.h"
 #include "scene/gui/scroll_container.h"
 #include "scene/gui/separator.h"
@@ -153,9 +154,9 @@ void ProjectManager::_build_icon_type_cache(Ref<Theme> p_theme) {
 
 // Main layout.
 
-void ProjectManager::_update_size_limits() {
-	const Size2 minimum_size = Size2(680, 450) * EDSCALE;
-	const Size2 default_size = Size2(1024, 600) * EDSCALE;
+void ProjectManager::_update_size_limits(bool p_custom_res) {
+	const Size2 minimum_size = Size2(720, 450) * EDSCALE;
+	const Size2 default_size = Size2(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT) * EDSCALE;
 
 	// Define a minimum window size to prevent UI elements from overlapping or being cut off.
 	Window *w = Object::cast_to<Window>(SceneTree::get_singleton()->get_root());
@@ -163,16 +164,21 @@ void ProjectManager::_update_size_limits() {
 		// Calling Window methods this early doesn't sync properties with DS.
 		w->set_min_size(minimum_size);
 		DisplayServer::get_singleton()->window_set_min_size(minimum_size);
-		w->set_size(default_size);
-		DisplayServer::get_singleton()->window_set_size(default_size);
+		if (!p_custom_res) {
+			// Only set window size if it currently matches the default, which is defined in `main/main.cpp`.
+			// This allows CLI arguments to override the window size.
+			w->set_size(default_size);
+			DisplayServer::get_singleton()->window_set_size(default_size);
+		}
 	}
+	Size2 real_size = DisplayServer::get_singleton()->window_get_size();
 
 	Rect2i screen_rect = DisplayServer::get_singleton()->screen_get_usable_rect(DisplayServer::get_singleton()->window_get_current_screen());
 	if (screen_rect.size != Vector2i()) {
 		// Center the window on the screen.
 		Vector2i window_position;
-		window_position.x = screen_rect.position.x + (screen_rect.size.x - default_size.x) / 2;
-		window_position.y = screen_rect.position.y + (screen_rect.size.y - default_size.y) / 2;
+		window_position.x = screen_rect.position.x + (screen_rect.size.x - real_size.x) / 2;
+		window_position.y = screen_rect.position.y + (screen_rect.size.y - real_size.y) / 2;
 		DisplayServer::get_singleton()->window_set_position(window_position);
 
 		// Limit popup menus to prevent unusably long lists.
@@ -248,6 +254,7 @@ void ProjectManager::_update_theme(bool p_skip_creation) {
 			import_btn->set_button_icon(get_editor_theme_icon(SNAME("Load")));
 			scan_btn->set_button_icon(get_editor_theme_icon(SNAME("Search")));
 			open_btn->set_button_icon(get_editor_theme_icon(SNAME("Edit")));
+			open_options_btn->set_button_icon(get_editor_theme_icon(SNAME("Collapse")));
 			run_btn->set_button_icon(get_editor_theme_icon(SNAME("Play")));
 			rename_btn->set_button_icon(get_editor_theme_icon(SNAME("Rename")));
 			manage_tags_btn->set_button_icon(get_editor_theme_icon("Script"));
@@ -267,6 +274,9 @@ void ProjectManager::_update_theme(bool p_skip_creation) {
 			manage_tags_btn->add_theme_constant_override("h_separation", get_theme_constant(SNAME("sidebar_button_icon_separation"), SNAME("ProjectManager")));
 			erase_btn->add_theme_constant_override("h_separation", get_theme_constant(SNAME("sidebar_button_icon_separation"), SNAME("ProjectManager")));
 			erase_missing_btn->add_theme_constant_override("h_separation", get_theme_constant(SNAME("sidebar_button_icon_separation"), SNAME("ProjectManager")));
+
+			open_btn_container->add_theme_constant_override("separation", 0);
+			open_options_popup->set_item_icon(0, get_editor_theme_icon(SNAME("NodeWarning")));
 		}
 
 		// Asset library popup.
@@ -341,7 +351,7 @@ void ProjectManager::_select_main_view(int p_id) {
 	if (current_main_view == MAIN_VIEW_PROJECTS && search_box->is_inside_tree()) {
 		// Automatically grab focus when the user moves from the Templates tab
 		// back to the Projects tab.
-		search_box->grab_focus();
+		search_box->edit();
 	}
 
 	// The Templates tab's search field is focused on display in the asset
@@ -499,6 +509,10 @@ void ProjectManager::_open_selected_projects() {
 
 		args.push_back("--editor");
 
+		if (open_in_recovery_mode) {
+			args.push_back("--recovery-mode");
+		}
+
 		Error err = OS::get_singleton()->create_instance(args);
 		if (err != OK) {
 			loading_label->hide();
@@ -514,7 +528,7 @@ void ProjectManager::_open_selected_projects() {
 	get_tree()->quit();
 }
 
-void ProjectManager::_open_selected_projects_ask() {
+void ProjectManager::_open_selected_projects_check_warnings() {
 	const HashSet<String> &selected_list = project_list->get_selected_project_keys();
 	if (selected_list.size() < 1) {
 		return;
@@ -601,6 +615,28 @@ void ProjectManager::_open_selected_projects_ask() {
 
 	// Open if the project is up-to-date.
 	_open_selected_projects();
+}
+
+void ProjectManager::_open_selected_projects_check_recovery_mode() {
+	Vector<ProjectList::Item> selected_projects = project_list->get_selected_projects();
+
+	if (selected_projects.is_empty()) {
+		return;
+	}
+
+	const ProjectList::Item &project = selected_projects[0];
+	if (project.missing) {
+		return;
+	}
+
+	open_in_recovery_mode = false;
+	// Check if the project failed to load during last startup.
+	if (project.recovery_mode) {
+		_open_recovery_mode_ask(false);
+		return;
+	}
+
+	_open_selected_projects_check_warnings();
 }
 
 void ProjectManager::_open_selected_projects_with_migration() {
@@ -695,11 +731,44 @@ void ProjectManager::_update_project_buttons() {
 
 	erase_btn->set_disabled(empty_selection);
 	open_btn->set_disabled(empty_selection || is_missing_project_selected);
+	open_options_btn->set_disabled(empty_selection || is_missing_project_selected);
 	rename_btn->set_disabled(empty_selection || is_missing_project_selected);
 	manage_tags_btn->set_disabled(empty_selection || is_missing_project_selected || selected_projects.size() > 1);
 	run_btn->set_disabled(empty_selection || is_missing_project_selected);
 
 	erase_missing_btn->set_disabled(!project_list->is_any_project_missing());
+}
+
+void ProjectManager::_open_options_popup() {
+	Rect2 rect = open_btn_container->get_screen_rect();
+	rect.position.y += rect.size.height;
+	open_options_popup->set_size(Size2(rect.size.width, 0));
+	open_options_popup->set_position(rect.position);
+
+	open_options_popup->popup();
+}
+
+void ProjectManager::_open_recovery_mode_ask(bool manual) {
+	String recovery_mode_details;
+
+	// Only show the initial crash preamble if this popup wasn't manually triggered.
+	if (!manual) {
+		recovery_mode_details +=
+				TTR("It looks like Godot crashed when opening this project the last time. If you're having problems editing this project, you can try to open it in Recovery Mode.") +
+				String::utf8("\n\n");
+	}
+
+	recovery_mode_details +=
+			TTR("Recovery Mode is a special mode that may help to recover projects that crash the engine during initialization. This mode temporarily disables the following features:") +
+			String::utf8("\n\n•  ") + TTR("Tool scripts") +
+			String::utf8("\n•  ") + TTR("Editor plugins") +
+			String::utf8("\n•  ") + TTR("GDExtension addons") +
+			String::utf8("\n•  ") + TTR("Automatic scene restoring") +
+			String::utf8("\n\n") + TTR("This mode is intended only for basic editing to troubleshoot such issues, and therefore it will not be possible to run the project during this mode. It is also a good idea to make a backup of your project before proceeding.") +
+			String::utf8("\n\n") + TTR("Edit the project in Recovery Mode?");
+
+	open_recovery_mode_ask->set_text(recovery_mode_details);
+	open_recovery_mode_ask->popup_centered(Size2(550, 70) * EDSCALE);
 }
 
 void ProjectManager::_on_projects_updated() {
@@ -715,16 +784,38 @@ void ProjectManager::_on_projects_updated() {
 	project_list->update_dock_menu();
 }
 
+void ProjectManager::_on_open_options_selected(int p_option) {
+	switch (p_option) {
+		case 0: // Edit in recovery mode.
+			_open_recovery_mode_ask(true);
+			break;
+	}
+}
+
+void ProjectManager::_on_recovery_mode_popup_open_normal() {
+	open_recovery_mode_ask->hide();
+	open_in_recovery_mode = false;
+	_open_selected_projects_check_warnings();
+}
+
+void ProjectManager::_on_recovery_mode_popup_open_recovery() {
+	open_in_recovery_mode = true;
+	_open_selected_projects_check_warnings();
+}
+
 void ProjectManager::_on_project_created(const String &dir, bool edit) {
 	project_list->add_project(dir, false);
 	project_list->save_config();
 	search_box->clear();
+
 	int i = project_list->refresh_project(dir);
 	project_list->select_project(i);
 	project_list->ensure_project_visible(i);
+	_update_project_buttons();
+	_update_list_placeholder();
 
 	if (edit) {
-		_open_selected_projects_ask();
+		_open_selected_projects_check_warnings();
 	}
 
 	project_list->update_dock_menu();
@@ -752,7 +843,7 @@ void ProjectManager::_on_search_term_submitted(const String &p_text) {
 		return;
 	}
 
-	_open_selected_projects_ask();
+	_open_selected_projects_check_recovery_mode();
 }
 
 LineEdit *ProjectManager::get_search_box() {
@@ -762,9 +853,7 @@ LineEdit *ProjectManager::get_search_box() {
 // Project tag management.
 
 void ProjectManager::_manage_project_tags() {
-	for (int i = 0; i < project_tags->get_child_count(); i++) {
-		project_tags->get_child(i)->queue_free();
-	}
+	project_tags->remove_all_children(true, DELETE_MODE_QUEUE_FREE);
 
 	const ProjectList::Item item = project_list->get_selected_projects()[0];
 	current_project_tags = item.tags;
@@ -969,7 +1058,7 @@ void ProjectManager::shortcut_input(const Ref<InputEvent> &p_ev) {
 
 		switch (k->get_keycode()) {
 			case Key::ENTER: {
-				_open_selected_projects_ask();
+				_open_selected_projects_check_recovery_mode();
 			} break;
 			case Key::HOME: {
 				if (project_list->get_project_count() > 0) {
@@ -1014,7 +1103,7 @@ void ProjectManager::shortcut_input(const Ref<InputEvent> &p_ev) {
 			} break;
 			case Key::F: {
 				if (k->is_command_or_control_pressed()) {
-					search_box->grab_focus();
+					search_box->edit();
 				} else {
 					keycode_handled = false;
 				}
@@ -1073,10 +1162,8 @@ void ProjectManager::_titlebar_resized() {
 
 // Object methods.
 
-ProjectManager::ProjectManager() {
+ProjectManager::ProjectManager(bool p_custom_res) {
 	singleton = this;
-
-	set_translation_domain("godot.editor");
 
 	// Turn off some servers we aren't going to be using in the Project Manager.
 	NavigationServer3D::get_singleton()->set_active(false);
@@ -1323,7 +1410,7 @@ ProjectManager::ProjectManager() {
 			project_list->connect(ProjectList::SIGNAL_LIST_CHANGED, callable_mp(this, &ProjectManager::_update_project_buttons));
 			project_list->connect(ProjectList::SIGNAL_LIST_CHANGED, callable_mp(this, &ProjectManager::_update_list_placeholder));
 			project_list->connect(ProjectList::SIGNAL_SELECTION_CHANGED, callable_mp(this, &ProjectManager::_update_project_buttons));
-			project_list->connect(ProjectList::SIGNAL_PROJECT_ASK_OPEN, callable_mp(this, &ProjectManager::_open_selected_projects_ask));
+			project_list->connect(ProjectList::SIGNAL_PROJECT_ASK_OPEN, callable_mp(this, &ProjectManager::_open_selected_projects_check_recovery_mode));
 
 			// Empty project list placeholder.
 			{
@@ -1344,8 +1431,8 @@ ProjectManager::ProjectManager() {
 				empty_list_message->set_text(vformat("[center][b]%s[/b] %s[/center]", line1, line2));
 				empty_list_placeholder->add_child(empty_list_message);
 
-				HBoxContainer *empty_list_actions = memnew(HBoxContainer);
-				empty_list_actions->set_alignment(BoxContainer::ALIGNMENT_CENTER);
+				FlowContainer *empty_list_actions = memnew(FlowContainer);
+				empty_list_actions->set_alignment(FlowContainer::ALIGNMENT_CENTER);
 				empty_list_placeholder->add_child(empty_list_actions);
 
 				empty_list_create_project = memnew(Button);
@@ -1382,11 +1469,30 @@ ProjectManager::ProjectManager() {
 
 			project_list_sidebar->add_child(memnew(HSeparator));
 
+			open_btn_container = memnew(HBoxContainer);
+			open_btn_container->set_anchors_preset(Control::PRESET_FULL_RECT);
+			project_list_sidebar->add_child(open_btn_container);
+
 			open_btn = memnew(Button);
 			open_btn->set_text(TTR("Edit"));
 			open_btn->set_shortcut(ED_SHORTCUT("project_manager/edit_project", TTRC("Edit Project"), KeyModifierMask::CMD_OR_CTRL | Key::E));
-			open_btn->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_open_selected_projects_ask));
-			project_list_sidebar->add_child(open_btn);
+			open_btn->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_open_selected_projects_check_recovery_mode));
+			open_btn->set_h_size_flags(Control::SIZE_EXPAND_FILL);
+			open_btn_container->add_child(open_btn);
+
+			open_btn_container->add_child(memnew(VSeparator));
+
+			open_options_btn = memnew(Button);
+			open_options_btn->set_icon_alignment(HorizontalAlignment::HORIZONTAL_ALIGNMENT_CENTER);
+			open_options_btn->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_open_options_popup));
+			open_btn_container->add_child(open_options_btn);
+
+			open_options_popup = memnew(PopupMenu);
+			open_options_popup->add_item(TTR("Edit in recovery mode"));
+			open_options_popup->connect(SceneStringName(id_pressed), callable_mp(this, &ProjectManager::_on_open_options_selected));
+			open_options_btn->add_child(open_options_popup);
+
+			open_btn_container->set_custom_minimum_size(Size2(120, open_btn->get_combined_minimum_size().y));
 
 			run_btn = memnew(Button);
 			run_btn->set_text(TTR("Run"));
@@ -1502,6 +1608,14 @@ ProjectManager::ProjectManager() {
 		multi_run_ask->get_ok_button()->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_run_project_confirm));
 		add_child(multi_run_ask);
 
+		open_recovery_mode_ask = memnew(ConfirmationDialog);
+		open_recovery_mode_ask->set_min_size(Size2(550, 70) * EDSCALE);
+		open_recovery_mode_ask->set_autowrap(true);
+		open_recovery_mode_ask->add_button(TTR("Edit normally"))->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_on_recovery_mode_popup_open_normal));
+		open_recovery_mode_ask->set_ok_button_text(TTR("Edit in Recovery Mode"));
+		open_recovery_mode_ask->get_ok_button()->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_on_recovery_mode_popup_open_recovery));
+		add_child(open_recovery_mode_ask);
+
 		ask_update_settings = memnew(ConfirmationDialog);
 		ask_update_settings->set_autowrap(true);
 		ask_update_settings->get_ok_button()->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_open_selected_projects_with_migration));
@@ -1587,7 +1701,7 @@ ProjectManager::ProjectManager() {
 		new_tag_name->connect(SceneStringName(text_changed), callable_mp(this, &ProjectManager::_set_new_tag_name));
 		new_tag_name->connect(SceneStringName(text_submitted), callable_mp(this, &ProjectManager::_create_new_tag).unbind(1));
 		create_tag_dialog->connect("about_to_popup", callable_mp(new_tag_name, &LineEdit::clear));
-		create_tag_dialog->connect("about_to_popup", callable_mp((Control *)new_tag_name, &Control::grab_focus), CONNECT_DEFERRED);
+		create_tag_dialog->connect("about_to_popup", callable_mp(new_tag_name, &LineEdit::edit), CONNECT_DEFERRED);
 
 		tag_error = memnew(Label);
 		tag_vb->add_child(tag_error);
@@ -1634,7 +1748,7 @@ ProjectManager::ProjectManager() {
 		title_bar->connect(SceneStringName(item_rect_changed), callable_mp(this, &ProjectManager::_titlebar_resized));
 	}
 
-	_update_size_limits();
+	_update_size_limits(p_custom_res);
 }
 
 ProjectManager::~ProjectManager() {

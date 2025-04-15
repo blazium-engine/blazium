@@ -357,7 +357,7 @@ void LightmapGI::_find_meshes_and_lights(Node *p_at_node, Vector<MeshesFound> &m
 			Transform3D xf = get_global_transform().affine_inverse() * s->get_global_transform();
 			for (int i = 0; i < bmeshes.size(); i += 2) {
 				Ref<Mesh> mesh = bmeshes[i];
-				if (!mesh.is_valid()) {
+				if (mesh.is_null()) {
 					continue;
 				}
 
@@ -1389,11 +1389,17 @@ void LightmapGI::_notification(int p_what) {
 								"%s (%s): The directional lightmap textures are stored in a format that isn't supported anymore. Please bake lightmaps again to make lightmaps display from this node again.",
 								get_light_data()->get_path(), get_name()));
 
+				if (last_owner && last_owner != get_owner()) {
+					light_data->clear_users();
+				}
+
 				_assign_lightmaps();
 			}
 		} break;
 
 		case NOTIFICATION_EXIT_TREE: {
+			last_owner = get_owner();
+
 			if (light_data.is_valid()) {
 				_clear_lightmaps();
 			}
@@ -1402,7 +1408,7 @@ void LightmapGI::_notification(int p_what) {
 }
 
 void LightmapGI::_assign_lightmaps() {
-	ERR_FAIL_COND(!light_data.is_valid());
+	ERR_FAIL_COND(light_data.is_null());
 
 	for (int i = 0; i < light_data->get_user_count(); i++) {
 		Node *node = get_node(light_data->get_user_path(i));
@@ -1421,7 +1427,7 @@ void LightmapGI::_assign_lightmaps() {
 }
 
 void LightmapGI::_clear_lightmaps() {
-	ERR_FAIL_COND(!light_data.is_valid());
+	ERR_FAIL_COND(light_data.is_null());
 	for (int i = 0; i < light_data->get_user_count(); i++) {
 		Node *node = get_node(light_data->get_user_path(i));
 		int instance_idx = light_data->get_user_sub_instance(i);

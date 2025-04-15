@@ -32,6 +32,7 @@
 
 #include "core/os/os.h"
 #include "scene/resources/video_stream.h"
+#include "servers/audio_server.cpp"
 
 int VideoStreamPlayer::sp_get_channel_count() const {
 	if (playback.is_null()) {
@@ -81,10 +82,10 @@ void VideoStreamPlayer::_mix_audios(void *p_self) {
 
 // Called from audio thread
 void VideoStreamPlayer::_mix_audio() {
-	if (!stream.is_valid()) {
+	if (stream.is_null()) {
 		return;
 	}
-	if (!playback.is_valid() || !playback->is_playing() || playback->is_paused()) {
+	if (playback.is_null() || !playback->is_playing() || playback->is_paused()) {
 		return;
 	}
 
@@ -136,6 +137,7 @@ void VideoStreamPlayer::_notification(int p_notification) {
 		} break;
 
 		case NOTIFICATION_EXIT_TREE: {
+			stop();
 			AudioServer::get_singleton()->remove_mix_callback(_mix_audios, this);
 		} break;
 
@@ -158,6 +160,7 @@ void VideoStreamPlayer::_notification(int p_notification) {
 			playback->update(delta); // playback->is_playing() returns false in the last video frame
 
 			if (!playback->is_playing()) {
+				resampler.flush();
 				if (loop) {
 					play();
 					return;
@@ -211,7 +214,7 @@ void VideoStreamPlayer::_notification(int p_notification) {
 }
 
 Size2 VideoStreamPlayer::get_minimum_size() const {
-	if (!expand && !texture.is_null()) {
+	if (!expand && texture.is_valid()) {
 		return texture->get_size();
 	} else {
 		return Size2();
@@ -264,7 +267,7 @@ void VideoStreamPlayer::set_stream(const Ref<VideoStream> &p_stream) {
 		stream->connect_changed(callable_mp(this, &VideoStreamPlayer::set_stream).bind(stream));
 	}
 
-	if (!playback.is_null()) {
+	if (playback.is_valid()) {
 		playback->set_paused(paused);
 		texture = playback->get_texture();
 

@@ -4390,8 +4390,11 @@ void Node3DEditorViewport::assign_pending_data_pointers(Node3D *p_preview_node, 
 
 void _insert_rid_recursive(Node *node, HashSet<RID> &rids) {
 	CollisionObject3D *co = Object::cast_to<CollisionObject3D>(node);
+
 	if (co) {
 		rids.insert(co->get_rid());
+	} else if (node->is_class("CSGShape3D")) { // HACK: We should avoid referencing module logic.
+		rids.insert(node->call("_get_root_collision_instance"));
 	}
 
 	for (int i = 0; i < node->get_child_count(); i++) {
@@ -4595,11 +4598,7 @@ void Node3DEditorViewport::_create_preview_node(const Vector<String> &files) con
 void Node3DEditorViewport::_remove_preview_node() {
 	set_message("");
 	if (preview_node->get_parent()) {
-		for (int i = preview_node->get_child_count() - 1; i >= 0; i--) {
-			Node *node = preview_node->get_child(i);
-			node->queue_free();
-			preview_node->remove_child(node);
-		}
+		preview_node->remove_all_children(true, DELETE_MODE_QUEUE_FREE);
 		EditorNode::get_singleton()->get_scene_root()->remove_child(preview_node);
 	}
 }

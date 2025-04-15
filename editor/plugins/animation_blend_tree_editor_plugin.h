@@ -35,6 +35,7 @@
 #include "editor/editor_inspector.h"
 #include "editor/plugins/animation_tree_editor_plugin.h"
 #include "scene/gui/dialogs.h"
+
 class AcceptDialog;
 class AnimationNodeBlendTree;
 class Button;

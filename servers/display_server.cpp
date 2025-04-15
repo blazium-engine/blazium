@@ -634,7 +634,7 @@ Point2i DisplayServer::ime_get_selection() const {
 }
 
 String DisplayServer::ime_get_text() const {
-	ERR_FAIL_V_MSG(String(), "IME or NOTIFICATION_WM_IME_UPDATEnot supported by this display server.");
+	ERR_FAIL_V_MSG(String(), "IME or NOTIFICATION_WM_IME_UPDATE not supported by this display server.");
 }
 
 void DisplayServer::virtual_keyboard_show(const String &p_existing_text, const Rect2 &p_screen_rect, VirtualKeyboardType p_type, int p_max_length, int p_cursor_start, int p_cursor_end) {
@@ -647,7 +647,8 @@ void DisplayServer::virtual_keyboard_hide() {
 
 // returns height of the currently shown keyboard (0 if keyboard is hidden)
 int DisplayServer::virtual_keyboard_get_height() const {
-	ERR_FAIL_V_MSG(0, "Virtual keyboard not supported by this display server.");
+	WARN_PRINT("Virtual keyboard not supported by this display server.");
+	return 0;
 }
 
 bool DisplayServer::has_hardware_keyboard() const {
@@ -741,6 +742,9 @@ Key DisplayServer::keyboard_get_keycode_from_physical(Key p_keycode) const {
 
 Key DisplayServer::keyboard_get_label_from_physical(Key p_keycode) const {
 	ERR_FAIL_V_MSG(p_keycode, "Not supported by this display server.");
+}
+
+void DisplayServer::show_emoji_and_symbol_picker() const {
 }
 
 void DisplayServer::force_process_and_drop_events() {
@@ -934,7 +938,7 @@ void DisplayServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("screen_get_usable_rect", "screen"), &DisplayServer::screen_get_usable_rect, DEFVAL(SCREEN_OF_MAIN_WINDOW));
 	ClassDB::bind_method(D_METHOD("screen_get_dpi", "screen"), &DisplayServer::screen_get_dpi, DEFVAL(SCREEN_OF_MAIN_WINDOW));
 	ClassDB::bind_method(D_METHOD("screen_get_scale", "screen"), &DisplayServer::screen_get_scale, DEFVAL(SCREEN_OF_MAIN_WINDOW));
-	ClassDB::bind_method(D_METHOD("is_touchscreen_available"), &DisplayServer::is_touchscreen_available, DEFVAL(SCREEN_OF_MAIN_WINDOW));
+	ClassDB::bind_method(D_METHOD("is_touchscreen_available"), &DisplayServer::is_touchscreen_available);
 	ClassDB::bind_method(D_METHOD("screen_get_max_scale"), &DisplayServer::screen_get_max_scale);
 	ClassDB::bind_method(D_METHOD("screen_get_refresh_rate", "screen"), &DisplayServer::screen_get_refresh_rate, DEFVAL(SCREEN_OF_MAIN_WINDOW));
 	ClassDB::bind_method(D_METHOD("screen_get_pixel", "position"), &DisplayServer::screen_get_pixel);
@@ -1049,6 +1053,8 @@ void DisplayServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("keyboard_get_keycode_from_physical", "keycode"), &DisplayServer::keyboard_get_keycode_from_physical);
 	ClassDB::bind_method(D_METHOD("keyboard_get_label_from_physical", "keycode"), &DisplayServer::keyboard_get_label_from_physical);
 
+	ClassDB::bind_method(D_METHOD("show_emoji_and_symbol_picker"), &DisplayServer::show_emoji_and_symbol_picker);
+
 	ClassDB::bind_method(D_METHOD("process_events"), &DisplayServer::process_events);
 	ClassDB::bind_method(D_METHOD("force_process_and_drop_events"), &DisplayServer::force_process_and_drop_events);
 
@@ -1105,6 +1111,8 @@ void DisplayServer::_bind_methods() {
 	BIND_ENUM_CONSTANT(FEATURE_WINDOW_DRAG);
 	BIND_ENUM_CONSTANT(FEATURE_SCREEN_EXCLUDE_FROM_CAPTURE);
 	BIND_ENUM_CONSTANT(FEATURE_WINDOW_EMBEDDING);
+	BIND_ENUM_CONSTANT(FEATURE_NATIVE_DIALOG_FILE_MIME);
+	BIND_ENUM_CONSTANT(FEATURE_EMOJI_AND_SYMBOL_PICKER);
 
 	BIND_ENUM_CONSTANT(MOUSE_MODE_VISIBLE);
 	BIND_ENUM_CONSTANT(MOUSE_MODE_HIDDEN);
@@ -1304,12 +1312,95 @@ Input::CursorShape DisplayServer::_input_get_current_cursor_shape() {
 	return (Input::CursorShape)singleton->cursor_get_shape();
 }
 
-void DisplayServer::_input_set_custom_mouse_cursor_func(const Ref<Resource> &p_image, Input::CursorShape p_shape, const Vector2 &p_hostspot) {
-	singleton->cursor_set_custom_image(p_image, (CursorShape)p_shape, p_hostspot);
+void DisplayServer::_input_set_custom_mouse_cursor_func(const Ref<Resource> &p_image, Input::CursorShape p_shape, const Vector2 &p_hotspot) {
+	singleton->cursor_set_custom_image(p_image, (CursorShape)p_shape, p_hotspot);
+}
+
+bool DisplayServer::is_rendering_device_supported() {
+#if defined(RD_ENABLED)
+	RenderingDevice *device = RenderingDevice::get_singleton();
+	if (device) {
+		return true;
+	}
+
+	if (supported_rendering_device == RenderingDeviceCreationStatus::SUCCESS) {
+		return true;
+	} else if (supported_rendering_device == RenderingDeviceCreationStatus::FAILURE) {
+		return false;
+	}
+
+	Error err;
+
+#if defined(WINDOWS_ENABLED) || defined(LINUXBSD_ENABLED)
+	// On some drivers combining OpenGL and RenderingDevice can result in crash, offload the check to the subprocess.
+	List<String> arguments;
+	arguments.push_back("--test-rd-support");
+	if (get_singleton()) {
+		arguments.push_back("--display-driver");
+		arguments.push_back(get_singleton()->get_name().to_lower());
+	}
+
+	String pipe;
+	int exitcode = 0;
+	err = OS::get_singleton()->execute(OS::get_singleton()->get_executable_path(), arguments, &pipe, &exitcode);
+	if (err == OK && exitcode == 0) {
+		supported_rendering_device = RenderingDeviceCreationStatus::SUCCESS;
+		return true;
+	} else {
+		supported_rendering_device = RenderingDeviceCreationStatus::FAILURE;
+	}
+#else // WINDOWS_ENABLED
+
+	RenderingContextDriver *rcd = nullptr;
+
+#if defined(VULKAN_ENABLED)
+	rcd = memnew(RenderingContextDriverVulkan);
+#endif
+#ifdef D3D12_ENABLED
+	if (rcd == nullptr) {
+		rcd = memnew(RenderingContextDriverD3D12);
+	}
+#endif
+#ifdef METAL_ENABLED
+	if (rcd == nullptr) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunguarded-availability"
+		// Eliminate "RenderingContextDriverMetal is only available on iOS 14.0 or newer".
+		rcd = memnew(RenderingContextDriverMetal);
+#pragma clang diagnostic pop
+	}
+#endif
+
+	if (rcd != nullptr) {
+		err = rcd->initialize();
+		if (err == OK) {
+			RenderingDevice *rd = memnew(RenderingDevice);
+			err = rd->initialize(rcd);
+			memdelete(rd);
+			rd = nullptr;
+			if (err == OK) {
+				// Creating a RenderingDevice is quite slow.
+				// Cache the result for future usage, so that it's much faster on subsequent calls.
+				supported_rendering_device = RenderingDeviceCreationStatus::SUCCESS;
+				memdelete(rcd);
+				rcd = nullptr;
+				return true;
+			} else {
+				supported_rendering_device = RenderingDeviceCreationStatus::FAILURE;
+			}
+		}
+
+		memdelete(rcd);
+		rcd = nullptr;
+	}
+
+#endif // WINDOWS_ENABLED
+#endif // RD_ENABLED
+	return false;
 }
 
 bool DisplayServer::can_create_rendering_device() {
-	if (get_singleton()->get_name() == "headless") {
+	if (get_singleton() && get_singleton()->get_name() == "headless") {
 		return false;
 	}
 
@@ -1326,6 +1417,23 @@ bool DisplayServer::can_create_rendering_device() {
 	}
 
 	Error err;
+
+#ifdef WINDOWS_ENABLED
+	// On some NVIDIA drivers combining OpenGL and RenderingDevice can result in crash, offload the check to the subprocess.
+	List<String> arguments;
+	arguments.push_back("--test-rd-creation");
+
+	String pipe;
+	int exitcode = 0;
+	err = OS::get_singleton()->execute(OS::get_singleton()->get_executable_path(), arguments, &pipe, &exitcode);
+	if (err == OK && exitcode == 0) {
+		created_rendering_device = RenderingDeviceCreationStatus::SUCCESS;
+		return true;
+	} else {
+		created_rendering_device = RenderingDeviceCreationStatus::FAILURE;
+	}
+#else // WINDOWS_ENABLED
+
 	RenderingContextDriver *rcd = nullptr;
 
 #if defined(VULKAN_ENABLED)
@@ -1369,6 +1477,7 @@ bool DisplayServer::can_create_rendering_device() {
 		rcd = nullptr;
 	}
 
+#endif // WINDOWS_ENABLED
 #endif // RD_ENABLED
 	return false;
 }

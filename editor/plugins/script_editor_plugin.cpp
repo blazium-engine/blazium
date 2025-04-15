@@ -361,7 +361,7 @@ void ScriptEditorQuickOpen::popup_dialog(const Vector<String> &p_functions, bool
 	} else {
 		search_box->clear();
 	}
-	search_box->grab_focus();
+	search_box->edit();
 	functions = p_functions;
 	_update_search();
 }
@@ -1260,8 +1260,8 @@ Ref<Script> ScriptEditor::_get_current_script() {
 TypedArray<Script> ScriptEditor::_get_open_scripts() const {
 	TypedArray<Script> ret;
 	Vector<Ref<Script>> scripts = get_open_scripts();
-	int scrits_amount = scripts.size();
-	for (int idx_script = 0; idx_script < scrits_amount; idx_script++) {
+	int scripts_amount = scripts.size();
+	for (int idx_script = 0; idx_script < scripts_amount; idx_script++) {
 		ret.push_back(scripts[idx_script]);
 	}
 	return ret;
@@ -1343,7 +1343,7 @@ void ScriptEditor::_menu_option(int p_option) {
 				}
 
 				Ref<Resource> scr = ResourceLoader::load(path);
-				if (!scr.is_valid()) {
+				if (scr.is_null()) {
 					EditorNode::get_singleton()->show_warning(TTR("Could not load file at:") + "\n\n" + path, TTR("Error!"));
 					file_dialog_option = -1;
 					return;
@@ -2774,6 +2774,15 @@ void ScriptEditor::save_all_scripts() {
 	_update_script_names();
 }
 
+void ScriptEditor::update_script_times() {
+	for (int i = 0; i < tab_container->get_tab_count(); i++) {
+		ScriptEditorBase *se = Object::cast_to<ScriptEditorBase>(tab_container->get_tab_control(i));
+		if (se) {
+			se->edited_file_data.last_modified_time = FileAccess::get_modified_time(se->edited_file_data.path);
+		}
+	}
+}
+
 void ScriptEditor::apply_scripts() const {
 	for (int i = 0; i < tab_container->get_tab_count(); i++) {
 		ScriptEditorBase *se = Object::cast_to<ScriptEditorBase>(tab_container->get_tab_control(i));
@@ -2800,23 +2809,26 @@ void ScriptEditor::_reload_scripts(bool p_refresh_only) {
 		Ref<Resource> edited_res = se->get_edited_resource();
 
 		if (edited_res->is_built_in()) {
-			continue; //internal script, who cares
+			continue; // Internal script, who cares.
 		}
 
-		if (!p_refresh_only) {
-			uint64_t last_date = edited_res->get_last_modified_time();
+		if (p_refresh_only) {
+			// Make sure the modified time is correct.
+			se->edited_file_data.last_modified_time = FileAccess::get_modified_time(edited_res->get_path());
+		} else {
+			uint64_t last_date = se->edited_file_data.last_modified_time;
 			uint64_t date = FileAccess::get_modified_time(edited_res->get_path());
 
 			if (last_date == date) {
 				continue;
 			}
+			se->edited_file_data.last_modified_time = date;
 
 			Ref<Script> scr = edited_res;
 			if (scr.is_valid()) {
 				Ref<Script> rel_scr = ResourceLoader::load(scr->get_path(), scr->get_class(), ResourceFormatLoader::CACHE_MODE_IGNORE);
-				ERR_CONTINUE(!rel_scr.is_valid());
+				ERR_CONTINUE(rel_scr.is_null());
 				scr->set_source_code(rel_scr->get_source_code());
-				scr->set_last_modified_time(rel_scr->get_last_modified_time());
 				scr->reload(true);
 
 				update_docs_from_script(scr);
@@ -2825,9 +2837,8 @@ void ScriptEditor::_reload_scripts(bool p_refresh_only) {
 			Ref<JSON> json = edited_res;
 			if (json.is_valid()) {
 				Ref<JSON> rel_json = ResourceLoader::load(json->get_path(), json->get_class(), ResourceFormatLoader::CACHE_MODE_IGNORE);
-				ERR_CONTINUE(!rel_json.is_valid());
+				ERR_CONTINUE(rel_json.is_null());
 				json->parse(rel_json->get_parsed_text(), true);
-				json->set_last_modified_time(rel_json->get_last_modified_time());
 			}
 
 			Ref<TextFile> text_file = edited_res;
@@ -2861,7 +2872,7 @@ Ref<Resource> ScriptEditor::open_file(const String &p_file) {
 	ResourceLoader::get_recognized_extensions_for_type("JSON", &extensions);
 	if (extensions.find(p_file.get_extension())) {
 		Ref<Resource> scr = ResourceLoader::load(p_file);
-		if (!scr.is_valid()) {
+		if (scr.is_null()) {
 			EditorNode::get_singleton()->show_warning(TTR("Could not load file at:") + "\n\n" + p_file, TTR("Error!"));
 			return Ref<Resource>();
 		}
@@ -2898,7 +2909,7 @@ void ScriptEditor::_editor_stop() {
 void ScriptEditor::_add_callback(Object *p_obj, const String &p_function, const PackedStringArray &p_args) {
 	ERR_FAIL_NULL(p_obj);
 	Ref<Script> scr = p_obj->get_script();
-	ERR_FAIL_COND(!scr.is_valid());
+	ERR_FAIL_COND(scr.is_null());
 
 	if (!scr->get_language()->can_make_function()) {
 		return;
@@ -3125,7 +3136,7 @@ Variant ScriptEditor::get_drag_data_fw(const Point2 &p_point, Control *p_from) {
 		preview_icon = get_editor_theme_icon(SNAME("Help"));
 	}
 
-	if (!preview_icon.is_null()) {
+	if (preview_icon.is_valid()) {
 		TextureRect *tf = memnew(TextureRect);
 		tf->set_texture(preview_icon);
 		tf->set_stretch_mode(TextureRect::STRETCH_KEEP_CENTERED);
@@ -3394,12 +3405,10 @@ void ScriptEditor::_make_script_list_context_menu() {
 	context_menu->add_separator();
 	if (se) {
 		Ref<Script> scr = se->get_edited_resource();
-		if (scr.is_valid()) {
-			if (!scr.is_null() && scr->is_tool()) {
-				context_menu->add_shortcut(ED_GET_SHORTCUT("script_editor/reload_script_soft"), FILE_TOOL_RELOAD_SOFT);
-				context_menu->add_shortcut(ED_GET_SHORTCUT("script_editor/run_file"), FILE_RUN);
-				context_menu->add_separator();
-			}
+		if (scr.is_valid() && scr->is_tool()) {
+			context_menu->add_shortcut(ED_GET_SHORTCUT("script_editor/reload_script_soft"), FILE_TOOL_RELOAD_SOFT);
+			context_menu->add_shortcut(ED_GET_SHORTCUT("script_editor/run_file"), FILE_RUN);
+			context_menu->add_separator();
 		}
 		context_menu->add_shortcut(ED_GET_SHORTCUT("script_editor/copy_path"), FILE_COPY_PATH);
 		context_menu->set_item_disabled(-1, se->get_edited_resource()->get_path().is_empty());
@@ -3477,7 +3486,7 @@ void ScriptEditor::set_window_layout(Ref<ConfigFile> p_layout) {
 
 		if (extensions.find(path.get_extension())) {
 			Ref<Resource> scr = ResourceLoader::load(path);
-			if (!scr.is_valid()) {
+			if (scr.is_null()) {
 				continue;
 			}
 			if (!edit(scr, false)) {
@@ -3486,7 +3495,7 @@ void ScriptEditor::set_window_layout(Ref<ConfigFile> p_layout) {
 		} else {
 			Error error;
 			Ref<TextFile> text_file = _load_text_file(path, &error);
-			if (error != OK || !text_file.is_valid()) {
+			if (error != OK || text_file.is_null()) {
 				continue;
 			}
 			if (!edit(text_file, false)) {
@@ -4169,6 +4178,7 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 	overview_vbox->add_child(buttons_hbox);
 
 	filename = memnew(Label);
+	filename->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 	filename->set_clip_text(true);
 	filename->set_h_size_flags(SIZE_EXPAND_FILL);
 	filename->set_vertical_alignment(VERTICAL_ALIGNMENT_CENTER);

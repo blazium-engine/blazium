@@ -31,8 +31,6 @@
 #include "theme_editor_preview.h"
 
 #include "core/config/project_settings.h"
-#include "core/input/input.h"
-#include "core/math/math_funcs.h"
 #include "editor/editor_node.h"
 #include "editor/editor_string_names.h"
 #include "editor/themes/editor_scale.h"
@@ -478,11 +476,7 @@ void SceneThemeEditorPreview::_reload_scene() {
 		return;
 	}
 
-	for (int i = preview_content->get_child_count() - 1; i >= 0; i--) {
-		Node *node = preview_content->get_child(i);
-		node->queue_free();
-		preview_content->remove_child(node);
-	}
+	preview_content->remove_all_children(true, DELETE_MODE_QUEUE_FREE);
 
 	Node *instance = loaded_scene->instantiate();
 	if (!instance || !Object::cast_to<Control>(instance)) {

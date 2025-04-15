@@ -3227,13 +3227,12 @@ Error BindingsGenerator::_generate_cs_signal(const BindingsGenerator::TypeInterf
 			p_output.append(" class.\n");
 			p_output.append(INDENT1 "/// </summary>");
 
+			// Generate delegate
 			if (p_isignal.is_deprecated) {
 				p_output.append(MEMBER_BEGIN "[Obsolete(\"");
 				p_output.append(bbcode_to_text(p_isignal.deprecation_message, &p_itype));
 				p_output.append("\")]");
 			}
-
-			// Generate delegate
 			p_output.append(MEMBER_BEGIN "public delegate void ");
 			p_output.append(delegate_name);
 			p_output.append("(");
@@ -3241,6 +3240,11 @@ Error BindingsGenerator::_generate_cs_signal(const BindingsGenerator::TypeInterf
 			p_output.append(");\n");
 
 			// Generate Callable trampoline for the delegate
+			if (p_isignal.is_deprecated) {
+				p_output.append(MEMBER_BEGIN "[Obsolete(\"");
+				p_output.append(bbcode_to_text(p_isignal.deprecation_message, &p_itype));
+				p_output.append("\")]");
+			}
 			p_output << MEMBER_BEGIN "private static void " << p_isignal.proxy_name << "Trampoline"
 					 << "(object delegateObj, NativeVariantPtrArgs args, out godot_variant ret)\n"
 					 << INDENT1 "{\n"
@@ -3284,17 +3288,16 @@ Error BindingsGenerator::_generate_cs_signal(const BindingsGenerator::TypeInterf
 			}
 		}
 
-		if (p_isignal.is_deprecated) {
-			p_output.append(MEMBER_BEGIN "[Obsolete(\"");
-			p_output.append(bbcode_to_text(p_isignal.deprecation_message, &p_itype));
-			p_output.append("\")]");
-		}
-
 		// TODO:
 		// Could we assume the StringName instance of signal name will never be freed (it's stored in ClassDB) before the managed world is unloaded?
 		// If so, we could store the pointer we get from `data_unique_pointer()` instead of allocating StringName here.
 
 		// Generate event
+		if (p_isignal.is_deprecated) {
+			p_output.append(MEMBER_BEGIN "[Obsolete(\"");
+			p_output.append(bbcode_to_text(p_isignal.deprecation_message, &p_itype));
+			p_output.append("\")]");
+		}
 		p_output.append(MEMBER_BEGIN "public ");
 
 		if (p_itype.is_singleton) {
@@ -3344,6 +3347,11 @@ Error BindingsGenerator::_generate_cs_signal(const BindingsGenerator::TypeInterf
 
 		// Generate EmitSignal{EventName} method to raise the event.
 		if (!p_itype.is_singleton) {
+			if (p_isignal.is_deprecated) {
+				p_output.append(MEMBER_BEGIN "[Obsolete(\"");
+				p_output.append(bbcode_to_text(p_isignal.deprecation_message, &p_itype));
+				p_output.append("\")]");
+			}
 			p_output.append(MEMBER_BEGIN "protected void ");
 			p_output << "EmitSignal" << p_isignal.proxy_name;
 			if (is_parameterless) {
@@ -3797,6 +3805,8 @@ bool BindingsGenerator::_arg_default_value_is_assignable_to_type(const Variant &
 		case Variant::VECTOR2:
 		case Variant::RECT2:
 		case Variant::VECTOR3:
+		case Variant::VECTOR4:
+		case Variant::PROJECTION:
 		case Variant::RID:
 		case Variant::PACKED_BYTE_ARRAY:
 		case Variant::PACKED_INT32_ARRAY:
@@ -3826,7 +3836,10 @@ bool BindingsGenerator::_arg_default_value_is_assignable_to_type(const Variant &
 		case Variant::VECTOR3I:
 			return p_arg_type.name == name_cache.type_Vector3 ||
 					p_arg_type.name == Variant::get_type_name(p_val.get_type());
-		default:
+		case Variant::VECTOR4I:
+			return p_arg_type.name == name_cache.type_Vector4 ||
+					p_arg_type.name == Variant::get_type_name(p_val.get_type());
+		case Variant::VARIANT_MAX:
 			CRASH_NOW_MSG("Unexpected Variant type: " + itos(p_val.get_type()));
 			break;
 	}
@@ -4678,7 +4691,7 @@ bool BindingsGenerator::_arg_default_value_from_variant(const Variant &p_val, Ar
 					"Parameter of type '" + String(r_iarg.type.cname) + "' can only have null/zero as the default value.");
 			r_iarg.default_argument = "default";
 			break;
-		default:
+		case Variant::VARIANT_MAX:
 			ERR_FAIL_V_MSG(false, "Unexpected Variant type: " + itos(p_val.get_type()));
 			break;
 	}

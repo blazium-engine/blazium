@@ -92,6 +92,7 @@ class SceneTreeEditor : public Control {
 
 		HashMap<Node *, CachedNode>::Iterator add(Node *p_node, TreeItem *p_item);
 		HashMap<Node *, CachedNode>::Iterator get(Node *p_node, bool p_deleted_ok = true);
+		bool has(Node *p_node);
 		void remove(Node *p_node, bool p_recursive = false);
 		void mark_dirty(Node *p_node, bool p_parents = true);
 		void mark_children_dirty(Node *p_node, bool p_recursive = false);
@@ -123,6 +124,7 @@ class SceneTreeEditor : public Control {
 	AcceptDialog *warning = nullptr;
 
 	bool auto_expand_selected = true;
+	bool hide_filtered_out_parents = false;
 	bool connect_to_script_mode = false;
 	bool connecting_signal = false;
 	bool update_when_invisible = true;
@@ -237,9 +239,10 @@ public:
 	void set_show_enabled_subscene(bool p_show) { show_enabled_subscene = p_show; }
 	void set_valid_types(const Vector<StringName> &p_valid);
 
-	void update_tree() { _update_tree(); }
+	inline void update_tree() { _update_tree(); }
 
 	void set_auto_expand_selected(bool p_auto, bool p_update_settings);
+	void set_hide_filtered_out_parents(bool p_hide, bool p_update_settings);
 	void set_connect_to_script_mode(bool p_enable);
 	void set_connecting_signal(bool p_enable);
 	void set_update_when_invisible(bool p_enable);

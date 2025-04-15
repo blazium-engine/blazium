@@ -259,6 +259,10 @@ bool Color::is_equal_approx(const Color &p_color) const {
 	return Math::is_equal_approx(r, p_color.r) && Math::is_equal_approx(g, p_color.g) && Math::is_equal_approx(b, p_color.b) && Math::is_equal_approx(a, p_color.a);
 }
 
+bool Color::is_same(const Color &p_color) const {
+	return Math::is_same(r, p_color.r) && Math::is_same(g, p_color.g) && Math::is_same(b, p_color.b) && Math::is_same(a, p_color.a);
+}
+
 Color Color::clamp(const Color &p_min, const Color &p_max) const {
 	return Color(
 			CLAMP(r, p_min.r, p_max.r),
@@ -439,7 +443,7 @@ int Color::find_named_color(const String &p_name) {
 }
 
 int Color::get_named_color_count() {
-	return sizeof(named_colors) / sizeof(NamedColor);
+	return std::size(named_colors);
 }
 
 String Color::get_named_color_name(int p_idx) {
@@ -482,106 +486,12 @@ Color Color::from_rgbe9995(uint32_t p_rgbe) {
 	return Color(rd, gd, bd, 1.0f);
 }
 
+Color Color::from_rgba8(int64_t p_r8, int64_t p_g8, int64_t p_b8, int64_t p_a8) {
+	return Color(p_r8 / 255.0f, p_g8 / 255.0f, p_b8 / 255.0f, p_a8 / 255.0f);
+}
+
 Color::operator String() const {
 	return "(" + String::num(r, 4) + ", " + String::num(g, 4) + ", " + String::num(b, 4) + ", " + String::num(a, 4) + ")";
-}
-
-Color Color::operator+(const Color &p_color) const {
-	return Color(
-			r + p_color.r,
-			g + p_color.g,
-			b + p_color.b,
-			a + p_color.a);
-}
-
-void Color::operator+=(const Color &p_color) {
-	r = r + p_color.r;
-	g = g + p_color.g;
-	b = b + p_color.b;
-	a = a + p_color.a;
-}
-
-Color Color::operator-(const Color &p_color) const {
-	return Color(
-			r - p_color.r,
-			g - p_color.g,
-			b - p_color.b,
-			a - p_color.a);
-}
-
-void Color::operator-=(const Color &p_color) {
-	r = r - p_color.r;
-	g = g - p_color.g;
-	b = b - p_color.b;
-	a = a - p_color.a;
-}
-
-Color Color::operator*(const Color &p_color) const {
-	return Color(
-			r * p_color.r,
-			g * p_color.g,
-			b * p_color.b,
-			a * p_color.a);
-}
-
-Color Color::operator*(float p_scalar) const {
-	return Color(
-			r * p_scalar,
-			g * p_scalar,
-			b * p_scalar,
-			a * p_scalar);
-}
-
-void Color::operator*=(const Color &p_color) {
-	r = r * p_color.r;
-	g = g * p_color.g;
-	b = b * p_color.b;
-	a = a * p_color.a;
-}
-
-void Color::operator*=(float p_scalar) {
-	r = r * p_scalar;
-	g = g * p_scalar;
-	b = b * p_scalar;
-	a = a * p_scalar;
-}
-
-Color Color::operator/(const Color &p_color) const {
-	return Color(
-			r / p_color.r,
-			g / p_color.g,
-			b / p_color.b,
-			a / p_color.a);
-}
-
-Color Color::operator/(float p_scalar) const {
-	return Color(
-			r / p_scalar,
-			g / p_scalar,
-			b / p_scalar,
-			a / p_scalar);
-}
-
-void Color::operator/=(const Color &p_color) {
-	r = r / p_color.r;
-	g = g / p_color.g;
-	b = b / p_color.b;
-	a = a / p_color.a;
-}
-
-void Color::operator/=(float p_scalar) {
-	r = r / p_scalar;
-	g = g / p_scalar;
-	b = b / p_scalar;
-	a = a / p_scalar;
-}
-
-Color Color::operator-() const {
-	return Color(
-			1.0f - r,
-			1.0f - g,
-			1.0f - b,
-			1.0f - a);
 }
 
 Color Color::from_ok_hsl(float p_h, float p_s, float p_l, float p_alpha) {

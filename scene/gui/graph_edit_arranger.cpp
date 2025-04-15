@@ -66,7 +66,7 @@ void GraphEditArranger::arrange_nodes() {
 	float gap_v = 100.0f;
 	float gap_h = 100.0f;
 
-	List<Ref<GraphEdit::Connection>> connection_list = graph_edit->get_connection_list();
+	const Vector<Ref<GraphEdit::Connection>> connection_list = graph_edit->get_connections();
 
 	for (int i = graph_edit->get_child_count() - 1; i >= 0; i--) {
 		GraphNode *graph_element = Object::cast_to<GraphNode>(graph_edit->get_child(i));
@@ -442,7 +442,7 @@ float GraphEditArranger::_calculate_threshold(const StringName &p_v, const Strin
 	if (p_v == p_w) {
 		int min_order = MAX_ORDER;
 		Ref<GraphEdit::Connection> incoming;
-		List<Ref<GraphEdit::Connection>> connection_list = graph_edit->get_connection_list();
+		const Vector<Ref<GraphEdit::Connection>> connection_list = graph_edit->get_connections();
 		for (const Ref<GraphEdit::Connection> &connection : connection_list) {
 			if (connection->to_node == p_w) {
 				ORDER(connection->from_node, r_layers);
@@ -459,7 +459,7 @@ float GraphEditArranger::_calculate_threshold(const StringName &p_v, const Strin
 			Vector2 pos_from = gnode_from->get_output_port_position(incoming->from_port) * graph_edit->get_zoom();
 			Vector2 pos_to = gnode_to->get_input_port_position(incoming->to_port) * graph_edit->get_zoom();
 
-			// If connected block node is selected, calculate thershold or add current block to list.
+			// If connected block node is selected, calculate threshold or add current block to list.
 			if (gnode_from->is_selected()) {
 				Vector2 connected_block_pos = r_node_positions[r_root[incoming->from_node]];
 				if (connected_block_pos.y != FLT_MAX) {
@@ -473,7 +473,7 @@ float GraphEditArranger::_calculate_threshold(const StringName &p_v, const Strin
 		// This time, pick an outgoing edge and repeat as above!
 		int min_order = MAX_ORDER;
 		Ref<GraphEdit::Connection> outgoing;
-		List<Ref<GraphEdit::Connection>> connection_list = graph_edit->get_connection_list();
+		const Vector<Ref<GraphEdit::Connection>> connection_list = graph_edit->get_connections();
 		for (const Ref<GraphEdit::Connection> &connection : connection_list) {
 			if (connection->from_node == p_w) {
 				ORDER(connection->to_node, r_layers);
@@ -490,7 +490,7 @@ float GraphEditArranger::_calculate_threshold(const StringName &p_v, const Strin
 			Vector2 pos_from = gnode_from->get_output_port_position(outgoing->from_port) * graph_edit->get_zoom();
 			Vector2 pos_to = gnode_to->get_input_port_position(outgoing->to_port) * graph_edit->get_zoom();
 
-			// If connected block node is selected, calculate thershold or add current block to list.
+			// If connected block node is selected, calculate threshold or add current block to list.
 			if (gnode_to->is_selected()) {
 				Vector2 connected_block_pos = r_node_positions[r_root[outgoing->to_node]];
 				if (connected_block_pos.y != FLT_MAX) {

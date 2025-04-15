@@ -130,8 +130,6 @@ public:
 
 	//easier wrap to avoid mistakes
 
-	struct Item;
-
 	typedef uint64_t PolygonID;
 	virtual PolygonID request_polygon(const Vector<int> &p_indices, const Vector<Point2> &p_points, const Vector<Color> &p_colors, const Vector<Point2> &p_uvs = Vector<Point2>(), const Vector<int> &p_bones = Vector<int>(), const Vector<float> &p_weights = Vector<float>()) = 0;
 	virtual void free_polygon(PolygonID p_polygon) = 0;
@@ -323,6 +321,7 @@ public:
 		bool update_when_visible : 1;
 		bool on_interpolate_transform_list : 1;
 		bool interpolated : 1;
+		bool use_identity_transform : 1;
 
 		struct CanvasGroup {
 			RS::CanvasGroupMode mode;
@@ -486,6 +485,7 @@ public:
 			repeat_source = false;
 			on_interpolate_transform_list = false;
 			interpolated = true;
+			use_identity_transform = false;
 		}
 		virtual ~Item() {
 			clear();

@@ -576,9 +576,17 @@ void DisplayServerWeb::_mouse_update_mode() {
 
 void DisplayServerWeb::mouse_set_mode(MouseMode p_mode) {
 	ERR_FAIL_INDEX(p_mode, MouseMode::MOUSE_MODE_MAX);
-	if (p_mode == mouse_mode_base) {
+
+	if (mouse_mode_override_enabled) {
+		mouse_mode_base = p_mode;
+		// No need to update, as override is enabled.
 		return;
 	}
+	if (p_mode == mouse_mode_base && p_mode == mouse_get_mode()) {
+		// No need to update, as it is currently set as the correct mode.
+		return;
+	}
+
 	mouse_mode_base = p_mode;
 	_mouse_update_mode();
 }
@@ -596,9 +604,17 @@ DisplayServer::MouseMode DisplayServerWeb::mouse_get_mode() const {
 
 void DisplayServerWeb::mouse_set_mode_override(MouseMode p_mode) {
 	ERR_FAIL_INDEX(p_mode, MouseMode::MOUSE_MODE_MAX);
-	if (p_mode == mouse_mode_override) {
+
+	if (!mouse_mode_override_enabled) {
+		mouse_mode_override = p_mode;
+		// No need to update, as override is not enabled.
 		return;
 	}
+	if (p_mode == mouse_mode_override && p_mode == mouse_get_mode()) {
+		// No need to update, as it is currently set as the correct mode.
+		return;
+	}
+
 	mouse_mode_override = p_mode;
 	_mouse_update_mode();
 }
@@ -1172,6 +1188,7 @@ bool DisplayServerWeb::has_feature(Feature p_feature) const {
 		//case FEATURE_NATIVE_DIALOG_INPUT:
 		//case FEATURE_NATIVE_DIALOG_FILE:
 		//case FEATURE_NATIVE_DIALOG_FILE_EXTRA:
+		//case FEATURE_NATIVE_DIALOG_FILE_MIME:
 		//case FEATURE_NATIVE_ICON:
 		//case FEATURE_WINDOW_TRANSPARENCY:
 		//case FEATURE_KEEP_SCREEN_ON:

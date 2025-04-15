@@ -30,15 +30,12 @@
 
 #include "shader_rd.h"
 
-#include "core/io/compression.h"
 #include "core/io/dir_access.h"
 #include "core/io/file_access.h"
 #include "core/object/worker_thread_pool.h"
 #include "core/version.h"
-#include "renderer_compositor_rd.h"
 #include "servers/rendering/rendering_device.h"
 #include "servers/rendering/shader_include_db.h"
-#include "thirdparty/misc/smolv.h"
 
 void ShaderRD::_add_stage(const char *p_code, StageType p_stage_type) {
 	Vector<String> lines = String(p_code).split("\n");
@@ -556,8 +553,8 @@ void ShaderRD::_compile_version(Version *p_version, int p_group) {
 	compile_data.group = p_group;
 
 #if 1
-	WorkerThreadPool::GroupID group_task = WorkerThreadPool::get_singleton()->add_template_group_task(this, &ShaderRD::_compile_variant, &compile_data, group_to_variant_map[p_group].size(), -1, true, SNAME("ShaderCompilation"));
-	WorkerThreadPool::get_singleton()->wait_for_group_task_completion(group_task);
+	WorkerThreadPool::GroupID group_task = WorkerThreadPool::get_named_pool(SNAME("ShaderCompilationPool"))->add_template_group_task(this, &ShaderRD::_compile_variant, &compile_data, group_to_variant_map[p_group].size(), -1, true, SNAME("ShaderCompilation"));
+	WorkerThreadPool::get_named_pool(SNAME("ShaderCompilationPool"))->wait_for_group_task_completion(group_task);
 
 #else
 	for (uint32_t i = 0; i < group_to_variant_map[p_group].size(); i++) {

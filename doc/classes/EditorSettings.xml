@@ -191,6 +191,10 @@
 		<member name="debugger/auto_switch_to_stack_trace" type="bool" setter="" getter="">
 			If [code]true[/code], automatically switches to the [b]Stack Trace[/b] panel when the debugger hits a breakpoint or steps.
 		</member>
+		<member name="debugger/max_node_selection" type="int" setter="" getter="">
+			The limit of how many remote nodes can be selected at once.
+			[b]Warning:[/b] Increasing this value is not recommended, as selecting too many can make the editing and inspection of remote properties unreliable.
+		</member>
 		<member name="debugger/profile_native_calls" type="bool" setter="" getter="">
 			If [code]true[/code], enables collection of profiling data from non-GDScript Godot functions, such as engine class methods. Enabling this slows execution while profiling further.
 		</member>
@@ -240,6 +244,9 @@
 		</member>
 		<member name="docks/scene_tree/center_node_on_reparent" type="bool" setter="" getter="">
 			If [code]true[/code], new node created when reparenting node(s) will be positioned at the average position of the selected node(s).
+		</member>
+		<member name="docks/scene_tree/hide_filtered_out_parents" type="bool" setter="" getter="">
+			If [code]true[/code], the scene tree dock will only show nodes that match the filter, without showing parents that don't. This settings can also be changed in the Scene dock's top menu.
 		</member>
 		<member name="docks/scene_tree/start_create_dialog_fully_expanded" type="bool" setter="" getter="">
 			If [code]true[/code], the Create dialog (Create New Node/Create New Resource) will start with all its sections expanded. Otherwise, sections will be collapsed until the user starts searching (which will automatically expand sections as needed).
@@ -534,9 +541,6 @@
 		<member name="editors/game/embedded_game" type="bool" setter="" getter="">
 			The Game tab, which allows embedding the game window and selecting nodes by clicking inside of it. If this feature is disabled, the Game tab won't display.
 		</member>
-		<member name="editors/grid_map/editor_side" type="int" setter="" getter="">
-			Specifies the side of 3D editor's viewport where GridMap's mesh palette will appear.
-		</member>
 		<member name="editors/grid_map/palette_min_width" type="int" setter="" getter="">
 			Minimum width of GridMap's mesh palette side panel.
 		</member>
@@ -714,8 +718,28 @@
 			Port used for file server when exporting project with remote file system.
 		</member>
 		<member name="filesystem/import/blender/blender_path" type="String" setter="" getter="">
-			The path to the directory containing the Blender executable used for converting the Blender 3D scene files [code].blend[/code] to glTF 2.0 format during import. Blender 3.0 or later is required.
+			The path to the Blender executable used for converting the Blender 3D scene files [code].blend[/code] to glTF 2.0 format during import. Blender 3.0 or later is required.
 			To enable this feature for your specific project, use [member ProjectSettings.filesystem/import/blender/enabled].
+			If this setting is empty, Blender's default paths will be detected and used automatically if present in this order:
+			[b]Windows:[/b]
+			[codeblock]
+			- C:\Program Files\Blender Foundation\blender.exe
+			- C:\Program Files (x86)\Blender Foundation\blender.exe
+			[/codeblock]
+			[b]macOS:[/b]
+			[codeblock]
+			- /opt/homebrew/bin/blender
+			- /opt/local/bin/blender
+			- /usr/local/bin/blender
+			- /usr/local/opt/blender
+			- /Applications/Blender.app/Contents/MacOS/Blender
+			[/codeblock]
+			[b]Linux/*BSD:[/b]
+			[codeblock]
+			- /usr/bin/blender
+			- /usr/local/bin/blender
+			- /opt/blender/bin/blender
+			[/codeblock]
 		</member>
 		<member name="filesystem/import/blender/rpc_port" type="int" setter="" getter="">
 			The port number used for Remote Procedure Call (RPC) communication with Godot's created process of the blender executable.
@@ -1096,6 +1120,10 @@
 		</member>
 		<member name="network/tls/editor_tls_certificates" type="String" setter="" getter="">
 			The TLS certificate bundle to use for HTTP requests made within the editor (e.g. from the AssetLib tab). If left empty, the [url=https://github.com/godotengine/godot/blob/master/thirdparty/certs/ca-certificates.crt]included Mozilla certificate bundle[/url] will be used.
+		</member>
+		<member name="network/tls/enable_tls_v1.3" type="bool" setter="" getter="">
+			If [code]true[/code], enable TLSv1.3 negotiation.
+			[b]Note:[/b] Only supported when using Mbed TLS 3.0 or later (Linux distribution packages may be compiled against older system Mbed TLS packages), otherwise the maximum supported TLS version is always TLSv1.2.
 		</member>
 		<member name="project_manager/default_renderer" type="String" setter="" getter="">
 			The renderer type that will be checked off by default when creating a new project. Accepted strings are "forward_plus", "mobile" or "gl_compatibility".

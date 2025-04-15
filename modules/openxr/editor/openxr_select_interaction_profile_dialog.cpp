@@ -29,7 +29,11 @@
 /**************************************************************************/
 
 #include "openxr_select_interaction_profile_dialog.h"
+
+#include "../action_map/openxr_interaction_profile_metadata.h"
 #include "../openxr_api.h"
+
+#include "scene/gui/button.h"
 
 void OpenXRSelectInteractionProfileDialog::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("interaction_profile_selected", PropertyInfo(Variant::STRING, "interaction_profile")));
@@ -71,9 +75,7 @@ void OpenXRSelectInteractionProfileDialog::open(PackedStringArray p_do_not_inclu
 	ERR_FAIL_NULL(meta_data);
 
 	// Out with the old.
-	while (main_vb->get_child_count() > 1) {
-		memdelete(main_vb->get_child(1));
-	}
+	main_vb->remove_all_children(true, DELETE_MODE_INSTANT_FREE);
 
 	PackedStringArray requested_extensions = OpenXRAPI::get_all_requested_extensions();
 

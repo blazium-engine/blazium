@@ -33,8 +33,6 @@
 #include "core/input/input_map.h"
 #include "core/os/keyboard.h"
 #include "core/os/os.h"
-#include "core/string/print_string.h"
-#include "core/string/translation.h"
 #include "scene/gui/label.h"
 #include "scene/gui/popup_menu.h"
 #include "scene/main/window.h"
@@ -53,7 +51,6 @@ void LineEdit::edit() {
 
 	if (!has_focus()) {
 		grab_focus();
-		return;
 	}
 
 	if (!editable || editing) {
@@ -74,6 +71,8 @@ void LineEdit::edit() {
 
 	show_virtual_keyboard();
 	queue_redraw();
+
+	emit_signal(SNAME("editing_toggled"), true);
 }
 
 void LineEdit::unedit() {
@@ -94,6 +93,8 @@ void LineEdit::unedit() {
 	if (deselect_on_focus_loss_enabled && !selection.drag_attempt) {
 		deselect();
 	}
+
+	emit_signal(SNAME("editing_toggled"), false);
 }
 
 bool LineEdit::is_editing() const {
@@ -409,7 +410,6 @@ void LineEdit::gui_input(const Ref<InputEvent> &p_event) {
 
 			if (editable && !editing) {
 				edit();
-				emit_signal(SNAME("editing_toggled"), true);
 			}
 
 			accept_event();
@@ -426,7 +426,6 @@ void LineEdit::gui_input(const Ref<InputEvent> &p_event) {
 
 			if (!editing) {
 				edit();
-				emit_signal(SNAME("editing_toggled"), true);
 			}
 
 			if (!paste_buffer.is_empty()) {
@@ -527,7 +526,6 @@ void LineEdit::gui_input(const Ref<InputEvent> &p_event) {
 
 			if (editable && !editing) {
 				edit();
-				emit_signal(SNAME("editing_toggled"), true);
 				return;
 			}
 			queue_redraw();
@@ -623,7 +621,6 @@ void LineEdit::gui_input(const Ref<InputEvent> &p_event) {
 
 	if (editable && !editing && k->is_action_pressed("ui_text_submit", false)) {
 		edit();
-		emit_signal(SNAME("editing_toggled"), true);
 		accept_event();
 		return;
 	}
@@ -784,7 +781,6 @@ void LineEdit::gui_input(const Ref<InputEvent> &p_event) {
 
 		if (editing && !keep_editing_on_text_submit) {
 			unedit();
-			emit_signal(SNAME("editing_toggled"), false);
 		}
 
 		accept_event();
@@ -794,7 +790,6 @@ void LineEdit::gui_input(const Ref<InputEvent> &p_event) {
 	if (k->is_action("ui_cancel")) {
 		if (editing) {
 			unedit();
-			emit_signal(SNAME("editing_toggled"), false);
 		}
 
 		accept_event();
@@ -1364,24 +1359,27 @@ void LineEdit::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_FOCUS_ENTER: {
-			// Only allow editing if the LineEdit is not focused with arrow keys.
-			if (!(Input::get_singleton()->is_action_pressed("ui_up") || Input::get_singleton()->is_action_pressed("ui_down") || Input::get_singleton()->is_action_pressed("ui_left") || Input::get_singleton()->is_action_pressed("ui_right"))) {
+			if (Input::get_singleton()->is_mouse_button_pressed(MouseButton::LEFT) || Input::get_singleton()->is_mouse_button_pressed(MouseButton::RIGHT) || Input::get_singleton()->is_mouse_button_pressed(MouseButton::MIDDLE)) {
 				edit();
-				emit_signal(SNAME("editing_toggled"), true);
 			}
 		} break;
 
 		case NOTIFICATION_FOCUS_EXIT: {
 			if (editing) {
 				unedit();
-				emit_signal(SNAME("editing_toggled"), false);
 			}
 		} break;
 
 		case MainLoop::NOTIFICATION_OS_IME_UPDATE: {
 			if (editing) {
-				ime_text = DisplayServer::get_singleton()->ime_get_text();
-				ime_selection = DisplayServer::get_singleton()->ime_get_selection();
+				const String &new_ime_text = DisplayServer::get_singleton()->ime_get_text();
+				const Vector2i &new_ime_selection = DisplayServer::get_singleton()->ime_get_selection();
+				if (ime_text == new_ime_text && ime_selection == new_ime_selection) {
+					break;
+				}
+
+				ime_text = new_ime_text;
+				ime_selection = new_ime_selection;
 
 				if (!ime_text.is_empty()) {
 					selection_delete();
@@ -1734,7 +1732,7 @@ void LineEdit::_validate_caret_can_draw() {
 		draw_caret = true;
 		caret_blink_timer = 0.0;
 	}
-	caret_can_draw = editing && (window_has_focus || (menu && menu->has_focus())) && (has_focus() || caret_force_displayed);
+	caret_can_draw = (caret_force_displayed && !is_part_of_edited_scene()) || (editing && (window_has_focus || (menu && menu->has_focus())) && has_focus());
 }
 
 void LineEdit::delete_char() {
@@ -2168,7 +2166,6 @@ void LineEdit::set_editable(bool p_editable) {
 
 	if (!editable && editing) {
 		unedit();
-		emit_signal(SNAME("editing_toggled"), false);
 	}
 	_validate_caret_can_draw();
 
@@ -2376,7 +2373,10 @@ void LineEdit::menu_option(int p_option) {
 			if (editable) {
 				insert_text_at_caret(String::chr(0x00AD));
 			}
-		}
+		} break;
+		case MENU_EMOJI_AND_SYMBOL: {
+			show_emoji_and_symbol_picker();
+		} break;
 	}
 }
 
@@ -2386,6 +2386,22 @@ void LineEdit::set_context_menu_enabled(bool p_enable) {
 
 bool LineEdit::is_context_menu_enabled() {
 	return context_menu_enabled;
+}
+
+void LineEdit::show_emoji_and_symbol_picker() {
+	_update_ime_window_position();
+	DisplayServer::get_singleton()->show_emoji_and_symbol_picker();
+}
+
+void LineEdit::set_emoji_menu_enabled(bool p_enabled) {
+	if (emoji_menu_enabled != p_enabled) {
+		emoji_menu_enabled = p_enabled;
+		_update_context_menu();
+	}
+}
+
+bool LineEdit::is_emoji_menu_enabled() const {
+	return emoji_menu_enabled;
 }
 
 bool LineEdit::is_menu_visible() const {
@@ -2717,6 +2733,11 @@ void LineEdit::_generate_context_menu() {
 	menu_ctl->add_item(ETR("Word Joiner (WJ)"), MENU_INSERT_WJ);
 	menu_ctl->add_item(ETR("Soft Hyphen (SHY)"), MENU_INSERT_SHY);
 
+	if (DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_EMOJI_AND_SYMBOL_PICKER)) {
+		menu->add_item(ETR("Emoji & Symbols"), MENU_EMOJI_AND_SYMBOL);
+		menu->add_separator();
+	}
+
 	menu->add_item(ETR("Cut"), MENU_CUT);
 	menu->add_item(ETR("Copy"), MENU_COPY);
 	menu->add_item(ETR("Paste"), MENU_PASTE);
@@ -2772,6 +2793,9 @@ void LineEdit::_update_context_menu() {
 		m_menu->set_item_checked(idx, m_checked);  \
 	}
 
+	if (DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_EMOJI_AND_SYMBOL_PICKER)) {
+		MENU_ITEM_DISABLED(menu, MENU_EMOJI_AND_SYMBOL, !editable || !emoji_menu_enabled)
+	}
 	MENU_ITEM_ACTION_DISABLED(menu, MENU_CUT, "ui_cut", !editable)
 	MENU_ITEM_ACTION(menu, MENU_COPY, "ui_copy")
 	MENU_ITEM_ACTION_DISABLED(menu, MENU_PASTE, "ui_paste", !editable)
@@ -2867,6 +2891,8 @@ void LineEdit::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_menu_visible"), &LineEdit::is_menu_visible);
 	ClassDB::bind_method(D_METHOD("set_context_menu_enabled", "enable"), &LineEdit::set_context_menu_enabled);
 	ClassDB::bind_method(D_METHOD("is_context_menu_enabled"), &LineEdit::is_context_menu_enabled);
+	ClassDB::bind_method(D_METHOD("set_emoji_menu_enabled", "enable"), &LineEdit::set_emoji_menu_enabled);
+	ClassDB::bind_method(D_METHOD("is_emoji_menu_enabled"), &LineEdit::is_emoji_menu_enabled);
 	ClassDB::bind_method(D_METHOD("set_virtual_keyboard_enabled", "enable"), &LineEdit::set_virtual_keyboard_enabled);
 	ClassDB::bind_method(D_METHOD("is_virtual_keyboard_enabled"), &LineEdit::is_virtual_keyboard_enabled);
 	ClassDB::bind_method(D_METHOD("set_virtual_keyboard_type", "type"), &LineEdit::set_virtual_keyboard_type);
@@ -2925,6 +2951,7 @@ void LineEdit::_bind_methods() {
 	BIND_ENUM_CONSTANT(MENU_INSERT_ZWNJ);
 	BIND_ENUM_CONSTANT(MENU_INSERT_WJ);
 	BIND_ENUM_CONSTANT(MENU_INSERT_SHY);
+	BIND_ENUM_CONSTANT(MENU_EMOJI_AND_SYMBOL);
 	BIND_ENUM_CONSTANT(MENU_MAX);
 
 	BIND_ENUM_CONSTANT(KEYBOARD_TYPE_DEFAULT);
@@ -2944,6 +2971,7 @@ void LineEdit::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "keep_editing_on_text_submit"), "set_keep_editing_on_text_submit", "is_editing_kept_on_text_submit");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "expand_to_text_length"), "set_expand_to_text_length_enabled", "is_expand_to_text_length_enabled");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "context_menu_enabled"), "set_context_menu_enabled", "is_context_menu_enabled");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "emoji_menu_enabled"), "set_emoji_menu_enabled", "is_emoji_menu_enabled");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "virtual_keyboard_enabled"), "set_virtual_keyboard_enabled", "is_virtual_keyboard_enabled");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "virtual_keyboard_type", PROPERTY_HINT_ENUM, "Default,Multiline,Number,Decimal,Phone,Email,Password,URL"), "set_virtual_keyboard_type", "get_virtual_keyboard_type");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "clear_button_enabled"), "set_clear_button_enabled", "is_clear_button_enabled");

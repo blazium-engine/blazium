@@ -382,6 +382,15 @@ RDD::TextureID RenderingDeviceDriverMetal::texture_create_from_extension(uint64_
 RDD::TextureID RenderingDeviceDriverMetal::texture_create_shared(TextureID p_original_texture, const TextureView &p_view) {
 	id<MTLTexture> src_texture = rid::get(p_original_texture);
 
+	NSUInteger slices = src_texture.arrayLength;
+	if (src_texture.textureType == MTLTextureTypeCube) {
+		// Metal expects Cube textures to have a slice count of 6.
+		slices = 6;
+	} else if (src_texture.textureType == MTLTextureTypeCubeArray) {
+		// Metal expects Cube Array textures to have 6 slices per layer.
+		slices *= 6;
+	}
+
 #if DEV_ENABLED
 	if (src_texture.sampleCount > 1) {
 		// TODO(sgc): is it ok to create a shared texture from a multi-sample texture?
@@ -411,7 +420,7 @@ RDD::TextureID RenderingDeviceDriverMetal::texture_create_shared(TextureID p_ori
 	id<MTLTexture> obj = [src_texture newTextureViewWithPixelFormat:format
 														textureType:src_texture.textureType
 															 levels:NSMakeRange(0, src_texture.mipmapLevelCount)
-															 slices:NSMakeRange(0, src_texture.arrayLength)
+															 slices:NSMakeRange(0, slices)
 															swizzle:swizzle];
 	ERR_FAIL_NULL_V_MSG(obj, TextureID(), "Unable to create shared texture");
 	return rid::make(obj);
@@ -543,7 +552,14 @@ void RenderingDeviceDriverMetal::texture_get_copyable_layout(TextureID p_texture
 		r_layout->size = get_image_format_required_size(format, sz.width, sz.height, sz.depth, 1, &sbw, &sbh);
 		r_layout->row_pitch = r_layout->size / ((sbh / bh) * sz.depth);
 		r_layout->depth_pitch = r_layout->size / sz.depth;
-		r_layout->layer_pitch = r_layout->size / obj.arrayLength;
+
+		uint32_t array_length = obj.arrayLength;
+		if (obj.textureType == MTLTextureTypeCube) {
+			array_length = 6;
+		} else if (obj.textureType == MTLTextureTypeCubeArray) {
+			array_length *= 6;
+		}
+		r_layout->layer_pitch = r_layout->size / array_length;
 	} else {
 		CRASH_NOW_MSG("need to calculate layout for shared texture");
 	}
@@ -1186,8 +1202,9 @@ class BufReader {
 	uint64_t pos = 0;
 
 	bool check_length(size_t p_size) {
-		if (status != Status::OK)
+		if (status != Status::OK) {
 			return false;
+		}
 
 		if (pos + p_size > length) {
 			status = Status::SHORT_BUFFER;
@@ -1986,8 +2003,9 @@ Vector<uint8_t> RenderingDeviceDriverMetal::shader_compile_binary_from_spirv(Vec
 	msl_options.platform = CompilerMSL::Options::iOS;
 #endif
 
-#if TARGET_OS_IOS
+#if TARGET_OS_IPHONE
 	msl_options.ios_use_simdgroup_functions = (*metal_device_properties).features.simdPermute;
+	msl_options.ios_support_base_vertex_instance = true;
 #endif
 
 	msl_options.argument_buffers = true;
@@ -2448,8 +2466,9 @@ RDD::ShaderID RenderingDeviceDriverMetal::shader_create_from_bytecode(const Vect
 
 			for (UniformInfo const &uniform : set.uniforms) {
 				BindingInfo const *binding_info = uniform.bindings.getptr(stage);
-				if (binding_info == nullptr)
+				if (binding_info == nullptr) {
 					continue;
+				}
 
 				[descriptors addObject:binding_info->new_argument_descriptor()];
 				BindingInfo const *secondary_binding_info = uniform.bindings_secondary.getptr(stage);
@@ -3876,6 +3895,8 @@ uint64_t RenderingDeviceDriverMetal::limit_get(Limit p_limit) {
 			return (int64_t)limits.subgroupSupportedShaderStages;
 		case LIMIT_SUBGROUP_OPERATIONS:
 			return (int64_t)limits.subgroupSupportedOperations;
+		case LIMIT_MAX_SHADER_VARYINGS:
+			return limits.maxShaderVaryings;
 		UNKNOWN(LIMIT_VRS_TEXEL_WIDTH);
 		UNKNOWN(LIMIT_VRS_TEXEL_HEIGHT);
 		default:
@@ -3949,9 +3970,14 @@ RenderingDeviceDriverMetal::RenderingDeviceDriverMetal(RenderingContextDriverMet
 		context_driver(p_context_driver) {
 	DEV_ASSERT(p_context_driver != nullptr);
 
+#if TARGET_OS_OSX
 	if (String res = OS::get_singleton()->get_environment("GODOT_MTL_SHADER_LOAD_STRATEGY"); res == U"lazy") {
 		_shader_load_strategy = ShaderLoadStrategy::LAZY;
 	}
+#else
+	// Always use the lazy strategy on other OSs like iOS, tvOS, or visionOS.
+	_shader_load_strategy = ShaderLoadStrategy::LAZY;
+#endif
 }
 
 RenderingDeviceDriverMetal::~RenderingDeviceDriverMetal() {

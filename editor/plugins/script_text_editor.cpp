@@ -41,6 +41,7 @@
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
 #include "editor/gui/editor_toaster.h"
+#include "editor/plugins/editor_context_menu_plugin.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/code_edit.h"
 #include "scene/gui/color_picker.h"
@@ -215,7 +216,7 @@ void ScriptTextEditor::_load_theme_settings() {
 	}
 
 	theme_loaded = true;
-	if (!script.is_null()) {
+	if (script.is_valid()) {
 		_set_theme_for_script();
 	}
 }
@@ -320,7 +321,7 @@ void ScriptTextEditor::_error_clicked(const Variant &p_line) {
 			goto_line_centered(line, column);
 		} else {
 			Ref<Resource> scr = ResourceLoader::load(path);
-			if (!scr.is_valid()) {
+			if (scr.is_null()) {
 				EditorNode::get_singleton()->show_warning(TTR("Could not load file at:") + "\n\n" + path, TTR("Error!"));
 			} else {
 				int corrected_column = column;
@@ -584,7 +585,7 @@ void ScriptTextEditor::_update_warnings() {
 
 	bool has_connections_table = false;
 	// Add missing connections.
-	if (GLOBAL_GET("debug/gdscript/warnings/enable").booleanize()) {
+	if (GLOBAL_GET("debug/gdscript/warnings/enable")) {
 		Node *base = get_tree()->get_edited_scene_root();
 		if (base && missing_connections.size() > 0) {
 			has_connections_table = true;
@@ -762,7 +763,7 @@ void ScriptTextEditor::_update_bookmark_list() {
 			line = line.substr(0, 50);
 		}
 
-		bookmarks_menu->add_item(String::num((int)bookmark_list[i] + 1) + " - `" + line + "`");
+		bookmarks_menu->add_item(String::num_int64(bookmark_list[i] + 1) + " - `" + line + "`");
 		bookmarks_menu->set_item_metadata(-1, bookmark_list[i]);
 	}
 }
@@ -860,7 +861,7 @@ void ScriptEditor::_update_modified_scripts_for_external_editor(Ref<Script> p_fo
 
 		if (last_date != date) {
 			Ref<Script> rel_scr = ResourceLoader::load(scr->get_path(), scr->get_class(), ResourceFormatLoader::CACHE_MODE_IGNORE);
-			ERR_CONTINUE(!rel_scr.is_valid());
+			ERR_CONTINUE(rel_scr.is_null());
 			scr->set_source_code(rel_scr->get_source_code());
 			scr->set_last_modified_time(rel_scr->get_last_modified_time());
 			scr->update_exports();
@@ -917,7 +918,7 @@ void ScriptTextEditor::_update_breakpoint_list() {
 			line = line.substr(0, 50);
 		}
 
-		breakpoints_menu->add_item(String::num((int)breakpoint_list[i] + 1) + " - `" + line + "`");
+		breakpoints_menu->add_item(String::num_int64(breakpoint_list[i] + 1) + " - `" + line + "`");
 		breakpoints_menu->set_item_metadata(-1, breakpoint_list[i]);
 	}
 }
@@ -1303,7 +1304,7 @@ void ScriptTextEditor::_update_connected_methods() {
 				// There is a chance that the method is inherited from another script.
 				bool found_inherited_function = false;
 				Ref<Script> inherited_script = script->get_base_script();
-				while (!inherited_script.is_null()) {
+				while (inherited_script.is_valid()) {
 					if (inherited_script->has_method(method)) {
 						found_inherited_function = true;
 						break;
@@ -1338,7 +1339,7 @@ void ScriptTextEditor::_update_connected_methods() {
 		String found_base_class;
 		StringName base_class = script->get_instance_base_type();
 		Ref<Script> inherited_script = script->get_base_script();
-		while (!inherited_script.is_null()) {
+		while (inherited_script.is_valid()) {
 			if (inherited_script->has_method(name)) {
 				found_base_class = "script:" + inherited_script->get_path();
 				break;
@@ -1434,7 +1435,7 @@ void ScriptTextEditor::_gutter_clicked(int p_line, int p_gutter) {
 		if (base_class_split[0] == "script") {
 			// Go to function declaration.
 			Ref<Script> base_script = ResourceLoader::load(base_class_split[1]);
-			ERR_FAIL_COND(!base_script.is_valid());
+			ERR_FAIL_COND(base_script.is_null());
 			emit_signal(SNAME("go_to_method"), base_script, method);
 		} else if (base_class_split[0] == "builtin") {
 			// Open method documentation.
@@ -1747,6 +1748,14 @@ void ScriptTextEditor::_edit_option(int p_op) {
 				_lookup_symbol(text, tx->get_caret_line(0), tx->get_caret_column(0));
 			}
 		} break;
+		case EDIT_EMOJI_AND_SYMBOL: {
+			code_editor->get_text_editor()->show_emoji_and_symbol_picker();
+		} break;
+		default: {
+			if (p_op >= EditorContextMenuPlugin::BASE_ID) {
+				EditorContextMenuPluginManager::get_singleton()->activate_custom_option(EditorContextMenuPlugin::CONTEXT_SLOT_SCRIPT_EDITOR_CODE, p_op, tx);
+			}
+		}
 	}
 }
 
@@ -2310,6 +2319,10 @@ void ScriptTextEditor::_prepare_edit_menu() {
 
 void ScriptTextEditor::_make_context_menu(bool p_selection, bool p_color, bool p_foldable, bool p_open_docs, bool p_goto_definition, Vector2 p_pos) {
 	context_menu->clear();
+	if (DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_EMOJI_AND_SYMBOL_PICKER)) {
+		context_menu->add_item(TTR("Emoji & Symbols"), EDIT_EMOJI_AND_SYMBOL);
+		context_menu->add_separator();
+	}
 	context_menu->add_shortcut(ED_GET_SHORTCUT("ui_undo"), EDIT_UNDO);
 	context_menu->add_shortcut(ED_GET_SHORTCUT("ui_redo"), EDIT_REDO);
 
@@ -2341,12 +2354,15 @@ void ScriptTextEditor::_make_context_menu(bool p_selection, bool p_color, bool p
 	if (p_color || p_open_docs || p_goto_definition) {
 		context_menu->add_separator();
 		if (p_open_docs) {
-			context_menu->add_item(TTR("Lookup Symbol"), LOOKUP_SYMBOL);
+			context_menu->add_shortcut(ED_GET_SHORTCUT("script_text_editor/goto_symbol"), LOOKUP_SYMBOL);
 		}
 		if (p_color) {
 			context_menu->add_item(TTR("Pick Color"), EDIT_PICK_COLOR);
 		}
 	}
+
+	const PackedStringArray paths = { code_editor->get_text_editor()->get_path() };
+	EditorContextMenuPluginManager::get_singleton()->add_options_from_plugins(context_menu, EditorContextMenuPlugin::CONTEXT_SLOT_SCRIPT_EDITOR_CODE, paths);
 
 	const CodeEdit *tx = code_editor->get_text_editor();
 	context_menu->set_item_disabled(context_menu->get_item_index(EDIT_UNDO), !tx->has_undo());
@@ -2492,6 +2508,7 @@ void ScriptTextEditor::_enable_code_editor() {
 	edit_hb->add_child(goto_menu);
 	goto_menu->get_popup()->add_shortcut(ED_GET_SHORTCUT("script_text_editor/goto_function"), SEARCH_LOCATE_FUNCTION);
 	goto_menu->get_popup()->add_shortcut(ED_GET_SHORTCUT("script_text_editor/goto_line"), SEARCH_GOTO_LINE);
+	goto_menu->get_popup()->add_shortcut(ED_GET_SHORTCUT("script_text_editor/goto_symbol"), LOOKUP_SYMBOL);
 	goto_menu->get_popup()->add_separator();
 
 	goto_menu->get_popup()->add_submenu_node_item(TTR("Bookmarks"), bookmarks_menu);
@@ -2676,6 +2693,7 @@ void ScriptTextEditor::register_editor() {
 	ED_SHORTCUT_OVERRIDE("script_text_editor/goto_function", "macos", KeyModifierMask::CTRL | KeyModifierMask::META | Key::J);
 
 	ED_SHORTCUT("script_text_editor/goto_line", TTRC("Go to Line..."), KeyModifierMask::CMD_OR_CTRL | Key::L);
+	ED_SHORTCUT("script_text_editor/goto_symbol", TTRC("Lookup Symbol"));
 
 	ED_SHORTCUT("script_text_editor/toggle_breakpoint", TTRC("Toggle Breakpoint"), Key::F9);
 	ED_SHORTCUT_OVERRIDE("script_text_editor/toggle_breakpoint", "macos", KeyModifierMask::META | KeyModifierMask::SHIFT | Key::B);

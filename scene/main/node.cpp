@@ -1723,6 +1723,19 @@ void Node::remove_child(Node *p_child) {
 	}
 }
 
+void Node::remove_all_children(bool p_include_internal, DeleteMode free_mode) {
+	TypedArray<Node> children = get_children(p_include_internal);
+	for (int i = 0; i < children.size(); i++) {
+		Node *node = Object::cast_to<Node>(children[i]);
+		remove_child(node);
+		if (free_mode == DELETE_MODE_INSTANT_FREE) {
+			memdelete(node);
+		} else if (free_mode == DELETE_MODE_QUEUE_FREE) {
+			node->queue_free();
+		}
+	}
+}
+
 void Node::_update_children_cache_impl() const {
 	// Assign children
 	data.children_cache.resize(data.children.size());

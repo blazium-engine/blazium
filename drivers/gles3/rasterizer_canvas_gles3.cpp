@@ -32,7 +32,6 @@
 
 #ifdef GLES3_ENABLED
 
-#include "core/os/os.h"
 #include "rasterizer_gles3.h"
 #include "rasterizer_scene_gles3.h"
 
@@ -644,8 +643,6 @@ void RasterizerCanvasGLES3::_render_items(RID p_to_render_target, int p_item_cou
 
 	if (index == 0) {
 		// Nothing to render, just return.
-		state.current_batch_index = 0;
-		state.canvas_instance_batches.clear();
 		return;
 	}
 
@@ -1126,6 +1123,11 @@ void RasterizerCanvasGLES3::_record_item_commands(const Item *p_item, RID p_rend
 					// Reset base data.
 					_update_transform_2d_to_mat2x3(base_transform * draw_transform, state.instance_data_array[r_index].world);
 					_prepare_canvas_texture(state.canvas_instance_batches[state.current_batch_index].tex, state.canvas_instance_batches[state.current_batch_index].filter, state.canvas_instance_batches[state.current_batch_index].repeat, r_index, texpixel_size);
+					state.instance_data_array[r_index].lights[0] = lights[0];
+					state.instance_data_array[r_index].lights[1] = lights[1];
+					state.instance_data_array[r_index].lights[2] = lights[2];
+					state.instance_data_array[r_index].lights[3] = lights[3];
+					state.instance_data_array[r_index].flags = base_flags;
 
 					for (uint32_t j = 0; j < 3; j++) {
 						int offset = j == 0 ? 0 : 1;
@@ -1540,7 +1542,9 @@ void RasterizerCanvasGLES3::_add_to_batch(uint32_t &r_index, bool &r_batch_broke
 
 void RasterizerCanvasGLES3::_new_batch(bool &r_batch_broken) {
 	if (state.canvas_instance_batches.size() == 0) {
-		state.canvas_instance_batches.push_back(Batch());
+		Batch new_batch;
+		new_batch.instance_buffer_index = state.current_instance_buffer_index;
+		state.canvas_instance_batches.push_back(new_batch);
 		return;
 	}
 

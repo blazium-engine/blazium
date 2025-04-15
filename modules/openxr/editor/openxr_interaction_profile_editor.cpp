@@ -31,7 +31,6 @@
 #include "openxr_interaction_profile_editor.h"
 #include "../openxr_api.h"
 #include "editor/editor_string_names.h"
-#include "openxr_action_map_editor.h"
 
 ///////////////////////////////////////////////////////////////////////////
 // Interaction profile editor base
@@ -333,9 +332,7 @@ void OpenXRInteractionProfileEditor::_update_interaction_profile() {
 	PackedStringArray requested_extensions = OpenXRAPI::get_all_requested_extensions();
 
 	// out with the old...
-	while (interaction_profile_hb->get_child_count() > 0) {
-		memdelete(interaction_profile_hb->get_child(0));
-	}
+	interaction_profile_hb->remove_all_children(true, DELETE_MODE_INSTANT_FREE);
 
 	// in with the new...
 

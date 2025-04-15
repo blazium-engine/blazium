@@ -68,10 +68,13 @@ void ProjectListItemControl::_notification(int p_what) {
 			project_unsupported_features->set_texture(get_editor_theme_icon(SNAME("NodeWarning")));
 
 			favorite_button->set_texture_normal(get_editor_theme_icon(SNAME("Favorites")));
+
 			if (project_is_missing) {
 				explore_button->set_button_icon(get_editor_theme_icon(SNAME("FileBroken")));
+#if !defined(ANDROID_ENABLED) && !defined(WEB_ENABLED)
 			} else {
 				explore_button->set_button_icon(get_editor_theme_icon(SNAME("Load")));
+#endif
 			}
 		} break;
 
@@ -190,9 +193,6 @@ void ProjectListItemControl::set_is_favorite(bool p_favorite) {
 }
 
 void ProjectListItemControl::set_is_missing(bool p_missing) {
-	if (project_is_missing == p_missing) {
-		return;
-	}
 	project_is_missing = p_missing;
 
 	if (project_is_missing) {
@@ -201,10 +201,8 @@ void ProjectListItemControl::set_is_missing(bool p_missing) {
 		explore_button->set_button_icon(get_editor_theme_icon(SNAME("FileBroken")));
 		explore_button->set_tooltip_text(TTR("Error: Project is missing on the filesystem."));
 	} else {
-		project_icon->set_modulate(Color(1, 1, 1, 1.0));
-
-		explore_button->set_button_icon(get_editor_theme_icon(SNAME("Load")));
 #if !defined(ANDROID_ENABLED) && !defined(WEB_ENABLED)
+		explore_button->set_button_icon(get_editor_theme_icon(SNAME("Load")));
 		explore_button->set_tooltip_text(TTR("Show in File Manager"));
 #else
 		// Opening the system file manager is not supported on the Android and web editors.
@@ -468,14 +466,16 @@ ProjectList::Item ProjectList::load_project_data(const String &p_path, bool p_fa
 	String conf = p_path.path_join("project.godot");
 	bool grayed = false;
 	bool missing = false;
+	bool recovery_mode = false;
 
 	Ref<ConfigFile> cf = memnew(ConfigFile);
 	Error cf_err = cf->load(conf);
 
 	int config_version = 0;
+	String cf_project_name;
 	String project_name = TTR("Unnamed Project");
 	if (cf_err == OK) {
-		String cf_project_name = cf->get_value("application", "config/name", "");
+		cf_project_name = cf->get_value("application", "config/name", "");
 		if (!cf_project_name.is_empty()) {
 			project_name = cf_project_name.xml_unescape();
 		}
@@ -551,7 +551,29 @@ ProjectList::Item ProjectList::load_project_data(const String &p_path, bool p_fa
 		ProjectManager::get_singleton()->add_new_tag(tag);
 	}
 
-	return Item(project_name, description, project_version, tags, p_path, icon, main_scene, unsupported_features, last_edited, p_favorite, grayed, missing, config_version);
+	// We can't use OS::get_user_dir() because it attempts to load paths from the current loaded project through ProjectSettings,
+	// while here we're parsing project files externally. Therefore, we have to replicate its behavior.
+	String user_dir;
+	if (!cf_project_name.is_empty()) {
+		String appname = OS::get_singleton()->get_safe_dir_name(cf_project_name);
+		bool use_custom_dir = cf->get_value("application", "config/use_custom_user_dir", false);
+		if (use_custom_dir) {
+			String custom_dir = OS::get_singleton()->get_safe_dir_name(cf->get_value("application", "config/custom_user_dir_name", ""), true);
+			if (custom_dir.is_empty()) {
+				custom_dir = appname;
+			}
+			user_dir = custom_dir;
+		} else {
+			user_dir = OS::get_singleton()->get_godot_dir_name().path_join("app_userdata").path_join(appname);
+		}
+	} else {
+		user_dir = OS::get_singleton()->get_godot_dir_name().path_join("app_userdata").path_join("[unnamed project]");
+	}
+
+	String recovery_mode_lock_file = OS::get_singleton()->get_user_data_dir(user_dir).path_join(".recovery_mode_lock");
+	recovery_mode = FileAccess::exists(recovery_mode_lock_file);
+
+	return Item(project_name, description, project_version, tags, p_path, icon, main_scene, unsupported_features, last_edited, p_favorite, grayed, missing, recovery_mode, config_version);
 }
 
 void ProjectList::_update_icons_async() {

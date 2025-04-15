@@ -32,10 +32,8 @@
 
 #include "core/config/project_settings.h"
 #include "editor/editor_node.h"
-#include "editor/editor_settings.h"
 #include "editor/gui/editor_bottom_panel.h"
 #include "editor/gui/editor_file_dialog.h"
-#include "editor/themes/editor_scale.h"
 
 HashMap<String, String> OpenXRActionMapEditor::interaction_profile_editors;
 HashMap<String, String> OpenXRActionMapEditor::binding_modifier_editors;
@@ -399,11 +397,7 @@ void OpenXRActionMapEditor::open_action_map(String p_path) {
 }
 
 void OpenXRActionMapEditor::_clear_action_map() {
-	while (actionsets_vb->get_child_count() > 0) {
-		Node *child = actionsets_vb->get_child(0);
-		actionsets_vb->remove_child(child);
-		child->queue_free();
-	}
+	actionsets_vb->remove_all_children(true, DELETE_MODE_QUEUE_FREE);
 
 	for (int i = tabs->get_tab_count() - 1; i >= 0; --i) {
 		// First tab won't be an interaction profile editor, but being thorough..

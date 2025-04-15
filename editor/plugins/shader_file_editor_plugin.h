@@ -31,13 +31,13 @@
 #ifndef SHADER_FILE_EDITOR_PLUGIN_H
 #define SHADER_FILE_EDITOR_PLUGIN_H
 
-#include "editor/code_editor.h"
 #include "editor/plugins/editor_plugin.h"
 #include "scene/gui/panel_container.h"
 #include "servers/rendering/rendering_device_binds.h"
 
 class ItemList;
 class RichTextLabel;
+class HBoxContainer;
 
 class ShaderFileEditor : public PanelContainer {
 	GDCLASS(ShaderFileEditor, PanelContainer);

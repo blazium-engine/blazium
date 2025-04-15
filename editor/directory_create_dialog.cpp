@@ -31,7 +31,6 @@
 #include "directory_create_dialog.h"
 
 #include "core/io/dir_access.h"
-#include "editor/editor_file_system.h"
 #include "editor/editor_node.h"
 #include "editor/gui/editor_validation_panel.h"
 #include "editor/themes/editor_scale.h"
@@ -128,7 +127,7 @@ void DirectoryCreateDialog::ok_pressed() {
 
 void DirectoryCreateDialog::_post_popup() {
 	ConfirmationDialog::_post_popup();
-	dir_path->grab_focus();
+	dir_path->edit();
 }
 
 void DirectoryCreateDialog::config(const String &p_base_dir, const Callable &p_accept_callback, int p_mode, const String &p_title, const String &p_default_name) {

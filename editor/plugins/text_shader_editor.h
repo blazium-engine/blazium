@@ -33,7 +33,6 @@
 
 #include "editor/code_editor.h"
 #include "editor/plugins/shader/shader_editor.h"
-#include "scene/gui/margin_container.h"
 #include "scene/resources/syntax_highlighter.h"
 #include "servers/rendering/shader_warnings.h"
 
@@ -138,6 +137,7 @@ class TextShaderEditor : public ShaderEditor {
 		BOOKMARK_GOTO_PREV,
 		BOOKMARK_REMOVE_ALL,
 		HELP_DOCS,
+		EDIT_EMOJI_AND_SYMBOL,
 	};
 
 	MenuButton *edit_menu = nullptr;

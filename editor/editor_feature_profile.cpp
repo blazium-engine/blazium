@@ -447,7 +447,7 @@ void EditorFeatureProfileManager::_profile_action(int p_action) {
 		case PROFILE_NEW: {
 			new_profile_dialog->popup_centered(Size2(240, 60) * EDSCALE);
 			new_profile_name->clear();
-			new_profile_name->grab_focus();
+			new_profile_name->edit();
 		} break;
 		case PROFILE_ERASE: {
 			String selected = _get_selected_profile();

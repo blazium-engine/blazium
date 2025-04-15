@@ -62,6 +62,24 @@
 #include <wbemcli.h>
 #include <wincrypt.h>
 
+#if defined(RD_ENABLED)
+#include "servers/rendering/rendering_device.h"
+#endif
+
+#if defined(GLES3_ENABLED)
+#include "gl_manager_windows_native.h"
+#endif
+
+#if defined(VULKAN_ENABLED)
+#include "rendering_context_driver_vulkan_windows.h"
+#endif
+#if defined(D3D12_ENABLED)
+#include "drivers/d3d12/rendering_context_driver_d3d12.h"
+#endif
+#if defined(GLES3_ENABLED)
+#include "drivers/gles3/rasterizer_gles3.h"
+#endif
+
 #ifdef DEBUG_ENABLED
 #pragma pack(push, before_imagehlp, 8)
 #include <imagehlp.h>
@@ -152,6 +170,52 @@ void RedirectIOToConsole() {
 		RedirectStream("CONOUT$", "w", stdout, STD_OUTPUT_HANDLE);
 		RedirectStream("CONOUT$", "w", stderr, STD_ERROR_HANDLE);
 	}
+}
+
+bool OS_Windows::is_using_con_wrapper() const {
+	static String exe_renames[] = {
+		".console.exe",
+		"_console.exe",
+		" console.exe",
+		"console.exe",
+		String(),
+	};
+
+	bool found_exe = false;
+	bool found_conwrap_exe = false;
+	String exe_name = get_executable_path().to_lower();
+	String exe_dir = exe_name.get_base_dir();
+	String exe_fname = exe_name.get_file().get_basename();
+
+	DWORD pids[256];
+	DWORD count = GetConsoleProcessList(&pids[0], 256);
+	for (DWORD i = 0; i < count; i++) {
+		HANDLE process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pids[i]);
+		if (process != NULL) {
+			WCHAR proc_name[MAX_PATH];
+			DWORD len = MAX_PATH;
+			if (QueryFullProcessImageNameW(process, 0, &proc_name[0], &len)) {
+				String name = String::utf16((const char16_t *)&proc_name[0], len).replace("\\", "/").to_lower();
+				if (name == exe_name) {
+					found_exe = true;
+				}
+				for (int j = 0; !exe_renames[j].is_empty(); j++) {
+					if (name == exe_dir.path_join(exe_fname + exe_renames[j])) {
+						found_conwrap_exe = true;
+					}
+				}
+			}
+			CloseHandle(process);
+			if (found_conwrap_exe && found_exe) {
+				break;
+			}
+		}
+	}
+	if (!found_exe) {
+		return true; // Unable to read console info, assume true.
+	}
+
+	return found_conwrap_exe;
 }
 
 BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType) {
@@ -723,7 +787,7 @@ bool OS_Windows::get_user_prefers_integrated_gpu() const {
 			GetCurrentApplicationUserModelIdPtr GetCurrentApplicationUserModelId = (GetCurrentApplicationUserModelIdPtr)(void *)GetProcAddress(kernel32, "GetCurrentApplicationUserModelId");
 
 			if (GetCurrentApplicationUserModelId) {
-				UINT32 length = sizeof(value_name) / sizeof(value_name[0]);
+				UINT32 length = std::size(value_name);
 				LONG result = GetCurrentApplicationUserModelId(&length, value_name);
 				if (result == ERROR_SUCCESS) {
 					is_packaged = true;
@@ -1751,14 +1815,113 @@ void OS_Windows::unset_environment(const String &p_var) const {
 	SetEnvironmentVariableW((LPCWSTR)(p_var.utf16().get_data()), nullptr); // Null to delete.
 }
 
-String OS_Windows::get_stdin_string() {
-	char buff[1024];
+String OS_Windows::get_stdin_string(int64_t p_buffer_size) {
+	if (get_stdin_type() == STD_HANDLE_INVALID) {
+		return String();
+	}
+
+	Vector<uint8_t> data;
+	data.resize(p_buffer_size);
 	DWORD count = 0;
-	if (ReadFile(GetStdHandle(STD_INPUT_HANDLE), buff, 1024, &count, nullptr)) {
-		return String::utf8((const char *)buff, count);
+	if (ReadFile(GetStdHandle(STD_INPUT_HANDLE), data.ptrw(), data.size(), &count, nullptr)) {
+		return String::utf8((const char *)data.ptr(), count);
 	}
 
 	return String();
+}
+
+PackedByteArray OS_Windows::get_stdin_buffer(int64_t p_buffer_size) {
+	Vector<uint8_t> data;
+	data.resize(p_buffer_size);
+	DWORD count = 0;
+	if (ReadFile(GetStdHandle(STD_INPUT_HANDLE), data.ptrw(), data.size(), &count, nullptr)) {
+		return data;
+	}
+
+	return PackedByteArray();
+}
+
+OS_Windows::StdHandleType OS_Windows::get_stdin_type() const {
+	HANDLE h = GetStdHandle(STD_INPUT_HANDLE);
+	if (h == 0 || h == INVALID_HANDLE_VALUE) {
+		return STD_HANDLE_INVALID;
+	}
+	DWORD ftype = GetFileType(h);
+	if (ftype == FILE_TYPE_UNKNOWN && GetLastError() != ERROR_SUCCESS) {
+		return STD_HANDLE_UNKNOWN;
+	}
+	ftype &= ~(FILE_TYPE_REMOTE);
+
+	if (ftype == FILE_TYPE_DISK) {
+		return STD_HANDLE_FILE;
+	} else if (ftype == FILE_TYPE_PIPE) {
+		return STD_HANDLE_PIPE;
+	} else {
+		DWORD conmode = 0;
+		BOOL res = GetConsoleMode(h, &conmode);
+		if (!res && (GetLastError() == ERROR_INVALID_HANDLE)) {
+			return STD_HANDLE_UNKNOWN; // Unknown character device.
+		} else {
+#ifndef WINDOWS_SUBSYSTEM_CONSOLE
+			if (!is_using_con_wrapper()) {
+				return STD_HANDLE_INVALID; // Window app can't read stdin input without werapper.
+			}
+#endif
+			return STD_HANDLE_CONSOLE;
+		}
+	}
+}
+
+OS_Windows::StdHandleType OS_Windows::get_stdout_type() const {
+	HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (h == 0 || h == INVALID_HANDLE_VALUE) {
+		return STD_HANDLE_INVALID;
+	}
+	DWORD ftype = GetFileType(h);
+	if (ftype == FILE_TYPE_UNKNOWN && GetLastError() != ERROR_SUCCESS) {
+		return STD_HANDLE_UNKNOWN;
+	}
+	ftype &= ~(FILE_TYPE_REMOTE);
+
+	if (ftype == FILE_TYPE_DISK) {
+		return STD_HANDLE_FILE;
+	} else if (ftype == FILE_TYPE_PIPE) {
+		return STD_HANDLE_PIPE;
+	} else {
+		DWORD conmode = 0;
+		BOOL res = GetConsoleMode(h, &conmode);
+		if (!res && (GetLastError() == ERROR_INVALID_HANDLE)) {
+			return STD_HANDLE_UNKNOWN; // Unknown character device.
+		} else {
+			return STD_HANDLE_CONSOLE;
+		}
+	}
+}
+
+OS_Windows::StdHandleType OS_Windows::get_stderr_type() const {
+	HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
+	if (h == 0 || h == INVALID_HANDLE_VALUE) {
+		return STD_HANDLE_INVALID;
+	}
+	DWORD ftype = GetFileType(h);
+	if (ftype == FILE_TYPE_UNKNOWN && GetLastError() != ERROR_SUCCESS) {
+		return STD_HANDLE_UNKNOWN;
+	}
+	ftype &= ~(FILE_TYPE_REMOTE);
+
+	if (ftype == FILE_TYPE_DISK) {
+		return STD_HANDLE_FILE;
+	} else if (ftype == FILE_TYPE_PIPE) {
+		return STD_HANDLE_PIPE;
+	} else {
+		DWORD conmode = 0;
+		BOOL res = GetConsoleMode(h, &conmode);
+		if (!res && (GetLastError() == ERROR_INVALID_HANDLE)) {
+			return STD_HANDLE_UNKNOWN; // Unknown character device.
+		} else {
+			return STD_HANDLE_CONSOLE;
+		}
+	}
 }
 
 Error OS_Windows::shell_open(const String &p_uri) {
@@ -2018,7 +2181,7 @@ String OS_Windows::get_temp_path() const {
 			temp_path_cache = get_config_path();
 		}
 	}
-	return temp_path_cache;
+	return temp_path_cache.replace("\\", "/").trim_suffix("/");
 }
 
 // Get properly capitalized engine name for system paths
@@ -2064,22 +2227,8 @@ String OS_Windows::get_system_dir(SystemDir p_dir, bool p_shared_storage) const 
 	return path;
 }
 
-String OS_Windows::get_user_data_dir() const {
-	String appname = get_safe_dir_name(GLOBAL_GET("application/config/name"));
-	if (!appname.is_empty()) {
-		bool use_custom_dir = GLOBAL_GET("application/config/use_custom_user_dir");
-		if (use_custom_dir) {
-			String custom_dir = get_safe_dir_name(GLOBAL_GET("application/config/custom_user_dir_name"), true);
-			if (custom_dir.is_empty()) {
-				custom_dir = appname;
-			}
-			return get_data_path().path_join(custom_dir).replace("\\", "/");
-		} else {
-			return get_data_path().path_join(get_godot_dir_name()).path_join("app_userdata").path_join(appname).replace("\\", "/");
-		}
-	}
-
-	return get_data_path().path_join(get_godot_dir_name()).path_join("app_userdata").path_join("[unnamed project]");
+String OS_Windows::get_user_data_dir(const String &p_user_dir) const {
+	return get_data_path().path_join(p_user_dir).replace("\\", "/");
 }
 
 String OS_Windows::get_unique_id() const {
@@ -2191,23 +2340,124 @@ void OS_Windows::add_frame_delay(bool p_can_draw) {
 		target_ticks += dynamic_delay;
 		uint64_t current_ticks = get_ticks_usec();
 
-		if (target_ticks > current_ticks + delay_resolution) {
-			uint64_t delay_time = target_ticks - current_ticks - delay_resolution;
-			// Make sure we always sleep for a multiple of delay_resolution to avoid overshooting.
-			// Refer to: https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-sleep#remarks
-			delay_time = (delay_time / delay_resolution) * delay_resolution;
-			if (delay_time > 0) {
-				delay_usec(delay_time);
+		if (!is_in_low_processor_usage_mode()) {
+			if (target_ticks > current_ticks + delay_resolution) {
+				uint64_t delay_time = target_ticks - current_ticks - delay_resolution;
+				// Make sure we always sleep for a multiple of delay_resolution to avoid overshooting.
+				// Refer to: https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-sleep#remarks
+				delay_time = (delay_time / delay_resolution) * delay_resolution;
+				if (delay_time > 0) {
+					delay_usec(delay_time);
+				}
 			}
-		}
-		// Busy wait for the remainder of time.
-		while (get_ticks_usec() < target_ticks) {
-			YieldProcessor();
+			// Busy wait for the remainder of time.
+			while (get_ticks_usec() < target_ticks) {
+				YieldProcessor();
+			}
+		} else {
+			// Use a more relaxed approach for low processor usage mode.
+			// This has worse frame pacing but is more power efficient.
+			if (current_ticks < target_ticks) {
+				delay_usec(target_ticks - current_ticks);
+			}
 		}
 
 		current_ticks = get_ticks_usec();
 		target_ticks = MIN(MAX(target_ticks, current_ticks - dynamic_delay), current_ticks + dynamic_delay);
 	}
+}
+
+bool OS_Windows::_test_create_rendering_device(const String &p_display_driver) const {
+	// Tests Rendering Device creation.
+
+	bool ok = false;
+#if defined(RD_ENABLED)
+	Error err;
+	RenderingContextDriver *rcd = nullptr;
+
+#if defined(VULKAN_ENABLED)
+	rcd = memnew(RenderingContextDriverVulkan);
+#endif
+#ifdef D3D12_ENABLED
+	if (rcd == nullptr) {
+		rcd = memnew(RenderingContextDriverD3D12);
+	}
+#endif
+	if (rcd != nullptr) {
+		err = rcd->initialize();
+		if (err == OK) {
+			RenderingDevice *rd = memnew(RenderingDevice);
+			err = rd->initialize(rcd);
+			memdelete(rd);
+			rd = nullptr;
+			if (err == OK) {
+				ok = true;
+			}
+		}
+		memdelete(rcd);
+		rcd = nullptr;
+	}
+#endif
+
+	return ok;
+}
+
+bool OS_Windows::_test_create_rendering_device_and_gl(const String &p_display_driver) const {
+	// Tests OpenGL context and Rendering Device simultaneous creation. This function is expected to crash on some NVIDIA drivers.
+
+	WNDCLASSEXW wc_probe;
+	memset(&wc_probe, 0, sizeof(WNDCLASSEXW));
+	wc_probe.cbSize = sizeof(WNDCLASSEXW);
+	wc_probe.style = CS_OWNDC | CS_DBLCLKS;
+	wc_probe.lpfnWndProc = (WNDPROC)::DefWindowProcW;
+	wc_probe.cbClsExtra = 0;
+	wc_probe.cbWndExtra = 0;
+	wc_probe.hInstance = GetModuleHandle(nullptr);
+	wc_probe.hIcon = LoadIcon(nullptr, IDI_WINLOGO);
+	wc_probe.hCursor = nullptr;
+	wc_probe.hbrBackground = nullptr;
+	wc_probe.lpszMenuName = nullptr;
+	wc_probe.lpszClassName = L"Engine probe window";
+
+	if (!RegisterClassExW(&wc_probe)) {
+		return false;
+	}
+
+	HWND hWnd = CreateWindowExW(WS_EX_WINDOWEDGE, L"Engine probe window", L"", WS_OVERLAPPEDWINDOW, 0, 0, 800, 600, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+	if (!hWnd) {
+		UnregisterClassW(L"Engine probe window", GetModuleHandle(nullptr));
+		return false;
+	}
+
+	bool ok = true;
+#ifdef GLES3_ENABLED
+	GLManagerNative_Windows *test_gl_manager_native = memnew(GLManagerNative_Windows);
+	if (test_gl_manager_native->window_create(DisplayServer::MAIN_WINDOW_ID, hWnd, GetModuleHandle(nullptr), 800, 600) == OK) {
+		RasterizerGLES3::make_current(true);
+	} else {
+		ok = false;
+	}
+#endif
+
+	MSG msg = {};
+	while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
+		TranslateMessage(&msg);
+		DispatchMessageW(&msg);
+	}
+
+	if (ok) {
+		ok = _test_create_rendering_device(p_display_driver);
+	}
+
+#ifdef GLES3_ENABLED
+	if (test_gl_manager_native) {
+		memdelete(test_gl_manager_native);
+	}
+#endif
+
+	DestroyWindow(hWnd);
+	UnregisterClassW(L"Engine probe window", GetModuleHandle(nullptr));
+	return ok;
 }
 
 OS_Windows::OS_Windows(HINSTANCE _hInstance) {

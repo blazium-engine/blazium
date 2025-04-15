@@ -30,12 +30,10 @@
 
 #include "editor_build_profile.h"
 
-#include "core/io/dir_access.h"
 #include "core/io/json.h"
 #include "editor/editor_file_system.h"
 #include "editor/editor_node.h"
 #include "editor/editor_paths.h"
-#include "editor/editor_property_name_processor.h"
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
 #include "editor/gui/editor_file_dialog.h"

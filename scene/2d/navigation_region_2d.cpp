@@ -30,7 +30,7 @@
 
 #include "navigation_region_2d.h"
 
-#include "core/math/geometry_2d.h"
+#include "core/math/random_pcg.h"
 #include "scene/resources/world_2d.h"
 #include "servers/navigation_server_2d.h"
 
@@ -164,14 +164,14 @@ void NavigationRegion2D::_notification(int p_what) {
 
 		case NOTIFICATION_VISIBILITY_CHANGED: {
 #ifdef DEBUG_ENABLED
-			_set_debug_visibile(is_visible_in_tree());
+			_set_debug_visible(is_visible_in_tree());
 #endif // DEBUG_ENABLED
 		} break;
 
 		case NOTIFICATION_EXIT_TREE: {
 			_region_exit_navigation_map();
 #ifdef DEBUG_ENABLED
-			_set_debug_visibile(false);
+			_set_debug_visible(false);
 #endif // DEBUG_ENABLED
 		} break;
 
@@ -198,24 +198,12 @@ void NavigationRegion2D::set_navigation_polygon(const Ref<NavigationPolygon> &p_
 	}
 
 	navigation_polygon = p_navigation_polygon;
-#ifdef DEBUG_ENABLED
-	debug_mesh_dirty = true;
-#endif // DEBUG_ENABLED
-	NavigationServer2D::get_singleton()->region_set_navigation_polygon(region, p_navigation_polygon);
 
 	if (navigation_polygon.is_valid()) {
 		navigation_polygon->connect_changed(callable_mp(this, &NavigationRegion2D::_navigation_polygon_changed));
 	}
 
-#ifdef DEBUG_ENABLED
-	if (navigation_polygon.is_null()) {
-		_set_debug_visibile(false);
-	}
-#endif // DEBUG_ENABLED
-
 	_navigation_polygon_changed();
-
-	update_configuration_warnings();
 }
 
 Ref<NavigationPolygon> NavigationRegion2D::get_navigation_polygon() const {
@@ -243,7 +231,7 @@ RID NavigationRegion2D::get_navigation_map() const {
 
 void NavigationRegion2D::bake_navigation_polygon(bool p_on_thread) {
 	ERR_FAIL_COND_MSG(!Thread::is_main_thread(), "The SceneTree can only be parsed on the main thread. Call this function from the main thread or use call_deferred().");
-	ERR_FAIL_COND_MSG(!navigation_polygon.is_valid(), "Baking the navigation polygon requires a valid `NavigationPolygon` resource.");
+	ERR_FAIL_COND_MSG(navigation_polygon.is_null(), "Baking the navigation polygon requires a valid `NavigationPolygon` resource.");
 
 	Ref<NavigationMeshSourceGeometryData2D> source_geometry_data;
 	source_geometry_data.instantiate();
@@ -251,19 +239,18 @@ void NavigationRegion2D::bake_navigation_polygon(bool p_on_thread) {
 	NavigationServer2D::get_singleton()->parse_source_geometry_data(navigation_polygon, source_geometry_data, this);
 
 	if (p_on_thread) {
-		NavigationServer2D::get_singleton()->bake_from_source_geometry_data_async(navigation_polygon, source_geometry_data, callable_mp(this, &NavigationRegion2D::_bake_finished).bind(navigation_polygon));
+		NavigationServer2D::get_singleton()->bake_from_source_geometry_data_async(navigation_polygon, source_geometry_data, callable_mp(this, &NavigationRegion2D::_bake_finished));
 	} else {
-		NavigationServer2D::get_singleton()->bake_from_source_geometry_data(navigation_polygon, source_geometry_data, callable_mp(this, &NavigationRegion2D::_bake_finished).bind(navigation_polygon));
+		NavigationServer2D::get_singleton()->bake_from_source_geometry_data(navigation_polygon, source_geometry_data, callable_mp(this, &NavigationRegion2D::_bake_finished));
 	}
 }
 
-void NavigationRegion2D::_bake_finished(Ref<NavigationPolygon> p_navigation_polygon) {
+void NavigationRegion2D::_bake_finished() {
 	if (!Thread::is_main_thread()) {
-		callable_mp(this, &NavigationRegion2D::_bake_finished).call_deferred(p_navigation_polygon);
+		callable_mp(this, &NavigationRegion2D::_bake_finished).call_deferred();
 		return;
 	}
 
-	set_navigation_polygon(p_navigation_polygon);
 	emit_signal(SNAME("bake_finished"));
 }
 
@@ -272,12 +259,25 @@ bool NavigationRegion2D::is_baking() const {
 }
 
 void NavigationRegion2D::_navigation_polygon_changed() {
+	_update_bounds();
+
+	NavigationServer2D::get_singleton()->region_set_navigation_polygon(region, navigation_polygon);
+
+#ifdef DEBUG_ENABLED
+	debug_mesh_dirty = true;
+
+	if (navigation_polygon.is_null()) {
+		_set_debug_visible(false);
+	}
+
 	if (is_inside_tree() && (Engine::get_singleton()->is_editor_hint() || get_tree()->is_debugging_navigation_hint())) {
 		queue_redraw();
 	}
-	if (navigation_polygon.is_valid()) {
-		NavigationServer2D::get_singleton()->region_set_navigation_polygon(region, navigation_polygon);
-	}
+#endif // DEBUG_ENABLED
+
+	emit_signal(SNAME("navigation_polygon_changed"));
+
+	update_configuration_warnings();
 }
 
 #ifdef DEBUG_ENABLED
@@ -300,7 +300,7 @@ PackedStringArray NavigationRegion2D::get_configuration_warnings() const {
 	PackedStringArray warnings = Node2D::get_configuration_warnings();
 
 	if (is_visible_in_tree() && is_inside_tree()) {
-		if (!navigation_polygon.is_valid()) {
+		if (navigation_polygon.is_null()) {
 			warnings.push_back(RTR("A NavigationMesh resource must be set or created for this node to work. Please set a property or draw a polygon."));
 		}
 	}
@@ -341,6 +341,8 @@ void NavigationRegion2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_baking"), &NavigationRegion2D::is_baking);
 
 	ClassDB::bind_method(D_METHOD("_navigation_polygon_changed"), &NavigationRegion2D::_navigation_polygon_changed);
+
+	ClassDB::bind_method(D_METHOD("get_bounds"), &NavigationRegion2D::get_bounds);
 
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "navigation_polygon", PROPERTY_HINT_RESOURCE_TYPE, "NavigationPolygon"), "set_navigation_polygon", "get_navigation_polygon");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "enabled"), "set_enabled", "is_enabled");
@@ -446,7 +448,7 @@ void NavigationRegion2D::_region_update_transform() {
 #ifdef DEBUG_ENABLED
 void NavigationRegion2D::_update_debug_mesh() {
 	if (!is_inside_tree()) {
-		_set_debug_visibile(false);
+		_set_debug_visible(false);
 		return;
 	}
 
@@ -641,7 +643,7 @@ void NavigationRegion2D::_update_debug_baking_rect() {
 #endif // DEBUG_ENABLED
 
 #ifdef DEBUG_ENABLED
-void NavigationRegion2D::_set_debug_visibile(bool p_visible) {
+void NavigationRegion2D::_set_debug_visible(bool p_visible) {
 	RenderingServer *rs = RenderingServer::get_singleton();
 	ERR_FAIL_NULL(rs);
 	if (debug_instance_rid.is_valid()) {
@@ -649,3 +651,26 @@ void NavigationRegion2D::_set_debug_visibile(bool p_visible) {
 	}
 }
 #endif // DEBUG_ENABLED
+
+void NavigationRegion2D::_update_bounds() {
+	if (navigation_polygon.is_null()) {
+		bounds = Rect2();
+		return;
+	}
+
+	const Vector<Vector2> &vertices = navigation_polygon->get_vertices();
+	if (vertices.is_empty()) {
+		bounds = Rect2();
+		return;
+	}
+
+	const Transform2D gt = is_inside_tree() ? get_global_transform() : get_transform();
+
+	Rect2 new_bounds;
+	new_bounds.position = gt.xform(vertices[0]);
+
+	for (const Vector2 &vertex : vertices) {
+		new_bounds.expand_to(gt.xform(vertex));
+	}
+	bounds = new_bounds;
+}

@@ -31,7 +31,6 @@
 #include "packed_scene.h"
 
 #include "core/config/engine.h"
-#include "core/config/project_settings.h"
 #include "core/io/missing_resource.h"
 #include "core/io/resource_loader.h"
 #include "core/templates/local_vector.h"
@@ -195,7 +194,7 @@ Node *SceneState::instantiate(GenEditState p_edit_state) const {
 		if (i == 0 && base_scene_idx >= 0) {
 			// Scene inheritance on root node.
 			Ref<PackedScene> sdata = props[base_scene_idx];
-			ERR_FAIL_COND_V(!sdata.is_valid(), nullptr);
+			ERR_FAIL_COND_V(sdata.is_null(), nullptr);
 			node = sdata->instantiate(p_edit_state == GEN_EDIT_STATE_DISABLED ? PackedScene::GEN_EDIT_STATE_DISABLED : PackedScene::GEN_EDIT_STATE_INSTANCE); //only main gets main edit state
 			ERR_FAIL_NULL_V(node, nullptr);
 			if (p_edit_state != GEN_EDIT_STATE_DISABLED) {
@@ -329,7 +328,7 @@ Node *SceneState::instantiate(GenEditState p_edit_state) const {
 
 						DeferredNodePathProperties dnp;
 						dnp.value = props[nprops[j].value];
-						dnp.base = node;
+						dnp.base = node->get_instance_id();
 						dnp.property = snames[name_idx];
 						deferred_node_paths.push_back(dnp);
 						continue;
@@ -526,21 +525,23 @@ Node *SceneState::instantiate(GenEditState p_edit_state) const {
 
 	for (const DeferredNodePathProperties &dnp : deferred_node_paths) {
 		// Replace properties stored as NodePaths with actual Nodes.
+		Node *base = Object::cast_to<Node>(ObjectDB::get_instance(dnp.base));
+		ERR_CONTINUE_EDMSG(!base, vformat("Failed to set deferred property '%s' as the base node disappeared.", dnp.property));
 		if (dnp.value.get_type() == Variant::ARRAY) {
 			Array paths = dnp.value;
 
 			bool valid;
-			Array array = dnp.base->get(dnp.property, &valid);
-			ERR_CONTINUE_EDMSG(!valid, vformat("Failed to get property '%s' from node '%s'.", dnp.property, dnp.base->get_name()));
+			Array array = base->get(dnp.property, &valid);
+			ERR_CONTINUE_EDMSG(!valid, vformat("Failed to get property '%s' from node '%s'.", dnp.property, base->get_name()));
 			array = array.duplicate();
 
 			array.resize(paths.size());
 			for (int i = 0; i < array.size(); i++) {
-				array.set(i, dnp.base->get_node_or_null(paths[i]));
+				array.set(i, base->get_node_or_null(paths[i]));
 			}
-			dnp.base->set(dnp.property, array);
+			base->set(dnp.property, array);
 		} else {
-			dnp.base->set(dnp.property, dnp.base->get_node_or_null(dnp.value));
+			base->set(dnp.property, base->get_node_or_null(dnp.value));
 		}
 	}
 
@@ -728,7 +729,7 @@ Error SceneState::_parse_node(Node *p_owner, Node *p_node, int p_parent_idx, Has
 		} else {
 			//must instance ourselves
 			Ref<PackedScene> instance = ResourceLoader::load(p_node->get_scene_file_path());
-			if (!instance.is_valid()) {
+			if (instance.is_null()) {
 				return ERR_CANT_OPEN;
 			}
 
@@ -2050,7 +2051,7 @@ void PackedScene::reload_from_file() {
 	}
 
 	Ref<PackedScene> s = ResourceLoader::load(ResourceLoader::path_remap(path), get_class(), ResourceFormatLoader::CACHE_MODE_IGNORE);
-	if (!s.is_valid()) {
+	if (s.is_null()) {
 		return;
 	}
 

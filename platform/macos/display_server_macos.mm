@@ -778,6 +778,7 @@ bool DisplayServerMacOS::has_feature(Feature p_feature) const {
 		case FEATURE_NATIVE_DIALOG_INPUT:
 		case FEATURE_NATIVE_DIALOG_FILE:
 		case FEATURE_NATIVE_DIALOG_FILE_EXTRA:
+		case FEATURE_NATIVE_DIALOG_FILE_MIME:
 		case FEATURE_IME:
 		case FEATURE_WINDOW_TRANSPARENCY:
 		case FEATURE_HIDPI:
@@ -792,6 +793,7 @@ bool DisplayServerMacOS::has_feature(Feature p_feature) const {
 		case FEATURE_NATIVE_HELP:
 		case FEATURE_WINDOW_DRAG:
 		case FEATURE_SCREEN_EXCLUDE_FROM_CAPTURE:
+		case FEATURE_EMOJI_AND_SYMBOL_PICKER:
 			return true;
 		default: {
 		}
@@ -1899,6 +1901,8 @@ void DisplayServerMacOS::delete_sub_window(WindowID p_id) {
 
 	[wd.window_object setContentView:nil];
 	[wd.window_object close];
+
+	mouse_enter_window(get_window_at_screen_position(mouse_get_position()));
 }
 
 void DisplayServerMacOS::window_set_rect_changed_callback(const Callable &p_callable, WindowID p_window) {
@@ -3173,6 +3177,10 @@ Key DisplayServerMacOS::keyboard_get_label_from_physical(Key p_keycode) const {
 	Key keycode_no_mod = p_keycode & KeyModifierMask::CODE_MASK;
 	unsigned int macos_keycode = KeyMappingMacOS::unmap_key(keycode_no_mod);
 	return (Key)(KeyMappingMacOS::remap_key(macos_keycode, 0, true) | modifiers);
+}
+
+void DisplayServerMacOS::show_emoji_and_symbol_picker() const {
+	[[NSApplication sharedApplication] orderFrontCharacterPalette:nil];
 }
 
 void DisplayServerMacOS::process_events() {

@@ -31,9 +31,8 @@
 #ifndef DYNAMIC_FONT_IMPORT_SETTINGS_H
 #define DYNAMIC_FONT_IMPORT_SETTINGS_H
 
-#include "editor/import/resource_importer_dynamic_font.h"
+#include "core/io/resource_importer.h"
 
-#include "core/templates/rb_set.h"
 #include "scene/gui/dialogs.h"
 
 class DynamicFontImportSettingsDialog;
@@ -85,6 +84,8 @@ class DynamicFontImportSettingsDialog : public ConfirmationDialog {
 	Ref<DynamicFontImportSettingsData> import_settings_data;
 	List<ResourceImporter::ImportOption> options_variations;
 	List<ResourceImporter::ImportOption> options_general;
+
+	bool is_pixel = false;
 
 	// Root layout
 	Label *label_warn = nullptr;

@@ -49,6 +49,7 @@
 #include "tests/core/io/test_ip.h"
 #include "tests/core/io/test_json.h"
 #include "tests/core/io/test_json_native.h"
+#include "tests/core/io/test_logger.h"
 #include "tests/core/io/test_marshalls.h"
 #include "tests/core/io/test_packet_peer.h"
 #include "tests/core/io/test_pck_packer.h"
@@ -169,6 +170,7 @@
 
 #include "tests/scene/test_arraymesh.h"
 #include "tests/scene/test_camera_3d.h"
+#include "tests/scene/test_gltf_document.h"
 #include "tests/scene/test_height_map_shape_3d.h"
 #include "tests/scene/test_path_3d.h"
 #include "tests/scene/test_path_follow_3d.h"
@@ -302,7 +304,7 @@ struct GodotTestCaseListener : public doctest::IReporter {
 			// So we have to do this for each test case. Also make sure there is
 			// no residual theme from something else.
 			ThemeDB::get_singleton()->finalize_theme();
-			ThemeDB::get_singleton()->initialize_theme_noproject();
+			ThemeDB::get_singleton()->initialize_theme();
 
 #ifndef _3D_DISABLED
 			physics_server_3d = PhysicsServer3DManager::get_singleton()->new_default_server();

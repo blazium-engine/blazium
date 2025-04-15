@@ -131,22 +131,58 @@ void EditorFileDialog::_native_dialog_cb(bool p_ok, const Vector<String> &p_file
 		emit_signal(SNAME("files_selected"), files);
 	} else {
 		if (mode == FILE_MODE_SAVE_FILE) {
-			if (p_filter >= 0 && p_filter < filters.size()) {
-				bool valid = false;
-				String flt = filters[p_filter].get_slice(";", 0);
-				int filter_slice_count = flt.get_slice_count(",");
-				for (int j = 0; j < filter_slice_count; j++) {
-					String str = (flt.get_slice(",", j).strip_edges());
-					if (f.matchn(str)) {
-						valid = true;
+			bool valid = false;
+
+			if (p_filter == filter->get_item_count() - 1) {
+				valid = true; // Match none.
+			} else if (filters.size() > 1 && p_filter == 0) {
+				// Match all filters.
+				for (int i = 0; i < filters.size(); i++) {
+					String flt = filters[i].get_slice(";", 0);
+					for (int j = 0; j < flt.get_slice_count(","); j++) {
+						String str = flt.get_slice(",", j).strip_edges();
+						if (f.matchn(str)) {
+							valid = true;
+							break;
+						}
+					}
+					if (valid) {
 						break;
 					}
 				}
-
-				if (!valid && filter_slice_count > 0) {
-					String str = (flt.get_slice(",", 0).strip_edges());
-					f += str.substr(1, str.length() - 1);
+			} else {
+				int idx = p_filter;
+				if (filters.size() > 1) {
+					idx--;
 				}
+				if (idx >= 0 && idx < filters.size()) {
+					String flt = filters[idx].get_slice(";", 0);
+					int filter_slice_count = flt.get_slice_count(",");
+					for (int j = 0; j < filter_slice_count; j++) {
+						String str = (flt.get_slice(",", j).strip_edges());
+						if (f.matchn(str)) {
+							valid = true;
+							break;
+						}
+					}
+
+					if (!valid && filter_slice_count > 0) {
+						String str = (flt.get_slice(",", 0).strip_edges());
+						f += str.substr(1, str.length() - 1);
+						file->set_text(f.get_file());
+						valid = true;
+					}
+				} else {
+					valid = true;
+				}
+			}
+
+			// Add first extension of filter if no valid extension is found.
+			if (!valid) {
+				int idx = p_filter;
+				String flt = filters[idx].get_slice(";", 0);
+				String ext = flt.get_slice(",", 0).strip_edges().get_extension();
+				f += "." + ext;
 			}
 			emit_signal(SNAME("file_selected"), f);
 		} else if ((mode == FILE_MODE_OPEN_ANY || mode == FILE_MODE_OPEN_FILE) && dir_access->file_exists(f)) {
@@ -166,7 +202,7 @@ void EditorFileDialog::_focus_file_text() {
 	int lp = file->get_text().rfind_char('.');
 	if (lp != -1) {
 		file->select(0, lp);
-		file->grab_focus();
+		file->edit();
 	}
 }
 
@@ -333,7 +369,7 @@ void EditorFileDialog::shortcut_input(const Ref<InputEvent> &p_event) {
 				handled = true;
 			}
 			if (ED_IS_SHORTCUT("file_dialog/focus_path", p_event)) {
-				dir->grab_focus();
+				dir->edit();
 				dir->select_all();
 				handled = true;
 			}
@@ -408,7 +444,14 @@ void EditorFileDialog::update_dir() {
 }
 
 void EditorFileDialog::_dir_submitted(const String &p_dir) {
-	dir_access->change_dir(p_dir);
+	String new_dir = p_dir;
+#ifdef WINDOWS_ENABLED
+	if (drives->is_visible() && !new_dir.is_network_share_path() && new_dir.is_absolute_path() && new_dir.find(":/") == -1 && new_dir.find(":\\") == -1) {
+		// Non network path without X:/ prefix on Windows, add drive letter.
+		new_dir = drives->get_item_text(drives->get_selected()).path_join(new_dir);
+	}
+#endif
+	dir_access->change_dir(new_dir);
 	invalidate();
 	update_dir();
 	_push_history();
@@ -436,7 +479,7 @@ void EditorFileDialog::_post_popup() {
 	set_current_dir(current);
 
 	if (mode == FILE_MODE_SAVE_FILE) {
-		file->grab_focus();
+		file->edit();
 	} else {
 		item_list->grab_focus();
 	}
@@ -569,9 +612,9 @@ void EditorFileDialog::_action_pressed() {
 		bool valid = false;
 
 		if (filter->get_selected() == filter->get_item_count() - 1) {
-			valid = true; // match none
+			valid = true; // Match none.
 		} else if (filters.size() > 1 && filter->get_selected() == 0) {
-			// match all filters
+			// Match all filters.
 			for (int i = 0; i < filters.size(); i++) {
 				String flt = filters[i].get_slice(";", 0);
 				for (int j = 0; j < flt.get_slice_count(","); j++) {
@@ -592,8 +635,8 @@ void EditorFileDialog::_action_pressed() {
 			}
 			if (idx >= 0 && idx < filters.size()) {
 				String flt = filters[idx].get_slice(";", 0);
-				int filterSliceCount = flt.get_slice_count(",");
-				for (int j = 0; j < filterSliceCount; j++) {
+				int filter_slice_count = flt.get_slice_count(",");
+				for (int j = 0; j < filter_slice_count; j++) {
 					String str = (flt.get_slice(",", j).strip_edges());
 					if (f.matchn(str)) {
 						valid = true;
@@ -601,7 +644,7 @@ void EditorFileDialog::_action_pressed() {
 					}
 				}
 
-				if (!valid && filterSliceCount > 0) {
+				if (!valid && filter_slice_count > 0) {
 					String str = (flt.get_slice(",", 0).strip_edges());
 					f += str.substr(1, str.length() - 1);
 					_request_single_thumbnail(get_current_dir().path_join(f.get_file()));
@@ -1209,50 +1252,83 @@ void EditorFileDialog::update_filters() {
 
 	if (filters.size() > 1) {
 		String all_filters;
+		String all_mime;
 		String all_filters_full;
+		String all_mime_full;
 
 		const int max_filters = 5;
 
+		// "All Recognized" display name.
 		for (int i = 0; i < MIN(max_filters, filters.size()); i++) {
 			String flt = filters[i].get_slicec(';', 0).strip_edges();
-			if (i > 0) {
+			if (!all_filters.is_empty() && !flt.is_empty()) {
 				all_filters += ", ";
 			}
 			all_filters += flt;
+
+			String mime = filters[i].get_slicec(';', 2).strip_edges();
+			if (!all_mime.is_empty() && !mime.is_empty()) {
+				all_mime += ", ";
+			}
+			all_mime += mime;
 		}
+
+		// "All Recognized" filter.
 		for (int i = 0; i < filters.size(); i++) {
 			String flt = filters[i].get_slicec(';', 0).strip_edges();
-			if (i > 0) {
+			if (!all_filters_full.is_empty() && !flt.is_empty()) {
 				all_filters_full += ",";
 			}
 			all_filters_full += flt;
+
+			String mime = filters[i].get_slicec(';', 2).strip_edges();
+			if (!all_mime_full.is_empty() && !mime.is_empty()) {
+				all_mime_full += ",";
+			}
+			all_mime_full += mime;
 		}
+
+		String native_all_name;
+		if (DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_NATIVE_DIALOG_FILE_MIME)) {
+			native_all_name += all_filters;
+		}
+		if (!native_all_name.is_empty()) {
+			native_all_name += ", ";
+		}
+		native_all_name += all_mime;
 
 		if (max_filters < filters.size()) {
 			all_filters += ", ...";
+			native_all_name += ", ...";
 		}
 
-		String f = TTR("All Recognized") + " (" + all_filters + ")";
-		filter->add_item(f);
-		processed_filters.push_back(all_filters_full + ";" + f);
+		filter->add_item(atr(ETR("All Recognized")) + " (" + all_filters + ")");
+		processed_filters.push_back(all_filters_full + ";" + atr(ETR("All Recognized")) + " (" + native_all_name + ")" + ";" + all_mime_full);
 	}
 	for (int i = 0; i < filters.size(); i++) {
 		String flt = filters[i].get_slicec(';', 0).strip_edges();
-		String desc = filters[i].get_slice(";", 1).strip_edges();
-		if (desc.length()) {
-			String f = desc + " (" + flt + ")";
-			filter->add_item(f);
-			processed_filters.push_back(flt + ";" + f);
+		String desc = filters[i].get_slicec(';', 1).strip_edges();
+		String mime = filters[i].get_slicec(';', 2).strip_edges();
+		String native_name;
+		if (DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_NATIVE_DIALOG_FILE_MIME)) {
+			native_name += flt;
+		}
+		if (!native_name.is_empty() && !mime.is_empty()) {
+			native_name += ", ";
+		}
+		native_name += mime;
+		if (!desc.is_empty()) {
+			filter->add_item(atr(desc) + " (" + flt + ")");
+			processed_filters.push_back(flt + ";" + atr(desc) + " (" + native_name + ");" + mime);
 		} else {
-			String f = "(" + flt + ")";
-			filter->add_item(f);
-			processed_filters.push_back(flt + ";" + f);
+			filter->add_item("(" + flt + ")");
+			processed_filters.push_back(flt + ";(" + native_name + ");" + mime);
 		}
 	}
 
 	String f = TTR("All Files") + " (*.*)";
 	filter->add_item(f);
-	processed_filters.push_back("*.*;" + f);
+	processed_filters.push_back("*.*;" + f + ";application/octet-stream");
 }
 
 void EditorFileDialog::clear_filters() {
@@ -1490,11 +1566,11 @@ void EditorFileDialog::_make_dir_confirm() {
 
 void EditorFileDialog::_make_dir() {
 	makedialog->popup_centered(Size2(250, 80) * EDSCALE);
-	makedirname->grab_focus();
+	makedirname->edit();
 }
 
 void EditorFileDialog::_focus_filter_box() {
-	filter_box->grab_focus();
+	filter_box->edit();
 	filter_box->select_all();
 }
 
@@ -1502,9 +1578,11 @@ void EditorFileDialog::_filter_changed(const String &p_text) {
 	search_string = p_text;
 	invalidate();
 
-	item_list->deselect_all();
-	if (item_list->get_item_count() > 0) {
-		item_list->call_deferred("select", 0);
+	if (item_list->get_selected_items().size() > 0) {
+		item_list->deselect_all();
+		if (item_list->get_item_count() > 0) {
+			item_list->call_deferred("select", 0);
+		}
 	}
 }
 
@@ -1948,19 +2026,10 @@ void EditorFileDialog::_update_option_controls() {
 	if (!options_dirty) {
 		return;
 	}
+
 	options_dirty = false;
-
-	while (flow_checkbox_options->get_child_count() > 0) {
-		Node *child = flow_checkbox_options->get_child(0);
-		flow_checkbox_options->remove_child(child);
-		child->queue_free();
-	}
-	while (grid_select_options->get_child_count() > 0) {
-		Node *child = grid_select_options->get_child(0);
-		grid_select_options->remove_child(child);
-		child->queue_free();
-	}
-
+	flow_checkbox_options->remove_all_children(true, DELETE_MODE_QUEUE_FREE);
+	grid_select_options->remove_all_children(true, DELETE_MODE_QUEUE_FREE);
 	selected_options.clear();
 
 	for (const EditorFileDialog::Option &opt : options) {
@@ -2187,7 +2256,7 @@ void EditorFileDialog::set_show_search_filter(bool p_show) {
 		return;
 	}
 	if (p_show) {
-		filter_box->grab_focus();
+		filter_box->edit();
 	} else {
 		search_string.clear();
 		filter_box->clear();

@@ -45,6 +45,7 @@
 #include "core/io/config_file.h"
 #include "core/io/dir_access.h"
 #include "core/io/dtls_server.h"
+#include "core/io/file_access_encrypted.h"
 #include "core/io/http_client.h"
 #include "core/io/image_loader.h"
 #include "core/io/json.h"
@@ -304,7 +305,7 @@ void register_core_types() {
 void register_core_settings() {
 	// Since in register core types, globals may not be present.
 	GLOBAL_DEF(PropertyInfo(Variant::INT, "network/limits/tcp/connect_timeout_seconds", PROPERTY_HINT_RANGE, "1,1800,1"), (30));
-	GLOBAL_DEF_RST(PropertyInfo(Variant::INT, "network/limits/packet_peer_stream/max_buffer_po2", PROPERTY_HINT_RANGE, "0,64,1,or_greater"), (16));
+	GLOBAL_DEF_RST(PropertyInfo(Variant::INT, "network/limits/packet_peer_stream/max_buffer_po2", PROPERTY_HINT_RANGE, "8,64,1,or_greater"), (16));
 	GLOBAL_DEF(PropertyInfo(Variant::STRING, "network/tls/certificate_bundle_override", PROPERTY_HINT_FILE, "*.crt"), "");
 
 	GLOBAL_DEF("threading/worker_pool/max_threads", -1);
@@ -454,6 +455,8 @@ void unregister_core_types() {
 	ClassDB::cleanup();
 	CoreStringNames::free();
 	StringName::cleanup();
+
+	FileAccessEncrypted::deinitialize();
 
 	OS::get_singleton()->benchmark_end_measure("Core", "Unregister Types");
 }

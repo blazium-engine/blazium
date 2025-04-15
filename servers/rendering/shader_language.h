@@ -60,6 +60,7 @@ public:
 		TK_FLOAT_CONSTANT,
 		TK_INT_CONSTANT,
 		TK_UINT_CONSTANT,
+		TK_STRING_CONSTANT,
 		TK_TYPE_VOID,
 		TK_TYPE_BOOL,
 		TK_TYPE_BVEC2,
@@ -177,6 +178,7 @@ public:
 		TK_HINT_ANISOTROPY_TEXTURE,
 		TK_HINT_SOURCE_COLOR,
 		TK_HINT_RANGE,
+		TK_HINT_ENUM,
 		TK_HINT_INSTANCE_INDEX,
 		TK_HINT_SCREEN_TEXTURE,
 		TK_HINT_NORMAL_ROUGHNESS_TEXTURE,
@@ -629,6 +631,28 @@ public:
 			int array_size = 0;
 			TkPos tkpos;
 
+			uint32_t get_size() const {
+				uint32_t size = 1;
+				if (array_size > 0) {
+					size = (uint32_t)array_size;
+				}
+
+				switch (type) {
+					case TYPE_MAT2:
+						size *= 2;
+						break;
+					case TYPE_MAT3:
+						size *= 3;
+						break;
+					case TYPE_MAT4:
+						size *= 4;
+						break;
+					default:
+						break;
+				}
+				return size;
+			}
+
 			Varying() {}
 		};
 
@@ -636,6 +660,7 @@ public:
 			enum Hint {
 				HINT_NONE,
 				HINT_RANGE,
+				HINT_ENUM,
 				HINT_SOURCE_COLOR,
 				HINT_NORMAL,
 				HINT_ROUGHNESS_NORMAL,
@@ -673,6 +698,7 @@ public:
 			TextureFilter filter = FILTER_DEFAULT;
 			TextureRepeat repeat = REPEAT_DEFAULT;
 			float hint_range[3];
+			PackedStringArray hint_enum_names;
 			int instance_index = 0;
 			String group;
 			String subgroup;
@@ -808,6 +834,7 @@ public:
 	static bool is_float_type(DataType p_type);
 	static bool is_sampler_type(DataType p_type);
 	static Variant constant_value_to_variant(const Vector<Scalar> &p_value, DataType p_type, int p_array_size, ShaderLanguage::ShaderNode::Uniform::Hint p_hint = ShaderLanguage::ShaderNode::Uniform::HINT_NONE);
+	static Variant get_default_datatype_value(DataType p_type, int p_array_size, ShaderLanguage::ShaderNode::Uniform::Hint p_hint);
 	static PropertyInfo uniform_to_property_info(const ShaderNode::Uniform &p_uniform);
 	static uint32_t get_datatype_size(DataType p_type);
 	static uint32_t get_datatype_component_count(DataType p_type);
@@ -1005,6 +1032,7 @@ private:
 	String current_uniform_subgroup_name;
 
 	VaryingFunctionNames varying_function_names;
+	uint32_t base_varying_index = 0;
 
 	TkPos _get_tkpos() {
 		TkPos tkp;
@@ -1200,6 +1228,7 @@ public:
 		HashSet<String> shader_types;
 		GlobalShaderUniformGetTypeFunc global_shader_uniform_type_func = nullptr;
 		bool is_include = false;
+		uint32_t base_varying_index = 0;
 	};
 
 	Error compile(const String &p_code, const ShaderCompileInfo &p_info);

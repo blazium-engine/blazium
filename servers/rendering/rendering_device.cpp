@@ -139,17 +139,17 @@ RenderingDevice::ShaderSPIRVGetCacheKeyFunction RenderingDevice::get_spirv_cache
 /***************************/
 
 void RenderingDevice::_add_dependency(RID p_id, RID p_depends_on) {
-	if (!dependency_map.has(p_depends_on)) {
-		dependency_map[p_depends_on] = HashSet<RID>();
+	HashSet<RID> *set = dependency_map.getptr(p_depends_on);
+	if (set == nullptr) {
+		set = &dependency_map.insert(p_depends_on, HashSet<RID>())->value;
 	}
+	set->insert(p_id);
 
-	dependency_map[p_depends_on].insert(p_id);
-
-	if (!reverse_dependency_map.has(p_id)) {
-		reverse_dependency_map[p_id] = HashSet<RID>();
+	set = reverse_dependency_map.getptr(p_id);
+	if (set == nullptr) {
+		set = &reverse_dependency_map.insert(p_id, HashSet<RID>())->value;
 	}
-
-	reverse_dependency_map[p_id].insert(p_depends_on);
+	set->insert(p_depends_on);
 }
 
 void RenderingDevice::_free_dependencies(RID p_id) {
@@ -702,6 +702,8 @@ RID RenderingDevice::texture_create(const TextureFormat &p_format, const Texture
 				"Number of layers must be equal or greater than 1 for arrays and cubemaps.");
 		ERR_FAIL_COND_V_MSG((format.texture_type == TEXTURE_TYPE_CUBE_ARRAY || format.texture_type == TEXTURE_TYPE_CUBE) && (format.array_layers % 6) != 0, RID(),
 				"Cubemap and cubemap array textures must provide a layer number that is multiple of 6");
+		ERR_FAIL_COND_V_MSG(((format.texture_type == TEXTURE_TYPE_CUBE_ARRAY || format.texture_type == TEXTURE_TYPE_CUBE)) && (format.width != format.height), RID(),
+				"Cubemap and cubemap array textures must have equal width and height.");
 		ERR_FAIL_COND_V_MSG(format.array_layers > driver->limit_get(LIMIT_MAX_TEXTURE_ARRAY_LAYERS), RID(), "Number of layers exceeds device maximum.");
 	} else {
 		format.array_layers = 1;
@@ -6324,6 +6326,20 @@ void RenderingDevice::_bind_methods() {
 	BIND_ENUM_CONSTANT(DATA_FORMAT_G16_B16_R16_3PLANE_422_UNORM);
 	BIND_ENUM_CONSTANT(DATA_FORMAT_G16_B16R16_2PLANE_422_UNORM);
 	BIND_ENUM_CONSTANT(DATA_FORMAT_G16_B16_R16_3PLANE_444_UNORM);
+	BIND_ENUM_CONSTANT(DATA_FORMAT_ASTC_4x4_SFLOAT_BLOCK);
+	BIND_ENUM_CONSTANT(DATA_FORMAT_ASTC_5x4_SFLOAT_BLOCK);
+	BIND_ENUM_CONSTANT(DATA_FORMAT_ASTC_5x5_SFLOAT_BLOCK);
+	BIND_ENUM_CONSTANT(DATA_FORMAT_ASTC_6x5_SFLOAT_BLOCK);
+	BIND_ENUM_CONSTANT(DATA_FORMAT_ASTC_6x6_SFLOAT_BLOCK);
+	BIND_ENUM_CONSTANT(DATA_FORMAT_ASTC_8x5_SFLOAT_BLOCK);
+	BIND_ENUM_CONSTANT(DATA_FORMAT_ASTC_8x6_SFLOAT_BLOCK);
+	BIND_ENUM_CONSTANT(DATA_FORMAT_ASTC_8x8_SFLOAT_BLOCK);
+	BIND_ENUM_CONSTANT(DATA_FORMAT_ASTC_10x5_SFLOAT_BLOCK);
+	BIND_ENUM_CONSTANT(DATA_FORMAT_ASTC_10x6_SFLOAT_BLOCK);
+	BIND_ENUM_CONSTANT(DATA_FORMAT_ASTC_10x8_SFLOAT_BLOCK);
+	BIND_ENUM_CONSTANT(DATA_FORMAT_ASTC_10x10_SFLOAT_BLOCK);
+	BIND_ENUM_CONSTANT(DATA_FORMAT_ASTC_12x10_SFLOAT_BLOCK);
+	BIND_ENUM_CONSTANT(DATA_FORMAT_ASTC_12x12_SFLOAT_BLOCK);
 	BIND_ENUM_CONSTANT(DATA_FORMAT_MAX);
 
 #ifndef DISABLE_DEPRECATED
@@ -6786,7 +6802,7 @@ RID RenderingDevice::_uniform_set_create(const TypedArray<RDUniform> &p_uniforms
 	uniforms.resize(p_uniforms.size());
 	for (int i = 0; i < p_uniforms.size(); i++) {
 		Ref<RDUniform> uniform = p_uniforms[i];
-		ERR_FAIL_COND_V(!uniform.is_valid(), RID());
+		ERR_FAIL_COND_V(uniform.is_null(), RID());
 		uniforms.write[i] = uniform->base;
 	}
 	return uniform_set_create(uniforms, p_shader, p_shader_set);

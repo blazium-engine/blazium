@@ -217,6 +217,7 @@ class PopupMenu : public Popup {
 	bool _set_item_accelerator(int p_index, const Ref<InputEventKey> &p_ie);
 	void _set_item_checkable_type(int p_index, int p_checkable_type);
 	int _get_item_checkable_type(int p_index) const;
+	void _native_popup(const Rect2i &p_rect);
 
 protected:
 	virtual Rect2i _popup_adjust_rect() const override;
@@ -357,6 +358,10 @@ public:
 	void clear(bool p_free_submenus = true);
 
 	virtual String get_tooltip(const Point2 &p_pos) const;
+
+#ifdef TOOLS_ENABLED
+	PackedStringArray get_configuration_warnings() const override;
+#endif
 
 	void add_autohide_area(const Rect2 &p_area);
 	void clear_autohide_areas();

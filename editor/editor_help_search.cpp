@@ -30,7 +30,6 @@
 
 #include "editor_help_search.h"
 
-#include "core/os/keyboard.h"
 #include "editor/editor_feature_profile.h"
 #include "editor/editor_main_screen.h"
 #include "editor/editor_node.h"
@@ -311,7 +310,7 @@ void EditorHelpSearch::popup_dialog(const String &p_term) {
 		search_box->set_text(p_term);
 		search_box->select_all();
 	}
-	search_box->grab_focus();
+	search_box->edit();
 	_update_results();
 }
 

@@ -38,7 +38,6 @@
 #include "editor/filesystem_dock.h"
 #include "editor/gui/editor_file_dialog.h"
 #include "editor/project_settings_editor.h"
-#include "editor/themes/editor_scale.h"
 #include "scene/gui/button.h"
 #include "scene/gui/label.h"
 #include "scene/gui/line_edit.h"
@@ -401,7 +400,7 @@ Node *EditorAutoloadSettings::_create_autoload(const String &p_path) {
 		scn.instantiate();
 		scn->set_path(p_path);
 		scn->reload_from_file();
-		ERR_FAIL_COND_V_MSG(!scn.is_valid(), nullptr, vformat("Failed to create an autoload, can't load from path: %s.", p_path));
+		ERR_FAIL_COND_V_MSG(scn.is_null(), nullptr, vformat("Failed to create an autoload, can't load from path: %s.", p_path));
 
 		if (scn.is_valid()) {
 			n = scn->instantiate();
@@ -721,6 +720,15 @@ void EditorAutoloadSettings::drop_data_fw(const Point2 &p_point, const Variant &
 	Dictionary drop_data = p_data;
 	PackedStringArray autoloads = drop_data["autoloads"];
 
+	// Store the initial order of the autoloads for comparison.
+	Vector<int> initial_orders;
+	initial_orders.resize(autoload_cache.size());
+	int idx = 0;
+	for (const AutoloadInfo &F : autoload_cache) {
+		initial_orders.write[idx++] = F.order;
+	}
+
+	// Perform the drag-and-drop operation.
 	Vector<int> orders;
 	orders.resize(autoload_cache.size());
 
@@ -740,10 +748,14 @@ void EditorAutoloadSettings::drop_data_fw(const Point2 &p_point, const Variant &
 		}
 	}
 
-	int i = 0;
-
+	idx = 0;
 	for (const AutoloadInfo &F : autoload_cache) {
-		orders.write[i++] = F.order;
+		orders.write[idx++] = F.order;
+	}
+
+	// If the order didn't change, we shouldn't create undo/redo actions.
+	if (orders == initial_orders) {
+		return;
 	}
 
 	orders.sort();
@@ -752,10 +764,9 @@ void EditorAutoloadSettings::drop_data_fw(const Point2 &p_point, const Variant &
 
 	undo_redo->create_action(TTR("Rearrange Autoloads"));
 
-	i = 0;
-
+	idx = 0;
 	for (const AutoloadInfo &F : autoload_cache) {
-		undo_redo->add_do_method(ProjectSettings::get_singleton(), "set_order", "autoload/" + F.name, orders[i++]);
+		undo_redo->add_do_method(ProjectSettings::get_singleton(), "set_order", "autoload/" + F.name, orders[idx++]);
 		undo_redo->add_undo_method(ProjectSettings::get_singleton(), "set_order", "autoload/" + F.name, F.order);
 	}
 

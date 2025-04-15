@@ -66,7 +66,7 @@ void GotoLinePopup::popup_find_line(CodeTextEditor *p_text_editor) {
 	Point2i centered_pos(parent_rect.get_center().x - get_contents_minimum_size().x / 2.0, parent_rect.position.y);
 	popup_on_parent(Rect2i(centered_pos, Size2()));
 	reset_size();
-	line_input->grab_focus();
+	line_input->edit();
 }
 
 void GotoLinePopup::_goto_line() {
@@ -152,7 +152,7 @@ void FindReplaceBar::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_VISIBILITY_CHANGED: {
-			set_process_unhandled_input(is_visible_in_tree());
+			set_process_input(is_visible_in_tree());
 		} break;
 
 		case NOTIFICATION_THEME_CHANGED: {
@@ -168,11 +168,11 @@ void FindReplaceBar::_notification(int p_what) {
 	}
 }
 
-void FindReplaceBar::unhandled_input(const Ref<InputEvent> &p_event) {
+// Implemented in input(..) as the LineEdit consumes the Escape pressed key.
+void FindReplaceBar::input(const Ref<InputEvent> &p_event) {
 	ERR_FAIL_COND(p_event.is_null());
 
 	Ref<InputEventKey> k = p_event;
-
 	if (k.is_valid() && k->is_action_pressed(SNAME("ui_cancel"), false, true)) {
 		Control *focus_owner = get_viewport()->gui_get_focus_owner();
 
@@ -180,13 +180,6 @@ void FindReplaceBar::unhandled_input(const Ref<InputEvent> &p_event) {
 			_hide_bar();
 			accept_event();
 		}
-	}
-}
-
-void FindReplaceBar::_focus_lost() {
-	if (Input::get_singleton()->is_action_pressed(SNAME("ui_cancel"))) {
-		// Unfocused after pressing Escape, so hide the bar.
-		_hide_bar(true);
 	}
 }
 
@@ -571,8 +564,8 @@ bool FindReplaceBar::search_next() {
 	return _search(flags, line, col);
 }
 
-void FindReplaceBar::_hide_bar(bool p_force_focus) {
-	if (replace_text->has_focus() || search_text->has_focus() || p_force_focus) {
+void FindReplaceBar::_hide_bar() {
+	if (replace_text->has_focus() || search_text->has_focus()) {
 		text_editor->grab_focus();
 	}
 
@@ -601,10 +594,10 @@ void FindReplaceBar::_show_search(bool p_with_replace, bool p_show_only) {
 
 	if (focus_replace) {
 		search_text->deselect();
-		callable_mp((Control *)replace_text, &Control::grab_focus).call_deferred();
+		callable_mp(replace_text, &LineEdit::edit).call_deferred();
 	} else {
 		replace_text->deselect();
-		callable_mp((Control *)search_text, &Control::grab_focus).call_deferred();
+		callable_mp(search_text, &LineEdit::edit).call_deferred();
 	}
 
 	if (on_one_line) {
@@ -796,7 +789,6 @@ FindReplaceBar::FindReplaceBar() {
 	search_text->set_custom_minimum_size(Size2(100 * EDSCALE, 0));
 	search_text->connect(SceneStringName(text_changed), callable_mp(this, &FindReplaceBar::_search_text_changed));
 	search_text->connect(SceneStringName(text_submitted), callable_mp(this, &FindReplaceBar::_search_text_submitted));
-	search_text->connect(SceneStringName(focus_exited), callable_mp(this, &FindReplaceBar::_focus_lost));
 
 	matches_label = memnew(Label);
 	hbc_button_search->add_child(matches_label);
@@ -835,7 +827,6 @@ FindReplaceBar::FindReplaceBar() {
 	replace_text->set_tooltip_text(TTR("Replace"));
 	replace_text->set_custom_minimum_size(Size2(100 * EDSCALE, 0));
 	replace_text->connect(SceneStringName(text_submitted), callable_mp(this, &FindReplaceBar::_replace_text_submitted));
-	replace_text->connect(SceneStringName(focus_exited), callable_mp(this, &FindReplaceBar::_focus_lost));
 
 	replace = memnew(Button);
 	hbc_button_replace->add_child(replace);
@@ -857,7 +848,7 @@ FindReplaceBar::FindReplaceBar() {
 	add_child(hide_button);
 	hide_button->set_tooltip_text(TTR("Hide"));
 	hide_button->set_focus_mode(FOCUS_NONE);
-	hide_button->connect(SceneStringName(pressed), callable_mp(this, &FindReplaceBar::_hide_bar).bind(false));
+	hide_button->connect(SceneStringName(pressed), callable_mp(this, &FindReplaceBar::_hide_bar));
 	hide_button->set_v_size_flags(SIZE_SHRINK_CENTER);
 }
 
@@ -872,7 +863,7 @@ void CodeTextEditor::input(const Ref<InputEvent> &event) {
 
 	const Ref<InputEventKey> key_event = event;
 
-	if (!key_event.is_valid()) {
+	if (key_event.is_null()) {
 		return;
 	}
 	if (!key_event->is_pressed()) {
@@ -940,12 +931,14 @@ void CodeTextEditor::_text_editor_gui_input(const Ref<InputEvent> &p_event) {
 		}
 	}
 
+#ifndef ANDROID_ENABLED
 	Ref<InputEventMagnifyGesture> magnify_gesture = p_event;
 	if (magnify_gesture.is_valid()) {
 		_zoom_to(zoom_factor * powf(magnify_gesture->get_factor(), 0.25f));
 		accept_event();
 		return;
 	}
+#endif
 
 	Ref<InputEventKey> k = p_event;
 
@@ -1059,7 +1052,7 @@ Ref<Texture2D> CodeTextEditor::_get_completion_icon(const ScriptLanguage::CodeCo
 				tex = get_editor_theme_icon(p_option.display);
 			} else {
 				tex = EditorNode::get_singleton()->get_class_icon(p_option.display);
-				if (!tex.is_valid()) {
+				if (tex.is_null()) {
 					tex = get_editor_theme_icon(SNAME("Object"));
 				}
 			}
@@ -1074,7 +1067,7 @@ Ref<Texture2D> CodeTextEditor::_get_completion_icon(const ScriptLanguage::CodeCo
 			tex = get_editor_theme_icon(SNAME("NodePath"));
 			break;
 		case ScriptLanguage::CODE_COMPLETION_KIND_VARIABLE:
-			tex = get_editor_theme_icon(SNAME("Variant"));
+			tex = get_editor_theme_icon(SNAME("LocalVariable"));
 			break;
 		case ScriptLanguage::CODE_COMPLETION_KIND_CONSTANT:
 			tex = get_editor_theme_icon(SNAME("MemberConstant"));
@@ -1916,11 +1909,13 @@ CodeTextEditor::CodeTextEditor() {
 	zoom_button->set_flat(true);
 	zoom_button->set_v_size_flags(SIZE_EXPAND | SIZE_SHRINK_CENTER);
 	zoom_button->set_tooltip_text(
-			TTR("Zoom factor") + "\n" + vformat(TTR("%sMouse wheel, %s/%s: Finetune\n%s: Reset"), keycode_get_string((Key)KeyModifierMask::CMD_OR_CTRL), ED_GET_SHORTCUT("script_editor/zoom_in")->get_as_text(), ED_GET_SHORTCUT("script_editor/zoom_out")->get_as_text(), ED_GET_SHORTCUT("script_editor/reset_zoom")->get_as_text()));
+			TTR("Zoom factor") + "\n" +
+			// TRANSLATORS: The placeholders are keyboard shortcuts. The first one is in the form of "Ctrl+"/"Cmd+".
+			vformat(TTR("%sMouse wheel, %s/%s: Finetune\n%s: Reset"), keycode_get_string((Key)KeyModifierMask::CMD_OR_CTRL), ED_GET_SHORTCUT("script_editor/zoom_in")->get_as_text(), ED_GET_SHORTCUT("script_editor/zoom_out")->get_as_text(), ED_GET_SHORTCUT("script_editor/reset_zoom")->get_as_text()));
 	zoom_button->set_text("100 %");
 
 	PopupMenu *zoom_menu = zoom_button->get_popup();
-	int preset_count = sizeof(ZOOM_FACTOR_PRESETS) / sizeof(float);
+	constexpr int preset_count = std::size(ZOOM_FACTOR_PRESETS);
 
 	for (int i = 0; i < preset_count; i++) {
 		float z = ZOOM_FACTOR_PRESETS[i];

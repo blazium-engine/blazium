@@ -112,8 +112,13 @@ PackedStringArray ResourceLoader::get_dependencies(const String &p_path) {
 }
 
 bool ResourceLoader::has_cached(const String &p_path) {
-	String local_path = ProjectSettings::get_singleton()->localize_path(p_path);
+	String local_path = ::ResourceLoader::_validate_local_path(p_path);
 	return ResourceCache::has(local_path);
+}
+
+Ref<Resource> ResourceLoader::get_cached_ref(const String &p_path) {
+	String local_path = ::ResourceLoader::_validate_local_path(p_path);
+	return ResourceCache::get_ref(local_path);
 }
 
 bool ResourceLoader::exists(const String &p_path, const String &p_type_hint) {
@@ -140,6 +145,7 @@ void ResourceLoader::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_abort_on_missing_resources", "abort"), &ResourceLoader::set_abort_on_missing_resources);
 	ClassDB::bind_method(D_METHOD("get_dependencies", "path"), &ResourceLoader::get_dependencies);
 	ClassDB::bind_method(D_METHOD("has_cached", "path"), &ResourceLoader::has_cached);
+	ClassDB::bind_method(D_METHOD("get_cached_ref", "path"), &ResourceLoader::get_cached_ref);
 	ClassDB::bind_method(D_METHOD("exists", "path", "type_hint"), &ResourceLoader::exists, DEFVAL(""));
 	ClassDB::bind_method(D_METHOD("get_resource_uid", "path"), &ResourceLoader::get_resource_uid);
 	ClassDB::bind_method(D_METHOD("list_directory", "directory_path"), &ResourceLoader::list_directory);
@@ -301,6 +307,26 @@ Error OS::shell_show_in_file_manager(const String &p_path, bool p_open_folder) {
 
 String OS::read_string_from_stdin() {
 	return ::OS::get_singleton()->get_stdin_string();
+}
+
+String OS::_read_string_from_stdin(int64_t p_buffer_size) {
+	return ::OS::get_singleton()->get_stdin_string(p_buffer_size);
+}
+
+PackedByteArray OS::read_buffer_from_stdin(int64_t p_buffer_size) {
+	return ::OS::get_singleton()->get_stdin_buffer(p_buffer_size);
+}
+
+OS::StdHandleType OS::get_stdin_type() const {
+	return (OS::StdHandleType)::OS::get_singleton()->get_stdin_type();
+}
+
+OS::StdHandleType OS::get_stdout_type() const {
+	return (OS::StdHandleType)::OS::get_singleton()->get_stdout_type();
+}
+
+OS::StdHandleType OS::get_stderr_type() const {
+	return (OS::StdHandleType)::OS::get_singleton()->get_stderr_type();
 }
 
 int OS::execute(const String &p_path, const Vector<String> &p_arguments, Array r_output, bool p_read_stderr, bool p_open_console) {
@@ -634,6 +660,12 @@ void OS::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_system_font_path_for_text", "font_name", "text", "locale", "script", "weight", "stretch", "italic"), &OS::get_system_font_path_for_text, DEFVAL(String()), DEFVAL(String()), DEFVAL(400), DEFVAL(100), DEFVAL(false));
 	ClassDB::bind_method(D_METHOD("get_executable_path"), &OS::get_executable_path);
 	ClassDB::bind_method(D_METHOD("read_string_from_stdin"), &OS::read_string_from_stdin);
+	ClassDB::bind_method(D_METHOD("read_string_from_stdin2", "buffer_size"), &OS::_read_string_from_stdin);
+	ClassDB::bind_method(D_METHOD("read_buffer_from_stdin", "buffer_size"), &OS::read_buffer_from_stdin);
+	ClassDB::bind_method(D_METHOD("get_stdin_type"), &OS::get_stdin_type);
+	ClassDB::bind_method(D_METHOD("get_stdout_type"), &OS::get_stdout_type);
+	ClassDB::bind_method(D_METHOD("get_stderr_type"), &OS::get_stderr_type);
+
 	ClassDB::bind_method(D_METHOD("execute", "path", "arguments", "output", "read_stderr", "open_console"), &OS::execute, DEFVAL_ARRAY, DEFVAL(false), DEFVAL(false));
 	ClassDB::bind_method(D_METHOD("execute_with_pipe", "path", "arguments"), &OS::execute_with_pipe);
 	ClassDB::bind_method(D_METHOD("create_process", "path", "arguments", "open_console"), &OS::create_process, DEFVAL(false));
@@ -727,6 +759,12 @@ void OS::_bind_methods() {
 	BIND_ENUM_CONSTANT(SYSTEM_DIR_MUSIC);
 	BIND_ENUM_CONSTANT(SYSTEM_DIR_PICTURES);
 	BIND_ENUM_CONSTANT(SYSTEM_DIR_RINGTONES);
+
+	BIND_ENUM_CONSTANT(STD_HANDLE_INVALID);
+	BIND_ENUM_CONSTANT(STD_HANDLE_CONSOLE);
+	BIND_ENUM_CONSTANT(STD_HANDLE_FILE);
+	BIND_ENUM_CONSTANT(STD_HANDLE_PIPE);
+	BIND_ENUM_CONSTANT(STD_HANDLE_UNKNOWN);
 }
 
 ////// Geometry2D //////
@@ -1251,13 +1289,19 @@ bool Semaphore::try_wait() {
 }
 
 void Semaphore::post() {
-	semaphore.post();
+	_post(1);
+}
+
+void Semaphore::_post(int p_count) {
+	ERR_FAIL_COND(p_count <= 0);
+	semaphore.post(p_count);
 }
 
 void Semaphore::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("wait"), &Semaphore::wait);
 	ClassDB::bind_method(D_METHOD("try_wait"), &Semaphore::try_wait);
 	ClassDB::bind_method(D_METHOD("post"), &Semaphore::post);
+	ClassDB::bind_method(D_METHOD("post2", "count"), &Semaphore::_post, DEFVAL(1));
 }
 
 ////// Mutex //////
@@ -1499,6 +1543,14 @@ TypedArray<Dictionary> ClassDB::class_get_property_list(const StringName &p_clas
 	return ret;
 }
 
+StringName ClassDB::class_get_property_getter(const StringName &p_class, const StringName &p_property) {
+	return ::ClassDB::get_property_getter(p_class, p_property);
+}
+
+StringName ClassDB::class_get_property_setter(const StringName &p_class, const StringName &p_property) {
+	return ::ClassDB::get_property_setter(p_class, p_property);
+}
+
 Variant ClassDB::class_get_property(Object *p_object, const StringName &p_property) const {
 	Variant ret;
 	::ClassDB::get_property(p_object, p_property, ret);
@@ -1549,6 +1601,23 @@ TypedArray<Dictionary> ClassDB::class_get_method_list(const StringName &p_class,
 	}
 
 	return ret;
+}
+
+Variant ClassDB::class_call_static(const Variant **p_arguments, int p_argcount, Callable::CallError &r_call_error) {
+	if (p_argcount < 2) {
+		r_call_error.error = Callable::CallError::CALL_ERROR_TOO_FEW_ARGUMENTS;
+		return Variant::NIL;
+	}
+	if (!p_arguments[0]->is_string() || !p_arguments[1]->is_string()) {
+		r_call_error.error = Callable::CallError::CALL_ERROR_INVALID_ARGUMENT;
+		return Variant::NIL;
+	}
+	StringName class_ = *p_arguments[0];
+	StringName method = *p_arguments[1];
+	const MethodBind *bind = ::ClassDB::get_method(class_, method);
+	ERR_FAIL_NULL_V_MSG(bind, Variant::NIL, "Cannot find static method.");
+	ERR_FAIL_COND_V_MSG(!bind->is_static(), Variant::NIL, "Method is not static.");
+	return bind->call(nullptr, p_arguments + 2, p_argcount - 2, r_call_error);
 }
 
 PackedStringArray ClassDB::class_get_integer_constant_list(const StringName &p_class, bool p_no_inheritance) const {
@@ -1665,6 +1734,8 @@ void ClassDB::_bind_methods() {
 	::ClassDB::bind_method(D_METHOD("class_get_signal_list", "class", "no_inheritance"), &ClassDB::class_get_signal_list, DEFVAL(false));
 
 	::ClassDB::bind_method(D_METHOD("class_get_property_list", "class", "no_inheritance"), &ClassDB::class_get_property_list, DEFVAL(false));
+	::ClassDB::bind_method(D_METHOD("class_get_property_getter", "class", "property"), &ClassDB::class_get_property_getter);
+	::ClassDB::bind_method(D_METHOD("class_get_property_setter", "class", "property"), &ClassDB::class_get_property_setter);
 	::ClassDB::bind_method(D_METHOD("class_get_property", "object", "property"), &ClassDB::class_get_property);
 	::ClassDB::bind_method(D_METHOD("class_set_property", "object", "property", "value"), &ClassDB::class_set_property);
 
@@ -1675,6 +1746,8 @@ void ClassDB::_bind_methods() {
 	::ClassDB::bind_method(D_METHOD("class_get_method_argument_count", "class", "method", "no_inheritance"), &ClassDB::class_get_method_argument_count, DEFVAL(false));
 
 	::ClassDB::bind_method(D_METHOD("class_get_method_list", "class", "no_inheritance"), &ClassDB::class_get_method_list, DEFVAL(false));
+
+	::ClassDB::bind_vararg_method(METHOD_FLAGS_DEFAULT, "class_call_static", &ClassDB::class_call_static, MethodInfo("class_call_static", PropertyInfo(Variant::STRING_NAME, "class"), PropertyInfo(Variant::STRING_NAME, "method")));
 
 	::ClassDB::bind_method(D_METHOD("class_get_integer_constant_list", "class", "no_inheritance"), &ClassDB::class_get_integer_constant_list, DEFVAL(false));
 

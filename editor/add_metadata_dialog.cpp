@@ -30,6 +30,8 @@
 
 #include "add_metadata_dialog.h"
 
+#include "editor/themes/editor_scale.h"
+#include "scene/gui/box_container.h"
 #include "scene/gui/label.h"
 
 AddMetadataDialog::AddMetadataDialog() {
@@ -91,7 +93,7 @@ void AddMetadataDialog::open(const StringName p_title, List<StringName> &p_exist
 	this->_existing_metas = p_existing_metas;
 	_complete_init(p_title);
 	popup_centered();
-	add_meta_name->grab_focus();
+	add_meta_name->edit();
 }
 
 StringName AddMetadataDialog::get_meta_name() {

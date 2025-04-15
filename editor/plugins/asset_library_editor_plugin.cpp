@@ -30,7 +30,6 @@
 
 #include "asset_library_editor_plugin.h"
 
-#include "core/input/input.h"
 #include "core/io/json.h"
 #include "core/io/stream_peer_tls.h"
 #include "core/os/keyboard.h"
@@ -79,6 +78,7 @@ void EditorAssetLibraryItem::configure(const String &p_title, int p_asset_id, co
 	category->set_text(p_category);
 	category_id = p_category_id;
 	author->set_text(p_author);
+	author->set_tooltip_text(TTR("Author") + ": " + p_author);
 	author_id = p_author_id;
 	price->set_text(p_cost);
 }
@@ -152,22 +152,39 @@ EditorAssetLibraryItem::EditorAssetLibraryItem(bool p_clickable) {
 	title->set_auto_translate_mode(AutoTranslateMode::AUTO_TRANSLATE_MODE_DISABLED);
 	vb->add_child(title);
 
-	category = memnew(LinkButton);
-	category->set_underline_mode(LinkButton::UNDERLINE_MODE_ON_HOVER);
-	vb->add_child(category);
+	HBoxContainer *category_hbox = memnew(HBoxContainer);
+	category_hbox->add_theme_constant_override("separation", 5 * EDSCALE);
+	vb->add_child(category_hbox);
 
-	HBoxContainer *author_price_hbox = memnew(HBoxContainer);
-	author_price_hbox->add_theme_constant_override("separation", 5 * EDSCALE);
-	vb->add_child(author_price_hbox);
+	category = memnew(LinkButton);
+	category->set_v_size_flags(Control::SIZE_SHRINK_CENTER);
+	category->set_underline_mode(LinkButton::UNDERLINE_MODE_ON_HOVER);
+	category_hbox->add_child(category);
+
+	category_hbox->add_child(memnew(HSeparator));
+
+	Ref<StyleBoxEmpty> label_margin;
+	label_margin.instantiate();
+	label_margin->set_content_margin_all(0);
+
+	price = memnew(Label);
+	price->set_h_size_flags(Control::SIZE_EXPAND_FILL);
+	price->set_text_overrun_behavior(TextServer::OVERRUN_TRIM_ELLIPSIS);
+	price->add_theme_style_override(CoreStringName(normal), label_margin);
+	price->set_tooltip_text(TTR("License"));
+	price->set_mouse_filter(MOUSE_FILTER_PASS);
+
+	category_hbox->add_child(price);
 
 	author = memnew(LinkButton);
-	author->set_tooltip_text(TTR("Author"));
-	author_price_hbox->add_child(author);
-
-	author_price_hbox->add_child(memnew(HSeparator));
+	author->set_v_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_CENTER);
+	author->set_underline_mode(LinkButton::UNDERLINE_MODE_NEVER);
+	author->set_text_overrun_behavior(TextServer::OVERRUN_TRIM_ELLIPSIS);
+	author->set_auto_translate_mode(AutoTranslateMode::AUTO_TRANSLATE_MODE_DISABLED);
+	author->set_custom_minimum_size(Size2(250 * EDSCALE, 0));
+	vb->add_child(author);
 
 	if (p_clickable) {
-		author->set_underline_mode(LinkButton::UNDERLINE_MODE_ON_HOVER);
 		icon->set_default_cursor_shape(CURSOR_POINTING_HAND);
 		icon->connect(SceneStringName(pressed), callable_mp(this, &EditorAssetLibraryItem::_asset_clicked));
 		title->connect(SceneStringName(pressed), callable_mp(this, &EditorAssetLibraryItem::_asset_clicked));
@@ -176,20 +193,8 @@ EditorAssetLibraryItem::EditorAssetLibraryItem(bool p_clickable) {
 	} else {
 		title->set_mouse_filter(MOUSE_FILTER_IGNORE);
 		category->set_mouse_filter(MOUSE_FILTER_IGNORE);
-		author->set_underline_mode(LinkButton::UNDERLINE_MODE_NEVER);
 		author->set_default_cursor_shape(CURSOR_ARROW);
 	}
-
-	Ref<StyleBoxEmpty> label_margin;
-	label_margin.instantiate();
-	label_margin->set_content_margin_all(0);
-
-	price = memnew(Label);
-	price->add_theme_style_override(CoreStringName(normal), label_margin);
-	price->set_tooltip_text(TTR("License"));
-	price->set_mouse_filter(MOUSE_FILTER_PASS);
-
-	author_price_hbox->add_child(price);
 
 	set_custom_minimum_size(Size2(250, 80) * EDSCALE);
 	set_h_size_flags(Control::SIZE_EXPAND_FILL);
@@ -450,7 +455,7 @@ void EditorAssetLibraryItemDownload::configure(const String &p_title, int p_asse
 	title->set_text(p_title);
 	icon->set_texture(p_preview);
 	asset_id = p_asset_id;
-	if (!p_preview.is_valid()) {
+	if (p_preview.is_null()) {
 		icon->set_texture(get_editor_theme_icon(SNAME("FileBrokenBigThumb")));
 	}
 	host = p_download_url;
@@ -664,7 +669,7 @@ void EditorAssetLibrary::_notification(int p_what) {
 				// Focus the search box automatically when switching to the Templates tab (in the Project Manager)
 				// or switching to the AssetLib tab (in the editor).
 				// The Project Manager's project filter box is automatically focused in the project manager code.
-				filter->grab_focus();
+				filter->edit();
 #endif
 
 				if (initial_loading) {
@@ -732,7 +737,7 @@ void EditorAssetLibrary::shortcut_input(const Ref<InputEvent> &p_event) {
 
 	if (key.is_valid() && key->is_pressed()) {
 		if (key->is_match(InputEventKey::create_reference(KeyModifierMask::CMD_OR_CTRL | Key::F)) && is_visible_in_tree()) {
-			filter->grab_focus();
+			filter->edit();
 			filter->select_all();
 			accept_event();
 		}
@@ -1794,7 +1799,7 @@ bool AssetLibraryEditorPlugin::is_available() {
 	// directly from GitHub which does not set CORS.
 	return false;
 #else
-	return StreamPeerTLS::is_available();
+	return StreamPeerTLS::is_available() && !Engine::get_singleton()->is_recovery_mode_hint();
 #endif
 }
 

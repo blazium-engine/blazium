@@ -45,12 +45,14 @@
 #include "core/io/stream_peer.h"
 #include "core/object/object_id.h"
 #include "core/version.h"
+#include "scene/2d/node_2d.h"
 #include "scene/3d/bone_attachment_3d.h"
 #include "scene/3d/camera_3d.h"
 #include "scene/3d/importer_mesh_instance_3d.h"
 #include "scene/3d/light_3d.h"
 #include "scene/3d/mesh_instance_3d.h"
 #include "scene/3d/multimesh_instance_3d.h"
+#include "scene/animation/animation_player.h"
 #include "scene/resources/3d/skin.h"
 #include "scene/resources/image_texture.h"
 #include "scene/resources/portable_compressed_texture.h"
@@ -1196,10 +1198,11 @@ Error GLTFDocument::_encode_buffer_view(Ref<GLTFState> p_state, const double *p_
 					dst_i++;
 				}
 			}
-			int64_t old_size = gltf_buffer.size();
-			gltf_buffer.resize(old_size + (buffer.size() * sizeof(int8_t)));
-			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer.size() * sizeof(int8_t));
-			bv->byte_length = buffer.size() * sizeof(int8_t);
+			const int64_t old_size = gltf_buffer.size();
+			const size_t buffer_size = buffer.size() * sizeof(int8_t);
+			gltf_buffer.resize(old_size + buffer_size);
+			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer_size);
+			bv->byte_length = buffer_size;
 		} break;
 		case GLTFAccessor::COMPONENT_TYPE_UNSIGNED_BYTE: {
 			Vector<uint8_t> buffer;
@@ -1221,7 +1224,8 @@ Error GLTFDocument::_encode_buffer_view(Ref<GLTFState> p_state, const double *p_
 				}
 			}
 			gltf_buffer.append_array(buffer);
-			bv->byte_length = buffer.size() * sizeof(uint8_t);
+			const size_t buffer_size = buffer.size() * sizeof(uint8_t);
+			bv->byte_length = buffer_size;
 		} break;
 		case GLTFAccessor::COMPONENT_TYPE_SIGNED_SHORT: {
 			Vector<int16_t> buffer;
@@ -1242,10 +1246,11 @@ Error GLTFDocument::_encode_buffer_view(Ref<GLTFState> p_state, const double *p_
 					dst_i++;
 				}
 			}
-			int64_t old_size = gltf_buffer.size();
-			gltf_buffer.resize(old_size + (buffer.size() * sizeof(int16_t)));
-			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer.size() * sizeof(int16_t));
-			bv->byte_length = buffer.size() * sizeof(int16_t);
+			const int64_t old_size = gltf_buffer.size();
+			const size_t buffer_size = buffer.size() * sizeof(int16_t);
+			gltf_buffer.resize(old_size + buffer_size);
+			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer_size);
+			bv->byte_length = buffer_size;
 		} break;
 		case GLTFAccessor::COMPONENT_TYPE_UNSIGNED_SHORT: {
 			Vector<uint16_t> buffer;
@@ -1266,10 +1271,11 @@ Error GLTFDocument::_encode_buffer_view(Ref<GLTFState> p_state, const double *p_
 					dst_i++;
 				}
 			}
-			int64_t old_size = gltf_buffer.size();
-			gltf_buffer.resize(old_size + (buffer.size() * sizeof(uint16_t)));
-			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer.size() * sizeof(uint16_t));
-			bv->byte_length = buffer.size() * sizeof(uint16_t);
+			const int64_t old_size = gltf_buffer.size();
+			const size_t buffer_size = buffer.size() * sizeof(uint16_t);
+			gltf_buffer.resize(old_size + buffer_size);
+			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer_size);
+			bv->byte_length = buffer_size;
 		} break;
 		case GLTFAccessor::COMPONENT_TYPE_SIGNED_INT: {
 			Vector<int32_t> buffer;
@@ -1286,10 +1292,11 @@ Error GLTFDocument::_encode_buffer_view(Ref<GLTFState> p_state, const double *p_
 					dst_i++;
 				}
 			}
-			int64_t old_size = gltf_buffer.size();
-			gltf_buffer.resize(old_size + (buffer.size() * sizeof(uint32_t)));
-			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer.size() * sizeof(uint32_t));
-			bv->byte_length = buffer.size() * sizeof(uint32_t);
+			const int64_t old_size = gltf_buffer.size();
+			const size_t buffer_size = buffer.size() * sizeof(int32_t);
+			gltf_buffer.resize(old_size + buffer_size);
+			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer_size);
+			bv->byte_length = buffer_size;
 		} break;
 		case GLTFAccessor::COMPONENT_TYPE_UNSIGNED_INT: {
 			Vector<uint32_t> buffer;
@@ -1306,10 +1313,11 @@ Error GLTFDocument::_encode_buffer_view(Ref<GLTFState> p_state, const double *p_
 					dst_i++;
 				}
 			}
-			int64_t old_size = gltf_buffer.size();
-			gltf_buffer.resize(old_size + (buffer.size() * sizeof(uint32_t)));
-			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer.size() * sizeof(uint32_t));
-			bv->byte_length = buffer.size() * sizeof(uint32_t);
+			const int64_t old_size = gltf_buffer.size();
+			const size_t buffer_size = buffer.size() * sizeof(uint32_t);
+			gltf_buffer.resize(old_size + buffer_size);
+			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer_size);
+			bv->byte_length = buffer_size;
 		} break;
 		case GLTFAccessor::COMPONENT_TYPE_SINGLE_FLOAT: {
 			Vector<float> buffer;
@@ -1326,10 +1334,11 @@ Error GLTFDocument::_encode_buffer_view(Ref<GLTFState> p_state, const double *p_
 					dst_i++;
 				}
 			}
-			int64_t old_size = gltf_buffer.size();
-			gltf_buffer.resize(old_size + (buffer.size() * sizeof(float)));
-			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer.size() * sizeof(float));
-			bv->byte_length = buffer.size() * sizeof(float);
+			const int64_t old_size = gltf_buffer.size();
+			const size_t buffer_size = buffer.size() * sizeof(float);
+			gltf_buffer.resize(old_size + buffer_size);
+			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer_size);
+			bv->byte_length = buffer_size;
 		} break;
 		case GLTFAccessor::COMPONENT_TYPE_DOUBLE_FLOAT: {
 			Vector<double> buffer;
@@ -1346,10 +1355,11 @@ Error GLTFDocument::_encode_buffer_view(Ref<GLTFState> p_state, const double *p_
 					dst_i++;
 				}
 			}
-			int64_t old_size = gltf_buffer.size();
-			gltf_buffer.resize(old_size + (buffer.size() * sizeof(double)));
-			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer.size() * sizeof(double));
-			bv->byte_length = buffer.size() * sizeof(double);
+			const int64_t old_size = gltf_buffer.size();
+			const size_t buffer_size = buffer.size() * sizeof(double);
+			gltf_buffer.resize(old_size + buffer_size);
+			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer_size);
+			bv->byte_length = buffer_size;
 		} break;
 		case GLTFAccessor::COMPONENT_TYPE_HALF_FLOAT: {
 			ERR_FAIL_V_MSG(ERR_UNAVAILABLE, "glTF: Half float not supported yet.");
@@ -1370,10 +1380,11 @@ Error GLTFDocument::_encode_buffer_view(Ref<GLTFState> p_state, const double *p_
 					dst_i++;
 				}
 			}
-			int64_t old_size = gltf_buffer.size();
-			gltf_buffer.resize(old_size + (buffer.size() * sizeof(int64_t)));
-			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer.size() * sizeof(int64_t));
-			bv->byte_length = buffer.size() * sizeof(int64_t);
+			const int64_t old_size = gltf_buffer.size();
+			const size_t buffer_size = buffer.size() * sizeof(int64_t);
+			gltf_buffer.resize(old_size + buffer_size);
+			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer_size);
+			bv->byte_length = buffer_size;
 		} break;
 		case GLTFAccessor::COMPONENT_TYPE_UNSIGNED_LONG: {
 			Vector<uint64_t> buffer;
@@ -1391,10 +1402,11 @@ Error GLTFDocument::_encode_buffer_view(Ref<GLTFState> p_state, const double *p_
 					dst_i++;
 				}
 			}
-			int64_t old_size = gltf_buffer.size();
-			gltf_buffer.resize(old_size + (buffer.size() * sizeof(uint64_t)));
-			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer.size() * sizeof(uint64_t));
-			bv->byte_length = buffer.size() * sizeof(uint64_t);
+			const int64_t old_size = gltf_buffer.size();
+			const size_t buffer_size = buffer.size() * sizeof(uint64_t);
+			gltf_buffer.resize(old_size + buffer_size);
+			memcpy(gltf_buffer.ptrw() + old_size, buffer.ptrw(), buffer_size);
+			bv->byte_length = buffer_size;
 		} break;
 	}
 	ERR_FAIL_COND_V(buffer_end > bv->byte_length, ERR_INVALID_DATA);
@@ -3151,7 +3163,7 @@ Error GLTFDocument::_serialize_meshes(Ref<GLTFState> p_state) {
 				v = instance_materials.get(surface_i);
 			}
 			Ref<Material> mat = v;
-			if (!mat.is_valid()) {
+			if (mat.is_null()) {
 				mat = import_mesh->get_surface_material(surface_i);
 			}
 			if (mat.is_valid()) {
@@ -3933,7 +3945,7 @@ Ref<Image> GLTFDocument::_parse_image_bytes_into_image(Ref<GLTFState> p_state, c
 	return r_image;
 }
 
-void GLTFDocument::_parse_image_save_image(Ref<GLTFState> p_state, const Vector<uint8_t> &p_bytes, const String &p_file_extension, int p_index, Ref<Image> p_image) {
+void GLTFDocument::_parse_image_save_image(Ref<GLTFState> p_state, const Vector<uint8_t> &p_bytes, const String &p_resource_uri, const String &p_file_extension, int p_index, Ref<Image> p_image) {
 	GLTFState::GLTFHandleBinary handling = GLTFState::GLTFHandleBinary(p_state->handle_binary_image);
 	if (p_image->is_empty() || handling == GLTFState::GLTFHandleBinary::HANDLE_BINARY_DISCARD_TEXTURES) {
 		p_state->images.push_back(Ref<Texture2D>());
@@ -3951,33 +3963,46 @@ void GLTFDocument::_parse_image_save_image(Ref<GLTFState> p_state, const Vector<
 				WARN_PRINT(vformat("glTF: Image index '%d' did not have a name. It will be automatically given a name based on its index.", p_index));
 				p_image->set_name(itos(p_index));
 			}
-			bool must_import = true;
+			bool must_write = true; // If the resource does not exist on the disk within res:// directory write it.
+			bool must_import = true; // Trigger import.
 			Vector<uint8_t> img_data = p_image->get_data();
 			Dictionary generator_parameters;
-			String file_path = p_state->get_extract_path().path_join(p_state->get_extract_prefix() + "_" + p_image->get_name());
-			file_path += p_file_extension.is_empty() ? ".png" : p_file_extension;
-			if (FileAccess::exists(file_path + ".import")) {
-				Ref<ConfigFile> config;
-				config.instantiate();
-				config->load(file_path + ".import");
-				if (config->has_section_key("remap", "generator_parameters")) {
-					generator_parameters = (Dictionary)config->get_value("remap", "generator_parameters");
-				}
-				if (!generator_parameters.has("md5")) {
-					must_import = false; // Didn't come from a gltf document; don't overwrite.
+			String file_path;
+			// If resource_uri is within res:// folder but outside of .godot/imported folder, use it.
+			if (!p_resource_uri.is_empty() && !p_resource_uri.begins_with("res://.godot/imported") && !p_resource_uri.begins_with("res://..")) {
+				file_path = p_resource_uri;
+				must_import = true;
+				must_write = !FileAccess::exists(file_path);
+			} else {
+				// Texture data has to be written to the res:// folder and imported.
+				file_path = p_state->get_extract_path().path_join(p_state->get_extract_prefix() + "_" + p_image->get_name());
+				file_path += p_file_extension.is_empty() ? ".png" : p_file_extension;
+				if (FileAccess::exists(file_path + ".import")) {
+					Ref<ConfigFile> config;
+					config.instantiate();
+					config->load(file_path + ".import");
+					if (config->has_section_key("remap", "generator_parameters")) {
+						generator_parameters = (Dictionary)config->get_value("remap", "generator_parameters");
+					}
+					if (!generator_parameters.has("md5")) {
+						must_write = false; // Didn't come from a gltf document; don't overwrite.
+						must_import = false; // And don't import.
+					}
 				}
 			}
-			if (must_import) {
+
+			if (must_write) {
 				String existing_md5 = generator_parameters["md5"];
 				unsigned char md5_hash[16];
 				CryptoCore::md5(img_data.ptr(), img_data.size(), md5_hash);
 				String new_md5 = String::hex_encode_buffer(md5_hash, 16);
 				generator_parameters["md5"] = new_md5;
 				if (new_md5 == existing_md5) {
+					must_write = false;
 					must_import = false;
 				}
 			}
-			if (must_import) {
+			if (must_write) {
 				Error err = OK;
 				if (p_file_extension.is_empty()) {
 					// If a file extension was not specified, save the image data to a PNG file.
@@ -3990,10 +4015,13 @@ void GLTFDocument::_parse_image_save_image(Ref<GLTFState> p_state, const Vector<
 					file->store_buffer(p_bytes);
 					file->close();
 				}
+			}
+			if (must_import) {
 				// ResourceLoader::import will crash if not is_editor_hint(), so this case is protected above and will fall through to uncompressed.
 				HashMap<StringName, Variant> custom_options;
 				custom_options[SNAME("mipmaps/generate")] = true;
 				// Will only use project settings defaults if custom_importer is empty.
+
 				EditorFileSystem::get_singleton()->update_file(file_path);
 				EditorFileSystem::get_singleton()->reimport_append(file_path, custom_options, String(), generator_parameters);
 			}
@@ -4003,7 +4031,7 @@ void GLTFDocument::_parse_image_save_image(Ref<GLTFState> p_state, const Vector<
 				p_state->source_images.push_back(saved_image->get_image());
 				return;
 			} else {
-				WARN_PRINT(vformat("glTF: Image index '%d' with the name '%s' couldn't be imported. It will be loaded directly instead, uncompressed.", p_index, p_image->get_name()));
+				WARN_PRINT(vformat("glTF: Image index '%d' with the name '%s' resolved to %s couldn't be imported. It will be loaded directly instead, uncompressed.", p_index, p_image->get_name(), file_path));
 			}
 		}
 	}
@@ -4071,6 +4099,9 @@ Error GLTFDocument::_parse_images(Ref<GLTFState> p_state, const String &p_base_p
 		while (used_names.has(image_name)) {
 			image_name += "_" + itos(i);
 		}
+
+		String resource_uri;
+
 		used_names.insert(image_name);
 		// Load the image data. If we get a byte array, store here for later.
 		Vector<uint8_t> data;
@@ -4088,14 +4119,14 @@ Error GLTFDocument::_parse_images(Ref<GLTFState> p_state, const String &p_base_p
 				ERR_FAIL_COND_V(p_base_path.is_empty(), ERR_INVALID_PARAMETER);
 				uri = uri.uri_decode();
 				uri = p_base_path.path_join(uri).replace("\\", "/"); // Fix for Windows.
-				// If the image is in the .godot/imported directory, we can't use ResourceLoader.
-				if (!p_base_path.begins_with("res://.godot/imported")) {
-					// ResourceLoader will rely on the file extension to use the relevant loader.
-					// The spec says that if mimeType is defined, it should take precedence (e.g.
-					// there could be a `.png` image which is actually JPEG), but there's no easy
-					// API for that in Godot, so we'd have to load as a buffer (i.e. embedded in
-					// the material), so we only do that only as fallback.
-					Ref<Texture2D> texture = ResourceLoader::load(uri, "Texture2D");
+				resource_uri = uri.simplify_path();
+				// ResourceLoader will rely on the file extension to use the relevant loader.
+				// The spec says that if mimeType is defined, it should take precedence (e.g.
+				// there could be a `.png` image which is actually JPEG), but there's no easy
+				// API for that in Godot, so we'd have to load as a buffer (i.e. embedded in
+				// the material), so we only do that only as fallback.
+				if (ResourceLoader::exists(resource_uri)) {
+					Ref<Texture2D> texture = ResourceLoader::load(resource_uri, "Texture2D");
 					if (texture.is_valid()) {
 						p_state->images.push_back(texture);
 						p_state->source_images.push_back(texture->get_image());
@@ -4106,13 +4137,13 @@ Error GLTFDocument::_parse_images(Ref<GLTFState> p_state, const String &p_base_p
 				// If the mimeType does not match with the file extension, either it should be
 				// specified in the file, or the GLTFDocumentExtension should handle it.
 				if (mime_type.is_empty()) {
-					mime_type = "image/" + uri.get_extension();
+					mime_type = "image/" + resource_uri.get_extension();
 				}
 				// Fallback to loading as byte array. This enables us to support the
 				// spec's requirement that we honor mimetype regardless of file URI.
-				data = FileAccess::get_file_as_bytes(uri);
+				data = FileAccess::get_file_as_bytes(resource_uri);
 				if (data.size() == 0) {
-					WARN_PRINT(vformat("glTF: Image index '%d' couldn't be loaded as a buffer of MIME type '%s' from URI: %s because there was no data to load. Skipping it.", i, mime_type, uri));
+					WARN_PRINT(vformat("glTF: Image index '%d' couldn't be loaded as a buffer of MIME type '%s' from URI: %s because there was no data to load. Skipping it.", i, mime_type, resource_uri));
 					p_state->images.push_back(Ref<Texture2D>()); // Placeholder to keep count.
 					p_state->source_images.push_back(Ref<Image>());
 					continue;
@@ -4142,7 +4173,7 @@ Error GLTFDocument::_parse_images(Ref<GLTFState> p_state, const String &p_base_p
 		String file_extension;
 		Ref<Image> img = _parse_image_bytes_into_image(p_state, data, mime_type, i, file_extension);
 		img->set_name(image_name);
-		_parse_image_save_image(p_state, data, file_extension, i, img);
+		_parse_image_save_image(p_state, data, resource_uri, file_extension, i, img);
 	}
 
 	print_verbose("glTF: Total images: " + itos(p_state->images.size()));
@@ -4821,12 +4852,12 @@ Error GLTFDocument::_parse_materials(Ref<GLTFState> p_state) {
 				material->set_transparency(BaseMaterial3D::TRANSPARENCY_ALPHA_DEPTH_PRE_PASS);
 			} else if (am == "MASK") {
 				material->set_transparency(BaseMaterial3D::TRANSPARENCY_ALPHA_SCISSOR);
-				if (material_dict.has("alphaCutoff")) {
-					material->set_alpha_scissor_threshold(material_dict["alphaCutoff"]);
-				} else {
-					material->set_alpha_scissor_threshold(0.5f);
-				}
 			}
+		}
+		if (material_dict.has("alphaCutoff")) {
+			material->set_alpha_scissor_threshold(material_dict["alphaCutoff"]);
+		} else {
+			material->set_alpha_scissor_threshold(0.5f);
 		}
 
 		if (material_dict.has("extras")) {
@@ -8155,7 +8186,7 @@ void GLTFDocument::_bind_methods() {
 			&GLTFDocument::get_supported_gltf_extensions);
 }
 
-void GLTFDocument::_build_parent_hierachy(Ref<GLTFState> p_state) {
+void GLTFDocument::_build_parent_hierarchy(Ref<GLTFState> p_state) {
 	// build the hierarchy
 	for (GLTFNodeIndex node_i = 0; node_i < p_state->nodes.size(); node_i++) {
 		for (int j = 0; j < p_state->nodes[node_i]->children.size(); j++) {

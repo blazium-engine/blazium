@@ -78,6 +78,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/resource.h>
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <time.h>
@@ -187,9 +188,87 @@ Vector<String> OS_Unix::get_video_adapter_driver_info() const {
 	return Vector<String>();
 }
 
-String OS_Unix::get_stdin_string() {
-	char buff[1024];
-	return String::utf8(fgets(buff, 1024, stdin));
+String OS_Unix::get_stdin_string(int64_t p_buffer_size) {
+	Vector<uint8_t> data;
+	data.resize(p_buffer_size);
+	if (fgets((char *)data.ptrw(), data.size(), stdin)) {
+		return String::utf8((char *)data.ptr());
+	}
+	return String();
+}
+
+PackedByteArray OS_Unix::get_stdin_buffer(int64_t p_buffer_size) {
+	Vector<uint8_t> data;
+	data.resize(p_buffer_size);
+	size_t sz = fread((void *)data.ptrw(), 1, data.size(), stdin);
+	if (sz > 0) {
+		data.resize(sz);
+		return data;
+	}
+	return PackedByteArray();
+}
+
+OS_Unix::StdHandleType OS_Unix::get_stdin_type() const {
+	int h = fileno(stdin);
+	if (h == -1) {
+		return STD_HANDLE_INVALID;
+	}
+
+	if (isatty(h)) {
+		return STD_HANDLE_CONSOLE;
+	}
+	struct stat statbuf;
+	if (fstat(h, &statbuf) < 0) {
+		return STD_HANDLE_UNKNOWN;
+	}
+	if (S_ISFIFO(statbuf.st_mode)) {
+		return STD_HANDLE_PIPE;
+	} else if (S_ISREG(statbuf.st_mode) || S_ISLNK(statbuf.st_mode)) {
+		return STD_HANDLE_FILE;
+	}
+	return STD_HANDLE_UNKNOWN;
+}
+
+OS_Unix::StdHandleType OS_Unix::get_stdout_type() const {
+	int h = fileno(stdout);
+	if (h == -1) {
+		return STD_HANDLE_INVALID;
+	}
+
+	if (isatty(h)) {
+		return STD_HANDLE_CONSOLE;
+	}
+	struct stat statbuf;
+	if (fstat(h, &statbuf) < 0) {
+		return STD_HANDLE_UNKNOWN;
+	}
+	if (S_ISFIFO(statbuf.st_mode)) {
+		return STD_HANDLE_PIPE;
+	} else if (S_ISREG(statbuf.st_mode) || S_ISLNK(statbuf.st_mode)) {
+		return STD_HANDLE_FILE;
+	}
+	return STD_HANDLE_UNKNOWN;
+}
+
+OS_Unix::StdHandleType OS_Unix::get_stderr_type() const {
+	int h = fileno(stderr);
+	if (h == -1) {
+		return STD_HANDLE_INVALID;
+	}
+
+	if (isatty(h)) {
+		return STD_HANDLE_CONSOLE;
+	}
+	struct stat statbuf;
+	if (fstat(h, &statbuf) < 0) {
+		return STD_HANDLE_UNKNOWN;
+	}
+	if (S_ISFIFO(statbuf.st_mode)) {
+		return STD_HANDLE_PIPE;
+	} else if (S_ISREG(statbuf.st_mode) || S_ISLNK(statbuf.st_mode)) {
+		return STD_HANDLE_FILE;
+	}
+	return STD_HANDLE_UNKNOWN;
 }
 
 Error OS_Unix::get_entropy(uint8_t *r_buffer, int p_bytes) {
@@ -881,22 +960,8 @@ void OS_Unix::unset_environment(const String &p_var) const {
 	unsetenv(p_var.utf8().get_data());
 }
 
-String OS_Unix::get_user_data_dir() const {
-	String appname = get_safe_dir_name(GLOBAL_GET("application/config/name"));
-	if (!appname.is_empty()) {
-		bool use_custom_dir = GLOBAL_GET("application/config/use_custom_user_dir");
-		if (use_custom_dir) {
-			String custom_dir = get_safe_dir_name(GLOBAL_GET("application/config/custom_user_dir_name"), true);
-			if (custom_dir.is_empty()) {
-				custom_dir = appname;
-			}
-			return get_data_path().path_join(custom_dir);
-		} else {
-			return get_data_path().path_join(get_godot_dir_name()).path_join("app_userdata").path_join(appname);
-		}
-	}
-
-	return get_data_path().path_join(get_godot_dir_name()).path_join("app_userdata").path_join("[unnamed project]");
+String OS_Unix::get_user_data_dir(const String &p_user_dir) const {
+	return get_data_path().path_join(p_user_dir);
 }
 
 String OS_Unix::get_executable_path() const {

@@ -30,7 +30,6 @@
 
 #include "camera_3d_gizmo_plugin.h"
 
-#include "core/config/project_settings.h"
 #include "editor/editor_node.h"
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
@@ -205,7 +204,6 @@ void Camera3DGizmoPlugin::redraw(EditorNode3DGizmo *p_gizmo) {
 			Vector3 right(hsize * size_factor.x, 0, 0);
 			Vector3 up(0, hsize * size_factor.y, 0);
 			Vector3 back(0, 0, -1.0);
-			Vector3 front(0, 0, 0);
 
 			ADD_QUAD(-up - right, -up + right, up + right, up - right);
 			ADD_QUAD(-up - right + back, -up + right + back, up + right + back, up - right + back);

@@ -127,6 +127,7 @@ bool DisplayServerWindows::has_feature(Feature p_feature) const {
 		case FEATURE_NATIVE_DIALOG_INPUT:
 		case FEATURE_NATIVE_DIALOG_FILE:
 		case FEATURE_NATIVE_DIALOG_FILE_EXTRA:
+		//case FEATURE_NATIVE_DIALOG_FILE_MIME:
 		case FEATURE_SWAP_BUFFERS:
 		case FEATURE_KEEP_SCREEN_ON:
 		case FEATURE_TEXT_TO_SPEECH:
@@ -136,6 +137,8 @@ bool DisplayServerWindows::has_feature(Feature p_feature) const {
 		case FEATURE_WINDOW_DRAG:
 		case FEATURE_SCREEN_EXCLUDE_FROM_CAPTURE:
 			return true;
+		case FEATURE_EMOJI_AND_SYMBOL_PICKER:
+			return (os_ver.dwBuildNumber >= 17134); // Windows 10 Redstone 4 (1803)+ only.
 		default:
 			return false;
 	}
@@ -3519,6 +3522,27 @@ Key DisplayServerWindows::keyboard_get_label_from_physical(Key p_keycode) const 
 	return p_keycode;
 }
 
+void DisplayServerWindows::show_emoji_and_symbol_picker() const {
+	// Send Win + Period shortcut, there's no non-WinRT public API.
+
+	INPUT input[4] = {};
+	input[0].type = INPUT_KEYBOARD; // Win down.
+	input[0].ki.wVk = VK_LWIN;
+
+	input[1].type = INPUT_KEYBOARD; // Period down.
+	input[1].ki.wVk = VK_OEM_PERIOD;
+
+	input[2].type = INPUT_KEYBOARD; // Win up.
+	input[2].ki.wVk = VK_LWIN;
+	input[2].ki.dwFlags = KEYEVENTF_KEYUP;
+
+	input[3].type = INPUT_KEYBOARD; // Period up.
+	input[3].ki.wVk = VK_OEM_PERIOD;
+	input[3].ki.dwFlags = KEYEVENTF_KEYUP;
+
+	SendInput(4, input, sizeof(INPUT));
+}
+
 String DisplayServerWindows::_get_keyboard_layout_display_name(const String &p_klid) const {
 	String ret;
 	HKEY key;
@@ -6762,8 +6786,8 @@ DisplayServerWindows::DisplayServerWindows(const String &p_rendering_driver, Win
 	_register_raw_input_devices(INVALID_WINDOW_ID);
 
 #if defined(RD_ENABLED)
-	bool fallback_to_vulkan = GLOBAL_GET("rendering/rendering_device/fallback_to_vulkan");
-	bool fallback_to_d3d12 = GLOBAL_GET("rendering/rendering_device/fallback_to_d3d12");
+	[[maybe_unused]] bool fallback_to_vulkan = GLOBAL_GET("rendering/rendering_device/fallback_to_vulkan");
+	[[maybe_unused]] bool fallback_to_d3d12 = GLOBAL_GET("rendering/rendering_device/fallback_to_d3d12");
 
 #if defined(VULKAN_ENABLED)
 	if (rendering_driver == "vulkan") {

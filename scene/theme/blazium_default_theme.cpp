@@ -405,6 +405,7 @@ void update_theme_icons(Ref<Theme> &p_theme, const Color &p_font_color, const Co
 	p_theme->set_icon("folded_arrow", "ColorPicker", icons["arrow_right"]);
 	p_theme->set_icon("folded_arrow_mirrored", "ColorPicker", icons["arrow_left"]);
 	p_theme->set_icon("expanded_arrow", "ColorPicker", icons["arrow_down"]);
+	p_theme->set_icon("menu_option", "ColorPicker", icons["tabs_menu_hl"]);
 	p_theme->set_icon("screen_picker", "ColorPicker", icons["color_picker_pipette"]);
 	p_theme->set_icon("shape_circle", "ColorPicker", icons["picker_shape_circle"]);
 	p_theme->set_icon("shape_rect", "ColorPicker", icons["picker_shape_rectangle"]);
@@ -450,6 +451,9 @@ void update_theme_icons(Ref<Theme> &p_theme, const Color &p_font_color, const Co
 	p_theme->set_icon("folder", "FileDialog", icons["folder"]);
 	p_theme->set_icon("file", "FileDialog", icons["file"]);
 	p_theme->set_icon("create_folder", "FileDialog", icons["folder_create"]);
+	p_theme->set_icon("load", "FileDialog", icons["load"]);
+	p_theme->set_icon("save", "FileDialog", icons["save"]);
+	p_theme->set_icon("clear", "FileDialog", icons["clear"]);
 
 	p_theme->set_icon("checked", "PopupMenu", icons["checked"]);
 	p_theme->set_icon("checked_disabled", "PopupMenu", icons["checked_disabled"]);
@@ -559,7 +563,6 @@ void update_theme_colors(Ref<Theme> &p_theme, const Color &p_base_color, const C
 	p_theme->set_color("up_pressed_icon_modulate", "SpinBox", accent_color);
 	p_theme->set_color("selection_stroke", "GraphEdit", accent_color);
 	p_theme->set_color("collapsed_font_color", "FoldableContainer", accent_color);
-	p_theme->set_color("button_icon_pressed", "FoldableContainer", accent_color);
 	p_theme->set_color("arrow_collapsed_color", "FoldableContainer", accent_color);
 
 	p_theme->set_color("search_result_color", "TextEdit", accent_color2);
@@ -666,7 +669,6 @@ void update_font_color(Ref<Theme> &p_theme, const Color &p_color) {
 	p_theme->set_color("font_hovered_color", "ItemList", font_color);
 	p_theme->set_color("connection_rim_color", "GraphEdit", font_color);
 	p_theme->set_color("hover_font_color", "FoldableContainer", font_color);
-	p_theme->set_color("button_icon_hovered", "FoldableContainer", font_color);
 	p_theme->set_color("arrow_hover_color", "FoldableContainer", font_color);
 
 	p_theme->set_color("font_focus_color", "Button", font_color);
@@ -716,7 +718,6 @@ void update_font_color(Ref<Theme> &p_theme, const Color &p_color) {
 	p_theme->set_color("default_color", "RichTextLabel", font_color);
 	p_theme->set_color("up_icon_modulate", "SpinBox", font_color);
 	p_theme->set_color("down_icon_modulate", "SpinBox", font_color);
-	p_theme->set_color("button_icon_normal", "FoldableContainer", font_color);
 	p_theme->set_color("arrow_normal_color", "FoldableContainer", font_color);
 	font_color.a = 0.6;
 	grabber_style->set_bg_color(font_color);
@@ -757,7 +758,6 @@ void update_font_color(Ref<Theme> &p_theme, const Color &p_color) {
 	p_theme->set_color("selection_fill", "GraphEdit", font_color);
 	p_theme->set_color("completion_scroll_hovered_color", "CodeEdit", font_color);
 	p_theme->set_color("completion_scroll_color", "CodeEdit", font_color);
-	p_theme->set_color("button_icon_disabled", "FoldableContainer", font_color);
 
 	p_theme->set_color("font_color", "Colors", p_color);
 }
@@ -1426,10 +1426,6 @@ void make_default_theme(Ref<Font> p_font, float p_scale, TextServer::SubpixelPos
 	t->set_stylebox("title_hover_panel", "FoldableContainer", foldable_title_hover_style);
 	t->set_stylebox("title_collapsed_hover_panel", "FoldableContainer", foldable_title_collapsed_hover_style);
 	t->set_stylebox(SceneStringName(panel), "FoldableContainer", foldable_panel_style);
-	t->set_stylebox("button_normal_style", "FoldableContainer", button_empty_style);
-	t->set_stylebox("button_hovered_style", "FoldableContainer", button_normal_style);
-	t->set_stylebox("button_pressed_style", "FoldableContainer", button_pressed_style);
-	t->set_stylebox("button_disabled_style", "FoldableContainer", button_disabled_style);
 
 	t->set_stylebox(SceneStringName(panel), "FlatFoldableContainer", flat_foldable_panel_style);
 
@@ -1632,6 +1628,7 @@ void make_default_theme(Ref<Font> p_font, float p_scale, TextServer::SubpixelPos
 	t->set_constant("draw_grabber_icon", "FlatSplitContainer", 0);
 	t->set_constant("draw_grabber_icon", "FlatHSplitContainer", 0);
 	t->set_constant("draw_grabber_icon", "FlatVSplitContainer", 0);
+	t->set_constant("connection_hover_thickness", "GraphEdit", 0);
 
 	t->set_constant("draw_split_bar", "FlatSplitContainer", 1);
 	t->set_constant("draw_split_bar", "FlatHSplitContainer", 1);

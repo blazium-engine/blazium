@@ -1877,9 +1877,12 @@ void ClassDB::_bind_compatibility(ClassInfo *type, MethodBind *p_method) {
 void ClassDB::_bind_method_custom(const StringName &p_class, MethodBind *p_method, bool p_compatibility) {
 	OBJTYPE_WLOCK;
 
+	StringName method_name = p_method->get_name();
+
 	ClassInfo *type = classes.getptr(p_class);
 	if (!type) {
-		ERR_FAIL_MSG(vformat("Couldn't bind custom method '%s' for instance '%s'.", p_method->get_name(), p_class));
+		memdelete(p_method);
+		ERR_FAIL_MSG(vformat("Couldn't bind custom method '%s' for instance '%s'.", method_name, p_class));
 	}
 
 	if (p_compatibility) {
@@ -1887,16 +1890,17 @@ void ClassDB::_bind_method_custom(const StringName &p_class, MethodBind *p_metho
 		return;
 	}
 
-	if (type->method_map.has(p_method->get_name())) {
+	if (type->method_map.has(method_name)) {
 		// overloading not supported
-		ERR_FAIL_MSG(vformat("Method already bound '%s::%s'.", p_class, p_method->get_name()));
+		memdelete(p_method);
+		ERR_FAIL_MSG(vformat("Method already bound '%s::%s'.", p_class, method_name));
 	}
 
 #ifdef DEBUG_METHODS_ENABLED
-	type->method_order.push_back(p_method->get_name());
+	type->method_order.push_back(method_name);
 #endif
 
-	type->method_map[p_method->get_name()] = p_method;
+	type->method_map[method_name] = p_method;
 }
 
 MethodBind *ClassDB::_bind_vararg_method(MethodBind *p_bind, const StringName &p_name, const Vector<Variant> &p_default_args, bool p_compatibility) {
@@ -1968,6 +1972,11 @@ MethodBind *ClassDB::bind_methodfi(uint32_t p_flags, MethodBind *p_bind, bool p_
 	if (method_name.args.size() > p_bind->get_argument_count()) {
 		memdelete(p_bind);
 		ERR_FAIL_V_MSG(nullptr, vformat("Method definition provides more arguments than the method actually has '%s::%s'.", instance_type, mdname));
+	}
+
+	if (p_defcount > p_bind->get_argument_count()) {
+		memdelete(p_bind);
+		ERR_FAIL_V_MSG(nullptr, vformat("Method definition for '%s::%s' provides more default arguments than the method has arguments.", instance_type, mdname));
 	}
 
 	p_bind->set_argument_names(method_name.args);

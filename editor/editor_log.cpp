@@ -38,7 +38,6 @@
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
 #include "editor/themes/editor_scale.h"
-#include "scene/gui/center_container.h"
 #include "scene/gui/line_edit.h"
 #include "scene/gui/rich_text_label.h"
 #include "scene/gui/separator.h"
@@ -419,7 +418,7 @@ void EditorLog::_set_filter_active(bool p_active, MessageType p_message_type) {
 void EditorLog::_set_search_visible(bool p_visible) {
 	search_box->set_visible(p_visible);
 	if (p_visible) {
-		search_box->grab_focus();
+		search_box->edit();
 	}
 	_start_state_save_timer();
 }

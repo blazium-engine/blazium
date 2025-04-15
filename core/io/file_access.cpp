@@ -199,6 +199,10 @@ Ref<FileAccess> FileAccess::_open(const String &p_path, ModeFlags p_mode_flags) 
 }
 
 Ref<FileAccess> FileAccess::open_encrypted(const String &p_path, ModeFlags p_mode_flags, const Vector<uint8_t> &p_key) {
+	return _open_encrypted(p_path, p_mode_flags, p_key, Vector<uint8_t>());
+}
+
+Ref<FileAccess> FileAccess::_open_encrypted(const String &p_path, ModeFlags p_mode_flags, const Vector<uint8_t> &p_key, const Vector<uint8_t> &p_iv) {
 	Ref<FileAccess> fa = _open(p_path, p_mode_flags);
 	if (fa.is_null()) {
 		return fa;
@@ -206,7 +210,7 @@ Ref<FileAccess> FileAccess::open_encrypted(const String &p_path, ModeFlags p_mod
 
 	Ref<FileAccessEncrypted> fae;
 	fae.instantiate();
-	Error err = fae->open_and_parse(fa, p_key, (p_mode_flags == WRITE) ? FileAccessEncrypted::MODE_WRITE_AES256 : FileAccessEncrypted::MODE_READ);
+	Error err = fae->open_and_parse(fa, p_key, (p_mode_flags == WRITE) ? FileAccessEncrypted::MODE_WRITE_AES256 : FileAccessEncrypted::MODE_READ, true, p_iv);
 	last_file_open_error = err;
 	if (err) {
 		return Ref<FileAccess>();
@@ -428,7 +432,7 @@ class CharBuffer {
 public:
 	_FORCE_INLINE_ CharBuffer() :
 			buffer(stack_buffer),
-			capacity(sizeof(stack_buffer) / sizeof(char)) {
+			capacity(std::size(stack_buffer)) {
 	}
 
 	_FORCE_INLINE_ void push_back(char c) {
@@ -450,7 +454,7 @@ String FileAccess::get_line() const {
 	uint8_t c = get_8();
 
 	while (!eof_reached()) {
-		if (c == '\n' || c == '\0') {
+		if (c == '\n' || c == '\0' || get_error() != OK) {
 			line.push_back(0);
 			return String::utf8(line.get_data());
 		} else if (c != '\r') {
@@ -893,6 +897,7 @@ String FileAccess::get_sha256(const String &p_file) {
 void FileAccess::_bind_methods() {
 	ClassDB::bind_static_method("FileAccess", D_METHOD("open", "path", "flags"), &FileAccess::_open);
 	ClassDB::bind_static_method("FileAccess", D_METHOD("open_encrypted", "path", "mode_flags", "key"), &FileAccess::open_encrypted);
+	ClassDB::bind_static_method("FileAccess", D_METHOD("open_encrypted2", "path", "mode_flags", "key", "iv"), &FileAccess::_open_encrypted, DEFVAL(Vector<uint8_t>()));
 	ClassDB::bind_static_method("FileAccess", D_METHOD("open_encrypted_with_pass", "path", "mode_flags", "pass"), &FileAccess::open_encrypted_pass);
 	ClassDB::bind_static_method("FileAccess", D_METHOD("open_compressed", "path", "mode_flags", "compression_mode"), &FileAccess::open_compressed, DEFVAL(0));
 	ClassDB::bind_static_method("FileAccess", D_METHOD("get_open_error"), &FileAccess::get_open_error);

@@ -36,6 +36,10 @@
 #include "core/object/worker_thread_pool.h"
 #include "core/os/thread.h"
 
+namespace core_bind {
+class ResourceLoader;
+}
+
 class ConditionVariable;
 
 template <int Tag>
@@ -101,6 +105,7 @@ typedef void (*ResourceLoadedCallback)(Ref<Resource> p_resource, const String &p
 
 class ResourceLoader {
 	friend class LoadToken;
+	friend class core_bind::ResourceLoader;
 
 	enum {
 		MAX_LOADERS = 64
@@ -200,6 +205,7 @@ private:
 
 	static void _run_load_task(void *p_userdata);
 
+	static thread_local bool import_thread;
 	static thread_local int load_nesting;
 	static thread_local HashMap<int, HashMap<String, Ref<Resource>>> res_ref_overrides; // Outermost key is nesting level.
 	static thread_local Vector<String> load_paths_stack;
@@ -216,6 +222,8 @@ private:
 	static float _dependency_get_progress(const String &p_path);
 
 	static bool _ensure_load_progress();
+
+	static String _validate_local_path(const String &p_path);
 
 public:
 	static Error load_threaded_request(const String &p_path, const String &p_type_hint = "", bool p_use_sub_threads = false, ResourceFormatLoader::CacheMode p_cache_mode = ResourceFormatLoader::CACHE_MODE_REUSE);
@@ -246,6 +254,8 @@ public:
 	static String get_import_group_file(const String &p_path);
 	static bool is_imported(const String &p_path);
 	static int get_import_order(const String &p_path);
+
+	static void set_is_import_thread(bool p_import_thread);
 
 	static void set_timestamp_on_load(bool p_timestamp) { timestamp_on_load = p_timestamp; }
 	static bool get_timestamp_on_load() { return timestamp_on_load; }

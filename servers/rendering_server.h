@@ -34,7 +34,6 @@
 #include "core/io/image.h"
 #include "core/math/geometry_3d.h"
 #include "core/math/transform_2d.h"
-#include "core/object/class_db.h"
 #include "core/templates/rid.h"
 #include "core/variant/typed_array.h"
 #include "core/variant/variant.h"
@@ -56,9 +55,6 @@
 #define ERR_NOT_ON_RENDER_THREAD
 #define ERR_NOT_ON_RENDER_THREAD_V(m_ret)
 #endif
-
-template <typename T>
-class TypedArray;
 
 class RenderingServer : public Object {
 	GDCLASS(RenderingServer, Object);
@@ -731,6 +727,7 @@ public:
 	virtual void particles_set_lifetime(RID p_particles, double p_lifetime) = 0;
 	virtual void particles_set_one_shot(RID p_particles, bool p_one_shot) = 0;
 	virtual void particles_set_pre_process_time(RID p_particles, double p_time) = 0;
+	virtual void particles_request_process_time(RID p_particles, real_t p_request_process_time) = 0;
 	virtual void particles_set_explosiveness_ratio(RID p_particles, float p_ratio) = 0;
 	virtual void particles_set_randomness_ratio(RID p_particles, float p_ratio) = 0;
 	virtual void particles_set_custom_aabb(RID p_particles, const AABB &p_aabb) = 0;
@@ -741,6 +738,7 @@ public:
 	virtual void particles_set_interpolate(RID p_particles, bool p_enable) = 0;
 	virtual void particles_set_fractional_delta(RID p_particles, bool p_enable) = 0;
 	virtual void particles_set_collision_base_size(RID p_particles, float p_size) = 0;
+	virtual void particles_set_seed(RID p_particles, uint32_t p_seed) = 0;
 
 	enum ParticlesTransformAlign {
 		PARTICLES_TRANSFORM_ALIGN_DISABLED,
@@ -824,6 +822,7 @@ public:
 	};
 
 	virtual void particles_collision_set_height_field_resolution(RID p_particles_collision, ParticlesCollisionHeightfieldResolution p_resolution) = 0; // For SDF and vector field.
+	virtual void particles_collision_set_height_field_mask(RID p_particles_collision, uint32_t p_heightfield_mask) = 0;
 
 	/* FOG VOLUME API */
 
@@ -1359,7 +1358,7 @@ public:
 		INSTANCE_VOXEL_GI,
 		INSTANCE_LIGHTMAP,
 		INSTANCE_OCCLUDER,
-		INSTANCE_VISIBLITY_NOTIFIER,
+		INSTANCE_VISIBLITY_NOTIFIER, // TODO: Fix typo in "VISIBILITY" (in 5.0).
 		INSTANCE_FOG_VOLUME,
 		INSTANCE_MAX,
 
@@ -1493,6 +1492,7 @@ public:
 	virtual void canvas_item_set_visibility_layer(RID p_item, uint32_t p_visibility_layer) = 0;
 
 	virtual void canvas_item_set_draw_behind_parent(RID p_item, bool p_enable) = 0;
+	virtual void canvas_item_set_use_identity_transform(RID p_item, bool p_enabled) = 0;
 
 	enum NinePatchAxisMode {
 		NINE_PATCH_STRETCH,

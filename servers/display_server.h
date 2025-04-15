@@ -104,7 +104,7 @@ private:
 	static bool _input_is_mouse_mode_override_enabled();
 	static void _input_warp(const Vector2 &p_to_pos);
 	static Input::CursorShape _input_get_current_cursor_shape();
-	static void _input_set_custom_mouse_cursor_func(const Ref<Resource> &, Input::CursorShape, const Vector2 &p_hostspot);
+	static void _input_set_custom_mouse_cursor_func(const Ref<Resource> &, Input::CursorShape, const Vector2 &p_hotspot);
 
 protected:
 	static void _bind_methods();
@@ -160,6 +160,8 @@ public:
 		FEATURE_WINDOW_DRAG,
 		FEATURE_SCREEN_EXCLUDE_FROM_CAPTURE,
 		FEATURE_WINDOW_EMBEDDING,
+		FEATURE_NATIVE_DIALOG_FILE_MIME,
+		FEATURE_EMOJI_AND_SYMBOL_PICKER,
 	};
 
 	virtual bool has_feature(Feature p_feature) const = 0;
@@ -602,6 +604,7 @@ public:
 	virtual String keyboard_get_layout_name(int p_index) const;
 	virtual Key keyboard_get_keycode_from_physical(Key p_keycode) const;
 	virtual Key keyboard_get_label_from_physical(Key p_keycode) const;
+	virtual void show_emoji_and_symbol_picker() const;
 
 	virtual int tablet_get_driver_count() const { return 1; }
 	virtual String tablet_get_driver_name(int p_driver) const { return "default"; }
@@ -649,8 +652,10 @@ public:
 	// Used to cache the result of `can_create_rendering_device()` when RenderingDevice isn't currently being used.
 	// This is done as creating a RenderingDevice is quite slow.
 	static inline RenderingDeviceCreationStatus created_rendering_device = RenderingDeviceCreationStatus::UNKNOWN;
-
 	static bool can_create_rendering_device();
+
+	static inline RenderingDeviceCreationStatus supported_rendering_device = RenderingDeviceCreationStatus::UNKNOWN;
+	static bool is_rendering_device_supported();
 
 	DisplayServer();
 	~DisplayServer();

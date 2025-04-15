@@ -34,7 +34,6 @@
 #include "openxr_api.h"
 
 #include "core/object/ref_counted.h"
-#include "core/os/os.h"
 #include "core/os/thread_safe.h"
 #include "core/variant/native_ptr.h"
 
@@ -76,6 +75,9 @@ public:
 	int64_t get_predicted_display_time();
 	int64_t get_next_frame_time();
 	bool can_render();
+
+	RID find_action(const String &p_name, const RID &p_action_set = RID());
+	uint64_t action_get_handle(RID p_action);
 
 	uint64_t get_hand_tracker(int p_hand_index);
 

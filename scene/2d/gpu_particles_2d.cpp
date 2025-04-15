@@ -32,17 +32,17 @@
 
 #include "scene/2d/cpu_particles_2d.h"
 #include "scene/resources/atlas_texture.h"
+#include "scene/resources/canvas_item_material.h"
 #include "scene/resources/curve_texture.h"
 #include "scene/resources/gradient_texture.h"
 #include "scene/resources/particle_process_material.h"
 
-#ifdef TOOLS_ENABLED
-#include "core/config/engine.h"
-#endif
-
 void GPUParticles2D::set_emitting(bool p_emitting) {
 	// Do not return even if `p_emitting == emitting` because `emitting` is just an approximation.
 
+	if (p_emitting && p_emitting != emitting && !use_fixed_seed) {
+		set_seed(Math::rand());
+	}
 	if (p_emitting && one_shot) {
 		if (!active && !emitting) {
 			// Last cycle ended.
@@ -326,6 +326,31 @@ float GPUParticles2D::get_interp_to_end() const {
 	return interp_to_end_factor;
 }
 
+void GPUParticles2D::set_use_fixed_seed(bool p_use_fixed_seed) {
+	if (p_use_fixed_seed == use_fixed_seed) {
+		return;
+	}
+	use_fixed_seed = p_use_fixed_seed;
+	notify_property_list_changed();
+}
+
+bool GPUParticles2D::get_use_fixed_seed() const {
+	return use_fixed_seed;
+}
+
+void GPUParticles2D::set_seed(uint32_t p_seed) {
+	seed = p_seed;
+	RS::get_singleton()->particles_set_seed(particles, p_seed);
+}
+
+uint32_t GPUParticles2D::get_seed() const {
+	return seed;
+}
+
+void GPUParticles2D::request_particles_process(real_t p_requested_process_time) {
+	RS::get_singleton()->particles_request_process_time(particles, p_requested_process_time);
+}
+
 PackedStringArray GPUParticles2D::get_configuration_warnings() const {
 	PackedStringArray warnings = Node2D::get_configuration_warnings();
 
@@ -384,6 +409,9 @@ Ref<Texture2D> GPUParticles2D::get_texture() const {
 }
 
 void GPUParticles2D::_validate_property(PropertyInfo &p_property) const {
+	if (p_property.name == "seed" && !use_fixed_seed) {
+		p_property.usage = PROPERTY_USAGE_NONE;
+	}
 	if (p_property.name == "emitting") {
 		p_property.hint = one_shot ? PROPERTY_HINT_ONESHOT : PROPERTY_HINT_NONE;
 	}
@@ -444,6 +472,13 @@ float GPUParticles2D::get_amount_ratio() const {
 }
 
 void GPUParticles2D::restart() {
+	_restart();
+}
+
+void GPUParticles2D::_restart(bool p_keep_seed) {
+	if (!p_keep_seed && !use_fixed_seed) {
+		set_seed(Math::rand());
+	}
 	RS::get_singleton()->particles_restart(particles);
 	RS::get_singleton()->particles_set_emitting(particles, true);
 
@@ -646,10 +681,10 @@ void GPUParticles2D::_notification(int p_what) {
 				};
 
 				Vector<Vector2> uvs;
-				AtlasTexture *atlas_texure = Object::cast_to<AtlasTexture>(*texture);
-				if (atlas_texure && atlas_texure->get_atlas().is_valid()) {
-					Rect2 region_rect = atlas_texure->get_region();
-					Size2 atlas_size = atlas_texure->get_atlas()->get_size();
+				AtlasTexture *atlas_texture = Object::cast_to<AtlasTexture>(*texture);
+				if (atlas_texture && atlas_texture->get_atlas().is_valid()) {
+					Rect2 region_rect = atlas_texture->get_region();
+					Size2 atlas_size = atlas_texture->get_atlas()->get_size();
 					uvs.push_back(Vector2(region_rect.position.x / atlas_size.x, region_rect.position.y / atlas_size.y));
 					uvs.push_back(Vector2((region_rect.position.x + region_rect.size.x) / atlas_size.x, region_rect.position.y / atlas_size.y));
 					uvs.push_back(Vector2((region_rect.position.x + region_rect.size.x) / atlas_size.x, (region_rect.position.y + region_rect.size.y) / atlas_size.y));
@@ -770,6 +805,8 @@ void GPUParticles2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_collision_base_size", "size"), &GPUParticles2D::set_collision_base_size);
 	ClassDB::bind_method(D_METHOD("set_interp_to_end", "interp"), &GPUParticles2D::set_interp_to_end);
 
+	ClassDB::bind_method(D_METHOD("request_particles_process", "process_time"), &GPUParticles2D::request_particles_process);
+
 	ClassDB::bind_method(D_METHOD("is_emitting"), &GPUParticles2D::is_emitting);
 	ClassDB::bind_method(D_METHOD("get_amount"), &GPUParticles2D::get_amount);
 	ClassDB::bind_method(D_METHOD("get_lifetime"), &GPUParticles2D::get_lifetime);
@@ -796,6 +833,7 @@ void GPUParticles2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("capture_rect"), &GPUParticles2D::capture_rect);
 
 	ClassDB::bind_method(D_METHOD("restart"), &GPUParticles2D::restart);
+	ClassDB::bind_method(D_METHOD("restart_keep_seed", "keep_seed"), &GPUParticles2D::_restart, DEFVAL(true));
 
 	ClassDB::bind_method(D_METHOD("set_sub_emitter", "path"), &GPUParticles2D::set_sub_emitter);
 	ClassDB::bind_method(D_METHOD("get_sub_emitter"), &GPUParticles2D::get_sub_emitter);
@@ -819,6 +857,12 @@ void GPUParticles2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_amount_ratio", "ratio"), &GPUParticles2D::set_amount_ratio);
 	ClassDB::bind_method(D_METHOD("get_amount_ratio"), &GPUParticles2D::get_amount_ratio);
 
+	ClassDB::bind_method(D_METHOD("set_use_fixed_seed", "use_fixed_seed"), &GPUParticles2D::set_use_fixed_seed);
+	ClassDB::bind_method(D_METHOD("get_use_fixed_seed"), &GPUParticles2D::get_use_fixed_seed);
+
+	ClassDB::bind_method(D_METHOD("set_seed", "seed"), &GPUParticles2D::set_seed);
+	ClassDB::bind_method(D_METHOD("get_seed"), &GPUParticles2D::get_seed);
+
 	ADD_SIGNAL(MethodInfo("finished"));
 
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "emitting", PROPERTY_HINT_ONESHOT), "set_emitting", "is_emitting");
@@ -835,6 +879,8 @@ void GPUParticles2D::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "speed_scale", PROPERTY_HINT_RANGE, "0,64,0.01"), "set_speed_scale", "get_speed_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "explosiveness", PROPERTY_HINT_RANGE, "0,1,0.01"), "set_explosiveness_ratio", "get_explosiveness_ratio");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "randomness", PROPERTY_HINT_RANGE, "0,1,0.01"), "set_randomness_ratio", "get_randomness_ratio");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "use_fixed_seed", PROPERTY_HINT_ENUM), "set_use_fixed_seed", "get_use_fixed_seed");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "seed", PROPERTY_HINT_RANGE, "0," + itos(UINT32_MAX) + ",1"), "set_seed", "get_seed");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "fixed_fps", PROPERTY_HINT_RANGE, "0,1000,1,suffix:FPS"), "set_fixed_fps", "get_fixed_fps");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "interpolate"), "set_interpolate", "get_interpolate");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "fract_delta"), "set_fractional_delta", "get_fractional_delta");
@@ -860,6 +906,8 @@ void GPUParticles2D::_bind_methods() {
 	BIND_ENUM_CONSTANT(EMIT_FLAG_VELOCITY);
 	BIND_ENUM_CONSTANT(EMIT_FLAG_COLOR);
 	BIND_ENUM_CONSTANT(EMIT_FLAG_CUSTOM);
+
+	ADD_PROPERTY_DEFAULT("seed", 0);
 }
 
 GPUParticles2D::GPUParticles2D() {
@@ -873,6 +921,8 @@ GPUParticles2D::GPUParticles2D() {
 	one_shot = false; // Needed so that set_emitting doesn't access uninitialized values
 	set_emitting(true);
 	set_one_shot(false);
+	set_seed(Math::rand());
+	set_use_fixed_seed(false);
 	set_amount(8);
 	set_amount_ratio(1.0);
 	set_lifetime(1);

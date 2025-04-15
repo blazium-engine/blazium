@@ -36,6 +36,8 @@
 #include "scene/3d/lightmap_gi.h"
 #include "scene/gui/button.h"
 
+#include "modules/modules_enabled.gen.h" // For lightmapper_rd.
+
 void LightmapGIEditorPlugin::_bake_select_file(const String &p_file) {
 	if (lightmap) {
 		LightmapGI::BakeError err = LightmapGI::BAKE_ERROR_OK;

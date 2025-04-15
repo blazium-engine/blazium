@@ -32,6 +32,7 @@
 
 #include "core/input/input.h"
 #include "core/io/marshalls.h"
+#include "editor/editor_file_system.h"
 #include "editor/editor_properties.h"
 #include "editor/editor_properties_vector.h"
 #include "editor/editor_settings.h"
@@ -39,12 +40,10 @@
 #include "editor/gui/editor_spin_slider.h"
 #include "editor/inspector_dock.h"
 #include "editor/themes/editor_scale.h"
-#include "editor/themes/editor_theme_manager.h"
 #include "scene/gui/button.h"
 #include "scene/gui/label.h"
 #include "scene/gui/margin_container.h"
 #include "scene/gui/popup_menu.h"
-#include "scene/resources/packed_scene.h"
 
 bool EditorPropertyArrayObject::_set(const StringName &p_name, const Variant &p_value) {
 	String name = p_name;
@@ -370,7 +369,6 @@ void EditorPropertyArray::update_property() {
 
 		if (!container) {
 			container = memnew(PanelContainer);
-			container->set_mouse_filter(MOUSE_FILTER_STOP);
 			add_child(container);
 			set_bottom_editor(container);
 
@@ -387,6 +385,7 @@ void EditorPropertyArray::update_property() {
 			size_slider = memnew(EditorSpinSlider);
 			size_slider->set_step(1);
 			size_slider->set_max(INT32_MAX);
+			size_slider->set_editing_integer(true);
 			size_slider->set_h_size_flags(SIZE_EXPAND_FILL);
 			size_slider->set_read_only(is_read_only());
 			size_slider->connect(SceneStringName(value_changed), callable_mp(this, &EditorPropertyArray::_length_changed));
@@ -1011,7 +1010,6 @@ void EditorPropertyDictionary::update_property() {
 
 		if (!container) {
 			container = memnew(PanelContainer);
-			container->set_mouse_filter(MOUSE_FILTER_STOP);
 			add_child(container);
 			set_bottom_editor(container);
 
@@ -1196,7 +1194,7 @@ EditorPropertyDictionary::EditorPropertyDictionary() {
 	change_type = memnew(PopupMenu);
 	add_child(change_type);
 	change_type->connect(SceneStringName(id_pressed), callable_mp(this, &EditorPropertyDictionary::_change_type_menu));
-	changing_type_index = -1;
+	changing_type_index = EditorPropertyDictionaryObject::NOT_CHANGING_TYPE;
 	has_borders = true;
 }
 

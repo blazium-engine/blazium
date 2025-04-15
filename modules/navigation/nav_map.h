@@ -31,6 +31,8 @@
 #ifndef NAV_MAP_H
 #define NAV_MAP_H
 
+#include "3d/nav_map_iteration_3d.h"
+#include "3d/nav_mesh_queries_3d.h"
 #include "nav_rid.h"
 #include "nav_utils.h"
 
@@ -49,8 +51,6 @@ class NavAgent;
 class NavObstacle;
 
 class NavMap : public NavRid {
-	RWLock map_rwlock;
-
 	/// Map Up
 	Vector3 up = Vector3(0, 1, 0);
 
@@ -60,8 +60,8 @@ class NavMap : public NavRid {
 	real_t cell_height = NavigationDefaults3D::navmesh_cell_height;
 
 	// For the inter-region merging to work, internal rasterization is performed.
-	float merge_rasterizer_cell_size = NavigationDefaults3D::navmesh_cell_size;
-	float merge_rasterizer_cell_height = NavigationDefaults3D::navmesh_cell_height;
+	Vector3 merge_rasterizer_cell_size = Vector3(cell_size, cell_height, cell_size);
+
 	// This value is used to control sensitivity of internal rasterizer.
 	float merge_rasterizer_cell_scale = 1.0;
 
@@ -73,17 +73,12 @@ class NavMap : public NavRid {
 	real_t link_connection_radius = NavigationDefaults3D::link_connection_radius;
 
 	bool map_settings_dirty = true;
-	bool iteration_dirty = true;
 
 	/// Map regions
 	LocalVector<NavRegion *> regions;
 
 	/// Map links
 	LocalVector<NavLink *> links;
-	LocalVector<gd::Polygon> link_polygons;
-
-	/// Map polygons
-	LocalVector<gd::Polygon> polygons;
 
 	/// RVO avoidance worlds
 	RVO2D::RVOSimulator2D rvo_simulation_2d;
@@ -118,14 +113,6 @@ class NavMap : public NavRid {
 	// Performance Monitor
 	gd::PerformanceData performance_data;
 
-	struct ConnectionPair {
-		gd::Edge::Connection connections[2];
-		int size = 0;
-	};
-
-	HashMap<gd::EdgeKey, ConnectionPair, gd::EdgeKey> connection_pairs_map;
-	LocalVector<gd::Edge::Connection> free_edges;
-
 	struct {
 		SelfList<NavRegion>::List regions;
 		SelfList<NavLink>::List links;
@@ -133,7 +120,25 @@ class NavMap : public NavRid {
 		SelfList<NavObstacle>::List obstacles;
 	} sync_dirty_requests;
 
-	HashMap<NavRegion *, LocalVector<gd::Edge::Connection>> region_external_connections;
+	int path_query_slots_max = 4;
+
+	bool use_async_iterations = true;
+
+	uint32_t iteration_slot_index = 0;
+	LocalVector<NavMapIteration> iteration_slots;
+	mutable RWLock iteration_slot_rwlock;
+
+	NavMapIterationBuild iteration_build;
+	bool iteration_build_use_threads = false;
+	WorkerThreadPool::TaskID iteration_build_thread_task_id = WorkerThreadPool::INVALID_TASK_ID;
+	static void _build_iteration_threaded(void *p_arg);
+
+	bool iteration_dirty = true;
+	bool iteration_building = false;
+	bool iteration_ready = false;
+
+	void _build_iteration();
+	void _sync_iteration();
 
 public:
 	NavMap();
@@ -175,8 +180,10 @@ public:
 	}
 
 	gd::PointKey get_point_key(const Vector3 &p_pos) const;
+	const Vector3 &get_merge_rasterizer_cell_size() const;
 
-	Vector<Vector3> get_path(Vector3 p_origin, Vector3 p_destination, bool p_optimize, uint32_t p_navigation_layers, Vector<int32_t> *r_path_types, TypedArray<RID> *r_path_rids, Vector<int64_t> *r_path_owners) const;
+	void query_path(NavMeshQueries3D::NavMeshPathQueryTask3D &p_query_task);
+
 	Vector3 get_closest_point_to_segment(const Vector3 &p_from, const Vector3 &p_to, const bool p_use_collision) const;
 	Vector3 get_closest_point(const Vector3 &p_point) const;
 	Vector3 get_closest_point_normal(const Vector3 &p_point) const;
@@ -242,6 +249,9 @@ public:
 	void remove_link_sync_dirty_request(SelfList<NavLink> *p_sync_request);
 	void remove_agent_sync_dirty_request(SelfList<NavAgent> *p_sync_request);
 	void remove_obstacle_sync_dirty_request(SelfList<NavObstacle> *p_sync_request);
+
+	void set_use_async_iterations(bool p_enabled);
+	bool get_use_async_iterations() const;
 
 private:
 	void _sync_dirty_map_update_requests();

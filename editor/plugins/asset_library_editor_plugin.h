@@ -33,7 +33,6 @@
 
 #include "editor/editor_asset_installer.h"
 #include "editor/plugins/editor_plugin.h"
-#include "editor/plugins/editor_plugin_settings.h"
 #include "scene/gui/margin_container.h"
 #include "scene/gui/panel_container.h"
 

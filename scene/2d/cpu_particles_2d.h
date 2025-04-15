@@ -33,6 +33,8 @@
 
 #include "scene/2d/node_2d.h"
 
+class RandomNumberGenerator;
+
 class CPUParticles2D : public Node2D {
 private:
 	GDCLASS(CPUParticles2D, Node2D);
@@ -133,6 +135,7 @@ private:
 
 	double lifetime = 1.0;
 	double pre_process_time = 0.0;
+	double _requested_process_time = 0.0;
 	real_t explosiveness_ratio = 0.0;
 	real_t randomness_ratio = 0.0;
 	double lifetime_randomness = 0.0;
@@ -140,6 +143,8 @@ private:
 	bool local_coords = false;
 	int fixed_fps = 0;
 	bool fractional_delta = true;
+	uint32_t seed = 0;
+	bool use_fixed_seed = false;
 
 	Transform2D inv_emission_transform;
 
@@ -176,11 +181,23 @@ private:
 
 	Vector2 gravity = Vector2(0, 980);
 
+	Ref<RandomNumberGenerator> rng;
+
 	void _update_internal();
 	void _particles_process(double p_delta);
 	void _update_particle_data_buffer();
+	void _set_emitting();
 
 	Mutex update_mutex;
+
+	struct InterpolationData {
+		// Whether this particle is non-interpolated, but following an interpolated parent.
+		bool interpolated_follow = false;
+
+		// If doing interpolated follow, we need to keep these updated per tick.
+		Transform2D global_xform_curr;
+		Transform2D global_xform_prev;
+	} _interpolation_data;
 
 	void _update_render_thread();
 
@@ -189,6 +206,8 @@ private:
 	void _set_do_redraw(bool p_do_redraw);
 
 	void _texture_changed();
+
+	void _refresh_interpolation_state();
 
 protected:
 	static void _bind_methods();
@@ -229,6 +248,14 @@ public:
 
 	void set_texture(const Ref<Texture2D> &p_texture);
 	Ref<Texture2D> get_texture() const;
+
+	void set_use_fixed_seed(bool p_use_fixed_seed);
+	bool get_use_fixed_seed() const;
+
+	void set_seed(uint32_t p_seed);
+	uint32_t get_seed() const;
+
+	void request_particles_process(real_t p_requested_process_time);
 
 	///////////////////
 
@@ -285,6 +312,7 @@ public:
 	PackedStringArray get_configuration_warnings() const override;
 
 	void restart();
+	void _restart(bool p_keep_seed = false);
 
 	void convert_from_particles(Node *p_particles);
 

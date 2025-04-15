@@ -33,6 +33,9 @@
 #include "core/config/project_settings.h"
 #include "core/io/dir_access.h"
 
+#include "servers/rendering/renderer_rd/forward_clustered/render_forward_clustered.h"
+#include "servers/rendering/renderer_rd/forward_mobile/render_forward_mobile.h"
+
 void RendererCompositorRD::blit_render_targets_to_screen(DisplayServer::WindowID p_screen, const BlitToScreen *p_render_targets, int p_amount) {
 	Error err = RD::get_singleton()->screen_prepare_for_drawing(p_screen);
 	if (err != OK) {
@@ -212,18 +215,7 @@ void RendererCompositorRD::set_boot_image(const Ref<Image> &p_image, const Color
 	Rect2 imgrect(0, 0, p_image->get_width(), p_image->get_height());
 	Rect2 screenrect;
 	if (p_scale) {
-		if (window_size.width > window_size.height) {
-			//scale horizontally
-			screenrect.size.y = window_size.height;
-			screenrect.size.x = imgrect.size.x * window_size.height / imgrect.size.y;
-			screenrect.position.x = (window_size.width - screenrect.size.x) / 2;
-
-		} else {
-			//scale vertically
-			screenrect.size.x = window_size.width;
-			screenrect.size.y = imgrect.size.y * window_size.width / imgrect.size.x;
-			screenrect.position.y = (window_size.height - screenrect.size.y) / 2;
-		}
+		screenrect = OS::get_singleton()->calculate_boot_screen_rect(window_size, imgrect.size);
 	} else {
 		screenrect = imgrect;
 		screenrect.position += ((window_size - screenrect.size) / 2.0).floor();

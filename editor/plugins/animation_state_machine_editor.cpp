@@ -30,8 +30,6 @@
 
 #include "animation_state_machine_editor.h"
 
-#include "core/config/project_settings.h"
-#include "core/input/input.h"
 #include "core/io/resource_loader.h"
 #include "core/math/geometry_2d.h"
 #include "core/os/keyboard.h"
@@ -41,12 +39,10 @@
 #include "editor/gui/editor_file_dialog.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/animation/animation_blend_tree.h"
-#include "scene/animation/animation_player.h"
 #include "scene/gui/label.h"
 #include "scene/gui/line_edit.h"
 #include "scene/gui/menu_button.h"
 #include "scene/gui/option_button.h"
-#include "scene/gui/panel.h"
 #include "scene/gui/panel_container.h"
 #include "scene/gui/popup.h"
 #include "scene/gui/popup_menu.h"
@@ -103,7 +99,7 @@ String AnimationNodeStateMachineEditor::_get_root_playback_path(String &r_node_d
 		while (!is_playable_anodesm_found) {
 			base_path = String("/").join(edited_path);
 			Ref<AnimationNodeStateMachine> anodesm = !edited_path.size() ? Ref<AnimationNode>(tree->get_root_animation_node().ptr()) : tree->get_root_animation_node()->find_node_by_path(base_path);
-			if (!anodesm.is_valid()) {
+			if (anodesm.is_null()) {
 				break;
 			} else {
 				if (anodesm->get_state_machine_type() != AnimationNodeStateMachine::STATE_MACHINE_TYPE_GROUPED) {
@@ -143,7 +139,7 @@ void AnimationNodeStateMachineEditor::_state_machine_gui_input(const Ref<InputEv
 
 	String node_directory;
 	Ref<AnimationNodeStateMachinePlayback> playback = tree->get(_get_root_playback_path(node_directory));
-	if (!playback.is_valid()) {
+	if (playback.is_null()) {
 		return;
 	}
 
@@ -199,7 +195,7 @@ void AnimationNodeStateMachineEditor::_state_machine_gui_input(const Ref<InputEv
 					name_edit_popup->set_size(edit_rect.size);
 					name_edit->set_text(node_rects[i].node_name);
 					name_edit_popup->popup();
-					name_edit->grab_focus();
+					name_edit->edit();
 					name_edit->select_all();
 
 					prev_name = node_rects[i].node_name;
@@ -354,7 +350,7 @@ void AnimationNodeStateMachineEditor::_state_machine_gui_input(const Ref<InputEv
 			Ref<AnimationNodeStateMachine> anodesm = node;
 			Ref<AnimationNodeEndState> end_node = node;
 
-			if (state_machine->has_transition(connecting_from, connecting_to_node) && state_machine->can_edit_node(connecting_to_node) && !anodesm.is_valid()) {
+			if (state_machine->has_transition(connecting_from, connecting_to_node) && state_machine->can_edit_node(connecting_to_node) && anodesm.is_null()) {
 				EditorNode::get_singleton()->show_warning(TTR("Transition exists!"));
 				connecting = false;
 			} else {
@@ -808,7 +804,7 @@ void AnimationNodeStateMachineEditor::_add_menu_type(int p_index) {
 		base_name = type.replace_first("AnimationNode", "");
 	}
 
-	if (!node.is_valid()) {
+	if (node.is_null()) {
 		EditorNode::get_singleton()->show_warning(TTR("This type of node can't be used. Only root nodes are allowed."));
 		return;
 	}
@@ -939,7 +935,7 @@ void AnimationNodeStateMachineEditor::_connection_draw(const Vector2 &p_from, co
 		state_machine_draw->draw_line(p_from, p_from.lerp(p_to, p_fade_ratio), fade_line_color, 2);
 	}
 
-	const int ICON_COUNT = sizeof(theme_cache.transition_icons) / sizeof(*theme_cache.transition_icons);
+	const int ICON_COUNT = std::size(theme_cache.transition_icons);
 	int icon_index = p_mode + (p_auto_advance ? ICON_COUNT / 2 : 0);
 	ERR_FAIL_COND(icon_index >= ICON_COUNT);
 	Ref<Texture2D> icon = theme_cache.transition_icons[icon_index];
@@ -1342,7 +1338,7 @@ void AnimationNodeStateMachineEditor::_state_machine_pos_draw_individual(const S
 	}
 
 	Ref<AnimationNodeStateMachinePlayback> playback = tree->get(AnimationTreeEditor::get_singleton()->get_base_path() + "playback");
-	if (!playback.is_valid() || !playback->is_playing()) {
+	if (playback.is_null() || !playback->is_playing()) {
 		return;
 	}
 
@@ -1391,7 +1387,7 @@ void AnimationNodeStateMachineEditor::_state_machine_pos_draw_all() {
 	}
 
 	Ref<AnimationNodeStateMachinePlayback> playback = tree->get(AnimationTreeEditor::get_singleton()->get_base_path() + "playback");
-	if (!playback.is_valid() || !playback->is_playing()) {
+	if (playback.is_null() || !playback->is_playing()) {
 		return;
 	}
 

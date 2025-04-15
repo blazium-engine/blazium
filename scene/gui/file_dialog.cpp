@@ -59,7 +59,7 @@ void FileDialog::_focus_file_text() {
 	if (lp != -1) {
 		file->select(0, lp);
 		if (file->is_inside_tree() && !is_part_of_edited_scene()) {
-			file->grab_focus();
+			file->edit();
 		}
 	}
 }
@@ -159,22 +159,58 @@ void FileDialog::_native_dialog_cb_with_options(bool p_ok, const Vector<String> 
 		emit_signal(SNAME("files_selected"), files);
 	} else {
 		if (mode == FILE_MODE_SAVE_FILE) {
-			if (p_filter >= 0 && p_filter < filters.size()) {
-				bool valid = false;
-				String flt = filters[p_filter].get_slice(";", 0);
-				int filter_slice_count = flt.get_slice_count(",");
-				for (int j = 0; j < filter_slice_count; j++) {
-					String str = (flt.get_slice(",", j).strip_edges());
-					if (f.matchn(str)) {
-						valid = true;
+			bool valid = false;
+
+			if (p_filter == filter->get_item_count() - 1) {
+				valid = true; // Match none.
+			} else if (filters.size() > 1 && p_filter == 0) {
+				// Match all filters.
+				for (int i = 0; i < filters.size(); i++) {
+					String flt = filters[i].get_slice(";", 0);
+					for (int j = 0; j < flt.get_slice_count(","); j++) {
+						String str = flt.get_slice(",", j).strip_edges();
+						if (f.matchn(str)) {
+							valid = true;
+							break;
+						}
+					}
+					if (valid) {
 						break;
 					}
 				}
-
-				if (!valid && filter_slice_count > 0) {
-					String str = (flt.get_slice(",", 0).strip_edges());
-					f += str.substr(1, str.length() - 1);
+			} else {
+				int idx = p_filter;
+				if (filters.size() > 1) {
+					idx--;
 				}
+				if (idx >= 0 && idx < filters.size()) {
+					String flt = filters[idx].get_slice(";", 0);
+					int filter_slice_count = flt.get_slice_count(",");
+					for (int j = 0; j < filter_slice_count; j++) {
+						String str = (flt.get_slice(",", j).strip_edges());
+						if (f.matchn(str)) {
+							valid = true;
+							break;
+						}
+					}
+
+					if (!valid && filter_slice_count > 0) {
+						String str = (flt.get_slice(",", 0).strip_edges());
+						f += str.substr(1, str.length() - 1);
+						file->set_text(f.get_file());
+						valid = true;
+					}
+				} else {
+					valid = true;
+				}
+			}
+
+			// Add first extension of filter if no valid extension is found.
+			if (!valid) {
+				int idx = p_filter;
+				String flt = filters[idx].get_slice(";", 0);
+				String ext = flt.get_slice(",", 0).strip_edges().get_extension();
+				f += "." + ext;
 			}
 			emit_signal(SNAME("file_selected"), f);
 		} else if ((mode == FILE_MODE_OPEN_ANY || mode == FILE_MODE_OPEN_FILE) && dir_access->file_exists(f)) {
@@ -327,7 +363,7 @@ void FileDialog::shortcut_input(const Ref<InputEvent> &p_event) {
 				// Cmd + Shift + G (matches Finder's "Go To" shortcut).
 				case Key::G: {
 					if (k->is_command_or_control_pressed() && k->is_shift_pressed()) {
-						dir->grab_focus();
+						dir->edit();
 						dir->select_all();
 					} else {
 						handled = false;
@@ -338,7 +374,7 @@ void FileDialog::shortcut_input(const Ref<InputEvent> &p_event) {
 				// plus macOS Safari's "focus on address bar" shortcut).
 				case Key::L: {
 					if (k->is_command_or_control_pressed()) {
-						dir->grab_focus();
+						dir->edit();
 						dir->select_all();
 					} else {
 						handled = false;
@@ -397,7 +433,17 @@ void FileDialog::update_dir() {
 }
 
 void FileDialog::_dir_submitted(String p_dir) {
-	_change_dir(root_prefix.path_join(p_dir));
+	String new_dir = p_dir;
+#ifdef WINDOWS_ENABLED
+	if (root_prefix.is_empty() && drives->is_visible() && !new_dir.is_network_share_path() && new_dir.is_absolute_path() && new_dir.find(":/") == -1 && new_dir.find(":\\") == -1) {
+		// Non network path without X:/ prefix on Windows, add drive letter.
+		new_dir = drives->get_item_text(drives->get_selected()).path_join(new_dir);
+	}
+#endif
+	if (!root_prefix.is_empty()) {
+		new_dir = root_prefix.path_join(new_dir);
+	}
+	_change_dir(new_dir);
 	file->set_text("");
 	_push_history();
 }
@@ -415,7 +461,7 @@ void FileDialog::_save_confirm_pressed() {
 void FileDialog::_post_popup() {
 	ConfirmationDialog::_post_popup();
 	if (mode == FILE_MODE_SAVE_FILE) {
-		file->grab_focus();
+		file->edit();
 	} else {
 		tree->grab_focus();
 	}
@@ -491,9 +537,9 @@ void FileDialog::_action_pressed() {
 		bool valid = false;
 
 		if (filter->get_selected() == filter->get_item_count() - 1) {
-			valid = true; // match none
+			valid = true; // Match none.
 		} else if (filters.size() > 1 && filter->get_selected() == 0) {
-			// match all filters
+			// Match all filters.
 			for (int i = 0; i < filters.size(); i++) {
 				String flt = filters[i].get_slice(";", 0);
 				for (int j = 0; j < flt.get_slice_count(","); j++) {
@@ -514,8 +560,8 @@ void FileDialog::_action_pressed() {
 			}
 			if (idx >= 0 && idx < filters.size()) {
 				String flt = filters[idx].get_slice(";", 0);
-				int filterSliceCount = flt.get_slice_count(",");
-				for (int j = 0; j < filterSliceCount; j++) {
+				int filter_slice_count = flt.get_slice_count(",");
+				for (int j = 0; j < filter_slice_count; j++) {
 					String str = (flt.get_slice(",", j).strip_edges());
 					if (f.matchn(str)) {
 						valid = true;
@@ -523,7 +569,7 @@ void FileDialog::_action_pressed() {
 					}
 				}
 
-				if (!valid && filterSliceCount > 0) {
+				if (!valid && filter_slice_count > 0) {
 					String str = (flt.get_slice(",", 0).strip_edges());
 					f += str.substr(1, str.length() - 1);
 					file->set_text(f.get_file());
@@ -627,8 +673,10 @@ void FileDialog::deselect_all() {
 				set_ok_button_text(ETR("Select Current Folder"));
 				break;
 			case FILE_MODE_OPEN_ANY:
+				set_ok_button_text(ETR("Open"));
+				break;
 			case FILE_MODE_SAVE_FILE:
-				// FIXME: Implement, or refactor to avoid duplication with set_mode
+				set_ok_button_text(ETR("Save"));
 				break;
 		}
 	}
@@ -647,8 +695,16 @@ void FileDialog::_tree_selected() {
 
 	if (!d["dir"]) {
 		file->set_text(d["name"]);
-	} else if (mode == FILE_MODE_OPEN_DIR) {
-		set_ok_button_text(ETR("Select This Folder"));
+		if (mode == FILE_MODE_SAVE_FILE) {
+			set_ok_button_text(ETR("Save"));
+		} else {
+			set_ok_button_text(ETR("Open"));
+		}
+	} else if (mode == FILE_MODE_OPEN_DIR || mode == FILE_MODE_OPEN_ANY || !dir_access->file_exists(file->get_text())) {
+		file->set_text("");
+		if (mode == FILE_MODE_OPEN_DIR || mode == FILE_MODE_OPEN_ANY) {
+			set_ok_button_text(ETR("Select This Folder"));
+		}
 	}
 
 	get_ok_button()->set_disabled(_is_open_should_be_disabled());
@@ -913,6 +969,7 @@ void FileDialog::update_file_list() {
 		// Select the first file from list if nothing is selected.
 		if (tree->get_root() && tree->get_root()->get_first_child() && tree->get_selected() == nullptr) {
 			tree->get_root()->get_first_child()->select(0);
+			_tree_selected();
 		}
 	}
 }
@@ -931,6 +988,7 @@ void FileDialog::_filename_filter_changed() {
 void FileDialog::_tree_select_first() {
 	if (tree->get_root() && tree->get_root()->get_first_child()) {
 		tree->get_root()->get_first_child()->select(0);
+		_tree_selected();
 	}
 }
 
@@ -948,50 +1006,83 @@ void FileDialog::update_filters() {
 
 	if (filters.size() > 1) {
 		String all_filters;
+		String all_mime;
 		String all_filters_full;
+		String all_mime_full;
 
 		const int max_filters = 5;
 
+		// "All Recognized" display name.
 		for (int i = 0; i < MIN(max_filters, filters.size()); i++) {
 			String flt = filters[i].get_slicec(';', 0).strip_edges();
-			if (i > 0) {
+			if (!all_filters.is_empty() && !flt.is_empty()) {
 				all_filters += ", ";
 			}
 			all_filters += flt;
+
+			String mime = filters[i].get_slicec(';', 2).strip_edges();
+			if (!all_mime.is_empty() && !mime.is_empty()) {
+				all_mime += ", ";
+			}
+			all_mime += mime;
 		}
+
+		// "All Recognized" filter.
 		for (int i = 0; i < filters.size(); i++) {
 			String flt = filters[i].get_slicec(';', 0).strip_edges();
-			if (i > 0) {
+			if (!all_filters_full.is_empty() && !flt.is_empty()) {
 				all_filters_full += ",";
 			}
 			all_filters_full += flt;
+
+			String mime = filters[i].get_slicec(';', 2).strip_edges();
+			if (!all_mime_full.is_empty() && !mime.is_empty()) {
+				all_mime_full += ",";
+			}
+			all_mime_full += mime;
 		}
+
+		String native_all_name;
+		if (DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_NATIVE_DIALOG_FILE_MIME)) {
+			native_all_name += all_filters;
+		}
+		if (!native_all_name.is_empty()) {
+			native_all_name += ", ";
+		}
+		native_all_name += all_mime;
 
 		if (max_filters < filters.size()) {
 			all_filters += ", ...";
+			native_all_name += ", ...";
 		}
 
-		String f = atr(ETR("All Recognized")) + " (" + all_filters + ")";
-		filter->add_item(f);
-		processed_filters.push_back(all_filters_full + ";" + f);
+		filter->add_item(atr(ETR("All Recognized")) + " (" + all_filters + ")");
+		processed_filters.push_back(all_filters_full + ";" + atr(ETR("All Recognized")) + " (" + native_all_name + ")" + ";" + all_mime_full);
 	}
 	for (int i = 0; i < filters.size(); i++) {
 		String flt = filters[i].get_slicec(';', 0).strip_edges();
-		String desc = filters[i].get_slice(";", 1).strip_edges();
-		if (desc.length()) {
-			String f = atr(desc) + " (" + flt + ")";
-			filter->add_item(f);
-			processed_filters.push_back(flt + ";" + f);
+		String desc = filters[i].get_slicec(';', 1).strip_edges();
+		String mime = filters[i].get_slicec(';', 2).strip_edges();
+		String native_name;
+		if (DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_NATIVE_DIALOG_FILE_MIME)) {
+			native_name += flt;
+		}
+		if (!native_name.is_empty() && !mime.is_empty()) {
+			native_name += ", ";
+		}
+		native_name += mime;
+		if (!desc.is_empty()) {
+			filter->add_item(atr(desc) + " (" + flt + ")");
+			processed_filters.push_back(flt + ";" + atr(desc) + " (" + native_name + ");" + mime);
 		} else {
-			String f = "(" + flt + ")";
-			filter->add_item(f);
-			processed_filters.push_back(flt + ";" + f);
+			filter->add_item("(" + flt + ")");
+			processed_filters.push_back(flt + ";(" + native_name + ");" + mime);
 		}
 	}
 
 	String f = atr(ETR("All Files")) + " (*.*)";
 	filter->add_item(f);
-	processed_filters.push_back("*.*;" + f);
+	processed_filters.push_back("*.*;" + f + ";application/octet-stream");
 }
 
 void FileDialog::clear_filename_filter() {
@@ -1257,7 +1348,7 @@ void FileDialog::_make_dir_confirm() {
 
 void FileDialog::_make_dir() {
 	makedialog->popup_centered(Size2(250, 80));
-	makedirname->grab_focus();
+	makedirname->edit();
 }
 
 void FileDialog::_select_drive(int p_idx) {
@@ -1339,11 +1430,7 @@ void FileDialog::_update_option_controls() {
 	}
 	options_dirty = false;
 
-	while (grid_options->get_child_count() > 0) {
-		Node *child = grid_options->get_child(0);
-		grid_options->remove_child(child);
-		child->queue_free();
-	}
+	grid_options->remove_all_children(true, DELETE_MODE_QUEUE_FREE);
 	selected_options.clear();
 
 	for (const FileDialog::Option &opt : options) {
@@ -1583,7 +1670,7 @@ void FileDialog::set_show_filename_filter(bool p_show) {
 		return;
 	}
 	if (p_show) {
-		filename_filter->grab_focus();
+		filename_filter->edit();
 	} else {
 		if (filename_filter->has_focus()) {
 			tree->call_deferred("grab_focus");

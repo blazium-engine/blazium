@@ -527,6 +527,7 @@ void ParticleProcessMaterial::_update_shader() {
 	code += "	float animation_offset;\n";
 	code += "	float lifetime;\n";
 	code += "	vec4 color;\n";
+	code += "	float emission_texture_position;\n";
 	code += "};\n\n";
 
 	code += "struct DynamicsParameters {\n";
@@ -583,11 +584,15 @@ void ParticleProcessMaterial::_update_shader() {
 	if (color_initial_ramp.is_valid()) {
 		code += "	params.color *= texture(color_initial_ramp, vec2(rand_from_seed(alt_seed)));\n";
 	}
-	if (emission_color_texture.is_valid() && (emission_shape == EMISSION_SHAPE_POINTS || emission_shape == EMISSION_SHAPE_DIRECTED_POINTS)) {
-		code += "	int point = min(emission_texture_point_count - 1, int(rand_from_seed(alt_seed) * float(emission_texture_point_count)));\n";
-		code += "	ivec2 emission_tex_size = textureSize(emission_texture_points, 0);\n";
-		code += "	ivec2 emission_tex_ofs = ivec2(point % emission_tex_size.x, point / emission_tex_size.x);\n";
-		code += "	params.color *= texelFetch(emission_texture_color, emission_tex_ofs, 0);\n";
+	if (emission_shape == EMISSION_SHAPE_POINTS || emission_shape == EMISSION_SHAPE_DIRECTED_POINTS) {
+		code += "	params.emission_texture_position = rand_from_seed(alt_seed);\n";
+
+		if (emission_color_texture.is_valid()) {
+			code += "	int point = min(emission_texture_point_count - 1, int(params.emission_texture_position * float(emission_texture_point_count)));\n";
+			code += "	ivec2 emission_tex_size = textureSize(emission_texture_points, 0);\n";
+			code += "	ivec2 emission_tex_ofs = ivec2(point % emission_tex_size.x, point / emission_tex_size.x);\n";
+			code += "	params.color *= texelFetch(emission_texture_color, emission_tex_ofs, 0);\n";
+		}
 	}
 	code += "}\n\n";
 
@@ -618,7 +623,7 @@ void ParticleProcessMaterial::_update_shader() {
 	}
 	code += "}\n\n";
 
-	code += "vec3 calculate_initial_position(inout uint alt_seed) {\n";
+	code += "vec3 calculate_initial_position(inout DisplayParameters params, inout uint alt_seed) {\n";
 	code += "	float pi = 3.14159;\n";
 	code += "	vec3 pos = vec3(0.0);\n";
 	code += "	{ // Emission shape.\n";
@@ -643,7 +648,7 @@ void ParticleProcessMaterial::_update_shader() {
 		code += "		pos = vec3(rand_from_seed(alt_seed) * 2.0 - 1.0, rand_from_seed(alt_seed) * 2.0 - 1.0, rand_from_seed(alt_seed) * 2.0 - 1.0) * emission_box_extents;\n";
 	}
 	if (emission_shape == EMISSION_SHAPE_POINTS || emission_shape == EMISSION_SHAPE_DIRECTED_POINTS) {
-		code += "		int point = min(emission_texture_point_count - 1, int(rand_from_seed(alt_seed) * float(emission_texture_point_count)));\n";
+		code += "		int point = min(emission_texture_point_count - 1, int(params.emission_texture_position * float(emission_texture_point_count)));\n";
 		code += "		ivec2 emission_tex_size = textureSize(emission_texture_points, 0);\n";
 		code += "		ivec2 emission_tex_ofs = ivec2(point % emission_tex_size.x, point / emission_tex_size.x);\n";
 		code += "		pos = texelFetch(emission_texture_points, emission_tex_ofs, 0).xyz;\n";
@@ -864,7 +869,7 @@ void ParticleProcessMaterial::_update_shader() {
 	code += "		TRANSFORM[2].xyz = vec3(0.0, 0.0, 1.0);\n";
 	code += "	}\n";
 	code += "	if (RESTART_POSITION) {\n";
-	code += "		TRANSFORM[3].xyz = calculate_initial_position(alt_seed);\n";
+	code += "		TRANSFORM[3].xyz = calculate_initial_position(params, alt_seed);\n";
 	if (turbulence_enabled) {
 		code += "		float initial_turbulence_displacement = mix(turbulence_initial_displacement_min, turbulence_initial_displacement_max, rand_from_seed(alt_seed));\n";
 		code += "		vec3 noise_direction = get_noise_direction(TRANSFORM[3].xyz);\n";
@@ -875,7 +880,7 @@ void ParticleProcessMaterial::_update_shader() {
 	code += "	if (RESTART_VELOCITY) {\n";
 	code += "		VELOCITY = get_random_direction_from_spread(alt_seed, spread) * dynamic_params.initial_velocity_multiplier;\n";
 	if (emission_shape == EMISSION_SHAPE_DIRECTED_POINTS) {
-		code += "		int point = min(emission_texture_point_count - 1, int(rand_from_seed(alt_seed) * float(emission_texture_point_count)));\n";
+		code += "		int point = min(emission_texture_point_count - 1, int(params.emission_texture_position * float(emission_texture_point_count)));\n";
 		code += "		ivec2 emission_tex_size = textureSize(emission_texture_points, 0);\n";
 		code += "		ivec2 emission_tex_ofs = ivec2(point % emission_tex_size.x, point / emission_tex_size.x);\n";
 		if (particle_flags[PARTICLE_FLAG_DISABLE_Z]) {
@@ -1029,7 +1034,7 @@ void ParticleProcessMaterial::_update_shader() {
 			code += "	{\n";
 		}
 		code += "		float vel_mag = length(VELOCITY);\n";
-		code += "		float vel_infl = clamp(dynamic_params.turb_influence * turbulence_influence, 0.0, 1.0);\n";
+		code += "		float vel_infl = clamp(dynamic_params.turb_influence * turbulence_influence, 0.0, 1.0) * (DELTA <= 0.0 ? 0.0 : 1.0);\n";
 		code += "		VELOCITY = mix(VELOCITY, normalize(noise_direction) * vel_mag * (1.0 + (1.0 - vel_infl) * 0.2), vel_infl);\n";
 		code += "		vel_mag = length(controlled_displacement);\n";
 		code += "		controlled_displacement = mix(controlled_displacement, normalize(noise_direction) * vel_mag * (1.0 + (1.0 - vel_infl) * 0.2), vel_infl);\n";
@@ -1116,9 +1121,16 @@ void ParticleProcessMaterial::_update_shader() {
 		code += "		params.scale *= texture(scale_over_velocity_curve, vec2(0.0)).rgb;\n";
 		code += "	}\n";
 	}
-	code += "	TRANSFORM[0].xyz *= sign(params.scale.x) * max(abs(params.scale.x), 0.001);\n";
-	code += "	TRANSFORM[1].xyz *= sign(params.scale.y) * max(abs(params.scale.y), 0.001);\n";
-	code += "	TRANSFORM[2].xyz *= sign(params.scale.z) * max(abs(params.scale.z), 0.001);\n";
+	// A scale of 0 results in no emission at some emission amounts (including 3 and 6).
+	// `sign(scale)` is unsuitable, because sign(0) returns 0, nullifying the minimum value.
+	// The following evaluates to 1 when scale is 0, falling back to a positive minimum value.
+	code += "	float scale_sign_x = params.scale.x < 0.0 ? -1.0 : 1.0;\n";
+	code += "	float scale_sign_y = params.scale.y < 0.0 ? -1.0 : 1.0;\n";
+	code += "	float scale_sign_z = params.scale.z < 0.0 ? -1.0 : 1.0;\n";
+	code += "	float scale_minimum = 0.001;\n";
+	code += "	TRANSFORM[0].xyz *= scale_sign_x * max(abs(params.scale.x), scale_minimum);\n";
+	code += "	TRANSFORM[1].xyz *= scale_sign_y * max(abs(params.scale.y), scale_minimum);\n";
+	code += "	TRANSFORM[2].xyz *= scale_sign_z * max(abs(params.scale.z), scale_minimum);\n";
 	code += "\n";
 	code += "	CUSTOM.z = params.animation_offset + lifetime_percent * params.animation_speed;\n\n";
 

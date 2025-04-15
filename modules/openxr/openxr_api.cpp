@@ -39,10 +39,6 @@
 #include "core/os/memory.h"
 #include "core/version.h"
 
-#ifdef TOOLS_ENABLED
-#include "editor/editor_settings.h"
-#endif
-
 #include "openxr_platform_inc.h"
 
 #ifdef VULKAN_ENABLED
@@ -2771,8 +2767,6 @@ Transform3D OpenXRAPI::transform_from_pose(const XrPosef &p_pose) {
 
 template <typename T>
 XRPose::TrackingConfidence _transform_from_location(const T &p_location, Transform3D &r_transform) {
-	Basis basis;
-	Vector3 origin;
 	XRPose::TrackingConfidence confidence = XRPose::XR_TRACKING_CONFIDENCE_NONE;
 	const XrPosef &pose = p_location.pose;
 
@@ -3709,10 +3703,10 @@ void OpenXRAPI::set_emulate_environment_blend_mode_alpha_blend(bool p_enabled) {
 }
 
 OpenXRAPI::OpenXRAlphaBlendModeSupport OpenXRAPI::is_environment_blend_mode_alpha_blend_supported() {
-	if (is_environment_blend_mode_supported(XR_ENVIRONMENT_BLEND_MODE_ALPHA_BLEND)) {
-		return OPENXR_ALPHA_BLEND_MODE_SUPPORT_REAL;
-	} else if (emulate_environment_blend_mode_alpha_blend) {
+	if (emulate_environment_blend_mode_alpha_blend) {
 		return OPENXR_ALPHA_BLEND_MODE_SUPPORT_EMULATING;
+	} else if (is_environment_blend_mode_supported(XR_ENVIRONMENT_BLEND_MODE_ALPHA_BLEND)) {
+		return OPENXR_ALPHA_BLEND_MODE_SUPPORT_REAL;
 	}
 	return OPENXR_ALPHA_BLEND_MODE_SUPPORT_NONE;
 }

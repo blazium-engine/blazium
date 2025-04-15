@@ -41,6 +41,7 @@ class SpinBox : public Range {
 
 	LineEdit *line_edit = nullptr;
 	bool update_on_text_changed = false;
+	bool accepted = true;
 
 	struct SizingCache {
 		int buttons_block_width = 0;
@@ -59,13 +60,13 @@ class SpinBox : public Range {
 	void _range_click_timeout();
 	void _release_mouse_from_drag_mode();
 
-	void _update_text(bool p_keep_line_edit = false);
+	void _update_text(bool p_only_update_if_value_changed = false);
 	void _text_submitted(const String &p_string);
 	void _text_changed(const String &p_string);
 
 	String prefix;
 	String suffix;
-	String last_updated_text;
+	String last_text_value;
 	double custom_arrow_step = 0.0;
 	bool use_custom_arrow_step = false;
 

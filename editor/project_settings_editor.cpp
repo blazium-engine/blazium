@@ -350,7 +350,7 @@ void ProjectSettingsEditor::_focus_current_search_box() {
 	}
 
 	if (current_search_box) {
-		current_search_box->grab_focus();
+		current_search_box->edit();
 		current_search_box->select_all();
 	}
 }
@@ -371,7 +371,7 @@ void ProjectSettingsEditor::_focus_current_path_box() {
 	}
 
 	if (current_path_box) {
-		current_path_box->grab_focus();
+		current_path_box->edit();
 		current_path_box->select_all();
 	}
 }

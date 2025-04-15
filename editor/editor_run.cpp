@@ -46,7 +46,7 @@ String EditorRun::get_running_scene() const {
 	return running_scene;
 }
 
-Error EditorRun::run(const String &p_scene, const String &p_write_movie) {
+Error EditorRun::run(const String &p_scene, const String &p_write_movie, const Vector<String> &p_run_args) {
 	List<String> args;
 
 	for (const String &a : Main::get_forwardable_cli_arguments(Main::CLI_SCOPE_PROJECT)) {
@@ -138,6 +138,12 @@ Error EditorRun::run(const String &p_scene, const String &p_write_movie) {
 
 	if (!p_scene.is_empty()) {
 		args.push_back(p_scene);
+	}
+
+	if (!p_run_args.is_empty()) {
+		for (const String &run_arg : p_run_args) {
+			args.push_back(run_arg);
+		}
 	}
 
 	String exec = OS::get_singleton()->get_executable_path();
@@ -280,9 +286,11 @@ EditorRun::WindowPlacement EditorRun::get_window_placement() {
 			} break;
 			case 3: { // force maximized
 				placement.force_maximized = true;
+				placement.position = (screen_rect.position) + ((screen_rect.size - placement.size) / 2).floor();
 			} break;
 			case 4: { // force fullscreen
 				placement.force_fullscreen = true;
+				placement.position = (screen_rect.position) + ((screen_rect.size - placement.size) / 2).floor();
 			} break;
 		}
 	} else {

@@ -31,9 +31,7 @@
 #include "animation_blend_tree_editor_plugin.h"
 
 #include "core/config/project_settings.h"
-#include "core/input/input.h"
 #include "core/io/resource_loader.h"
-#include "core/os/keyboard.h"
 #include "editor/editor_inspector.h"
 #include "editor/editor_node.h"
 #include "editor/editor_properties.h"
@@ -60,7 +58,6 @@
 #include "scene/gui/tree.h"
 #include "scene/gui/view_panner.h"
 #include "scene/main/window.h"
-#include "scene/resources/style_box_flat.h"
 
 void AnimationNodeBlendTreeEditor::add_custom_type(const String &p_name, const Ref<Script> &p_script) {
 	for (int i = 0; i < add_options.size(); i++) {
@@ -161,7 +158,7 @@ void AnimationNodeBlendTreeEditor::update_graph() {
 		node->set_draggable(!read_only);
 
 		Ref<AnimationNode> agnode = blend_tree->get_node(E);
-		ERR_CONTINUE(!agnode.is_valid());
+		ERR_CONTINUE(agnode.is_null());
 
 		node->set_position_offset(blend_tree->get_node_position(E) * EDSCALE);
 
@@ -339,7 +336,7 @@ void AnimationNodeBlendTreeEditor::_add_node(int p_idx) {
 		base_name = anode->get_class();
 	} else if (p_idx == MENU_PASTE) {
 		anode = EditorSettings::get_singleton()->get_resource_clipboard();
-		ERR_FAIL_COND(!anode.is_valid());
+		ERR_FAIL_COND(anode.is_null());
 		base_name = anode->get_class();
 	} else if (!add_options[p_idx].type.is_empty()) {
 		AnimationNode *an = Object::cast_to<AnimationNode>(ClassDB::instantiate(add_options[p_idx].type));
@@ -510,7 +507,7 @@ void AnimationNodeBlendTreeEditor::_anim_selected(int p_index, const Array &p_op
 	String option = p_options[p_index];
 
 	Ref<AnimationNodeAnimation> anim = blend_tree->get_node(p_node);
-	ERR_FAIL_COND(!anim.is_valid());
+	ERR_FAIL_COND(anim.is_null());
 
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
 	undo_redo->create_action(TTR("Set Animation"));
@@ -596,14 +593,14 @@ void AnimationNodeBlendTreeEditor::_node_selected(Object *p_node) {
 	String name = gn->get_name();
 
 	Ref<AnimationNode> anode = blend_tree->get_node(name);
-	ERR_FAIL_COND(!anode.is_valid());
+	ERR_FAIL_COND(anode.is_null());
 
 	EditorNode::get_singleton()->push_item(anode.ptr(), "", true);
 }
 
 void AnimationNodeBlendTreeEditor::_open_in_editor(const String &p_which) {
 	Ref<AnimationNode> an = blend_tree->get_node(p_which);
-	ERR_FAIL_COND(!an.is_valid());
+	ERR_FAIL_COND(an.is_null());
 	AnimationTreeEditor::get_singleton()->enter_editor(p_which);
 }
 
@@ -930,7 +927,7 @@ void AnimationNodeBlendTreeEditor::_inspect_filters(const String &p_which) {
 	filter_enabled->set_disabled(read_only);
 
 	Ref<AnimationNode> anode = blend_tree->get_node(p_which);
-	ERR_FAIL_COND(!anode.is_valid());
+	ERR_FAIL_COND(anode.is_null());
 
 	_filter_edit = anode;
 	if (!_update_filters(anode)) {
@@ -942,7 +939,7 @@ void AnimationNodeBlendTreeEditor::_inspect_filters(const String &p_which) {
 
 void AnimationNodeBlendTreeEditor::_update_editor_settings() {
 	graph->get_panner()->setup((ViewPanner::ControlScheme)EDITOR_GET("editors/panning/sub_editors_panning_scheme").operator int(), ED_GET_SHORTCUT("canvas_item_editor/pan_view"), bool(EDITOR_GET("editors/panning/simple_panning")));
-	graph->set_warped_panning(bool(EDITOR_GET("editors/panning/warped_mouse_panning")));
+	graph->set_warped_panning(EDITOR_GET("editors/panning/warped_mouse_panning"));
 }
 
 void AnimationNodeBlendTreeEditor::_notification(int p_what) {

@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional, TextIO, Tuple, Union
 sys.path.insert(0, root_directory := os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../"))
 
 import version
-from methods import Ansi, toggle_color
+from misc.utility.color import Ansi, toggle_color
 
 # $DOCS_URL/path/to/page.html(#fragment-tag)
 GODOT_DOCS_PATTERN = re.compile(r"^\$DOCS_URL/(.*)\.html(#.*)?$")
@@ -697,7 +697,8 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    toggle_color(args.color)
+    if args.color:
+        toggle_color(True)
 
     # Retrieve heading translations for the given language.
     if not args.dry_run and args.lang != "en":
@@ -919,7 +920,7 @@ def make_rst_class(class_def: ClassDef, state: State, dry_run: bool, output_dir:
         # Ascendants
         if class_def.inherits:
             inherits = class_def.inherits.strip()
-            f.write(f'**{translate("Inherits:")}** ')
+            f.write(f"**{translate('Inherits:')}** ")
             first = True
             while inherits is not None:
                 if not first:
@@ -946,7 +947,7 @@ def make_rst_class(class_def: ClassDef, state: State, dry_run: bool, output_dir:
                 inherited.append(c.name)
 
         if len(inherited):
-            f.write(f'**{translate("Inherited By:")}** ')
+            f.write(f"**{translate('Inherited By:')}** ")
             for i, child in enumerate(inherited):
                 if i > 0:
                     f.write(", ")
@@ -2240,6 +2241,8 @@ def format_text_block(
                         repl_text = target_name
                         if target_class_name != state.current_class:
                             repl_text = f"{target_class_name}.{target_name}"
+                        if tag_state.name == "method":
+                            repl_text = f"{repl_text}()"
                         tag_text = f":ref:`{repl_text}<class_{sanitize_class_name(target_class_name)}{ref_type}_{target_name}>`"
                         escape_pre = True
                         escape_post = True
@@ -2544,7 +2547,7 @@ def format_table(f: TextIO, data: List[Tuple[Optional[str], ...]], remove_empty_
         for i, text in enumerate(row):
             if column_sizes[i] == 0 and remove_empty_columns:
                 continue
-            row_text += f' {(text or "").ljust(column_sizes[i])} |'
+            row_text += f" {(text or '').ljust(column_sizes[i])} |"
         row_text += "\n"
 
         f.write(f"   {row_text}")

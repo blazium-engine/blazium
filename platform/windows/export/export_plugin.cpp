@@ -41,10 +41,7 @@
 #include "editor/export/editor_export.h"
 #include "editor/themes/editor_scale.h"
 
-#include "modules/modules_enabled.gen.h" // For svg.
-#ifdef MODULE_SVG_ENABLED
 #include "modules/svg/image_loader_svg.h"
-#endif
 
 Error EditorExportPlatformWindows::_process_icon(const Ref<EditorExportPreset> &p_preset, const String &p_src_path, const String &p_dst_path) {
 	static const uint8_t icon_size[] = { 16, 32, 48, 64, 128, 0 /*256*/ };
@@ -96,11 +93,10 @@ Error EditorExportPlatformWindows::_process_icon(const Ref<EditorExportPreset> &
 			f->seek(prev_offset);
 		}
 	} else {
-		Ref<Image> src_image;
-		src_image.instantiate();
-		err = ImageLoader::load_image(p_src_path, src_image);
-		ERR_FAIL_COND_V(err != OK || src_image->is_empty(), ERR_CANT_OPEN);
-		for (size_t i = 0; i < sizeof(icon_size) / sizeof(icon_size[0]); ++i) {
+		Ref<Image> src_image = _load_icon_or_splash_image(p_src_path, &err);
+		ERR_FAIL_COND_V(err != OK || src_image.is_null() || src_image->is_empty(), ERR_CANT_OPEN);
+
+		for (size_t i = 0; i < std::size(icon_size); ++i) {
 			int size = (icon_size[i] == 0) ? 256 : icon_size[i];
 
 			Ref<Image> res_image = src_image->duplicate();
@@ -111,7 +107,7 @@ Error EditorExportPlatformWindows::_process_icon(const Ref<EditorExportPreset> &
 	}
 
 	uint16_t valid_icon_count = 0;
-	for (size_t i = 0; i < sizeof(icon_size) / sizeof(icon_size[0]); ++i) {
+	for (size_t i = 0; i < std::size(icon_size); ++i) {
 		if (images.has(icon_size[i])) {
 			valid_icon_count++;
 		} else {
@@ -133,7 +129,7 @@ Error EditorExportPlatformWindows::_process_icon(const Ref<EditorExportPreset> &
 
 	// Write ICONDIRENTRY.
 	uint32_t img_offset = 6 + 16 * valid_icon_count;
-	for (size_t i = 0; i < sizeof(icon_size) / sizeof(icon_size[0]); ++i) {
+	for (size_t i = 0; i < std::size(icon_size); ++i) {
 		if (images.has(icon_size[i])) {
 			const IconData &di = images[icon_size[i]];
 			fw->store_8(icon_size[i]); // Width in pixels.
@@ -150,7 +146,7 @@ Error EditorExportPlatformWindows::_process_icon(const Ref<EditorExportPreset> &
 	}
 
 	// Write image data.
-	for (size_t i = 0; i < sizeof(icon_size) / sizeof(icon_size[0]); ++i) {
+	for (size_t i = 0; i < std::size(icon_size); ++i) {
 		if (images.has(icon_size[i])) {
 			const IconData &di = images[icon_size[i]];
 			fw->store_buffer(di.data.ptr(), di.data.size());
@@ -443,7 +439,7 @@ void EditorExportPlatformWindows::get_export_options(List<ExportOption> *r_optio
 	String run_script = "Expand-Archive -LiteralPath '{temp_dir}\\{archive_name}' -DestinationPath '{temp_dir}'\n"
 						"$action = New-ScheduledTaskAction -Execute '{temp_dir}\\{exe_name}' -Argument '{cmd_args}'\n"
 						"$trigger = New-ScheduledTaskTrigger -Once -At 00:00\n"
-						"$settings = New-ScheduledTaskSettingsSet\n"
+						"$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries\n"
 						"$task = New-ScheduledTask -Action $action -Trigger $trigger -Settings $settings\n"
 						"Register-ScheduledTask blazium_remote_debug -InputObject $task -Force:$true\n"
 						"Start-ScheduledTask -TaskName blazium_remote_debug\n"
@@ -515,7 +511,7 @@ Error EditorExportPlatformWindows::_rcedit_add_data(const Ref<EditorExportPreset
 		}
 	}
 
-	String file_verion = p_preset->get_version("application/file_version", true);
+	String file_version = p_preset->get_version("application/file_version", true);
 	String product_version = p_preset->get_version("application/product_version", true);
 	String company_name = p_preset->get("application/company_name");
 	String product_name = p_preset->get("application/product_name");
@@ -530,9 +526,9 @@ Error EditorExportPlatformWindows::_rcedit_add_data(const Ref<EditorExportPreset
 		args.push_back("--set-icon");
 		args.push_back(tmp_icon_path);
 	}
-	if (!file_verion.is_empty()) {
+	if (!file_version.is_empty()) {
 		args.push_back("--set-file-version");
-		args.push_back(file_verion);
+		args.push_back(file_version);
 	}
 	if (!product_version.is_empty()) {
 		args.push_back("--set-product-version");
@@ -1150,7 +1146,6 @@ Error EditorExportPlatformWindows::run(const Ref<EditorExportPreset> &p_preset, 
 
 EditorExportPlatformWindows::EditorExportPlatformWindows() {
 	if (EditorNode::get_singleton()) {
-#ifdef MODULE_SVG_ENABLED
 		Ref<Image> img = memnew(Image);
 		const bool upsample = !Math::is_equal_approx(Math::round(EDSCALE), EDSCALE);
 
@@ -1159,7 +1154,6 @@ EditorExportPlatformWindows::EditorExportPlatformWindows() {
 
 		ImageLoaderSVG::create_image_from_string(img, _windows_run_icon_svg, EDSCALE, upsample, false);
 		run_icon = ImageTexture::create_from_image(img);
-#endif
 
 		Ref<Theme> theme = EditorNode::get_singleton()->get_editor_theme();
 		if (theme.is_valid()) {
