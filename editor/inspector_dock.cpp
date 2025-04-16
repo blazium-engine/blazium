@@ -641,24 +641,30 @@ void InspectorDock::apply_script_properties(Object *p_object) {
 			si->set(E.first, E.second);
 		} else if (E.second.get_type() == Variant::OBJECT) {
 			for (const PropertyInfo &pi : properties) {
-				if (E.first == pi.name) {
-					Object *p_property_object = E.second;
+				if (E.first != pi.name) {
+					continue;
+				}
 
-					if (p_property_object->is_class(pi.hint_string)) {
+				if (pi.type != Variant::OBJECT) {
+					break;
+				}
+
+				Object *p_property_object = E.second;
+
+				if (p_property_object->is_class(pi.hint_string)) {
+					si->set(E.first, E.second);
+					break;
+				}
+
+				Ref<Script> base_script = p_property_object->get_script();
+				while (base_script.is_valid()) {
+					if (base_script->get_global_name() == pi.hint_string) {
 						si->set(E.first, E.second);
 						break;
 					}
-
-					Ref<Script> base_script = p_property_object->get_script();
-					while (base_script.is_valid()) {
-						if (base_script->get_global_name() == pi.hint_string) {
-							si->set(E.first, E.second);
-							break;
-						}
-						base_script = base_script->get_base_script();
-					}
-					break;
+					base_script = base_script->get_base_script();
 				}
+				break;
 			}
 		}
 	}
