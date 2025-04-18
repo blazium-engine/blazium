@@ -1954,6 +1954,11 @@ GDScriptParser::Node *GDScriptParser::parse_statement() {
 			}
 			break;
 		}
+		case GDScriptTokenizer::Token::UNDERSCORE: {
+			advance();
+			push_error(R"(Check "_:" indent.)");
+			break;
+		}
 		default: {
 			// Expression statement.
 			ExpressionNode *expression = parse_expression(true); // Allow assignment here.
