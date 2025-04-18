@@ -1956,7 +1956,7 @@ GDScriptParser::Node *GDScriptParser::parse_statement() {
 		}
 		case GDScriptTokenizer::Token::UNDERSCORE: {
 			advance();
-			push_error(R"(Check "_:" indent.)");
+			push_error(R"(Incorrect indentation for "_:")");
 			break;
 		}
 		default: {
