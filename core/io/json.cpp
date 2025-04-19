@@ -345,7 +345,11 @@ Error JSON::_get_token(const char32_t *p_str, int &index, int p_len, Token &r_to
 					double number = String::to_float(&p_str[index], &rptr);
 					index += (rptr - &p_str[index]);
 					r_token.type = TK_NUMBER;
-					r_token.value = number;
+					if (number == double(int(number))) {
+						r_token.value = int(number);
+					} else {
+						r_token.value = number;
+					}
 					return OK;
 
 				} else if (is_ascii_alphabet_char(p_str[index])) {
