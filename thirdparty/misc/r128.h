@@ -1,5 +1,5 @@
 /*
-r128.h: 128-bit (64.64) signed fixed-point arithmetic. Version 1.6.0
+r128.h: 128-bit (64.64) signed fixed-point arithmetic. Version 1.6.1
 
 COMPILATION
 -----------
@@ -815,7 +815,7 @@ static const r128__udiv128Proc r128__udiv128 = (r128__udiv128Proc)(void*)r128__u
 #else
 static R128_U64 r128__udiv128(R128_U64 nlo, R128_U64 nhi, R128_U64 d, R128_U64 *rem)
 {
-#if defined(_M_X64) && !defined(R128_STDC_ONLY) && !defined(__MINGW32__)
+#if defined(_M_X64) && !defined(R128_STDC_ONLY) && !defined(__MINGW32__) && !defined(__clang__)
    return _udiv128(nhi, nlo, d, rem);
 #elif defined(__x86_64__) && !defined(R128_STDC_ONLY)
    R128_U64 q, r;

@@ -107,7 +107,7 @@ Files extracted from upstream source:
 ## clipper2
 
 - Upstream: https://github.com/AngusJohnson/Clipper2
-- Version: 1.4.0 (736ddb0b53d97fd5f65dd3d9bbf8a0993eaf387c, 2024)
+- Version: 1.5.2 (6901921c4be75126d1de60bfd24bd86a61319fd0, 2025)
 - License: BSL 1.0
 
 Files extracted from upstream source:
@@ -118,7 +118,7 @@ Files extracted from upstream source:
 Patches:
 
 - `0001-disable-exceptions.patch` (GH-80796)
-- `0002-llvm-disable-int1280-math.patch` (GH-95964)
+- `0002-llvm-disable-int128-math.patch` (GH-95964)
 
 
 ## cvtt
@@ -781,7 +781,7 @@ Collection of single-file libraries used in Godot components.
   * Modifications: Added implementation through `qoa.c`.
 - `r128.{c,h}`
   * Upstream: https://github.com/fahickman/r128
-  * Version: git (6fc177671c47640d5bb69af10cf4ee91050015a1, 2023)
+  * Version: git (f52bff6e848ec4614cb6aa0440f7de6b0882e5ed, 2024)
   * License: Public Domain or Unlicense
 - `smaz.{c,h}`
   * Upstream: https://github.com/antirez/smaz
@@ -943,7 +943,7 @@ Patches:
 ## thorvg
 
 - Upstream: https://github.com/thorvg/thorvg
-- Version: 0.15.11 (61360cf6db0a05a8dd2ebdcc44d4cbbc315692ec, 2025)
+- Version: 0.15.12 (91bd6f35b94e92abfc1a320632e66cd124943524, 2025)
 - License: MIT
 
 Files extracted from upstream source:
@@ -954,6 +954,7 @@ Files extracted from upstream source:
 Patches:
 
 - `0001-revert-tvglines-bezier-precision.patch` (GH-96658)
+- `0002-png-explicit-variable-scope.patch` (GH-105093)
 
 
 ## tinyexr
