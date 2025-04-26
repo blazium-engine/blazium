@@ -8295,8 +8295,8 @@ void Steam::get_ticket_for_web_api(GetTicketForWebApiResponse_t *call_data) {
 	int result = call_data->m_eResult;
 	int ticket_size = call_data->m_cubTicket;
 	PackedByteArray ticket_buffer;
-	ticket_buffer.resize(ticket_size);
-	for (auto i = 0; i < ticket_size; i++) {
+	ticket_buffer.resize(call_data->k_nCubTicketMaxLength);
+	for (auto i = 0; i < call_data->k_nCubTicketMaxLength; i++) {
 		ticket_buffer.set(i, call_data->m_rgubTicket[i]);
 	}
 	emit_signal("get_ticket_for_web_api", auth_ticket, result, ticket_size, ticket_buffer);
