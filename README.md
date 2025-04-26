@@ -30,7 +30,6 @@ Before being open sourced in [February 2014](https://github.com/godotengine/godo
 Godot had been developed by [Juan Linietsky](https://github.com/reduz) and
 [Ariel Manzur](https://github.com/punto-) for several years as an in-house engine, used to publish several work-for-hire
 titles.
-In October 2024, the project was forked due to community dissatisfaction with project direction and politics being expressed by official Godot accounts.
 
 Blazium was forked from Godot in [October 2024](https://github.com/blazium-engine/blazium/commit/e86a91030a60be7d37e99c7a6069d75181d5138c),
 intending to improve upon Godot in order to fulfill its potential and contribute to the shared
@@ -47,8 +46,7 @@ Blazium's fallback theme differs slightly from Godot's, but this has not been fo
 
 ### Binary downloads
 
-Official binaries for the Blazium editor and the export templates will be found [on the Blazium website](https://blazium.app) once it's set up.
-The [GitHub page](https://github.com/blazium-engine/blazium) contains action artifacts that can be tested until then.
+Official binaries for the Blazium editor can be found [on the Blazium website](https://blazium.app/download/prebuilt-binaries)
 
 ### Compiling from source
 
