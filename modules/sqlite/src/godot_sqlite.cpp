@@ -83,7 +83,9 @@ Array fast_parse_row(sqlite3_stmt *stmt) {
 
 SQLiteQuery::SQLiteQuery() {}
 
-SQLiteQuery::~SQLiteQuery() { finalize(); }
+SQLiteQuery::~SQLiteQuery() {
+	finalize();
+}
 
 void SQLiteQuery::init(SQLiteAccess *p_db, const String &p_query, Array p_args) {
 	db = p_db;
@@ -92,7 +94,9 @@ void SQLiteQuery::init(SQLiteAccess *p_db, const String &p_query, Array p_args) 
 	stmt = nullptr;
 }
 
-bool SQLiteQuery::is_ready() const { return stmt != nullptr; }
+bool SQLiteQuery::is_ready() const {
+	return stmt != nullptr;
+}
 
 String SQLiteQuery::get_last_error_message() const {
 	ERR_FAIL_COND_V(db == nullptr, "Database is undefined.");
@@ -234,7 +238,7 @@ sqlite3_stmt *SQLiteAccess::prepare(const char *query) {
 	return stmt;
 }
 
-Dictionary SQLiteAccess::parse_row(sqlite3_stmt *stmt, int result_type) {
+Dictionary parse_row(sqlite3_stmt *stmt) {
 	Dictionary result;
 
 	// Get column count
@@ -279,16 +283,7 @@ Dictionary SQLiteAccess::parse_row(sqlite3_stmt *stmt, int result_type) {
 			default:
 				break;
 		}
-
-		// Set dictionary value
-		if (result_type == RESULT_NUM) {
-			result[i] = value;
-		} else if (result_type == RESULT_ASSOC) {
-			result[key] = value;
-		} else {
-			result[i] = value;
-			result[key] = value;
-		}
+		result[key] = value;
 	}
 
 	return result;
@@ -482,11 +477,11 @@ Ref<SQLiteQueryResult> SQLiteQuery::execute(const Array p_args) {
 		return result;
 	}
 
-	TypedArray<Array> results;
+	TypedArray<Dictionary> results;
 	while (true) {
 		const int res = sqlite3_step(stmt);
 		if (res == SQLITE_ROW) {
-			results.append(fast_parse_row(stmt));
+			results.append(parse_row(stmt));
 		} else if (res == SQLITE_DONE) {
 			break;
 		} else {

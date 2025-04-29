@@ -21,7 +21,7 @@
 		<member name="query" type="String" setter="" getter="get_query" default="&quot;&quot;">
 			The query that was run.
 		</member>
-		<member name="result" type="Array[]" setter="" getter="get_result" default="[]">
+		<member name="result" type="Dictionary[]" setter="" getter="get_result" default="[]">
 			The result of the query.
 		</member>
 	</members>

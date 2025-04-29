@@ -110,7 +110,7 @@ class SQLiteAccess;
 
 class SQLiteQueryResult : public RefCounted {
 	GDCLASS(SQLiteQueryResult, RefCounted);
-	TypedArray<Array> result;
+	TypedArray<Dictionary> result;
 	Array arguments;
 	String query;
 	String error;
@@ -124,7 +124,7 @@ protected:
 		ClassDB::bind_method(D_METHOD("get_query"), &SQLiteQueryResult::get_query);
 		ClassDB::bind_method(D_METHOD("get_arguments"), &SQLiteQueryResult::get_arguments);
 
-		ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "result", PROPERTY_HINT_ARRAY_TYPE, "Array"), "", "get_result");
+		ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "result", PROPERTY_HINT_ARRAY_TYPE, "Dictionary"), "", "get_result");
 		ADD_PROPERTY(PropertyInfo(Variant::STRING, "error"), "", "get_error");
 		ADD_PROPERTY(PropertyInfo(Variant::INT, "error_code"), "", "get_error_code");
 		ADD_PROPERTY(PropertyInfo(Variant::STRING, "query"), "", "get_query");
@@ -133,12 +133,14 @@ protected:
 
 public:
 	Array get_arguments() const { return arguments; }
-	TypedArray<Array> get_result() const { return result; }
+	TypedArray<Dictionary> get_result() const { return result; }
+	Dictionary get_result_as_dictionary() const {
+	}
 	String get_error() const { return error; }
 	int get_error_code() const { return error_code; }
 	String get_query() const { return query; }
 
-	void set_result(TypedArray<Array> p_result) { result = p_result; }
+	void set_result(TypedArray<Dictionary> p_result) { result = p_result; }
 	void set_error(String p_error) { error = p_error; }
 	void set_error_code(int p_error_code) { error_code = p_error_code; }
 	void set_query(String p_query) { query = p_query; }
@@ -189,7 +191,6 @@ private:
 	sqlite3_stmt *prepare(const char *statement);
 	Array fetch_rows(const String &query, const Array &args, int result_type = RESULT_BOTH);
 	sqlite3 *get_handler() const { return memory_read ? spmemvfs_db.handle : db; }
-	Dictionary parse_row(sqlite3_stmt *stmt, int result_type);
 
 public:
 	static String bind_args(sqlite3_stmt *stmt, const Array &args);

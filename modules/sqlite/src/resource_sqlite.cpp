@@ -245,11 +245,11 @@ TypedArray<SQLiteColumnSchema> SQLiteDatabase::get_columns(const String &p_name)
 	}
 	TypedArray<SQLiteColumnSchema> column_schemas;
 	for (int i = 0; i < result->get_result().size(); i++) {
-		Array row = result->get_result()[i];
+		Dictionary row = result->get_result()[i];
 		Ref<SQLiteColumnSchema> schema;
 		schema.instantiate();
-		schema->set_name(row[1]);
-		String data_type = row[2];
+		schema->set_name(row["name"]);
+		String data_type = row["type"];
 		// data type
 		if (data_type == "INTEGER") {
 			schema->set_type(Variant::Type::INT);
@@ -262,13 +262,13 @@ TypedArray<SQLiteColumnSchema> SQLiteDatabase::get_columns(const String &p_name)
 		} else {
 			schema->set_type(Variant::Type::NIL);
 		}
-		int not_null = row[3];
+		int not_null = row["notnull"];
 		schema->set_not_null(not_null == 1 ? true : false);
-		Variant default_value = row[4];
+		Variant default_value = row["dflt_value"];
 		if (!default_value.is_null()) {
 			schema->set_default_value(default_value);
 		}
-		int primary_key = row[5];
+		int primary_key = row["pk"];
 		schema->set_primary_key(primary_key == 1 ? true : false);
 		column_schemas.append(schema);
 	}
