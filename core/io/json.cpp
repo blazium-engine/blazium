@@ -600,6 +600,7 @@ Variant JSON::parse_string(const String &p_json_string) {
 void JSON::_bind_methods() {
 	ClassDB::bind_static_method("JSON", D_METHOD("stringify", "data", "indent", "sort_keys", "full_precision"), &JSON::stringify, DEFVAL(""), DEFVAL(true), DEFVAL(false));
 	ClassDB::bind_static_method("JSON", D_METHOD("parse_string", "json_string"), &JSON::parse_string);
+
 	ClassDB::bind_method(D_METHOD("parse", "json_text", "keep_text"), &JSON::parse, DEFVAL(false));
 
 	ClassDB::bind_method(D_METHOD("get_data"), &JSON::get_data);

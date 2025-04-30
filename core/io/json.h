@@ -64,7 +64,6 @@ class JSON : public Resource {
 		TokenType type;
 		Variant value;
 	};
-
 	String text;
 	Variant data;
 	String err_str;
