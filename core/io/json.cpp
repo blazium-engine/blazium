@@ -31,7 +31,10 @@
 #include "json.h"
 
 #include "core/config/engine.h"
+#include "core/config/project_settings.h"
 #include "core/string/print_string.h"
+
+static bool parse_number_as_double = true;
 
 const char *JSON::tk_name[TK_MAX] = {
 	"'{'",
@@ -45,6 +48,10 @@ const char *JSON::tk_name[TK_MAX] = {
 	"','",
 	"EOF",
 };
+
+JSON::JSON() {
+	parse_number_as_double = ProjectSettings::get_singleton()->get_setting("filesystem/import/json/always_parse_numbers_as_double", true);
+}
 
 String JSON::_make_indent(const String &p_indent, int p_size) {
 	return p_indent.repeat(p_size);
@@ -342,10 +349,18 @@ Error JSON::_get_token(const char32_t *p_str, int &index, int p_len, Token &r_to
 				if (p_str[index] == '-' || is_digit(p_str[index])) {
 					//a number
 					const char32_t *rptr;
-					double number = String::to_float(&p_str[index], &rptr);
-					index += (rptr - &p_str[index]);
-					r_token.type = TK_NUMBER;
-					r_token.value = number;
+					int int_len = -1;
+					if (parse_number_as_double || !String::get_int_boundary(&p_str[index], int_len)) {
+						double number = String::to_float(&p_str[index], &rptr);
+						index += (rptr - &p_str[index]);
+						r_token.type = TK_NUMBER;
+						r_token.value = number;
+					} else {
+						int number = String::to_int(&p_str[index]);
+						index += int_len;
+						r_token.type = TK_NUMBER;
+						r_token.value = number;
+					}
 					return OK;
 
 				} else if (is_ascii_alphabet_char(p_str[index])) {
