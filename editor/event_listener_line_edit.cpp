@@ -210,7 +210,7 @@ int EventListenerLineEdit::get_allowed_input_types() const {
 void EventListenerLineEdit::grab_focus() {
 	// If we grab focus through code, we don't need to ignore the first event!
 	ignore_next_event = false;
-	Control::grab_focus();
+	edit();
 }
 
 void EventListenerLineEdit::_notification(int p_what) {
