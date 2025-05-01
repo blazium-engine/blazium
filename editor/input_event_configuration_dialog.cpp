@@ -570,7 +570,7 @@ int InputEventConfigurationDialog::_get_current_device() const {
 void InputEventConfigurationDialog::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_VISIBILITY_CHANGED: {
-			event_listener->edit();
+			event_listener->grab_focus();
 		} break;
 
 		case NOTIFICATION_THEME_CHANGED: {
