@@ -906,6 +906,9 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 			p_theme->set_color("font_disabled_color", "CheckBox", p_config.font_disabled_color);
 			p_theme->set_color("font_outline_color", "CheckBox", p_config.font_outline_color);
 
+			p_theme->set_color("checkbox_checked_color", "CheckBox", Color(1, 1, 1));
+			p_theme->set_color("checkbox_unchecked_color", "CheckBox", Color(1, 1, 1));
+
 			p_theme->set_color("icon_normal_color", "CheckBox", p_config.icon_normal_color);
 			p_theme->set_color("icon_hover_color", "CheckBox", p_config.icon_hover_color);
 			p_theme->set_color("icon_focus_color", "CheckBox", p_config.icon_focus_color);
