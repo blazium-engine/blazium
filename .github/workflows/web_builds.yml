@@ -61,6 +61,14 @@ jobs:
       - name: Setup Python and SCons
         uses: ./.github/actions/godot-deps
 
+      - name: Add swap space
+        run: |
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          swapon --show
+
       - name: Compilation
         uses: ./.github/actions/godot-build
         with:
