@@ -503,7 +503,10 @@ void Steam::steamShutdown() {
 		were_callbacks_embedded = false;
 
 		auto callbacks = callable_mp(Steam::singleton, &Steam::run_callbacks);
-		SceneTree::get_singleton()->disconnect("process_frame", callbacks);
+		SceneTree *scene_tree = SceneTree::get_singleton();
+		if (scene_tree) {
+			scene_tree->disconnect("process_frame", callbacks);
+		}
 	}
 }
 
@@ -12016,6 +12019,7 @@ Steam::~Steam() {
 		steamShutdown();
 	}
 
+	is_init_success = false;
 	current_clan_id = 0;
 	browser_handle = 0;
 	inventory_handle = 0;
