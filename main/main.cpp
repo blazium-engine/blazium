@@ -959,6 +959,20 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 		args.push_back(String::utf8(argv[i]));
 	}
 
+	// On macos if the app is sandboxed, read the arguments from file.
+	if (OS::get_singleton()->is_sandboxed()) {
+		args.clear();
+		String args_path = OS::get_singleton()->get_temp_path().path_join("blazium_args.txt");
+		Ref<FileAccess> file = FileAccess::open(args_path, FileAccess::READ);
+		while (file.is_valid() && !file->eof_reached()) {
+			String line = file->get_line().strip_edges();
+			if (!line.is_empty()) {
+				args.push_back(line);
+			}
+		}
+		DirAccess::remove_file_or_error(args_path);
+	}
+
 	// Add arguments received from macOS LaunchService (URL schemas, file associations).
 	for (const String &arg : platform_args) {
 		args.push_back(arg);

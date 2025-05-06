@@ -665,6 +665,17 @@ Error OS_MacOS::create_process(const String &p_path, const List<String> &p_argum
 	// Use NSWorkspace if path is an .app bundle.
 	NSURL *url = [NSURL fileURLWithPath:@(p_path.utf8().get_data())];
 	NSBundle *bundle = [NSBundle bundleWithURL:url];
+	// if sandboxed, put arguments in a file
+	if (is_sandboxed()) {
+		String args_path = get_temp_path().path_join("blazium_args.txt");
+		Ref<FileAccess> file = FileAccess::open(args_path, FileAccess::WRITE);
+		if (file.is_valid()) {
+			for (const String &arg : p_arguments) {
+				file->store_line(arg);
+			}
+			file->close();
+		}
+	}
 	if (bundle) {
 		NSMutableArray *arguments = [[NSMutableArray alloc] init];
 		for (const String &arg : p_arguments) {
