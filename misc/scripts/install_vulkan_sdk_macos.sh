@@ -1,87 +1,44 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
-set -eu
+set -euo pipefail
 IFS=$'\n\t'
+new_ver_full=''
 
-DEBUG=false
-DRY_RUN=false
+# Check currently installed and latest available Vulkan SDK versions.
+if command -v jq 2>&1 >/dev/null; then
+	curl -L "https://sdk.lunarg.com/sdk/download/latest/mac/config.json" -o /tmp/vulkan-sdk.json
 
-log() {
-    echo "[INFO] $1"
-}
+	new_ver_full=`jq -r '.version' /tmp/vulkan-sdk.json`
+	new_ver=`echo "$new_ver_full" | awk -F. '{ printf("%d%02d%04d%02d\n", $1,$2,$3,$4); }';`
 
-debug_log() {
-    if [ "$DEBUG" = true ]; then
-        echo "[DEBUG] $1"
-    fi
-}
+	rm -f /tmp/vulkan-sdk.json
 
-log "Starting Vulkan SDK installation script."
-
-TEMP_DIR="./tmp"
-
-if [ ! -d "$TEMP_DIR" ]; then
-    log "Creating temp directory: $TEMP_DIR"
-    mkdir -p "$TEMP_DIR"
-fi
-
-log "Downloading Vulkan SDK..."
-curl -L "https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.zip" -o "$TEMP_DIR/vulkan-sdk.zip"
-log "Download complete: $TEMP_DIR/vulkan-sdk.zip"
-
-log "Extracting Vulkan SDK..."
-unzip -o "$TEMP_DIR/vulkan-sdk.zip" -d "$TEMP_DIR"
-log "Extraction complete."
-
-if [ "$DEBUG" = true ]; then
-    debug_log "Checking for InstallVulkan directories in $TEMP_DIR:"
-    find "$TEMP_DIR" -maxdepth 1 -type d -name "InstallVulkan-*.app"
-fi
-
-INSTALLER_APP=$(find "$TEMP_DIR" -maxdepth 1 -type d -name "InstallVulkan-*.app" | head -n 1)
-
-if [ -z "$INSTALLER_APP" ]; then
-    log "No versioned installer found, checking for InstallVulkan.app..."
-    INSTALLER_APP="$TEMP_DIR/InstallVulkan.app"
-    if [ ! -d "$INSTALLER_APP" ]; then
-        echo "[ERROR] No Vulkan installer found in $TEMP_DIR."
-        exit 1
-    fi
-    log "Using fallback installer: $INSTALLER_APP"
+	for f in $HOME/VulkanSDK/*; do
+		if [ -d "$f" ]; then
+			f=`echo "${f##*/}" | awk -F. '{ printf("%d%02d%04d%02d\n", $1,$2,$3,$4); }';`
+			if [ $f -ge $new_ver ]; then
+				echo 'Latest or newer Vulkan SDK is already installed. Skipping installation.'
+				exit 0
+			fi
+		fi
+	done
 else
-    log "Found Vulkan installer: $INSTALLER_APP"
+	echo 'Error: Could not find 'jq' command. Is jq installed? Try running "brew install jq" or "port install jq" and rerunning this script.'
+	exit 1
 fi
 
-log "Found Vulkan installer: $INSTALLER_APP"
+# Download and install the Vulkan SDK.
+curl -L "https://sdk.lunarg.com/sdk/download/latest/mac/vulkan-sdk.zip" -o /tmp/vulkan-sdk.zip
+unzip /tmp/vulkan-sdk.zip -d /tmp
 
-if echo "$INSTALLER_APP" | grep -q "InstallVulkan-"; then
-    VERSION=$(echo "$INSTALLER_APP" | sed 's/.*InstallVulkan-//;s/.app//')
-    INSTALLER_EXEC="$INSTALLER_APP/Contents/MacOS/InstallVulkan-$VERSION"
+if [ -d "/tmp/vulkansdk-macOS-$new_ver_full.app" ]; then
+	/tmp/vulkansdk-macOS-$new_ver_full.app/Contents/MacOS/vulkansdk-macOS-$new_ver_full --accept-licenses --default-answer --confirm-command install
+	rm -rf /tmp/vulkansdk-macOS-$new_ver_full.app
 else
-    VERSION="fallback"
-    INSTALLER_EXEC="$INSTALLER_APP/Contents/MacOS/InstallVulkan"
+	echo "Couldn't install the Vulkan SDK, the unzipped contents may no longer match what this script expects."
+	exit 1
 fi
 
-log "Using Vulkan version: $VERSION"
+rm -f /tmp/vulkan-sdk.zip
 
-debug_log "Looking for installer executable at: $INSTALLER_EXEC"
-if [ ! -x "$INSTALLER_EXEC" ]; then
-    echo "[ERROR] Installer executable not found or not executable: $INSTALLER_EXEC"
-    exit 1
-fi
-
-CMD="\"$INSTALLER_EXEC\" --accept-licenses --default-answer --confirm-command install"
-
-if [ "$DRY_RUN" = true ]; then
-    log "[DRY-RUN] Command that would be executed: $CMD"
-else
-    log "Executing Vulkan installer..."
-    eval "$CMD"
-    log "Installation complete."
-fi
-
-log "Cleaning up temporary files..."
-rm -rf "$INSTALLER_APP"
-rm -f "$TEMP_DIR/vulkan-sdk.zip"
-
-log "Vulkan SDK version $VERSION installed successfully! You can now build Blazium by running 'scons'."
+echo 'Vulkan SDK installed successfully! You can now build Godot by running "scons".'
