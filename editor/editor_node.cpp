@@ -1751,7 +1751,7 @@ void EditorNode::_dialog_display_load_error(String p_file, Error p_error) {
 				show_accept(vformat(TTR("Missing file '%s' or one of its dependencies."), p_file.get_file()), TTR("OK"));
 			} break;
 			case ERR_FILE_UNRECOGNIZED: {
-				show_accept(vformat(TTR("File '%s' is saved in a format that is newer than the formats supported by this version of Godot, so it can't be opened."), p_file.get_file()), TTR("OK"));
+				show_accept(vformat(TTR("File '%s' is saved in a format that is newer than the formats supported by this version of Blazium, so it can't be opened."), p_file.get_file()), TTR("OK"));
 			} break;
 			default: {
 				show_accept(vformat(TTR("Error while loading file '%s'."), p_file.get_file()), TTR("OK"));
@@ -3489,23 +3489,23 @@ void EditorNode::_menu_option_confirm(int p_option, bool p_confirmed) {
 			OS::get_singleton()->shell_open(GODOT_VERSION_DOCS_URL "/");
 		} break;
 		case HELP_FORUM: {
-			OS::get_singleton()->shell_open("https://forum.godotengine.org/");
+			OS::get_singleton()->shell_open("https://blazium.app/chat");
 		} break;
 		case HELP_REPORT_A_BUG: {
-			OS::get_singleton()->shell_open("https://github.com/godotengine/godot/issues");
+			OS::get_singleton()->shell_open("https://github.com/blazium-engine/blazium/issues");
 		} break;
 		case HELP_COPY_SYSTEM_INFO: {
 			String info = _get_system_info();
 			DisplayServer::get_singleton()->clipboard_set(info);
 		} break;
 		case HELP_SUGGEST_A_FEATURE: {
-			OS::get_singleton()->shell_open("https://github.com/godotengine/godot-proposals#readme");
+			OS::get_singleton()->shell_open("https://blazium.app/chat");
 		} break;
 		case HELP_SEND_DOCS_FEEDBACK: {
-			OS::get_singleton()->shell_open("https://github.com/godotengine/godot-docs/issues");
+			OS::get_singleton()->shell_open("https://github.com/blazium-engine/blazium-docs/issues");
 		} break;
 		case HELP_COMMUNITY: {
-			OS::get_singleton()->shell_open("https://godotengine.org/community");
+			OS::get_singleton()->shell_open("https://blazium.app/chat");
 		} break;
 		case HELP_ABOUT: {
 			about->popup_centered(Size2(780, 500) * EDSCALE);
@@ -7072,7 +7072,7 @@ bool EditorNode::call_build() {
 
 	for (int i = 0; i < build_callback_count && builds_successful; i++) {
 		if (!build_callbacks[i]()) {
-			ERR_PRINT("A Godot Engine build callback failed.");
+			ERR_PRINT("A Blazium Engine build callback failed.");
 			builds_successful = false;
 		}
 	}
@@ -8263,7 +8263,7 @@ EditorNode::EditorNode() {
 	help_menu->add_icon_shortcut(_get_editor_theme_native_menu_icon(SNAME("HelpSearch"), global_menu, dark_mode), ED_GET_SHORTCUT("editor/editor_help"), HELP_SEARCH);
 	help_menu->add_separator();
 	help_menu->add_shortcut(ED_SHORTCUT_AND_COMMAND("editor/online_docs", TTRC("Online Documentation")), HELP_DOCS);
-	help_menu->add_shortcut(ED_SHORTCUT_AND_COMMAND("editor/forum", TTRC("Forum")), HELP_FORUM);
+	// help_menu->add_shortcut(ED_SHORTCUT_AND_COMMAND("editor/forum", TTRC("Forum")), HELP_FORUM);
 	help_menu->add_shortcut(ED_SHORTCUT_AND_COMMAND("editor/community", TTRC("Community")), HELP_COMMUNITY);
 	help_menu->add_separator();
 	help_menu->add_icon_shortcut(_get_editor_theme_native_menu_icon(SNAME("ActionCopy"), global_menu, dark_mode), ED_SHORTCUT_AND_COMMAND("editor/copy_system_info", TTRC("Copy System Info")), HELP_COPY_SYSTEM_INFO);
@@ -8274,9 +8274,9 @@ EditorNode::EditorNode() {
 	help_menu->add_separator();
 	if (!global_menu || !OS::get_singleton()->has_feature("macos")) {
 		// On macOS  "Quit" and "About" options are in the "app" menu.
-		help_menu->add_icon_shortcut(_get_editor_theme_native_menu_icon(SNAME("Godot"), global_menu, dark_mode), ED_SHORTCUT_AND_COMMAND("editor/about", TTRC("About Godot...")), HELP_ABOUT);
+		help_menu->add_icon_shortcut(_get_editor_theme_native_menu_icon(SNAME("Godot"), global_menu, dark_mode), ED_SHORTCUT_AND_COMMAND("editor/about", TTRC("About Blazium...")), HELP_ABOUT);
 	}
-	help_menu->add_icon_shortcut(_get_editor_theme_native_menu_icon(SNAME("Heart"), global_menu, dark_mode), ED_SHORTCUT_AND_COMMAND("editor/support_development", TTRC("Support Godot Development")), HELP_SUPPORT_GODOT_DEVELOPMENT);
+	// help_menu->add_icon_shortcut(_get_editor_theme_native_menu_icon(SNAME("Heart"), global_menu, dark_mode), ED_SHORTCUT_AND_COMMAND("editor/support_development", TTRC("Support Godot Development")), HELP_SUPPORT_GODOT_DEVELOPMENT);
 
 	// Spacer to center 2D / 3D / Script buttons.
 	right_spacer = memnew(Control);
