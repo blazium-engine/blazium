@@ -1,0 +1,50 @@
+#!/usr/bin/env python
+from misc.utility.scons_hints import *
+
+Import("env")
+Import("env_modules")
+
+
+env_thirdparty = env.Clone()
+env_thirdparty.disable_warnings()
+env_thirdparty.add_source_files(env_thirdparty.modules_sources, "#thirdparty/libtmt/*.c")
+
+env_gdterm = env_modules.Clone()
+
+# Platform-specific setting for gdterm
+if env_gdterm["platform"] == "windows":
+    env_gdterm.add_source_files(env.modules_sources, "gdterm/pty/platform/windows/*.cpp")
+    env_gdterm.Append(
+        CPPDEFINES=[
+            "FORCE_UTF8",
+        ],
+        # CCFLAGS="DUNICODE",
+    )
+else:
+    env_gdterm.add_source_files(env.modules_sources, "gdterm/pty/platform/linux/*.cpp")
+    env_gdterm.Append(
+        CPPDEFINES=[
+            "FORCE_UTF8",
+        ],
+    )
+
+if env_gdterm["platform"] == "macos":
+    env_gdterm.Append(
+        CPPDEFINES=[
+            "USE_COMMAND_KEY_FOR_SHORTCUT",
+            "USE_PTY_UTIL_H",
+        ]
+    )
+elif env_gdterm["platform"] == "linuxbsd":
+    env_gdterm.Append(
+        CPPDEFINES=[
+            "USE_PRIMARY_CLIPBOARD",
+        ]
+    )
+
+
+env_gdterm.Prepend(CPPPATH=["thirdparty"])
+# Add main gdterm sources
+env_gdterm.add_source_files(env.modules_sources, "gdterm/pty/*.cpp")
+env_gdterm.add_source_files(env.modules_sources, "gdterm/*.cpp")
+env_gdterm.add_source_files(env.modules_sources, "*.cpp")
