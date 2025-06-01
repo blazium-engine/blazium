@@ -70,6 +70,7 @@ public:
 	virtual void exited() = 0;
 	virtual void log_pty_input(const char *data) = 0;
 	virtual void log_vt_handler_input(unsigned char *data, int data_len) = 0;
+	virtual ~TermRenderer() {}
 };
 
 class PtyProxy {

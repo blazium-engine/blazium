@@ -7,94 +7,6 @@ extern "C" {
 #include <string.h>
 #include <cassert>
 
-static const char *control_code[] = {
-	"\x00",
-	"\x01",
-	"\x02",
-	"\x03",
-	"\x04",
-	"\x05",
-	"\x06",
-	"\x07",
-	"\x08",
-	"\x09",
-	"\x0a",
-	"\x0b",
-	"\x0c",
-	"\x0d",
-	"\x0e",
-	"\x0f",
-	"\x10",
-	"\x11",
-	"\x12",
-	"\x13",
-	"\x14",
-	"\x15",
-	"\x16",
-	"\x17",
-	"\x18",
-	"\x19"
-};
-
-static const char *lower_case[] = {
-	"@",
-	"a",
-	"b",
-	"c",
-	"d",
-	"e",
-	"f",
-	"g",
-	"h",
-	"i",
-	"j",
-	"k",
-	"l",
-	"m",
-	"n",
-	"o",
-	"p",
-	"q",
-	"r",
-	"s",
-	"t",
-	"u",
-	"v",
-	"w",
-	"x",
-	"y",
-	"z"
-};
-
-static const char *upper_case[] = {
-	"A",
-	"B",
-	"C",
-	"D",
-	"E",
-	"F",
-	"G",
-	"H",
-	"I",
-	"J",
-	"K",
-	"L",
-	"M",
-	"N",
-	"O",
-	"P",
-	"Q",
-	"R",
-	"S",
-	"T",
-	"U",
-	"V",
-	"W",
-	"X",
-	"Y",
-	"Z"
-};
-
 const char *numbers[] = {
 	"0",
 	"1",
@@ -154,7 +66,6 @@ const char *symbols4[] = {
 void fill_term_string(char *buffer, int buf_len, wchar_t unicode, Key key, bool send_alt_meta_as_esc) {
 	assert(buf_len > 5); // 4 for maximum unicode + 1 for prefixing with escape
 	buffer[0] = '\0';
-	const char *return_val = "";
 	Key code = key & KeyModifierMask::CODE_MASK;
 	Key ctrl = key & KeyModifierMask::CTRL;
 	Key alt = key & KeyModifierMask::ALT;

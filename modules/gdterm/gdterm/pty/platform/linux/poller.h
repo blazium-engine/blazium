@@ -10,6 +10,7 @@ public:
 	virtual void handle(unsigned char *data, int len) = 0;
 	virtual void apply_size() = 0;
 	virtual void exited() = 0;
+	virtual ~PollHandler() {}
 };
 
 class Poller {
