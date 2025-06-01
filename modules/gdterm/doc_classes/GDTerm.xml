@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="GDTerm" inherits="Control" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		GDTerm is a terminal emulator that supports VT100 and xterm protocols, providing a text-based interface for command-line applications.
+		It features customizable colors, fonts, and scrollback functionality, allowing users to interact with shell commands and applications.
+		It can be used in Godot projects to integrate terminal capabilities directly into games or applications.
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="clear">
+			<return type="void" />
+			<description>
+				Clears the terminal screen.
+			</description>
+		</method>
+		<method name="get_num_screen_lines" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the number of lines currently displayed on the terminal screen.
+			</description>
+		</method>
+		<method name="get_num_scrollback_lines" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the number of lines in the scrollback buffer, which contains previously displayed text.
+			</description>
+		</method>
+		<method name="get_scroll_pos" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the current scroll position in the terminal.
+			</description>
+		</method>
+		<method name="get_selected_text" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the currently selected text in the terminal.
+			</description>
+		</method>
+		<method name="is_active">
+			<return type="bool" />
+			<description>
+				Returns whether the terminal is currently active.
+			</description>
+		</method>
+		<method name="send_input">
+			<return type="void" />
+			<param index="0" name="text" type="String" />
+			<description>
+				Sends input text to the terminal.
+			</description>
+		</method>
+		<method name="set_scroll_pos">
+			<return type="void" />
+			<param index="0" name="pos" type="int" />
+			<description>
+				Sets the scroll position of the terminal.
+			</description>
+		</method>
+		<method name="start">
+			<return type="void" />
+			<description>
+				Starts the terminal emulator.
+			</description>
+		</method>
+		<method name="stop">
+			<return type="void" />
+			<description>
+				Stops the terminal emulator.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="background" type="Color" setter="set_background" getter="get_background" default="Color(0.933333, 0.933333, 0.933333, 1)">
+			The terminal background color.
+		</member>
+		<member name="black" type="Color" setter="set_black" getter="get_black" default="Color(0, 0, 0, 1)">
+			Color black for the terminal.
+		</member>
+		<member name="blue" type="Color" setter="set_blue" getter="get_blue" default="Color(0, 0, 0.733333, 1)">
+			Color blue for the terminal.
+		</member>
+		<member name="bold_font" type="Font" setter="set_bold_font" getter="get_bold_font">
+			Bold font used in the terminal.
+		</member>
+		<member name="bright_black" type="Color" setter="set_bright_black" getter="get_bright_black" default="Color(0.333333, 0.333333, 0.333333, 1)">
+			Color for bright black in the terminal.
+		</member>
+		<member name="bright_blue" type="Color" setter="set_bright_blue" getter="get_bright_blue" default="Color(0.333333, 0.333333, 0.866667, 1)">
+			Color for bright blue in the terminal.
+		</member>
+		<member name="bright_cyan" type="Color" setter="set_bright_cyan" getter="get_bright_cyan" default="Color(0.333333, 0.866667, 0.866667, 1)">
+			Color for bright cyan in the terminal.
+		</member>
+		<member name="bright_green" type="Color" setter="set_bright_green" getter="get_bright_green" default="Color(0.333333, 0.866667, 0.333333, 1)">
+			Color for bright green in the terminal.
+		</member>
+		<member name="bright_magenta" type="Color" setter="set_bright_magenta" getter="get_bright_magenta" default="Color(0.866667, 0.333333, 0.866667, 1)">
+			Color for bright magenta in the terminal.
+		</member>
+		<member name="bright_red" type="Color" setter="set_bright_red" getter="get_bright_red" default="Color(0.866667, 0.333333, 0.333333, 1)">
+			Color for bright red in the terminal.
+		</member>
+		<member name="bright_white" type="Color" setter="set_bright_white" getter="get_bright_white" default="Color(0.866667, 0.866667, 0.866667, 1)">
+			Color for bright white in the terminal.
+		</member>
+		<member name="bright_yellow" type="Color" setter="set_bright_yellow" getter="get_bright_yellow" default="Color(0.866667, 0.866667, 0.333333, 1)">
+			Color for bright yellow in the terminal.
+		</member>
+		<member name="clip_contents" type="bool" setter="set_clip_contents" getter="is_clipping_contents" overrides="Control" default="true" />
+		<member name="cyan" type="Color" setter="set_cyan" getter="get_cyan" default="Color(0, 0.733333, 0.733333, 1)">
+			Color cyan for the terminal.
+		</member>
+		<member name="dim_font" type="Font" setter="set_dim_font" getter="get_dim_font">
+			Dim font used in the terminal.
+		</member>
+		<member name="focus_mode" type="int" setter="set_focus_mode" getter="get_focus_mode" overrides="Control" enum="Control.FocusMode" default="2" />
+		<member name="font" type="Font" setter="set_font" getter="get_font">
+			The main font used in the terminal.
+		</member>
+		<member name="font_size" type="int" setter="set_font_size" getter="get_font_size" default="14">
+			The size of the font used in the terminal.
+		</member>
+		<member name="foreground" type="Color" setter="set_foreground" getter="get_foreground" default="Color(0.0666667, 0.0666667, 0.0666667, 1)">
+			The terminal foreground color.
+		</member>
+		<member name="green" type="Color" setter="set_green" getter="get_green" default="Color(0, 0.733333, 0, 1)">
+			Color green for the terminal.
+		</member>
+		<member name="magenta" type="Color" setter="set_magenta" getter="get_magenta" default="Color(0.733333, 0, 0.733333, 1)">
+			Color magenta for the terminal.
+		</member>
+		<member name="red" type="Color" setter="set_red" getter="get_red" default="Color(0.733333, 0, 0, 1)">
+			Color red for the terminal.
+		</member>
+		<member name="send_alt_meta_as_escape" type="bool" setter="set_send_alt_meta_as_escape" getter="get_send_alt_meta_as_escape" default="false">
+			If true, pressing Alt or Meta sends an Escape character instead.
+		</member>
+		<member name="vt_handler_log_path" type="String" setter="set_vt_handler_log_path" getter="get_vt_handler_log_path" default="&quot;&quot;">
+			Path to a file where the VT handler logs its output.
+		</member>
+		<member name="white" type="Color" setter="set_white" getter="get_white" default="Color(0.733333, 0.733333, 0.733333, 1)">
+			Color white for the terminal.
+		</member>
+		<member name="yellow" type="Color" setter="set_yellow" getter="get_yellow" default="Color(0.733333, 0.733333, 0, 1)">
+			Color yellow for the terminal.
+		</member>
+	</members>
+	<signals>
+		<signal name="bell_request">
+			<description>
+				Emitted when the terminal requests a bell sound.
+			</description>
+		</signal>
+		<signal name="copy_request">
+			<description>
+				Emitted when the terminal requests to copy selected text.
+			</description>
+		</signal>
+		<signal name="inactive">
+			<description>
+				Emitted when the terminal becomes inactive, such as when it loses focus.
+			</description>
+		</signal>
+		<signal name="paste_request">
+			<description>
+				Emitted when the terminal requests to paste text from the clipboard.
+			</description>
+		</signal>
+		<signal name="scrollback_changed">
+			<description>
+				Emitted when the scrollback buffer changes.
+			</description>
+		</signal>
+	</signals>
+</class>
