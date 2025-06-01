@@ -153,6 +153,7 @@ repos:
             platform/android/java/editor/src/main/java/com/android/.*|
             platform/android/java/lib/src/com/.*|
             modules/blazium_sdk/.*|
+            modules/gdterm/.*|
             modules/godotsteam/.*|
             modules/sixway_mtl/.*|
             scene/theme/blazium_default_theme.cpp|
