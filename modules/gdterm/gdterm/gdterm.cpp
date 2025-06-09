@@ -1248,7 +1248,8 @@ void GDTerm::_calc_select_word_col(const GDTermLine &line, int &start_col, int &
 	bool found_word = false;
 	for (int i = 0; i < (int)line.dirs.size(); i++) {
 		if (line.dirs[i].kind == DIRECTIVE_WRITE_GLYPH) {
-			wchar_t buf[2];
+			// TODO investigate what is going on here
+			wchar_t buf[2] = { 0 };
 			if (isspace(buf[0])) {
 				if (found_word) {
 					return;
