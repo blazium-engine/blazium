@@ -909,7 +909,7 @@ static const uint64_t CLICK_DELTA_TIME = 500;
 
 void GDTerm::gui_input(const Ref<InputEvent> &p_event) {
 	Ref<InputEventKey> ke = p_event;
-	if (ke != NULL) {
+	if (ke.is_valid()) {
 		if (ke->is_pressed()) {
 			if (!_active) {
 				emit_signal("bell_request");
@@ -946,7 +946,7 @@ void GDTerm::gui_input(const Ref<InputEvent> &p_event) {
 	}
 
 	Ref<InputEventMouseButton> mbe = p_event;
-	if (mbe != nullptr) {
+	if (mbe.is_valid()) {
 		if (mbe->get_button_index() == MouseButton::LEFT) {
 			if (mbe->is_pressed()) {
 				Vector2 mpos = mbe->get_position();
@@ -1012,7 +1012,7 @@ void GDTerm::gui_input(const Ref<InputEvent> &p_event) {
 	}
 
 	Ref<InputEventMouseMotion> mme = p_event;
-	if (mme != nullptr) {
+	if (mme.is_valid()) {
 		if (_selecting) {
 			Vector2 mpos = mme->get_position();
 			int mouse_row = mpos.y / _font_space_size.y;
@@ -1587,7 +1587,7 @@ bool GDTerm::_is_control_c(Key code) {
 }
 
 void GDTerm::_do_resize() {
-	if (font == nullptr) {
+	if (font.is_null()) {
 		return;
 	}
 
