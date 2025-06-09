@@ -4,6 +4,29 @@
 #define NTDDI_VERSION 0x0A000006
 
 #include "../../pty_proxy.h"
+
+// x64 (64-bit Intel/AMD)
+#if defined(_M_X64) || defined(__x86_64__)
+#define _WIN64
+#define ARCH_NAME "x64"
+
+// ARM64 (AArch64)
+#elif defined(_M_ARM64) || defined(__aarch64__)
+#define _WIN64
+#define _M_ARM64
+#define _ARM64_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE 1
+#define ARCH_NAME "ARM64"
+
+// x86 (32-bit Intel/AMD)
+#elif defined(_M_IX86) || defined(__i386__)
+#define _WIN32
+#define ARCH_NAME "x86"
+
+// Unknown (error)
+#else
+#error "Unsupported architecture!"
+#endif
+
 #include <wincon.h>
 #include <windows.h>
 #include <condition_variable>
