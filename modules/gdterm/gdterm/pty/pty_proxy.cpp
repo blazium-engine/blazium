@@ -167,6 +167,9 @@ int get_num_codes(int char_start_idx, int cidx, TMTLINE *line) {
 
 int add_glyph_chars(int char_start_idx, int cidx, TMTLINE *line, PtyProxy *proxy) {
 	int maxchar = sizeof(tmt_wchar_t) * get_num_codes(char_start_idx, cidx, line);
+	if (maxchar <= 0) {
+		return cidx;
+	}
 	char *buffer = (char *)malloc(maxchar);
 	int numchars = fill_chars(buffer, maxchar, line->chars, char_start_idx, cidx);
 	if (numchars > 0) {
