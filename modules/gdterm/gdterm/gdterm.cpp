@@ -10,6 +10,7 @@
 #include "key_converter.h"
 
 #include <cassert>
+#include <cstring>
 
 static const int TARGET_SCROLL = 1;
 static const int TARGET_SCREEN = 2;
@@ -1003,7 +1004,7 @@ void GDTerm::gui_input(const Ref<InputEvent> &p_event) {
 					String text = get_selected_text();
 #ifdef USE_PRIMARY_CLIPBOARD
 					if (text.length() > 0) {
-						godot::DisplayServer::get_singleton()->clipboard_set_primary(text);
+						DisplayServer::get_singleton()->clipboard_set_primary(text);
 					}
 #endif
 				}
@@ -1768,16 +1769,16 @@ void GDTerm::_send_input_chunk(int max_send) {
 	}
 }
 
-void GDTerm::log_pty_input(const char *data) {
+void GDTerm::log_pty_input(const char *p_data) {
 	if (_vt_handler_input_log != nullptr) {
-		*_vt_handler_input_log << "KEY:'" << data << "':KEY" << std::endl;
+		*_vt_handler_input_log << "KEY:'" << p_data << "':KEY" << std::endl;
 		_vt_handler_input_log->flush();
 	}
 }
 
-void GDTerm::log_vt_handler_input(unsigned char *data, int data_len) {
+void GDTerm::log_vt_handler_input(unsigned char *p_data, int data_len) {
 	if (_vt_handler_input_log != nullptr) {
-		std::string s((char *)data, data_len);
+		std::string s((char *)p_data, data_len);
 		*_vt_handler_input_log << "VT:'" << s << "':VT" << std::endl;
 		_vt_handler_input_log->flush();
 	}
