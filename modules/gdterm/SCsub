@@ -16,6 +16,7 @@ env_gdterm = env_modules.Clone()
 # Platform-specific setting for gdterm
 if env_gdterm["platform"] == "windows":
     env_gdterm.add_source_files(env.modules_sources, "gdterm/pty/platform/windows/*.cpp")
+    windows_defines = ["FORCE_UTF8"]
     # Architecture-specific defines
     if env["arch"] == "x86_64":
         windows_defines.extend(
@@ -43,12 +44,7 @@ if env_gdterm["platform"] == "windows":
         )
     else:
         print(f"Warning: Unknown architecture {env['arch']}, Windows build may fail")
-    env_gdterm.Append(
-        CPPDEFINES=[
-            "FORCE_UTF8",
-        ],
-        # CCFLAGS="DUNICODE",
-    )
+    env_gdterm.Append(CPPDEFINES=windows_defines, CCFLAGS="DUNICODE")
 else:
     env_gdterm.add_source_files(env.modules_sources, "gdterm/pty/platform/linux/*.cpp")
     env_gdterm.Append(
