@@ -7,7 +7,8 @@ Import("env_modules")
 
 env_thirdparty = env.Clone()
 env_thirdparty.disable_warnings()
-env_thirdparty.Append(CCFLAGS=["/wd4200"])
+if env_gdterm["platform"] == "windows":
+    env_thirdparty.Append(CCFLAGS=["/wd4200"])
 env_thirdparty.add_source_files(env_thirdparty.modules_sources, "#thirdparty/libtmt/*.c")
 
 env_gdterm = env_modules.Clone()
