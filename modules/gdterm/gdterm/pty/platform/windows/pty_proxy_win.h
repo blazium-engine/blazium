@@ -5,6 +5,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <wincon.h>
+#include <windef.h>
 #include <windows.h>
 #include <condition_variable>
 #include <mutex>

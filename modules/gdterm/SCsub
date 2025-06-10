@@ -7,8 +7,6 @@ Import("env_modules")
 
 env_thirdparty = env.Clone()
 env_thirdparty.disable_warnings()
-# if env_gdterm["platform"] == "windows":
-#    env_thirdparty.Append(CCFLAGS=["/wd4200"])
 env_thirdparty.add_source_files(env_thirdparty.modules_sources, "#thirdparty/libtmt/*.c")
 
 env_gdterm = env_modules.Clone()
@@ -16,6 +14,7 @@ env_gdterm = env_modules.Clone()
 # Platform-specific setting for gdterm
 if env_gdterm["platform"] == "windows":
     env_gdterm.add_source_files(env.modules_sources, "gdterm/pty/platform/windows/*.cpp")
+    env_thirdparty.Append(CCFLAGS=["/wd4200"])
     windows_defines = ["FORCE_UTF8"]
     # Architecture-specific defines
     if env["arch"] == "x86_64":
@@ -44,7 +43,7 @@ if env_gdterm["platform"] == "windows":
         )
     else:
         print(f"Warning: Unknown architecture {env['arch']}, Windows build may fail")
-    env_gdterm.Append(CPPDEFINES=windows_defines, CCFLAGS="DUNICODE")
+    env_gdterm.Append(CPPDEFINES=windows_defines, CCFLAGS="-DUNICODE")
 else:
     env_gdterm.add_source_files(env.modules_sources, "gdterm/pty/platform/linux/*.cpp")
     env_gdterm.Append(
