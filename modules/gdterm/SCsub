@@ -15,7 +15,7 @@ env_gdterm = env_modules.Clone()
 if env_gdterm["platform"] == "windows":
     env_gdterm.add_source_files(env.modules_sources, "gdterm/pty/platform/windows/*.cpp")
     env_thirdparty.Append(CCFLAGS=["/wd4200"])
-    windows_defines = ["FORCE_UTF8"]
+    windows_defines = ["FORCE_UTF8", "_CRT_SECURE_NO_WARNINGS", "_CRT_NONSTDC_NO_DEPRECATE", "UNICODE", "_UNICODE"]
     # Architecture-specific defines
     if env["arch"] == "x86_64":
         windows_defines.extend(
