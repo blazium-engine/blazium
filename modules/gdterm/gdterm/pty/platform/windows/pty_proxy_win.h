@@ -4,7 +4,9 @@
 #include "../../pty_proxy.h"
 
 #define WIN32_LEAN_AND_MEAN
+#ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0A00
+#endif // _WIN32_WINNT
 #include <wincon.h>
 #include <windows.h>
 #include <condition_variable>
