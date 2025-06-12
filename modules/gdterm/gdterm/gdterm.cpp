@@ -1598,7 +1598,7 @@ void GDTerm::_do_resize() {
 		return;
 	}
 
-	_font_space_size = font->get_string_size(" ", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size);
+	_font_space_size = font->get_string_size("W", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size);
 
 	if (!is_inside_tree()) {
 		return;

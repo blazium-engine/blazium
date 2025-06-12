@@ -11,12 +11,6 @@
 void TerminalPlugin::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE: {
-			if (container) {
-				// Apply margins for better appearance.
-				container->add_theme_constant_override("margin_right", 4 * EDSCALE);
-				container->add_theme_constant_override("margin_top", 4 * EDSCALE);
-			}
-
 			if (terminal) {
 				if (!terminal->is_active()) {
 					terminal->start();
@@ -68,15 +62,15 @@ bool TerminalPlugin::_handle_gui_input(const Ref<InputEvent> &p_event) {
 			if (scrollbar->get_value() > scrollbar->get_min()) {
 				scrollbar->set_value(scrollbar->get_value() - 1);
 			}
-			return true; // Consume the event.
+			return true;
 		} else if (mb->get_button_index() == MouseButton::WHEEL_DOWN) {
 			if (scrollbar->get_value() < terminal->get_num_scrollback_lines()) {
 				scrollbar->set_value(scrollbar->get_value() + 1);
 			}
-			return true; // Consume the event.
+			return true;
 		}
 	}
-	return false; // Let other events pass through.
+	return false;
 }
 
 void TerminalPlugin::_bind_methods() {
