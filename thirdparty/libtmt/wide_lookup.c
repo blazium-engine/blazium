@@ -1,0 +1,3536 @@
+#include <stdint.h>
+#include <stdio.h>
+#include "tmt.h"
+#include "wide_lookup.h"
+
+/* inclusive range */
+struct lookup {
+	uint32_t start;
+	uint32_t end;
+};
+
+static struct lookup non_east_asian[] = {
+    { 0x1100, 0x115F },
+    { 0x231A, 0x231B },
+    { 0x2329, 0x2329 },
+    { 0x232A, 0x232A },
+    { 0x23E9, 0x23EC },
+    { 0x23F0, 0x23F0 },
+    { 0x23F3, 0x23F3 },
+    { 0x25FD, 0x25FE },
+    { 0x2614, 0x2615 },
+    { 0x2630, 0x2637 },
+    { 0x2648, 0x2653 },
+    { 0x267F, 0x267F },
+    { 0x268A, 0x268F },
+    { 0x2693, 0x2693 },
+    { 0x26A1, 0x26A1 },
+    { 0x26AA, 0x26AB },
+    { 0x26BD, 0x26BE },
+    { 0x26C4, 0x26C5 },
+    { 0x26CE, 0x26CE },
+    { 0x26D4, 0x26D4 },
+    { 0x26EA, 0x26EA },
+    { 0x26F2, 0x26F3 },
+    { 0x26F5, 0x26F5 },
+    { 0x26FA, 0x26FA },
+    { 0x26FD, 0x26FD },
+    { 0x2705, 0x2705 },
+    { 0x270A, 0x270B },
+    { 0x2728, 0x2728 },
+    { 0x274C, 0x274C },
+    { 0x274E, 0x274E },
+    { 0x2753, 0x2755 },
+    { 0x2757, 0x2757 },
+    { 0x2795, 0x2797 },
+    { 0x27B0, 0x27B0 },
+    { 0x27BF, 0x27BF },
+    { 0x2B1B, 0x2B1C },
+    { 0x2B50, 0x2B50 },
+    { 0x2B55, 0x2B55 },
+    { 0x2E80, 0x2E99 },
+    { 0x2E9B, 0x2EF3 },
+    { 0x2F00, 0x2FD5 },
+    { 0x2FF0, 0x2FFF },
+    { 0x3000, 0x3000 },
+    { 0x3001, 0x3003 },
+    { 0x3004, 0x3004 },
+    { 0x3005, 0x3005 },
+    { 0x3006, 0x3006 },
+    { 0x3007, 0x3007 },
+    { 0x3008, 0x3008 },
+    { 0x3009, 0x3009 },
+    { 0x300A, 0x300A },
+    { 0x300B, 0x300B },
+    { 0x300C, 0x300C },
+    { 0x300D, 0x300D },
+    { 0x300E, 0x300E },
+    { 0x300F, 0x300F },
+    { 0x3010, 0x3010 },
+    { 0x3011, 0x3011 },
+    { 0x3012, 0x3013 },
+    { 0x3014, 0x3014 },
+    { 0x3015, 0x3015 },
+    { 0x3016, 0x3016 },
+    { 0x3017, 0x3017 },
+    { 0x3018, 0x3018 },
+    { 0x3019, 0x3019 },
+    { 0x301A, 0x301A },
+    { 0x301B, 0x301B },
+    { 0x301C, 0x301C },
+    { 0x301D, 0x301D },
+    { 0x301E, 0x301F },
+    { 0x3020, 0x3020 },
+    { 0x3021, 0x3029 },
+    { 0x302A, 0x302D },
+    { 0x302E, 0x302F },
+    { 0x3030, 0x3030 },
+    { 0x3031, 0x3035 },
+    { 0x3036, 0x3037 },
+    { 0x3038, 0x303A },
+    { 0x303B, 0x303B },
+    { 0x303C, 0x303C },
+    { 0x303D, 0x303D },
+    { 0x303E, 0x303E },
+    { 0x3041, 0x3096 },
+    { 0x3099, 0x309A },
+    { 0x309B, 0x309C },
+    { 0x309D, 0x309E },
+    { 0x309F, 0x309F },
+    { 0x30A0, 0x30A0 },
+    { 0x30A1, 0x30FA },
+    { 0x30FB, 0x30FB },
+    { 0x30FC, 0x30FE },
+    { 0x30FF, 0x30FF },
+    { 0x3105, 0x312F },
+    { 0x3131, 0x318E },
+    { 0x3190, 0x3191 },
+    { 0x3192, 0x3195 },
+    { 0x3196, 0x319F },
+    { 0x31A0, 0x31BF },
+    { 0x31C0, 0x31E5 },
+    { 0x31EF, 0x31EF },
+    { 0x31F0, 0x31FF },
+    { 0x3200, 0x321E },
+    { 0x3220, 0x3229 },
+    { 0x322A, 0x3247 },
+    { 0x3250, 0x3250 },
+    { 0x3251, 0x325F },
+    { 0x3260, 0x327F },
+    { 0x3280, 0x3289 },
+    { 0x328A, 0x32B0 },
+    { 0x32B1, 0x32BF },
+    { 0x32C0, 0x32FF },
+    { 0x3300, 0x33FF },
+    { 0x3400, 0x4DBF },
+    { 0x4DC0, 0x4DFF },
+    { 0x4E00, 0x9FFF },
+    { 0xA000, 0xA014 },
+    { 0xA015, 0xA015 },
+    { 0xA016, 0xA48C },
+    { 0xA490, 0xA4C6 },
+    { 0xA960, 0xA97C },
+    { 0xAC00, 0xD7A3 },
+    { 0xF900, 0xFA6D },
+    { 0xFA6E, 0xFA6F },
+    { 0xFA70, 0xFAD9 },
+    { 0xFADA, 0xFAFF },
+    { 0xFE10, 0xFE16 },
+    { 0xFE17, 0xFE17 },
+    { 0xFE18, 0xFE18 },
+    { 0xFE19, 0xFE19 },
+    { 0xFE30, 0xFE30 },
+    { 0xFE31, 0xFE32 },
+    { 0xFE33, 0xFE34 },
+    { 0xFE35, 0xFE35 },
+    { 0xFE36, 0xFE36 },
+    { 0xFE37, 0xFE37 },
+    { 0xFE38, 0xFE38 },
+    { 0xFE39, 0xFE39 },
+    { 0xFE3A, 0xFE3A },
+    { 0xFE3B, 0xFE3B },
+    { 0xFE3C, 0xFE3C },
+    { 0xFE3D, 0xFE3D },
+    { 0xFE3E, 0xFE3E },
+    { 0xFE3F, 0xFE3F },
+    { 0xFE40, 0xFE40 },
+    { 0xFE41, 0xFE41 },
+    { 0xFE42, 0xFE42 },
+    { 0xFE43, 0xFE43 },
+    { 0xFE44, 0xFE44 },
+    { 0xFE45, 0xFE46 },
+    { 0xFE47, 0xFE47 },
+    { 0xFE48, 0xFE48 },
+    { 0xFE49, 0xFE4C },
+    { 0xFE4D, 0xFE4F },
+    { 0xFE50, 0xFE52 },
+    { 0xFE54, 0xFE57 },
+    { 0xFE58, 0xFE58 },
+    { 0xFE59, 0xFE59 },
+    { 0xFE5A, 0xFE5A },
+    { 0xFE5B, 0xFE5B },
+    { 0xFE5C, 0xFE5C },
+    { 0xFE5D, 0xFE5D },
+    { 0xFE5E, 0xFE5E },
+    { 0xFE5F, 0xFE61 },
+    { 0xFE62, 0xFE62 },
+    { 0xFE63, 0xFE63 },
+    { 0xFE64, 0xFE66 },
+    { 0xFE68, 0xFE68 },
+    { 0xFE69, 0xFE69 },
+    { 0xFE6A, 0xFE6B },
+    { 0xFF01, 0xFF03 },
+    { 0xFF04, 0xFF04 },
+    { 0xFF05, 0xFF07 },
+    { 0xFF08, 0xFF08 },
+    { 0xFF09, 0xFF09 },
+    { 0xFF0A, 0xFF0A },
+    { 0xFF0B, 0xFF0B },
+    { 0xFF0C, 0xFF0C },
+    { 0xFF0D, 0xFF0D },
+    { 0xFF0E, 0xFF0F },
+    { 0xFF10, 0xFF19 },
+    { 0xFF1A, 0xFF1B },
+    { 0xFF1C, 0xFF1E },
+    { 0xFF1F, 0xFF20 },
+    { 0xFF21, 0xFF3A },
+    { 0xFF3B, 0xFF3B },
+    { 0xFF3C, 0xFF3C },
+    { 0xFF3D, 0xFF3D },
+    { 0xFF3E, 0xFF3E },
+    { 0xFF3F, 0xFF3F },
+    { 0xFF40, 0xFF40 },
+    { 0xFF41, 0xFF5A },
+    { 0xFF5B, 0xFF5B },
+    { 0xFF5C, 0xFF5C },
+    { 0xFF5D, 0xFF5D },
+    { 0xFF5E, 0xFF5E },
+    { 0xFF5F, 0xFF5F },
+    { 0xFF60, 0xFF60 },
+    { 0xFFE0, 0xFFE1 },
+    { 0xFFE2, 0xFFE2 },
+    { 0xFFE3, 0xFFE3 },
+    { 0xFFE4, 0xFFE4 },
+    { 0xFFE5, 0xFFE6 },
+    { 0x16FE0, 0x16FE1 },
+    { 0x16FE2, 0x16FE2 },
+    { 0x16FE3, 0x16FE3 },
+    { 0x16FE4, 0x16FE4 },
+    { 0x16FF0, 0x16FF1 },
+    { 0x17000, 0x187F7 },
+    { 0x18800, 0x18AFF },
+    { 0x18B00, 0x18CD5 },
+    { 0x18CFF, 0x18CFF },
+    { 0x18D00, 0x18D08 },
+    { 0x1AFF0, 0x1AFF3 },
+    { 0x1AFF5, 0x1AFFB },
+    { 0x1AFFD, 0x1AFFE },
+    { 0x1B000, 0x1B0FF },
+    { 0x1B100, 0x1B122 },
+    { 0x1B132, 0x1B132 },
+    { 0x1B150, 0x1B152 },
+    { 0x1B155, 0x1B155 },
+    { 0x1B164, 0x1B167 },
+    { 0x1B170, 0x1B2FB },
+    { 0x1D300, 0x1D356 },
+    { 0x1D360, 0x1D376 },
+    { 0x1F004, 0x1F004 },
+    { 0x1F0CF, 0x1F0CF },
+    { 0x1F18E, 0x1F18E },
+    { 0x1F191, 0x1F19A },
+    { 0x1F200, 0x1F202 },
+    { 0x1F210, 0x1F23B },
+    { 0x1F240, 0x1F248 },
+    { 0x1F250, 0x1F251 },
+    { 0x1F260, 0x1F265 },
+    { 0x1F300, 0x1F320 },
+    { 0x1F32D, 0x1F335 },
+    { 0x1F337, 0x1F37C },
+    { 0x1F37E, 0x1F393 },
+    { 0x1F3A0, 0x1F3CA },
+    { 0x1F3CF, 0x1F3D3 },
+    { 0x1F3E0, 0x1F3F0 },
+    { 0x1F3F4, 0x1F3F4 },
+    { 0x1F3F8, 0x1F3FA },
+    { 0x1F3FB, 0x1F3FF },
+    { 0x1F400, 0x1F43E },
+    { 0x1F440, 0x1F440 },
+    { 0x1F442, 0x1F4FC },
+    { 0x1F4FF, 0x1F53D },
+    { 0x1F54B, 0x1F54E },
+    { 0x1F550, 0x1F567 },
+    { 0x1F57A, 0x1F57A },
+    { 0x1F595, 0x1F596 },
+    { 0x1F5A4, 0x1F5A4 },
+    { 0x1F5FB, 0x1F5FF },
+    { 0x1F600, 0x1F64F },
+    { 0x1F680, 0x1F6C5 },
+    { 0x1F6CC, 0x1F6CC },
+    { 0x1F6D0, 0x1F6D2 },
+    { 0x1F6D5, 0x1F6D7 },
+    { 0x1F6DC, 0x1F6DF },
+    { 0x1F6EB, 0x1F6EC },
+    { 0x1F6F4, 0x1F6FC },
+    { 0x1F7E0, 0x1F7EB },
+    { 0x1F7F0, 0x1F7F0 },
+    { 0x1F90C, 0x1F93A },
+    { 0x1F93C, 0x1F945 },
+    { 0x1F947, 0x1F9FF },
+    { 0x1FA70, 0x1FA7C },
+    { 0x1FA80, 0x1FA89 },
+    { 0x1FA8F, 0x1FAC6 },
+    { 0x1FACE, 0x1FADC },
+    { 0x1FADF, 0x1FAE9 },
+    { 0x1FAF0, 0x1FAF8 },
+    { 0x20000, 0x2A6DF },
+    { 0x2A6E0, 0x2A6FF },
+    { 0x2A700, 0x2B739 },
+    { 0x2B73A, 0x2B73F },
+    { 0x2B740, 0x2B81D },
+    { 0x2B81E, 0x2B81F },
+    { 0x2B820, 0x2CEA1 },
+    { 0x2CEA2, 0x2CEAF },
+    { 0x2CEB0, 0x2EBE0 },
+    { 0x2EBE1, 0x2EBEF },
+    { 0x2EBF0, 0x2EE5D },
+    { 0x2EE5E, 0x2F7FF },
+    { 0x2F800, 0x2FA1D },
+    { 0x2FA1E, 0x2FA1F },
+    { 0x2FA20, 0x2FFFD },
+    { 0x30000, 0x3134A },
+    { 0x3134B, 0x3134F },
+    { 0x31350, 0x323AF },
+    { 0x323B0, 0x3FFFD }
+};
+
+static struct lookup east_asian[] = {
+	{ 0x00A1, 0x00A1 },
+    { 0x00A4, 0x00A4 },
+    { 0x00A7, 0x00A7 },
+    { 0x00A8, 0x00A8 },
+    { 0x00AA, 0x00AA },
+    { 0x00AD, 0x00AD },
+    { 0x00AE, 0x00AE },
+    { 0x00B0, 0x00B0 },
+    { 0x00B1, 0x00B1 },
+    { 0x00B2, 0x00B3 },
+    { 0x00B4, 0x00B4 },
+    { 0x00B6, 0x00B7 },
+    { 0x00B8, 0x00B8 },
+    { 0x00B9, 0x00B9 },
+    { 0x00BA, 0x00BA },
+    { 0x00BC, 0x00BE },
+    { 0x00BF, 0x00BF },
+    { 0x00C6, 0x00C6 },
+    { 0x00D0, 0x00D0 },
+    { 0x00D7, 0x00D7 },
+    { 0x00D8, 0x00D8 },
+    { 0x00DE, 0x00E1 },
+    { 0x00E6, 0x00E6 },
+    { 0x00E8, 0x00EA },
+    { 0x00EC, 0x00ED },
+    { 0x00F0, 0x00F0 },
+    { 0x00F2, 0x00F3 },
+    { 0x00F7, 0x00F7 },
+    { 0x00F8, 0x00FA },
+    { 0x00FC, 0x00FC },
+    { 0x00FE, 0x00FE },
+    { 0x0101, 0x0101 },
+    { 0x0111, 0x0111 },
+    { 0x0113, 0x0113 },
+    { 0x011B, 0x011B },
+    { 0x0126, 0x0127 },
+    { 0x012B, 0x012B },
+    { 0x0131, 0x0133 },
+    { 0x0138, 0x0138 },
+    { 0x013F, 0x0142 },
+    { 0x0144, 0x0144 },
+    { 0x0148, 0x014B },
+    { 0x014D, 0x014D },
+    { 0x0152, 0x0153 },
+    { 0x0166, 0x0167 },
+    { 0x016B, 0x016B },
+    { 0x01CE, 0x01CE },
+    { 0x01D0, 0x01D0 },
+    { 0x01D2, 0x01D2 },
+    { 0x01D4, 0x01D4 },
+    { 0x01D6, 0x01D6 },
+    { 0x01D8, 0x01D8 },
+    { 0x01DA, 0x01DA },
+    { 0x01DC, 0x01DC },
+    { 0x0251, 0x0251 },
+    { 0x0261, 0x0261 },
+    { 0x02C4, 0x02C4 },
+    { 0x02C7, 0x02C7 },
+    { 0x02C9, 0x02CB },
+    { 0x02CD, 0x02CD },
+    { 0x02D0, 0x02D0 },
+    { 0x02D8, 0x02DB },
+    { 0x02DD, 0x02DD },
+    { 0x02DF, 0x02DF },
+    { 0x0300, 0x036F },
+    { 0x0391, 0x03A1 },
+    { 0x03A3, 0x03A9 },
+    { 0x03B1, 0x03C1 },
+    { 0x03C3, 0x03C9 },
+    { 0x0401, 0x0401 },
+    { 0x0410, 0x044F },
+    { 0x0451, 0x0451 },
+    { 0x1100, 0x115F },
+    { 0x2010, 0x2010 },
+    { 0x2013, 0x2015 },
+    { 0x2016, 0x2016 },
+    { 0x2018, 0x2018 },
+    { 0x2019, 0x2019 },
+    { 0x201C, 0x201C },
+    { 0x201D, 0x201D },
+    { 0x2020, 0x2022 },
+    { 0x2024, 0x2027 },
+    { 0x2030, 0x2030 },
+    { 0x2032, 0x2033 },
+    { 0x2035, 0x2035 },
+    { 0x203B, 0x203B },
+    { 0x203E, 0x203E },
+    { 0x2074, 0x2074 },
+    { 0x207F, 0x207F },
+    { 0x2081, 0x2084 },
+    { 0x20AC, 0x20AC },
+    { 0x2103, 0x2103 },
+    { 0x2105, 0x2105 },
+    { 0x2109, 0x2109 },
+    { 0x2113, 0x2113 },
+    { 0x2116, 0x2116 },
+    { 0x2121, 0x2122 },
+    { 0x2126, 0x2126 },
+    { 0x212B, 0x212B },
+    { 0x2153, 0x2154 },
+    { 0x215B, 0x215E },
+    { 0x2160, 0x216B },
+    { 0x2170, 0x2179 },
+    { 0x2189, 0x2189 },
+    { 0x2190, 0x2194 },
+    { 0x2195, 0x2199 },
+    { 0x21B8, 0x21B9 },
+    { 0x21D2, 0x21D2 },
+    { 0x21D4, 0x21D4 },
+    { 0x21E7, 0x21E7 },
+    { 0x2200, 0x2200 },
+    { 0x2202, 0x2203 },
+    { 0x2207, 0x2208 },
+    { 0x220B, 0x220B },
+    { 0x220F, 0x220F },
+    { 0x2211, 0x2211 },
+    { 0x2215, 0x2215 },
+    { 0x221A, 0x221A },
+    { 0x221D, 0x2220 },
+    { 0x2223, 0x2223 },
+    { 0x2225, 0x2225 },
+    { 0x2227, 0x222C },
+    { 0x222E, 0x222E },
+    { 0x2234, 0x2237 },
+    { 0x223C, 0x223D },
+    { 0x2248, 0x2248 },
+    { 0x224C, 0x224C },
+    { 0x2252, 0x2252 },
+    { 0x2260, 0x2261 },
+    { 0x2264, 0x2267 },
+    { 0x226A, 0x226B },
+    { 0x226E, 0x226F },
+    { 0x2282, 0x2283 },
+    { 0x2286, 0x2287 },
+    { 0x2295, 0x2295 },
+    { 0x2299, 0x2299 },
+    { 0x22A5, 0x22A5 },
+    { 0x22BF, 0x22BF },
+    { 0x2312, 0x2312 },
+    { 0x231A, 0x231B },
+    { 0x2329, 0x2329 },
+    { 0x232A, 0x232A },
+    { 0x23E9, 0x23EC },
+    { 0x23F0, 0x23F0 },
+    { 0x23F3, 0x23F3 },
+    { 0x2460, 0x249B },
+    { 0x249C, 0x24E9 },
+    { 0x24EB, 0x24FF },
+    { 0x2500, 0x254B },
+    { 0x2550, 0x2573 },
+    { 0x2580, 0x258F },
+    { 0x2592, 0x2595 },
+    { 0x25A0, 0x25A1 },
+    { 0x25A3, 0x25A9 },
+    { 0x25B2, 0x25B3 },
+    { 0x25B6, 0x25B6 },
+    { 0x25B7, 0x25B7 },
+    { 0x25BC, 0x25BD },
+    { 0x25C0, 0x25C0 },
+    { 0x25C1, 0x25C1 },
+    { 0x25C6, 0x25C8 },
+    { 0x25CB, 0x25CB },
+    { 0x25CE, 0x25D1 },
+    { 0x25E2, 0x25E5 },
+    { 0x25EF, 0x25EF },
+    { 0x25FD, 0x25FE },
+    { 0x2605, 0x2606 },
+    { 0x2609, 0x2609 },
+    { 0x260E, 0x260F },
+    { 0x2614, 0x2615 },
+    { 0x261C, 0x261C },
+    { 0x261E, 0x261E },
+    { 0x2630, 0x2637 },
+    { 0x2640, 0x2640 },
+    { 0x2642, 0x2642 },
+    { 0x2648, 0x2653 },
+    { 0x2660, 0x2661 },
+    { 0x2663, 0x2665 },
+    { 0x2667, 0x266A },
+    { 0x266C, 0x266D },
+    { 0x266F, 0x266F },
+    { 0x267F, 0x267F },
+    { 0x268A, 0x268F },
+    { 0x2693, 0x2693 },
+    { 0x269E, 0x269F },
+    { 0x26A1, 0x26A1 },
+    { 0x26AA, 0x26AB },
+    { 0x26BD, 0x26BE },
+    { 0x26BF, 0x26BF },
+    { 0x26C4, 0x26C5 },
+    { 0x26C6, 0x26CD },
+    { 0x26CE, 0x26CE },
+    { 0x26CF, 0x26D3 },
+    { 0x26D4, 0x26D4 },
+    { 0x26D5, 0x26E1 },
+    { 0x26E3, 0x26E3 },
+    { 0x26E8, 0x26E9 },
+    { 0x26EA, 0x26EA },
+    { 0x26EB, 0x26F1 },
+    { 0x26F2, 0x26F3 },
+    { 0x26F4, 0x26F4 },
+    { 0x26F5, 0x26F5 },
+    { 0x26F6, 0x26F9 },
+    { 0x26FA, 0x26FA },
+    { 0x26FB, 0x26FC },
+    { 0x26FD, 0x26FD },
+    { 0x26FE, 0x26FF },
+    { 0x2705, 0x2705 },
+    { 0x270A, 0x270B },
+    { 0x2728, 0x2728 },
+    { 0x273D, 0x273D },
+    { 0x274C, 0x274C },
+    { 0x274E, 0x274E },
+    { 0x2753, 0x2755 },
+    { 0x2757, 0x2757 },
+    { 0x2776, 0x277F },
+    { 0x2795, 0x2797 },
+    { 0x27B0, 0x27B0 },
+    { 0x27BF, 0x27BF },
+    { 0x2B1B, 0x2B1C },
+    { 0x2B50, 0x2B50 },
+    { 0x2B55, 0x2B55 },
+    { 0x2B56, 0x2B59 },
+    { 0x2E80, 0x2E99 },
+    { 0x2E9B, 0x2EF3 },
+    { 0x2F00, 0x2FD5 },
+    { 0x2FF0, 0x2FFF },
+    { 0x3000, 0x3000 },
+    { 0x3001, 0x3003 },
+    { 0x3004, 0x3004 },
+    { 0x3005, 0x3005 },
+    { 0x3006, 0x3006 },
+    { 0x3007, 0x3007 },
+    { 0x3008, 0x3008 },
+    { 0x3009, 0x3009 },
+    { 0x300A, 0x300A },
+    { 0x300B, 0x300B },
+    { 0x300C, 0x300C },
+    { 0x300D, 0x300D },
+    { 0x300E, 0x300E },
+    { 0x300F, 0x300F },
+    { 0x3010, 0x3010 },
+    { 0x3011, 0x3011 },
+    { 0x3012, 0x3013 },
+    { 0x3014, 0x3014 },
+    { 0x3015, 0x3015 },
+    { 0x3016, 0x3016 },
+    { 0x3017, 0x3017 },
+    { 0x3018, 0x3018 },
+    { 0x3019, 0x3019 },
+    { 0x301A, 0x301A },
+    { 0x301B, 0x301B },
+    { 0x301C, 0x301C },
+    { 0x301D, 0x301D },
+    { 0x301E, 0x301F },
+    { 0x3020, 0x3020 },
+    { 0x3021, 0x3029 },
+    { 0x302A, 0x302D },
+    { 0x302E, 0x302F },
+    { 0x3030, 0x3030 },
+    { 0x3031, 0x3035 },
+    { 0x3036, 0x3037 },
+    { 0x3038, 0x303A },
+    { 0x303B, 0x303B },
+    { 0x303C, 0x303C },
+    { 0x303D, 0x303D },
+    { 0x303E, 0x303E },
+    { 0x3041, 0x3096 },
+    { 0x3099, 0x309A },
+    { 0x309B, 0x309C },
+    { 0x309D, 0x309E },
+    { 0x309F, 0x309F },
+    { 0x30A0, 0x30A0 },
+    { 0x30A1, 0x30FA },
+    { 0x30FB, 0x30FB },
+    { 0x30FC, 0x30FE },
+    { 0x30FF, 0x30FF },
+    { 0x3105, 0x312F },
+    { 0x3131, 0x318E },
+    { 0x3190, 0x3191 },
+    { 0x3192, 0x3195 },
+    { 0x3196, 0x319F },
+    { 0x31A0, 0x31BF },
+    { 0x31C0, 0x31E5 },
+    { 0x31EF, 0x31EF },
+    { 0x31F0, 0x31FF },
+    { 0x3200, 0x321E },
+    { 0x3220, 0x3229 },
+    { 0x322A, 0x3247 },
+    { 0x3248, 0x324F },
+    { 0x3250, 0x3250 },
+    { 0x3251, 0x325F },
+    { 0x3260, 0x327F },
+    { 0x3280, 0x3289 },
+    { 0x328A, 0x32B0 },
+    { 0x32B1, 0x32BF },
+    { 0x32C0, 0x32FF },
+    { 0x3300, 0x33FF },
+    { 0x3400, 0x4DBF },
+    { 0x4DC0, 0x4DFF },
+    { 0x4E00, 0x9FFF },
+    { 0xA000, 0xA014 },
+    { 0xA015, 0xA015 },
+    { 0xA016, 0xA48C },
+    { 0xA490, 0xA4C6 },
+    { 0xA960, 0xA97C },
+    { 0xAC00, 0xD7A3 },
+    { 0xE000, 0xF8FF },
+    { 0xF900, 0xFA6D },
+    { 0xFA6E, 0xFA6F },
+    { 0xFA70, 0xFAD9 },
+    { 0xFADA, 0xFAFF },
+    { 0xFE00, 0xFE0F },
+    { 0xFE10, 0xFE16 },
+    { 0xFE17, 0xFE17 },
+    { 0xFE18, 0xFE18 },
+    { 0xFE19, 0xFE19 },
+    { 0xFE30, 0xFE30 },
+    { 0xFE31, 0xFE32 },
+    { 0xFE33, 0xFE34 },
+    { 0xFE35, 0xFE35 },
+    { 0xFE36, 0xFE36 },
+    { 0xFE37, 0xFE37 },
+    { 0xFE38, 0xFE38 },
+    { 0xFE39, 0xFE39 },
+    { 0xFE3A, 0xFE3A },
+    { 0xFE3B, 0xFE3B },
+    { 0xFE3C, 0xFE3C },
+    { 0xFE3D, 0xFE3D },
+    { 0xFE3E, 0xFE3E },
+    { 0xFE3F, 0xFE3F },
+    { 0xFE40, 0xFE40 },
+    { 0xFE41, 0xFE41 },
+    { 0xFE42, 0xFE42 },
+    { 0xFE43, 0xFE43 },
+    { 0xFE44, 0xFE44 },
+    { 0xFE45, 0xFE46 },
+    { 0xFE47, 0xFE47 },
+    { 0xFE48, 0xFE48 },
+    { 0xFE49, 0xFE4C },
+    { 0xFE4D, 0xFE4F },
+    { 0xFE50, 0xFE52 },
+    { 0xFE54, 0xFE57 },
+    { 0xFE58, 0xFE58 },
+    { 0xFE59, 0xFE59 },
+    { 0xFE5A, 0xFE5A },
+    { 0xFE5B, 0xFE5B },
+    { 0xFE5C, 0xFE5C },
+    { 0xFE5D, 0xFE5D },
+    { 0xFE5E, 0xFE5E },
+    { 0xFE5F, 0xFE61 },
+    { 0xFE62, 0xFE62 },
+    { 0xFE63, 0xFE63 },
+    { 0xFE64, 0xFE66 },
+    { 0xFE68, 0xFE68 },
+    { 0xFE69, 0xFE69 },
+    { 0xFE6A, 0xFE6B },
+    { 0xFF01, 0xFF03 },
+    { 0xFF04, 0xFF04 },
+    { 0xFF05, 0xFF07 },
+    { 0xFF08, 0xFF08 },
+    { 0xFF09, 0xFF09 },
+    { 0xFF0A, 0xFF0A },
+    { 0xFF0B, 0xFF0B },
+    { 0xFF0C, 0xFF0C },
+    { 0xFF0D, 0xFF0D },
+    { 0xFF0E, 0xFF0F },
+    { 0xFF10, 0xFF19 },
+    { 0xFF1A, 0xFF1B },
+    { 0xFF1C, 0xFF1E },
+    { 0xFF1F, 0xFF20 },
+    { 0xFF21, 0xFF3A },
+    { 0xFF3B, 0xFF3B },
+    { 0xFF3C, 0xFF3C },
+    { 0xFF3D, 0xFF3D },
+    { 0xFF3E, 0xFF3E },
+    { 0xFF3F, 0xFF3F },
+    { 0xFF40, 0xFF40 },
+    { 0xFF41, 0xFF5A },
+    { 0xFF5B, 0xFF5B },
+    { 0xFF5C, 0xFF5C },
+    { 0xFF5D, 0xFF5D },
+    { 0xFF5E, 0xFF5E },
+    { 0xFF5F, 0xFF5F },
+    { 0xFF60, 0xFF60 },
+    { 0xFFE0, 0xFFE1 },
+    { 0xFFE2, 0xFFE2 },
+    { 0xFFE3, 0xFFE3 },
+    { 0xFFE4, 0xFFE4 },
+    { 0xFFE5, 0xFFE6 },
+    { 0xFFFD, 0xFFFD },
+    { 0x16FE0, 0x16FE1 },
+    { 0x16FE2, 0x16FE2 },
+    { 0x16FE3, 0x16FE3 },
+    { 0x16FE4, 0x16FE4 },
+    { 0x16FF0, 0x16FF1 },
+    { 0x17000, 0x187F7 },
+    { 0x18800, 0x18AFF },
+    { 0x18B00, 0x18CD5 },
+    { 0x18CFF, 0x18CFF },
+    { 0x18D00, 0x18D08 },
+    { 0x1AFF0, 0x1AFF3 },
+    { 0x1AFF5, 0x1AFFB },
+    { 0x1AFFD, 0x1AFFE },
+    { 0x1B000, 0x1B0FF },
+    { 0x1B100, 0x1B122 },
+    { 0x1B132, 0x1B132 },
+    { 0x1B150, 0x1B152 },
+    { 0x1B155, 0x1B155 },
+    { 0x1B164, 0x1B167 },
+    { 0x1B170, 0x1B2FB },
+    { 0x1D300, 0x1D356 },
+    { 0x1D360, 0x1D376 },
+    { 0x1F004, 0x1F004 },
+    { 0x1F0CF, 0x1F0CF },
+    { 0x1F100, 0x1F10A },
+    { 0x1F110, 0x1F12D },
+    { 0x1F130, 0x1F169 },
+    { 0x1F170, 0x1F18D },
+    { 0x1F18E, 0x1F18E },
+    { 0x1F18F, 0x1F190 },
+    { 0x1F191, 0x1F19A },
+    { 0x1F19B, 0x1F1AC },
+    { 0x1F200, 0x1F202 },
+    { 0x1F210, 0x1F23B },
+    { 0x1F240, 0x1F248 },
+    { 0x1F250, 0x1F251 },
+    { 0x1F260, 0x1F265 },
+    { 0x1F300, 0x1F320 },
+    { 0x1F32D, 0x1F335 },
+    { 0x1F337, 0x1F37C },
+    { 0x1F37E, 0x1F393 },
+    { 0x1F3A0, 0x1F3CA },
+    { 0x1F3CF, 0x1F3D3 },
+    { 0x1F3E0, 0x1F3F0 },
+    { 0x1F3F4, 0x1F3F4 },
+    { 0x1F3F8, 0x1F3FA },
+    { 0x1F3FB, 0x1F3FF },
+    { 0x1F400, 0x1F43E },
+    { 0x1F440, 0x1F440 },
+    { 0x1F442, 0x1F4FC },
+    { 0x1F4FF, 0x1F53D },
+    { 0x1F54B, 0x1F54E },
+    { 0x1F550, 0x1F567 },
+    { 0x1F57A, 0x1F57A },
+    { 0x1F595, 0x1F596 },
+    { 0x1F5A4, 0x1F5A4 },
+    { 0x1F5FB, 0x1F5FF },
+    { 0x1F600, 0x1F64F },
+    { 0x1F680, 0x1F6C5 },
+    { 0x1F6CC, 0x1F6CC },
+    { 0x1F6D0, 0x1F6D2 },
+    { 0x1F6D5, 0x1F6D7 },
+    { 0x1F6DC, 0x1F6DF },
+    { 0x1F6EB, 0x1F6EC },
+    { 0x1F6F4, 0x1F6FC },
+    { 0x1F7E0, 0x1F7EB },
+    { 0x1F7F0, 0x1F7F0 },
+    { 0x1F90C, 0x1F93A },
+    { 0x1F93C, 0x1F945 },
+    { 0x1F947, 0x1F9FF },
+    { 0x1FA70, 0x1FA7C },
+    { 0x1FA80, 0x1FA89 },
+    { 0x1FA8F, 0x1FAC6 },
+    { 0x1FACE, 0x1FADC },
+    { 0x1FADF, 0x1FAE9 },
+    { 0x1FAF0, 0x1FAF8 },
+    { 0x20000, 0x2A6DF },
+    { 0x2A6E0, 0x2A6FF },
+    { 0x2A700, 0x2B739 },
+    { 0x2B73A, 0x2B73F },
+    { 0x2B740, 0x2B81D },
+    { 0x2B81E, 0x2B81F },
+    { 0x2B820, 0x2CEA1 },
+    { 0x2CEA2, 0x2CEAF },
+    { 0x2CEB0, 0x2EBE0 },
+    { 0x2EBE1, 0x2EBEF },
+    { 0x2EBF0, 0x2EE5D },
+    { 0x2EE5E, 0x2F7FF },
+    { 0x2F800, 0x2FA1D },
+    { 0x2FA1E, 0x2FA1F },
+    { 0x2FA20, 0x2FFFD },
+    { 0x30000, 0x3134A },
+    { 0x3134B, 0x3134F },
+    { 0x31350, 0x323AF },
+    { 0x323B0, 0x3FFFD },
+    { 0xE0100, 0xE01EF },
+    { 0xF0000, 0xFFFFD },
+    { 0x100000, 0x10FFFD },
+};
+
+bool
+is_wc_unicode_full_width(tmt_wchar_t wc, bool is_east_asia) {
+	if (wc < 0x80) {
+		return false; 
+	}
+
+	int len = sizeof(non_east_asian) / sizeof(struct lookup);
+	struct lookup *table = non_east_asian;
+	if (is_east_asia) {
+		table = east_asian;
+		len = sizeof(east_asian) / sizeof(struct lookup);
+	}
+
+	int lo_idx = 0;
+	int hi_idx = len-1;
+	int pos = hi_idx / 2;
+	while (true) {
+		if ((wc >= table[pos].start) && (wc <= table[pos].end)) {
+			return true;
+		}
+		if (wc < table[pos].start) {
+			hi_idx = pos - 1;
+		} else if (wc > table[pos].end) {
+			lo_idx = pos + 1;
+		}
+		if (hi_idx < lo_idx) {
+			break;
+		}
+		pos = lo_idx + (hi_idx - lo_idx + 1) / 2;
+	}
+
+	return false;
+}
+
+struct code_mark {
+	uint32_t   code;
+	tmt_mark_t mark;
+};
+
+struct code_mark unicode_mark_types[] = {
+    { 0x00AD, TMT_FORMAT }, // SOFT HYPHEN
+    { 0x0300, TMT_MARK }, // COMBINING GRAVE ACCENT
+    { 0x0301, TMT_MARK }, // COMBINING ACUTE ACCENT
+    { 0x0302, TMT_MARK }, // COMBINING CIRCUMFLEX ACCENT
+    { 0x0303, TMT_MARK }, // COMBINING TILDE
+    { 0x0304, TMT_MARK }, // COMBINING MACRON
+    { 0x0305, TMT_MARK }, // COMBINING OVERLINE
+    { 0x0306, TMT_MARK }, // COMBINING BREVE
+    { 0x0307, TMT_MARK }, // COMBINING DOT ABOVE
+    { 0x0308, TMT_MARK }, // COMBINING DIAERESIS
+    { 0x0309, TMT_MARK }, // COMBINING HOOK ABOVE
+    { 0x030A, TMT_MARK }, // COMBINING RING ABOVE
+    { 0x030B, TMT_MARK }, // COMBINING DOUBLE ACUTE ACCENT
+    { 0x030C, TMT_MARK }, // COMBINING CARON
+    { 0x030D, TMT_MARK }, // COMBINING VERTICAL LINE ABOVE
+    { 0x030E, TMT_MARK }, // COMBINING DOUBLE VERTICAL LINE ABOVE
+    { 0x030F, TMT_MARK }, // COMBINING DOUBLE GRAVE ACCENT
+    { 0x0310, TMT_MARK }, // COMBINING CANDRABINDU
+    { 0x0311, TMT_MARK }, // COMBINING INVERTED BREVE
+    { 0x0312, TMT_MARK }, // COMBINING TURNED COMMA ABOVE
+    { 0x0313, TMT_MARK }, // COMBINING COMMA ABOVE
+    { 0x0314, TMT_MARK }, // COMBINING REVERSED COMMA ABOVE
+    { 0x0315, TMT_MARK }, // COMBINING COMMA ABOVE RIGHT
+    { 0x0316, TMT_MARK }, // COMBINING GRAVE ACCENT BELOW
+    { 0x0317, TMT_MARK }, // COMBINING ACUTE ACCENT BELOW
+    { 0x0318, TMT_MARK }, // COMBINING LEFT TACK BELOW
+    { 0x0319, TMT_MARK }, // COMBINING RIGHT TACK BELOW
+    { 0x031A, TMT_MARK }, // COMBINING LEFT ANGLE ABOVE
+    { 0x031B, TMT_MARK }, // COMBINING HORN
+    { 0x031C, TMT_MARK }, // COMBINING LEFT HALF RING BELOW
+    { 0x031D, TMT_MARK }, // COMBINING UP TACK BELOW
+    { 0x031E, TMT_MARK }, // COMBINING DOWN TACK BELOW
+    { 0x031F, TMT_MARK }, // COMBINING PLUS SIGN BELOW
+    { 0x0320, TMT_MARK }, // COMBINING MINUS SIGN BELOW
+    { 0x0321, TMT_MARK }, // COMBINING PALATALIZED HOOK BELOW
+    { 0x0322, TMT_MARK }, // COMBINING RETROFLEX HOOK BELOW
+    { 0x0323, TMT_MARK }, // COMBINING DOT BELOW
+    { 0x0324, TMT_MARK }, // COMBINING DIAERESIS BELOW
+    { 0x0325, TMT_MARK }, // COMBINING RING BELOW
+    { 0x0326, TMT_MARK }, // COMBINING COMMA BELOW
+    { 0x0327, TMT_MARK }, // COMBINING CEDILLA
+    { 0x0328, TMT_MARK }, // COMBINING OGONEK
+    { 0x0329, TMT_MARK }, // COMBINING VERTICAL LINE BELOW
+    { 0x032A, TMT_MARK }, // COMBINING BRIDGE BELOW
+    { 0x032B, TMT_MARK }, // COMBINING INVERTED DOUBLE ARCH BELOW
+    { 0x032C, TMT_MARK }, // COMBINING CARON BELOW
+    { 0x032D, TMT_MARK }, // COMBINING CIRCUMFLEX ACCENT BELOW
+    { 0x032E, TMT_MARK }, // COMBINING BREVE BELOW
+    { 0x032F, TMT_MARK }, // COMBINING INVERTED BREVE BELOW
+    { 0x0330, TMT_MARK }, // COMBINING TILDE BELOW
+    { 0x0331, TMT_MARK }, // COMBINING MACRON BELOW
+    { 0x0332, TMT_MARK }, // COMBINING LOW LINE
+    { 0x0333, TMT_MARK }, // COMBINING DOUBLE LOW LINE
+    { 0x0334, TMT_MARK }, // COMBINING TILDE OVERLAY
+    { 0x0335, TMT_MARK }, // COMBINING SHORT STROKE OVERLAY
+    { 0x0336, TMT_MARK }, // COMBINING LONG STROKE OVERLAY
+    { 0x0337, TMT_MARK }, // COMBINING SHORT SOLIDUS OVERLAY
+    { 0x0338, TMT_MARK }, // COMBINING LONG SOLIDUS OVERLAY
+    { 0x0339, TMT_MARK }, // COMBINING RIGHT HALF RING BELOW
+    { 0x033A, TMT_MARK }, // COMBINING INVERTED BRIDGE BELOW
+    { 0x033B, TMT_MARK }, // COMBINING SQUARE BELOW
+    { 0x033C, TMT_MARK }, // COMBINING SEAGULL BELOW
+    { 0x033D, TMT_MARK }, // COMBINING X ABOVE
+    { 0x033E, TMT_MARK }, // COMBINING VERTICAL TILDE
+    { 0x033F, TMT_MARK }, // COMBINING DOUBLE OVERLINE
+    { 0x0340, TMT_MARK }, // COMBINING GRAVE TONE MARK
+    { 0x0341, TMT_MARK }, // COMBINING ACUTE TONE MARK
+    { 0x0342, TMT_MARK }, // COMBINING GREEK PERISPOMENI
+    { 0x0343, TMT_MARK }, // COMBINING GREEK KORONIS
+    { 0x0344, TMT_MARK }, // COMBINING GREEK DIALYTIKA TONOS
+    { 0x0345, TMT_MARK }, // COMBINING GREEK YPOGEGRAMMENI
+    { 0x0346, TMT_MARK }, // COMBINING BRIDGE ABOVE
+    { 0x0347, TMT_MARK }, // COMBINING EQUALS SIGN BELOW
+    { 0x0348, TMT_MARK }, // COMBINING DOUBLE VERTICAL LINE BELOW
+    { 0x0349, TMT_MARK }, // COMBINING LEFT ANGLE BELOW
+    { 0x034A, TMT_MARK }, // COMBINING NOT TILDE ABOVE
+    { 0x034B, TMT_MARK }, // COMBINING HOMOTHETIC ABOVE
+    { 0x034C, TMT_MARK }, // COMBINING ALMOST EQUAL TO ABOVE
+    { 0x034D, TMT_MARK }, // COMBINING LEFT RIGHT ARROW BELOW
+    { 0x034E, TMT_MARK }, // COMBINING UPWARDS ARROW BELOW
+    { 0x034F, TMT_MARK }, // COMBINING GRAPHEME JOINER
+    { 0x0350, TMT_MARK }, // COMBINING RIGHT ARROWHEAD ABOVE
+    { 0x0351, TMT_MARK }, // COMBINING LEFT HALF RING ABOVE
+    { 0x0352, TMT_MARK }, // COMBINING FERMATA
+    { 0x0353, TMT_MARK }, // COMBINING X BELOW
+    { 0x0354, TMT_MARK }, // COMBINING LEFT ARROWHEAD BELOW
+    { 0x0355, TMT_MARK }, // COMBINING RIGHT ARROWHEAD BELOW
+    { 0x0356, TMT_MARK }, // COMBINING RIGHT ARROWHEAD AND UP ARROWHEAD BELOW
+    { 0x0357, TMT_MARK }, // COMBINING RIGHT HALF RING ABOVE
+    { 0x0358, TMT_MARK }, // COMBINING DOT ABOVE RIGHT
+    { 0x0359, TMT_MARK }, // COMBINING ASTERISK BELOW
+    { 0x035A, TMT_MARK }, // COMBINING DOUBLE RING BELOW
+    { 0x035B, TMT_MARK }, // COMBINING ZIGZAG ABOVE
+    { 0x035C, TMT_MARK }, // COMBINING DOUBLE BREVE BELOW
+    { 0x035D, TMT_MARK }, // COMBINING DOUBLE BREVE
+    { 0x035E, TMT_MARK }, // COMBINING DOUBLE MACRON
+    { 0x035F, TMT_MARK }, // COMBINING DOUBLE MACRON BELOW
+    { 0x0360, TMT_MARK }, // COMBINING DOUBLE TILDE
+    { 0x0361, TMT_MARK }, // COMBINING DOUBLE INVERTED BREVE
+    { 0x0362, TMT_MARK }, // COMBINING DOUBLE RIGHTWARDS ARROW BELOW
+    { 0x0363, TMT_MARK }, // COMBINING LATIN SMALL LETTER A
+    { 0x0364, TMT_MARK }, // COMBINING LATIN SMALL LETTER E
+    { 0x0365, TMT_MARK }, // COMBINING LATIN SMALL LETTER I
+    { 0x0366, TMT_MARK }, // COMBINING LATIN SMALL LETTER O
+    { 0x0367, TMT_MARK }, // COMBINING LATIN SMALL LETTER U
+    { 0x0368, TMT_MARK }, // COMBINING LATIN SMALL LETTER C
+    { 0x0369, TMT_MARK }, // COMBINING LATIN SMALL LETTER D
+    { 0x036A, TMT_MARK }, // COMBINING LATIN SMALL LETTER H
+    { 0x036B, TMT_MARK }, // COMBINING LATIN SMALL LETTER M
+    { 0x036C, TMT_MARK }, // COMBINING LATIN SMALL LETTER R
+    { 0x036D, TMT_MARK }, // COMBINING LATIN SMALL LETTER T
+    { 0x036E, TMT_MARK }, // COMBINING LATIN SMALL LETTER V
+    { 0x036F, TMT_MARK }, // COMBINING LATIN SMALL LETTER X
+    { 0x0483, TMT_MARK }, // COMBINING CYRILLIC TITLO
+    { 0x0484, TMT_MARK }, // COMBINING CYRILLIC PALATALIZATION
+    { 0x0485, TMT_MARK }, // COMBINING CYRILLIC DASIA PNEUMATA
+    { 0x0486, TMT_MARK }, // COMBINING CYRILLIC PSILI PNEUMATA
+    { 0x0487, TMT_MARK }, // COMBINING CYRILLIC POKRYTIE
+    { 0x0488, TMT_MARK }, //COMBINING CYRILLIC HUNDRED THOUSANDS SIGN
+    { 0x0489, TMT_MARK }, //COMBINING CYRILLIC MILLIONS SIGN
+    { 0x0591, TMT_MARK }, // HEBREW ACCENT ETNAHTA
+    { 0x0592, TMT_MARK }, // HEBREW ACCENT SEGOL
+    { 0x0593, TMT_MARK }, // HEBREW ACCENT SHALSHELET
+    { 0x0594, TMT_MARK }, // HEBREW ACCENT ZAQEF QATAN
+    { 0x0595, TMT_MARK }, // HEBREW ACCENT ZAQEF GADOL
+    { 0x0596, TMT_MARK }, // HEBREW ACCENT TIPEHA
+    { 0x0597, TMT_MARK }, // HEBREW ACCENT REVIA
+    { 0x0598, TMT_MARK }, // HEBREW ACCENT ZARQA
+    { 0x0599, TMT_MARK }, // HEBREW ACCENT PASHTA
+    { 0x059A, TMT_MARK }, // HEBREW ACCENT YETIV
+    { 0x059B, TMT_MARK }, // HEBREW ACCENT TEVIR
+    { 0x059C, TMT_MARK }, // HEBREW ACCENT GERESH
+    { 0x059D, TMT_MARK }, // HEBREW ACCENT GERESH MUQDAM
+    { 0x059E, TMT_MARK }, // HEBREW ACCENT GERSHAYIM
+    { 0x059F, TMT_MARK }, // HEBREW ACCENT QARNEY PARA
+    { 0x05A0, TMT_MARK }, // HEBREW ACCENT TELISHA GEDOLA
+    { 0x05A1, TMT_MARK }, // HEBREW ACCENT PAZER
+    { 0x05A2, TMT_MARK }, // HEBREW ACCENT ATNAH HAFUKH
+    { 0x05A3, TMT_MARK }, // HEBREW ACCENT MUNAH
+    { 0x05A4, TMT_MARK }, // HEBREW ACCENT MAHAPAKH
+    { 0x05A5, TMT_MARK }, // HEBREW ACCENT MERKHA
+    { 0x05A6, TMT_MARK }, // HEBREW ACCENT MERKHA KEFULA
+    { 0x05A7, TMT_MARK }, // HEBREW ACCENT DARGA
+    { 0x05A8, TMT_MARK }, // HEBREW ACCENT QADMA
+    { 0x05A9, TMT_MARK }, // HEBREW ACCENT TELISHA QETANA
+    { 0x05AA, TMT_MARK }, // HEBREW ACCENT YERAH BEN YOMO
+    { 0x05AB, TMT_MARK }, // HEBREW ACCENT OLE
+    { 0x05AC, TMT_MARK }, // HEBREW ACCENT ILUY
+    { 0x05AD, TMT_MARK }, // HEBREW ACCENT DEHI
+    { 0x05AE, TMT_MARK }, // HEBREW ACCENT ZINOR
+    { 0x05AF, TMT_MARK }, // HEBREW MARK MASORA CIRCLE
+    { 0x05B0, TMT_MARK }, // HEBREW POINT SHEVA
+    { 0x05B1, TMT_MARK }, // HEBREW POINT HATAF SEGOL
+    { 0x05B2, TMT_MARK }, // HEBREW POINT HATAF PATAH
+    { 0x05B3, TMT_MARK }, // HEBREW POINT HATAF QAMATS
+    { 0x05B4, TMT_MARK }, // HEBREW POINT HIRIQ
+    { 0x05B5, TMT_MARK }, // HEBREW POINT TSERE
+    { 0x05B6, TMT_MARK }, // HEBREW POINT SEGOL
+    { 0x05B7, TMT_MARK }, // HEBREW POINT PATAH
+    { 0x05B8, TMT_MARK }, // HEBREW POINT QAMATS
+    { 0x05B9, TMT_MARK }, // HEBREW POINT HOLAM
+    { 0x05BA, TMT_MARK }, // HEBREW POINT HOLAM HASER FOR VAV
+    { 0x05BB, TMT_MARK }, // HEBREW POINT QUBUTS
+    { 0x05BC, TMT_MARK }, // HEBREW POINT DAGESH OR MAPIQ
+    { 0x05BD, TMT_MARK }, // HEBREW POINT METEG
+    { 0x05BF, TMT_MARK }, // HEBREW POINT RAFE
+    { 0x05C1, TMT_MARK }, // HEBREW POINT SHIN DOT
+    { 0x05C2, TMT_MARK }, // HEBREW POINT SIN DOT
+    { 0x05C4, TMT_MARK }, // HEBREW MARK UPPER DOT
+    { 0x05C5, TMT_MARK }, // HEBREW MARK LOWER DOT
+    { 0x05C7, TMT_MARK }, // HEBREW POINT QAMATS QATAN
+    { 0x0600, TMT_FORMAT }, // ARABIC NUMBER SIGN
+    { 0x0601, TMT_FORMAT }, // ARABIC SIGN SANAH
+    { 0x0602, TMT_FORMAT }, // ARABIC FOOTNOTE MARKER
+    { 0x0603, TMT_FORMAT }, // ARABIC SIGN SAFHA
+    { 0x0604, TMT_FORMAT }, // ARABIC SIGN SAMVAT
+    { 0x0605, TMT_FORMAT }, // ARABIC NUMBER MARK ABOVE
+    { 0x0610, TMT_MARK }, // ARABIC SIGN SALLALLAHOU ALAYHE WASSALLAM
+    { 0x0611, TMT_MARK }, // ARABIC SIGN ALAYHE ASSALLAM
+    { 0x0612, TMT_MARK }, // ARABIC SIGN RAHMATULLAH ALAYHE
+    { 0x0613, TMT_MARK }, // ARABIC SIGN RADI ALLAHOU ANHU
+    { 0x0614, TMT_MARK }, // ARABIC SIGN TAKHALLUS
+    { 0x0615, TMT_MARK }, // ARABIC SMALL HIGH TAH
+    { 0x0616, TMT_MARK }, // ARABIC SMALL HIGH LIGATURE ALEF WITH LAM WITH YEH
+    { 0x0617, TMT_MARK }, // ARABIC SMALL HIGH ZAIN
+    { 0x0618, TMT_MARK }, // ARABIC SMALL FATHA
+    { 0x0619, TMT_MARK }, // ARABIC SMALL DAMMA
+    { 0x061A, TMT_MARK }, // ARABIC SMALL KASRA
+    { 0x061C, TMT_FORMAT }, // ARABIC LETTER MARK
+    { 0x064B, TMT_MARK }, // ARABIC FATHATAN
+    { 0x064C, TMT_MARK }, // ARABIC DAMMATAN
+    { 0x064D, TMT_MARK }, // ARABIC KASRATAN
+    { 0x064E, TMT_MARK }, // ARABIC FATHA
+    { 0x064F, TMT_MARK }, // ARABIC DAMMA
+    { 0x0650, TMT_MARK }, // ARABIC KASRA
+    { 0x0651, TMT_MARK }, // ARABIC SHADDA
+    { 0x0652, TMT_MARK }, // ARABIC SUKUN
+    { 0x0653, TMT_MARK }, // ARABIC MADDAH ABOVE
+    { 0x0654, TMT_MARK }, // ARABIC HAMZA ABOVE
+    { 0x0655, TMT_MARK }, // ARABIC HAMZA BELOW
+    { 0x0656, TMT_MARK }, // ARABIC SUBSCRIPT ALEF
+    { 0x0657, TMT_MARK }, // ARABIC INVERTED DAMMA
+    { 0x0658, TMT_MARK }, // ARABIC MARK NOON GHUNNA
+    { 0x0659, TMT_MARK }, // ARABIC ZWARAKAY
+    { 0x065A, TMT_MARK }, // ARABIC VOWEL SIGN SMALL V ABOVE
+    { 0x065B, TMT_MARK }, // ARABIC VOWEL SIGN INVERTED SMALL V ABOVE
+    { 0x065C, TMT_MARK }, // ARABIC VOWEL SIGN DOT BELOW
+    { 0x065D, TMT_MARK }, // ARABIC REVERSED DAMMA
+    { 0x065E, TMT_MARK }, // ARABIC FATHA WITH TWO DOTS
+    { 0x065F, TMT_MARK }, // ARABIC WAVY HAMZA BELOW
+    { 0x0670, TMT_MARK }, // ARABIC LETTER SUPERSCRIPT ALEF
+    { 0x06D6, TMT_MARK }, // ARABIC SMALL HIGH LIGATURE SAD WITH LAM WITH ALEF MAKSURA
+    { 0x06D7, TMT_MARK }, // ARABIC SMALL HIGH LIGATURE QAF WITH LAM WITH ALEF MAKSURA
+    { 0x06D8, TMT_MARK }, // ARABIC SMALL HIGH MEEM INITIAL FORM
+    { 0x06D9, TMT_MARK }, // ARABIC SMALL HIGH LAM ALEF
+    { 0x06DA, TMT_MARK }, // ARABIC SMALL HIGH JEEM
+    { 0x06DB, TMT_MARK }, // ARABIC SMALL HIGH THREE DOTS
+    { 0x06DC, TMT_MARK }, // ARABIC SMALL HIGH SEEN
+    { 0x06DD, TMT_FORMAT }, // ARABIC END OF AYAH
+    { 0x06DF, TMT_MARK }, // ARABIC SMALL HIGH ROUNDED ZERO
+    { 0x06E0, TMT_MARK }, // ARABIC SMALL HIGH UPRIGHT RECTANGULAR ZERO
+    { 0x06E1, TMT_MARK }, // ARABIC SMALL HIGH DOTLESS HEAD OF KHAH
+    { 0x06E2, TMT_MARK }, // ARABIC SMALL HIGH MEEM ISOLATED FORM
+    { 0x06E3, TMT_MARK }, // ARABIC SMALL LOW SEEN
+    { 0x06E4, TMT_MARK }, // ARABIC SMALL HIGH MADDA
+    { 0x06E7, TMT_MARK }, // ARABIC SMALL HIGH YEH
+    { 0x06E8, TMT_MARK }, // ARABIC SMALL HIGH NOON
+    { 0x06EA, TMT_MARK }, // ARABIC EMPTY CENTRE LOW STOP
+    { 0x06EB, TMT_MARK }, // ARABIC EMPTY CENTRE HIGH STOP
+    { 0x06EC, TMT_MARK }, // ARABIC ROUNDED HIGH STOP WITH FILLED CENTRE
+    { 0x06ED, TMT_MARK }, // ARABIC SMALL LOW MEEM
+    { 0x070F, TMT_FORMAT }, // SYRIAC ABBREVIATION MARK
+    { 0x0711, TMT_MARK }, // SYRIAC LETTER SUPERSCRIPT ALAPH
+    { 0x0730, TMT_MARK }, // SYRIAC PTHAHA ABOVE
+    { 0x0731, TMT_MARK }, // SYRIAC PTHAHA BELOW
+    { 0x0732, TMT_MARK }, // SYRIAC PTHAHA DOTTED
+    { 0x0733, TMT_MARK }, // SYRIAC ZQAPHA ABOVE
+    { 0x0734, TMT_MARK }, // SYRIAC ZQAPHA BELOW
+    { 0x0735, TMT_MARK }, // SYRIAC ZQAPHA DOTTED
+    { 0x0736, TMT_MARK }, // SYRIAC RBASA ABOVE
+    { 0x0737, TMT_MARK }, // SYRIAC RBASA BELOW
+    { 0x0738, TMT_MARK }, // SYRIAC DOTTED ZLAMA HORIZONTAL
+    { 0x0739, TMT_MARK }, // SYRIAC DOTTED ZLAMA ANGULAR
+    { 0x073A, TMT_MARK }, // SYRIAC HBASA ABOVE
+    { 0x073B, TMT_MARK }, // SYRIAC HBASA BELOW
+    { 0x073C, TMT_MARK }, // SYRIAC HBASA-ESASA DOTTED
+    { 0x073D, TMT_MARK }, // SYRIAC ESASA ABOVE
+    { 0x073E, TMT_MARK }, // SYRIAC ESASA BELOW
+    { 0x073F, TMT_MARK }, // SYRIAC RWAHA
+    { 0x0740, TMT_MARK }, // SYRIAC FEMININE DOT
+    { 0x0741, TMT_MARK }, // SYRIAC QUSHSHAYA
+    { 0x0742, TMT_MARK }, // SYRIAC RUKKAKHA
+    { 0x0743, TMT_MARK }, // SYRIAC TWO VERTICAL DOTS ABOVE
+    { 0x0744, TMT_MARK }, // SYRIAC TWO VERTICAL DOTS BELOW
+    { 0x0745, TMT_MARK }, // SYRIAC THREE DOTS ABOVE
+    { 0x0746, TMT_MARK }, // SYRIAC THREE DOTS BELOW
+    { 0x0747, TMT_MARK }, // SYRIAC OBLIQUE LINE ABOVE
+    { 0x0748, TMT_MARK }, // SYRIAC OBLIQUE LINE BELOW
+    { 0x0749, TMT_MARK }, // SYRIAC MUSIC
+    { 0x074A, TMT_MARK }, // SYRIAC BARREKH
+    { 0x07A6, TMT_MARK }, // THAANA ABAFILI
+    { 0x07A7, TMT_MARK }, // THAANA AABAAFILI
+    { 0x07A8, TMT_MARK }, // THAANA IBIFILI
+    { 0x07A9, TMT_MARK }, // THAANA EEBEEFILI
+    { 0x07AA, TMT_MARK }, // THAANA UBUFILI
+    { 0x07AB, TMT_MARK }, // THAANA OOBOOFILI
+    { 0x07AC, TMT_MARK }, // THAANA EBEFILI
+    { 0x07AD, TMT_MARK }, // THAANA EYBEYFILI
+    { 0x07AE, TMT_MARK }, // THAANA OBOFILI
+    { 0x07AF, TMT_MARK }, // THAANA OABOAFILI
+    { 0x07B0, TMT_MARK }, // THAANA SUKUN
+    { 0x07EB, TMT_MARK }, // NKO COMBINING SHORT HIGH TONE
+    { 0x07EC, TMT_MARK }, // NKO COMBINING SHORT LOW TONE
+    { 0x07ED, TMT_MARK }, // NKO COMBINING SHORT RISING TONE
+    { 0x07EE, TMT_MARK }, // NKO COMBINING LONG DESCENDING TONE
+    { 0x07EF, TMT_MARK }, // NKO COMBINING LONG HIGH TONE
+    { 0x07F0, TMT_MARK }, // NKO COMBINING LONG LOW TONE
+    { 0x07F1, TMT_MARK }, // NKO COMBINING LONG RISING TONE
+    { 0x07F2, TMT_MARK }, // NKO COMBINING NASALIZATION MARK
+    { 0x07F3, TMT_MARK }, // NKO COMBINING DOUBLE DOT ABOVE
+    { 0x07FD, TMT_MARK }, // NKO DANTAYALAN
+    { 0x0816, TMT_MARK }, // SAMARITAN MARK IN
+    { 0x0817, TMT_MARK }, // SAMARITAN MARK IN-ALAF
+    { 0x0818, TMT_MARK }, // SAMARITAN MARK OCCLUSION
+    { 0x0819, TMT_MARK }, // SAMARITAN MARK DAGESH
+    { 0x081B, TMT_MARK }, // SAMARITAN MARK EPENTHETIC YUT
+    { 0x081C, TMT_MARK }, // SAMARITAN VOWEL SIGN LONG E
+    { 0x081D, TMT_MARK }, // SAMARITAN VOWEL SIGN E
+    { 0x081E, TMT_MARK }, // SAMARITAN VOWEL SIGN OVERLONG AA
+    { 0x081F, TMT_MARK }, // SAMARITAN VOWEL SIGN LONG AA
+    { 0x0820, TMT_MARK }, // SAMARITAN VOWEL SIGN AA
+    { 0x0821, TMT_MARK }, // SAMARITAN VOWEL SIGN OVERLONG A
+    { 0x0822, TMT_MARK }, // SAMARITAN VOWEL SIGN LONG A
+    { 0x0823, TMT_MARK }, // SAMARITAN VOWEL SIGN A
+    { 0x0825, TMT_MARK }, // SAMARITAN VOWEL SIGN SHORT A
+    { 0x0826, TMT_MARK }, // SAMARITAN VOWEL SIGN LONG U
+    { 0x0827, TMT_MARK }, // SAMARITAN VOWEL SIGN U
+    { 0x0829, TMT_MARK }, // SAMARITAN VOWEL SIGN LONG I
+    { 0x082A, TMT_MARK }, // SAMARITAN VOWEL SIGN I
+    { 0x082B, TMT_MARK }, // SAMARITAN VOWEL SIGN O
+    { 0x082C, TMT_MARK }, // SAMARITAN VOWEL SIGN SUKUN
+    { 0x082D, TMT_MARK }, // SAMARITAN MARK NEQUDAA
+    { 0x0859, TMT_MARK }, // MANDAIC AFFRICATION MARK
+    { 0x085A, TMT_MARK }, // MANDAIC VOCALIZATION MARK
+    { 0x085B, TMT_MARK }, // MANDAIC GEMINATION MARK
+    { 0x0890, TMT_FORMAT }, // ARABIC POUND MARK ABOVE
+    { 0x0891, TMT_FORMAT }, // ARABIC PIASTRE MARK ABOVE
+    { 0x0897, TMT_MARK }, // ARABIC PEPET
+    { 0x0898, TMT_MARK }, // ARABIC SMALL HIGH WORD AL-JUZ
+    { 0x0899, TMT_MARK }, // ARABIC SMALL LOW WORD ISHMAAM
+    { 0x089A, TMT_MARK }, // ARABIC SMALL LOW WORD IMAALA
+    { 0x089B, TMT_MARK }, // ARABIC SMALL LOW WORD TASHEEL
+    { 0x089C, TMT_MARK }, // ARABIC MADDA WAAJIB
+    { 0x089D, TMT_MARK }, // ARABIC SUPERSCRIPT ALEF MOKHASSAS
+    { 0x089E, TMT_MARK }, // ARABIC DOUBLED MADDA
+    { 0x089F, TMT_MARK }, // ARABIC HALF MADDA OVER MADDA
+    { 0x08CA, TMT_MARK }, // ARABIC SMALL HIGH FARSI YEH
+    { 0x08CB, TMT_MARK }, // ARABIC SMALL HIGH YEH BARREE WITH TWO DOTS BELOW
+    { 0x08CC, TMT_MARK }, // ARABIC SMALL HIGH WORD SAH
+    { 0x08CD, TMT_MARK }, // ARABIC SMALL HIGH ZAH
+    { 0x08CE, TMT_MARK }, // ARABIC LARGE ROUND DOT ABOVE
+    { 0x08CF, TMT_MARK }, // ARABIC LARGE ROUND DOT BELOW
+    { 0x08D0, TMT_MARK }, // ARABIC SUKUN BELOW
+    { 0x08D1, TMT_MARK }, // ARABIC LARGE CIRCLE BELOW
+    { 0x08D2, TMT_MARK }, // ARABIC LARGE ROUND DOT INSIDE CIRCLE BELOW
+    { 0x08D3, TMT_MARK }, // ARABIC SMALL LOW WAW
+    { 0x08D4, TMT_MARK }, // ARABIC SMALL HIGH WORD AR-RUB
+    { 0x08D5, TMT_MARK }, // ARABIC SMALL HIGH SAD
+    { 0x08D6, TMT_MARK }, // ARABIC SMALL HIGH AIN
+    { 0x08D7, TMT_MARK }, // ARABIC SMALL HIGH QAF
+    { 0x08D8, TMT_MARK }, // ARABIC SMALL HIGH NOON WITH KASRA
+    { 0x08D9, TMT_MARK }, // ARABIC SMALL LOW NOON WITH KASRA
+    { 0x08DA, TMT_MARK }, // ARABIC SMALL HIGH WORD ATH-THALATHA
+    { 0x08DB, TMT_MARK }, // ARABIC SMALL HIGH WORD AS-SAJDA
+    { 0x08DC, TMT_MARK }, // ARABIC SMALL HIGH WORD AN-NISF
+    { 0x08DD, TMT_MARK }, // ARABIC SMALL HIGH WORD SAKTA
+    { 0x08DE, TMT_MARK }, // ARABIC SMALL HIGH WORD QIF
+    { 0x08DF, TMT_MARK }, // ARABIC SMALL HIGH WORD WAQFA
+    { 0x08E0, TMT_MARK }, // ARABIC SMALL HIGH FOOTNOTE MARKER
+    { 0x08E1, TMT_MARK }, // ARABIC SMALL HIGH SIGN SAFHA
+    { 0x08E2, TMT_FORMAT }, // ARABIC DISPUTED END OF AYAH
+    { 0x08E3, TMT_MARK }, // ARABIC TURNED DAMMA BELOW
+    { 0x08E4, TMT_MARK }, // ARABIC CURLY FATHA
+    { 0x08E5, TMT_MARK }, // ARABIC CURLY DAMMA
+    { 0x08E6, TMT_MARK }, // ARABIC CURLY KASRA
+    { 0x08E7, TMT_MARK }, // ARABIC CURLY FATHATAN
+    { 0x08E8, TMT_MARK }, // ARABIC CURLY DAMMATAN
+    { 0x08E9, TMT_MARK }, // ARABIC CURLY KASRATAN
+    { 0x08EA, TMT_MARK }, // ARABIC TONE ONE DOT ABOVE
+    { 0x08EB, TMT_MARK }, // ARABIC TONE TWO DOTS ABOVE
+    { 0x08EC, TMT_MARK }, // ARABIC TONE LOOP ABOVE
+    { 0x08ED, TMT_MARK }, // ARABIC TONE ONE DOT BELOW
+    { 0x08EE, TMT_MARK }, // ARABIC TONE TWO DOTS BELOW
+    { 0x08EF, TMT_MARK }, // ARABIC TONE LOOP BELOW
+    { 0x08F0, TMT_MARK }, // ARABIC OPEN FATHATAN
+    { 0x08F1, TMT_MARK }, // ARABIC OPEN DAMMATAN
+    { 0x08F2, TMT_MARK }, // ARABIC OPEN KASRATAN
+    { 0x08F3, TMT_MARK }, // ARABIC SMALL HIGH WAW
+    { 0x08F4, TMT_MARK }, // ARABIC FATHA WITH RING
+    { 0x08F5, TMT_MARK }, // ARABIC FATHA WITH DOT ABOVE
+    { 0x08F6, TMT_MARK }, // ARABIC KASRA WITH DOT BELOW
+    { 0x08F7, TMT_MARK }, // ARABIC LEFT ARROWHEAD ABOVE
+    { 0x08F8, TMT_MARK }, // ARABIC RIGHT ARROWHEAD ABOVE
+    { 0x08F9, TMT_MARK }, // ARABIC LEFT ARROWHEAD BELOW
+    { 0x08FA, TMT_MARK }, // ARABIC RIGHT ARROWHEAD BELOW
+    { 0x08FB, TMT_MARK }, // ARABIC DOUBLE RIGHT ARROWHEAD ABOVE
+    { 0x08FC, TMT_MARK }, // ARABIC DOUBLE RIGHT ARROWHEAD ABOVE WITH DOT
+    { 0x08FD, TMT_MARK }, // ARABIC RIGHT ARROWHEAD ABOVE WITH DOT
+    { 0x08FE, TMT_MARK }, // ARABIC DAMMA WITH DOT
+    { 0x08FF, TMT_MARK }, // ARABIC MARK SIDEWAYS NOON GHUNNA
+    { 0x0900, TMT_MARK }, // DEVANAGARI SIGN INVERTED CANDRABINDU
+    { 0x0901, TMT_MARK }, // DEVANAGARI SIGN CANDRABINDU
+    { 0x0902, TMT_MARK }, // DEVANAGARI SIGN ANUSVARA
+    { 0x0903, TMT_MARK_FULLWIDTH }, //DEVANAGARI SIGN VISARGA
+    { 0x093A, TMT_MARK }, // DEVANAGARI VOWEL SIGN OE
+    { 0x093B, TMT_MARK_FULLWIDTH }, //DEVANAGARI VOWEL SIGN OOE
+    { 0x093C, TMT_MARK }, // DEVANAGARI SIGN NUKTA
+    { 0x093E, TMT_MARK_FULLWIDTH }, //DEVANAGARI VOWEL SIGN AA
+    { 0x093F, TMT_MARK_FULLWIDTH }, //DEVANAGARI VOWEL SIGN I
+    { 0x0940, TMT_MARK_FULLWIDTH }, //DEVANAGARI VOWEL SIGN II
+    { 0x0941, TMT_MARK }, // DEVANAGARI VOWEL SIGN U
+    { 0x0942, TMT_MARK }, // DEVANAGARI VOWEL SIGN UU
+    { 0x0943, TMT_MARK }, // DEVANAGARI VOWEL SIGN VOCALIC R
+    { 0x0944, TMT_MARK }, // DEVANAGARI VOWEL SIGN VOCALIC RR
+    { 0x0945, TMT_MARK }, // DEVANAGARI VOWEL SIGN CANDRA E
+    { 0x0946, TMT_MARK }, // DEVANAGARI VOWEL SIGN SHORT E
+    { 0x0947, TMT_MARK }, // DEVANAGARI VOWEL SIGN E
+    { 0x0948, TMT_MARK }, // DEVANAGARI VOWEL SIGN AI
+    { 0x0949, TMT_MARK_FULLWIDTH }, //DEVANAGARI VOWEL SIGN CANDRA O
+    { 0x094A, TMT_MARK_FULLWIDTH }, //DEVANAGARI VOWEL SIGN SHORT O
+    { 0x094B, TMT_MARK_FULLWIDTH }, //DEVANAGARI VOWEL SIGN O
+    { 0x094C, TMT_MARK_FULLWIDTH }, //DEVANAGARI VOWEL SIGN AU
+    { 0x094D, TMT_MARK }, // DEVANAGARI SIGN VIRAMA
+    { 0x094E, TMT_MARK_FULLWIDTH }, //DEVANAGARI VOWEL SIGN PRISHTHAMATRA E
+    { 0x094F, TMT_MARK_FULLWIDTH }, //DEVANAGARI VOWEL SIGN AW
+    { 0x0951, TMT_MARK }, // DEVANAGARI STRESS SIGN UDATTA
+    { 0x0952, TMT_MARK }, // DEVANAGARI STRESS SIGN ANUDATTA
+    { 0x0953, TMT_MARK }, // DEVANAGARI GRAVE ACCENT
+    { 0x0954, TMT_MARK }, // DEVANAGARI ACUTE ACCENT
+    { 0x0955, TMT_MARK }, // DEVANAGARI VOWEL SIGN CANDRA LONG E
+    { 0x0956, TMT_MARK }, // DEVANAGARI VOWEL SIGN UE
+    { 0x0957, TMT_MARK }, // DEVANAGARI VOWEL SIGN UUE
+    { 0x0962, TMT_MARK }, // DEVANAGARI VOWEL SIGN VOCALIC L
+    { 0x0963, TMT_MARK }, // DEVANAGARI VOWEL SIGN VOCALIC LL
+    { 0x0981, TMT_MARK }, // BENGALI SIGN CANDRABINDU
+    { 0x0982, TMT_MARK_FULLWIDTH }, //BENGALI SIGN ANUSVARA
+    { 0x0983, TMT_MARK_FULLWIDTH }, //BENGALI SIGN VISARGA
+    { 0x09BC, TMT_MARK }, // BENGALI SIGN NUKTA
+    { 0x09BE, TMT_MARK_FULLWIDTH }, //BENGALI VOWEL SIGN AA
+    { 0x09BF, TMT_MARK_FULLWIDTH }, //BENGALI VOWEL SIGN I
+    { 0x09C0, TMT_MARK_FULLWIDTH }, //BENGALI VOWEL SIGN II
+    { 0x09C1, TMT_MARK }, // BENGALI VOWEL SIGN U
+    { 0x09C2, TMT_MARK }, // BENGALI VOWEL SIGN UU
+    { 0x09C3, TMT_MARK }, // BENGALI VOWEL SIGN VOCALIC R
+    { 0x09C4, TMT_MARK }, // BENGALI VOWEL SIGN VOCALIC RR
+    { 0x09C7, TMT_MARK_FULLWIDTH }, //BENGALI VOWEL SIGN E
+    { 0x09C8, TMT_MARK_FULLWIDTH }, //BENGALI VOWEL SIGN AI
+    { 0x09CB, TMT_MARK_FULLWIDTH }, //BENGALI VOWEL SIGN O
+    { 0x09CC, TMT_MARK_FULLWIDTH }, //BENGALI VOWEL SIGN AU
+    { 0x09CD, TMT_MARK }, // BENGALI SIGN VIRAMA
+    { 0x09D7, TMT_MARK_FULLWIDTH }, //BENGALI AU LENGTH MARK
+    { 0x09E2, TMT_MARK }, // BENGALI VOWEL SIGN VOCALIC L
+    { 0x09E3, TMT_MARK }, // BENGALI VOWEL SIGN VOCALIC LL
+    { 0x09FE, TMT_MARK }, // BENGALI SANDHI MARK
+    { 0x0A01, TMT_MARK }, // GURMUKHI SIGN ADAK BINDI
+    { 0x0A02, TMT_MARK }, // GURMUKHI SIGN BINDI
+    { 0x0A03, TMT_MARK_FULLWIDTH }, //GURMUKHI SIGN VISARGA
+    { 0x0A3C, TMT_MARK }, // GURMUKHI SIGN NUKTA
+    { 0x0A3E, TMT_MARK_FULLWIDTH }, //GURMUKHI VOWEL SIGN AA
+    { 0x0A3F, TMT_MARK_FULLWIDTH }, //GURMUKHI VOWEL SIGN I
+    { 0x0A40, TMT_MARK_FULLWIDTH }, //GURMUKHI VOWEL SIGN II
+    { 0x0A41, TMT_MARK }, // GURMUKHI VOWEL SIGN U
+    { 0x0A42, TMT_MARK }, // GURMUKHI VOWEL SIGN UU
+    { 0x0A47, TMT_MARK }, // GURMUKHI VOWEL SIGN EE
+    { 0x0A48, TMT_MARK }, // GURMUKHI VOWEL SIGN AI
+    { 0x0A4B, TMT_MARK }, // GURMUKHI VOWEL SIGN OO
+    { 0x0A4C, TMT_MARK }, // GURMUKHI VOWEL SIGN AU
+    { 0x0A4D, TMT_MARK }, // GURMUKHI SIGN VIRAMA
+    { 0x0A51, TMT_MARK }, // GURMUKHI SIGN UDAAT
+    { 0x0A70, TMT_MARK }, // GURMUKHI TIPPI
+    { 0x0A71, TMT_MARK }, // GURMUKHI ADDAK
+    { 0x0A75, TMT_MARK }, // GURMUKHI SIGN YAKASH
+    { 0x0A81, TMT_MARK }, // GUJARATI SIGN CANDRABINDU
+    { 0x0A82, TMT_MARK }, // GUJARATI SIGN ANUSVARA
+    { 0x0A83, TMT_MARK_FULLWIDTH }, //GUJARATI SIGN VISARGA
+    { 0x0ABC, TMT_MARK }, // GUJARATI SIGN NUKTA
+    { 0x0ABE, TMT_MARK_FULLWIDTH }, //GUJARATI VOWEL SIGN AA
+    { 0x0ABF, TMT_MARK_FULLWIDTH }, //GUJARATI VOWEL SIGN I
+    { 0x0AC0, TMT_MARK_FULLWIDTH }, //GUJARATI VOWEL SIGN II
+    { 0x0AC1, TMT_MARK }, // GUJARATI VOWEL SIGN U
+    { 0x0AC2, TMT_MARK }, // GUJARATI VOWEL SIGN UU
+    { 0x0AC3, TMT_MARK }, // GUJARATI VOWEL SIGN VOCALIC R
+    { 0x0AC4, TMT_MARK }, // GUJARATI VOWEL SIGN VOCALIC RR
+    { 0x0AC5, TMT_MARK }, // GUJARATI VOWEL SIGN CANDRA E
+    { 0x0AC7, TMT_MARK }, // GUJARATI VOWEL SIGN E
+    { 0x0AC8, TMT_MARK }, // GUJARATI VOWEL SIGN AI
+    { 0x0AC9, TMT_MARK_FULLWIDTH }, //GUJARATI VOWEL SIGN CANDRA O
+    { 0x0ACB, TMT_MARK_FULLWIDTH }, //GUJARATI VOWEL SIGN O
+    { 0x0ACC, TMT_MARK_FULLWIDTH }, //GUJARATI VOWEL SIGN AU
+    { 0x0ACD, TMT_MARK }, // GUJARATI SIGN VIRAMA
+    { 0x0AE2, TMT_MARK }, // GUJARATI VOWEL SIGN VOCALIC L
+    { 0x0AE3, TMT_MARK }, // GUJARATI VOWEL SIGN VOCALIC LL
+    { 0x0AFA, TMT_MARK }, // GUJARATI SIGN SUKUN
+    { 0x0AFB, TMT_MARK }, // GUJARATI SIGN SHADDA
+    { 0x0AFC, TMT_MARK }, // GUJARATI SIGN MADDAH
+    { 0x0AFD, TMT_MARK }, // GUJARATI SIGN THREE-DOT NUKTA ABOVE
+    { 0x0AFE, TMT_MARK }, // GUJARATI SIGN CIRCLE NUKTA ABOVE
+    { 0x0AFF, TMT_MARK }, // GUJARATI SIGN TWO-CIRCLE NUKTA ABOVE
+    { 0x0B01, TMT_MARK }, // ORIYA SIGN CANDRABINDU
+    { 0x0B02, TMT_MARK_FULLWIDTH }, //ORIYA SIGN ANUSVARA
+    { 0x0B03, TMT_MARK_FULLWIDTH }, //ORIYA SIGN VISARGA
+    { 0x0B3C, TMT_MARK }, // ORIYA SIGN NUKTA
+    { 0x0B3E, TMT_MARK_FULLWIDTH }, //ORIYA VOWEL SIGN AA
+    { 0x0B3F, TMT_MARK }, // ORIYA VOWEL SIGN I
+    { 0x0B40, TMT_MARK_FULLWIDTH }, //ORIYA VOWEL SIGN II
+    { 0x0B41, TMT_MARK }, // ORIYA VOWEL SIGN U
+    { 0x0B42, TMT_MARK }, // ORIYA VOWEL SIGN UU
+    { 0x0B43, TMT_MARK }, // ORIYA VOWEL SIGN VOCALIC R
+    { 0x0B44, TMT_MARK }, // ORIYA VOWEL SIGN VOCALIC RR
+    { 0x0B47, TMT_MARK_FULLWIDTH }, //ORIYA VOWEL SIGN E
+    { 0x0B48, TMT_MARK_FULLWIDTH }, //ORIYA VOWEL SIGN AI
+    { 0x0B4B, TMT_MARK_FULLWIDTH }, //ORIYA VOWEL SIGN O
+    { 0x0B4C, TMT_MARK_FULLWIDTH }, //ORIYA VOWEL SIGN AU
+    { 0x0B4D, TMT_MARK }, // ORIYA SIGN VIRAMA
+    { 0x0B55, TMT_MARK }, // ORIYA SIGN OVERLINE
+    { 0x0B56, TMT_MARK }, // ORIYA AI LENGTH MARK
+    { 0x0B57, TMT_MARK_FULLWIDTH }, //ORIYA AU LENGTH MARK
+    { 0x0B62, TMT_MARK }, // ORIYA VOWEL SIGN VOCALIC L
+    { 0x0B63, TMT_MARK }, // ORIYA VOWEL SIGN VOCALIC LL
+    { 0x0B82, TMT_MARK }, // TAMIL SIGN ANUSVARA
+    { 0x0BBE, TMT_MARK_FULLWIDTH }, //TAMIL VOWEL SIGN AA
+    { 0x0BBF, TMT_MARK_FULLWIDTH }, //TAMIL VOWEL SIGN I
+    { 0x0BC0, TMT_MARK }, // TAMIL VOWEL SIGN II
+    { 0x0BC1, TMT_MARK_FULLWIDTH }, //TAMIL VOWEL SIGN U
+    { 0x0BC2, TMT_MARK_FULLWIDTH }, //TAMIL VOWEL SIGN UU
+    { 0x0BC6, TMT_MARK_FULLWIDTH }, //TAMIL VOWEL SIGN E
+    { 0x0BC7, TMT_MARK_FULLWIDTH }, //TAMIL VOWEL SIGN EE
+    { 0x0BC8, TMT_MARK_FULLWIDTH }, //TAMIL VOWEL SIGN AI
+    { 0x0BCA, TMT_MARK_FULLWIDTH }, //TAMIL VOWEL SIGN O
+    { 0x0BCB, TMT_MARK_FULLWIDTH }, //TAMIL VOWEL SIGN OO
+    { 0x0BCC, TMT_MARK_FULLWIDTH }, //TAMIL VOWEL SIGN AU
+    { 0x0BCD, TMT_MARK }, // TAMIL SIGN VIRAMA
+    { 0x0BD7, TMT_MARK_FULLWIDTH }, //TAMIL AU LENGTH MARK
+    { 0x0C00, TMT_MARK }, // TELUGU SIGN COMBINING CANDRABINDU ABOVE
+    { 0x0C01, TMT_MARK_FULLWIDTH }, //TELUGU SIGN CANDRABINDU
+    { 0x0C02, TMT_MARK_FULLWIDTH }, //TELUGU SIGN ANUSVARA
+    { 0x0C03, TMT_MARK_FULLWIDTH }, //TELUGU SIGN VISARGA
+    { 0x0C04, TMT_MARK }, // TELUGU SIGN COMBINING ANUSVARA ABOVE
+    { 0x0C3C, TMT_MARK }, // TELUGU SIGN NUKTA
+    { 0x0C3E, TMT_MARK }, // TELUGU VOWEL SIGN AA
+    { 0x0C3F, TMT_MARK }, // TELUGU VOWEL SIGN I
+    { 0x0C40, TMT_MARK }, // TELUGU VOWEL SIGN II
+    { 0x0C41, TMT_MARK_FULLWIDTH }, //TELUGU VOWEL SIGN U
+    { 0x0C42, TMT_MARK_FULLWIDTH }, //TELUGU VOWEL SIGN UU
+    { 0x0C43, TMT_MARK_FULLWIDTH }, //TELUGU VOWEL SIGN VOCALIC R
+    { 0x0C44, TMT_MARK_FULLWIDTH }, //TELUGU VOWEL SIGN VOCALIC RR
+    { 0x0C46, TMT_MARK }, // TELUGU VOWEL SIGN E
+    { 0x0C47, TMT_MARK }, // TELUGU VOWEL SIGN EE
+    { 0x0C48, TMT_MARK }, // TELUGU VOWEL SIGN AI
+    { 0x0C4A, TMT_MARK }, // TELUGU VOWEL SIGN O
+    { 0x0C4B, TMT_MARK }, // TELUGU VOWEL SIGN OO
+    { 0x0C4C, TMT_MARK }, // TELUGU VOWEL SIGN AU
+    { 0x0C4D, TMT_MARK }, // TELUGU SIGN VIRAMA
+    { 0x0C55, TMT_MARK }, // TELUGU LENGTH MARK
+    { 0x0C56, TMT_MARK }, // TELUGU AI LENGTH MARK
+    { 0x0C62, TMT_MARK }, // TELUGU VOWEL SIGN VOCALIC L
+    { 0x0C63, TMT_MARK }, // TELUGU VOWEL SIGN VOCALIC LL
+    { 0x0C81, TMT_MARK }, // KANNADA SIGN CANDRABINDU
+    { 0x0C82, TMT_MARK_FULLWIDTH }, //KANNADA SIGN ANUSVARA
+    { 0x0C83, TMT_MARK_FULLWIDTH }, //KANNADA SIGN VISARGA
+    { 0x0CBC, TMT_MARK }, // KANNADA SIGN NUKTA
+    { 0x0CBE, TMT_MARK_FULLWIDTH }, //KANNADA VOWEL SIGN AA
+    { 0x0CBF, TMT_MARK }, // KANNADA VOWEL SIGN I
+    { 0x0CC0, TMT_MARK_FULLWIDTH }, //KANNADA VOWEL SIGN II
+    { 0x0CC1, TMT_MARK_FULLWIDTH }, //KANNADA VOWEL SIGN U
+    { 0x0CC2, TMT_MARK_FULLWIDTH }, //KANNADA VOWEL SIGN UU
+    { 0x0CC3, TMT_MARK_FULLWIDTH }, //KANNADA VOWEL SIGN VOCALIC R
+    { 0x0CC4, TMT_MARK_FULLWIDTH }, //KANNADA VOWEL SIGN VOCALIC RR
+    { 0x0CC6, TMT_MARK }, // KANNADA VOWEL SIGN E
+    { 0x0CC7, TMT_MARK_FULLWIDTH }, //KANNADA VOWEL SIGN EE
+    { 0x0CC8, TMT_MARK_FULLWIDTH }, //KANNADA VOWEL SIGN AI
+    { 0x0CCA, TMT_MARK_FULLWIDTH }, //KANNADA VOWEL SIGN O
+    { 0x0CCB, TMT_MARK_FULLWIDTH }, //KANNADA VOWEL SIGN OO
+    { 0x0CCC, TMT_MARK }, // KANNADA VOWEL SIGN AU
+    { 0x0CCD, TMT_MARK }, // KANNADA SIGN VIRAMA
+    { 0x0CD5, TMT_MARK_FULLWIDTH }, //KANNADA LENGTH MARK
+    { 0x0CD6, TMT_MARK_FULLWIDTH }, //KANNADA AI LENGTH MARK
+    { 0x0CE2, TMT_MARK }, // KANNADA VOWEL SIGN VOCALIC L
+    { 0x0CE3, TMT_MARK }, // KANNADA VOWEL SIGN VOCALIC LL
+    { 0x0CF3, TMT_MARK_FULLWIDTH }, //KANNADA SIGN COMBINING ANUSVARA ABOVE RIGHT
+    { 0x0D00, TMT_MARK }, // MALAYALAM SIGN COMBINING ANUSVARA ABOVE
+    { 0x0D01, TMT_MARK }, // MALAYALAM SIGN CANDRABINDU
+    { 0x0D02, TMT_MARK_FULLWIDTH }, //MALAYALAM SIGN ANUSVARA
+    { 0x0D03, TMT_MARK_FULLWIDTH }, //MALAYALAM SIGN VISARGA
+    { 0x0D3B, TMT_MARK }, // MALAYALAM SIGN VERTICAL BAR VIRAMA
+    { 0x0D3C, TMT_MARK }, // MALAYALAM SIGN CIRCULAR VIRAMA
+    { 0x0D3E, TMT_MARK_FULLWIDTH }, //MALAYALAM VOWEL SIGN AA
+    { 0x0D3F, TMT_MARK_FULLWIDTH }, //MALAYALAM VOWEL SIGN I
+    { 0x0D40, TMT_MARK_FULLWIDTH }, //MALAYALAM VOWEL SIGN II
+    { 0x0D41, TMT_MARK }, // MALAYALAM VOWEL SIGN U
+    { 0x0D42, TMT_MARK }, // MALAYALAM VOWEL SIGN UU
+    { 0x0D43, TMT_MARK }, // MALAYALAM VOWEL SIGN VOCALIC R
+    { 0x0D44, TMT_MARK }, // MALAYALAM VOWEL SIGN VOCALIC RR
+    { 0x0D46, TMT_MARK_FULLWIDTH }, //MALAYALAM VOWEL SIGN E
+    { 0x0D47, TMT_MARK_FULLWIDTH }, //MALAYALAM VOWEL SIGN EE
+    { 0x0D48, TMT_MARK_FULLWIDTH }, //MALAYALAM VOWEL SIGN AI
+    { 0x0D4A, TMT_MARK_FULLWIDTH }, //MALAYALAM VOWEL SIGN O
+    { 0x0D4B, TMT_MARK_FULLWIDTH }, //MALAYALAM VOWEL SIGN OO
+    { 0x0D4C, TMT_MARK_FULLWIDTH }, //MALAYALAM VOWEL SIGN AU
+    { 0x0D4D, TMT_MARK }, // MALAYALAM SIGN VIRAMA
+    { 0x0D57, TMT_MARK_FULLWIDTH }, //MALAYALAM AU LENGTH MARK
+    { 0x0D62, TMT_MARK }, // MALAYALAM VOWEL SIGN VOCALIC L
+    { 0x0D63, TMT_MARK }, // MALAYALAM VOWEL SIGN VOCALIC LL
+    { 0x0D81, TMT_MARK }, // SINHALA SIGN CANDRABINDU
+    { 0x0D82, TMT_MARK_FULLWIDTH }, //SINHALA SIGN ANUSVARAYA
+    { 0x0D83, TMT_MARK_FULLWIDTH }, //SINHALA SIGN VISARGAYA
+    { 0x0DCA, TMT_MARK }, // SINHALA SIGN AL-LAKUNA
+    { 0x0DCF, TMT_MARK_FULLWIDTH }, //SINHALA VOWEL SIGN AELA-PILLA
+    { 0x0DD0, TMT_MARK_FULLWIDTH }, //SINHALA VOWEL SIGN KETTI AEDA-PILLA
+    { 0x0DD1, TMT_MARK_FULLWIDTH }, //SINHALA VOWEL SIGN DIGA AEDA-PILLA
+    { 0x0DD2, TMT_MARK }, // SINHALA VOWEL SIGN KETTI IS-PILLA
+    { 0x0DD3, TMT_MARK }, // SINHALA VOWEL SIGN DIGA IS-PILLA
+    { 0x0DD4, TMT_MARK }, // SINHALA VOWEL SIGN KETTI PAA-PILLA
+    { 0x0DD6, TMT_MARK }, // SINHALA VOWEL SIGN DIGA PAA-PILLA
+    { 0x0DD8, TMT_MARK_FULLWIDTH }, //SINHALA VOWEL SIGN GAETTA-PILLA
+    { 0x0DD9, TMT_MARK_FULLWIDTH }, //SINHALA VOWEL SIGN KOMBUVA
+    { 0x0DDA, TMT_MARK_FULLWIDTH }, //SINHALA VOWEL SIGN DIGA KOMBUVA
+    { 0x0DDB, TMT_MARK_FULLWIDTH }, //SINHALA VOWEL SIGN KOMBU DEKA
+    { 0x0DDC, TMT_MARK_FULLWIDTH }, //SINHALA VOWEL SIGN KOMBUVA HAA AELA-PILLA
+    { 0x0DDD, TMT_MARK_FULLWIDTH }, //SINHALA VOWEL SIGN KOMBUVA HAA DIGA AELA-PILLA
+    { 0x0DDE, TMT_MARK_FULLWIDTH }, //SINHALA VOWEL SIGN KOMBUVA HAA GAYANUKITTA
+    { 0x0DDF, TMT_MARK_FULLWIDTH }, //SINHALA VOWEL SIGN GAYANUKITTA
+    { 0x0DF2, TMT_MARK_FULLWIDTH }, //SINHALA VOWEL SIGN DIGA GAETTA-PILLA
+    { 0x0DF3, TMT_MARK_FULLWIDTH }, //SINHALA VOWEL SIGN DIGA GAYANUKITTA
+    { 0x0E31, TMT_MARK }, // THAI CHARACTER MAI HAN-AKAT
+    { 0x0E34, TMT_MARK }, // THAI CHARACTER SARA I
+    { 0x0E35, TMT_MARK }, // THAI CHARACTER SARA II
+    { 0x0E36, TMT_MARK }, // THAI CHARACTER SARA UE
+    { 0x0E37, TMT_MARK }, // THAI CHARACTER SARA UEE
+    { 0x0E38, TMT_MARK }, // THAI CHARACTER SARA U
+    { 0x0E39, TMT_MARK }, // THAI CHARACTER SARA UU
+    { 0x0E3A, TMT_MARK }, // THAI CHARACTER PHINTHU
+    { 0x0E47, TMT_MARK }, // THAI CHARACTER MAITAIKHU
+    { 0x0E48, TMT_MARK }, // THAI CHARACTER MAI EK
+    { 0x0E49, TMT_MARK }, // THAI CHARACTER MAI THO
+    { 0x0E4A, TMT_MARK }, // THAI CHARACTER MAI TRI
+    { 0x0E4B, TMT_MARK }, // THAI CHARACTER MAI CHATTAWA
+    { 0x0E4C, TMT_MARK }, // THAI CHARACTER THANTHAKHAT
+    { 0x0E4D, TMT_MARK }, // THAI CHARACTER NIKHAHIT
+    { 0x0E4E, TMT_MARK }, // THAI CHARACTER YAMAKKAN
+    { 0x0EB1, TMT_MARK }, // LAO VOWEL SIGN MAI KAN
+    { 0x0EB4, TMT_MARK }, // LAO VOWEL SIGN I
+    { 0x0EB5, TMT_MARK }, // LAO VOWEL SIGN II
+    { 0x0EB6, TMT_MARK }, // LAO VOWEL SIGN Y
+    { 0x0EB7, TMT_MARK }, // LAO VOWEL SIGN YY
+    { 0x0EB8, TMT_MARK }, // LAO VOWEL SIGN U
+    { 0x0EB9, TMT_MARK }, // LAO VOWEL SIGN UU
+    { 0x0EBA, TMT_MARK }, // LAO SIGN PALI VIRAMA
+    { 0x0EBB, TMT_MARK }, // LAO VOWEL SIGN MAI KON
+    { 0x0EBC, TMT_MARK }, // LAO SEMIVOWEL SIGN LO
+    { 0x0EC8, TMT_MARK }, // LAO TONE MAI EK
+    { 0x0EC9, TMT_MARK }, // LAO TONE MAI THO
+    { 0x0ECA, TMT_MARK }, // LAO TONE MAI TI
+    { 0x0ECB, TMT_MARK }, // LAO TONE MAI CATAWA
+    { 0x0ECC, TMT_MARK }, // LAO CANCELLATION MARK
+    { 0x0ECD, TMT_MARK }, // LAO NIGGAHITA
+    { 0x0ECE, TMT_MARK }, // LAO YAMAKKAN
+    { 0x0F18, TMT_MARK }, // TIBETAN ASTROLOGICAL SIGN -KHYUD PA
+    { 0x0F19, TMT_MARK }, // TIBETAN ASTROLOGICAL SIGN SDONG TSHUGS
+    { 0x0F35, TMT_MARK }, // TIBETAN MARK NGAS BZUNG NYI ZLA
+    { 0x0F37, TMT_MARK }, // TIBETAN MARK NGAS BZUNG SGOR RTAGS
+    { 0x0F39, TMT_MARK }, // TIBETAN MARK TSA -PHRU
+    { 0x0F3E, TMT_MARK_FULLWIDTH }, //TIBETAN SIGN YAR TSHES
+    { 0x0F3F, TMT_MARK_FULLWIDTH }, //TIBETAN SIGN MAR TSHES
+    { 0x0F71, TMT_MARK }, // TIBETAN VOWEL SIGN AA
+    { 0x0F72, TMT_MARK }, // TIBETAN VOWEL SIGN I
+    { 0x0F73, TMT_MARK }, // TIBETAN VOWEL SIGN II
+    { 0x0F74, TMT_MARK }, // TIBETAN VOWEL SIGN U
+    { 0x0F75, TMT_MARK }, // TIBETAN VOWEL SIGN UU
+    { 0x0F76, TMT_MARK }, // TIBETAN VOWEL SIGN VOCALIC R
+    { 0x0F77, TMT_MARK }, // TIBETAN VOWEL SIGN VOCALIC RR
+    { 0x0F78, TMT_MARK }, // TIBETAN VOWEL SIGN VOCALIC L
+    { 0x0F79, TMT_MARK }, // TIBETAN VOWEL SIGN VOCALIC LL
+    { 0x0F7A, TMT_MARK }, // TIBETAN VOWEL SIGN E
+    { 0x0F7B, TMT_MARK }, // TIBETAN VOWEL SIGN EE
+    { 0x0F7C, TMT_MARK }, // TIBETAN VOWEL SIGN O
+    { 0x0F7D, TMT_MARK }, // TIBETAN VOWEL SIGN OO
+    { 0x0F7E, TMT_MARK }, // TIBETAN SIGN RJES SU NGA RO
+    { 0x0F7F, TMT_MARK_FULLWIDTH }, //TIBETAN SIGN RNAM BCAD
+    { 0x0F80, TMT_MARK }, // TIBETAN VOWEL SIGN REVERSED I
+    { 0x0F81, TMT_MARK }, // TIBETAN VOWEL SIGN REVERSED II
+    { 0x0F82, TMT_MARK }, // TIBETAN SIGN NYI ZLA NAA DA
+    { 0x0F83, TMT_MARK }, // TIBETAN SIGN SNA LDAN
+    { 0x0F84, TMT_MARK }, // TIBETAN MARK HALANTA
+    { 0x0F86, TMT_MARK }, // TIBETAN SIGN LCI RTAGS
+    { 0x0F87, TMT_MARK }, // TIBETAN SIGN YANG RTAGS
+    { 0x0F8D, TMT_MARK }, // TIBETAN SUBJOINED SIGN LCE TSA CAN
+    { 0x0F8E, TMT_MARK }, // TIBETAN SUBJOINED SIGN MCHU CAN
+    { 0x0F8F, TMT_MARK }, // TIBETAN SUBJOINED SIGN INVERTED MCHU CAN
+    { 0x0F90, TMT_MARK }, // TIBETAN SUBJOINED LETTER KA
+    { 0x0F91, TMT_MARK }, // TIBETAN SUBJOINED LETTER KHA
+    { 0x0F92, TMT_MARK }, // TIBETAN SUBJOINED LETTER GA
+    { 0x0F93, TMT_MARK }, // TIBETAN SUBJOINED LETTER GHA
+    { 0x0F94, TMT_MARK }, // TIBETAN SUBJOINED LETTER NGA
+    { 0x0F95, TMT_MARK }, // TIBETAN SUBJOINED LETTER CA
+    { 0x0F96, TMT_MARK }, // TIBETAN SUBJOINED LETTER CHA
+    { 0x0F97, TMT_MARK }, // TIBETAN SUBJOINED LETTER JA
+    { 0x0F99, TMT_MARK }, // TIBETAN SUBJOINED LETTER NYA
+    { 0x0F9A, TMT_MARK }, // TIBETAN SUBJOINED LETTER TTA
+    { 0x0F9B, TMT_MARK }, // TIBETAN SUBJOINED LETTER TTHA
+    { 0x0F9C, TMT_MARK }, // TIBETAN SUBJOINED LETTER DDA
+    { 0x0F9D, TMT_MARK }, // TIBETAN SUBJOINED LETTER DDHA
+    { 0x0F9E, TMT_MARK }, // TIBETAN SUBJOINED LETTER NNA
+    { 0x0F9F, TMT_MARK }, // TIBETAN SUBJOINED LETTER TA
+    { 0x0FA0, TMT_MARK }, // TIBETAN SUBJOINED LETTER THA
+    { 0x0FA1, TMT_MARK }, // TIBETAN SUBJOINED LETTER DA
+    { 0x0FA2, TMT_MARK }, // TIBETAN SUBJOINED LETTER DHA
+    { 0x0FA3, TMT_MARK }, // TIBETAN SUBJOINED LETTER NA
+    { 0x0FA4, TMT_MARK }, // TIBETAN SUBJOINED LETTER PA
+    { 0x0FA5, TMT_MARK }, // TIBETAN SUBJOINED LETTER PHA
+    { 0x0FA6, TMT_MARK }, // TIBETAN SUBJOINED LETTER BA
+    { 0x0FA7, TMT_MARK }, // TIBETAN SUBJOINED LETTER BHA
+    { 0x0FA8, TMT_MARK }, // TIBETAN SUBJOINED LETTER MA
+    { 0x0FA9, TMT_MARK }, // TIBETAN SUBJOINED LETTER TSA
+    { 0x0FAA, TMT_MARK }, // TIBETAN SUBJOINED LETTER TSHA
+    { 0x0FAB, TMT_MARK }, // TIBETAN SUBJOINED LETTER DZA
+    { 0x0FAC, TMT_MARK }, // TIBETAN SUBJOINED LETTER DZHA
+    { 0x0FAD, TMT_MARK }, // TIBETAN SUBJOINED LETTER WA
+    { 0x0FAE, TMT_MARK }, // TIBETAN SUBJOINED LETTER ZHA
+    { 0x0FAF, TMT_MARK }, // TIBETAN SUBJOINED LETTER ZA
+    { 0x0FB0, TMT_MARK }, // TIBETAN SUBJOINED LETTER -A
+    { 0x0FB1, TMT_MARK }, // TIBETAN SUBJOINED LETTER YA
+    { 0x0FB2, TMT_MARK }, // TIBETAN SUBJOINED LETTER RA
+    { 0x0FB3, TMT_MARK }, // TIBETAN SUBJOINED LETTER LA
+    { 0x0FB4, TMT_MARK }, // TIBETAN SUBJOINED LETTER SHA
+    { 0x0FB5, TMT_MARK }, // TIBETAN SUBJOINED LETTER SSA
+    { 0x0FB6, TMT_MARK }, // TIBETAN SUBJOINED LETTER SA
+    { 0x0FB7, TMT_MARK }, // TIBETAN SUBJOINED LETTER HA
+    { 0x0FB8, TMT_MARK }, // TIBETAN SUBJOINED LETTER A
+    { 0x0FB9, TMT_MARK }, // TIBETAN SUBJOINED LETTER KSSA
+    { 0x0FBA, TMT_MARK }, // TIBETAN SUBJOINED LETTER FIXED-FORM WA
+    { 0x0FBB, TMT_MARK }, // TIBETAN SUBJOINED LETTER FIXED-FORM YA
+    { 0x0FBC, TMT_MARK }, // TIBETAN SUBJOINED LETTER FIXED-FORM RA
+    { 0x0FC6, TMT_MARK }, // TIBETAN SYMBOL PADMA GDAN
+    { 0x102B, TMT_MARK_FULLWIDTH }, //MYANMAR VOWEL SIGN TALL AA
+    { 0x102C, TMT_MARK_FULLWIDTH }, //MYANMAR VOWEL SIGN AA
+    { 0x102D, TMT_MARK }, // MYANMAR VOWEL SIGN I
+    { 0x102E, TMT_MARK }, // MYANMAR VOWEL SIGN II
+    { 0x102F, TMT_MARK }, // MYANMAR VOWEL SIGN U
+    { 0x1030, TMT_MARK }, // MYANMAR VOWEL SIGN UU
+    { 0x1031, TMT_MARK_FULLWIDTH }, //MYANMAR VOWEL SIGN E
+    { 0x1032, TMT_MARK }, // MYANMAR VOWEL SIGN AI
+    { 0x1033, TMT_MARK }, // MYANMAR VOWEL SIGN MON II
+    { 0x1034, TMT_MARK }, // MYANMAR VOWEL SIGN MON O
+    { 0x1035, TMT_MARK }, // MYANMAR VOWEL SIGN E ABOVE
+    { 0x1036, TMT_MARK }, // MYANMAR SIGN ANUSVARA
+    { 0x1037, TMT_MARK }, // MYANMAR SIGN DOT BELOW
+    { 0x1038, TMT_MARK_FULLWIDTH }, //MYANMAR SIGN VISARGA
+    { 0x1039, TMT_MARK }, // MYANMAR SIGN VIRAMA
+    { 0x103A, TMT_MARK }, // MYANMAR SIGN ASAT
+    { 0x103B, TMT_MARK_FULLWIDTH }, //MYANMAR CONSONANT SIGN MEDIAL YA
+    { 0x103C, TMT_MARK_FULLWIDTH }, //MYANMAR CONSONANT SIGN MEDIAL RA
+    { 0x103D, TMT_MARK }, // MYANMAR CONSONANT SIGN MEDIAL WA
+    { 0x103E, TMT_MARK }, // MYANMAR CONSONANT SIGN MEDIAL HA
+    { 0x1056, TMT_MARK_FULLWIDTH }, //MYANMAR VOWEL SIGN VOCALIC R
+    { 0x1057, TMT_MARK_FULLWIDTH }, //MYANMAR VOWEL SIGN VOCALIC RR
+    { 0x1058, TMT_MARK }, // MYANMAR VOWEL SIGN VOCALIC L
+    { 0x1059, TMT_MARK }, // MYANMAR VOWEL SIGN VOCALIC LL
+    { 0x105E, TMT_MARK }, // MYANMAR CONSONANT SIGN MON MEDIAL NA
+    { 0x105F, TMT_MARK }, // MYANMAR CONSONANT SIGN MON MEDIAL MA
+    { 0x1060, TMT_MARK }, // MYANMAR CONSONANT SIGN MON MEDIAL LA
+    { 0x1062, TMT_MARK_FULLWIDTH }, //MYANMAR VOWEL SIGN SGAW KAREN EU
+    { 0x1063, TMT_MARK_FULLWIDTH }, //MYANMAR TONE MARK SGAW KAREN HATHI
+    { 0x1064, TMT_MARK_FULLWIDTH }, //MYANMAR TONE MARK SGAW KAREN KE PHO
+    { 0x1067, TMT_MARK_FULLWIDTH }, //MYANMAR VOWEL SIGN WESTERN PWO KAREN EU
+    { 0x1068, TMT_MARK_FULLWIDTH }, //MYANMAR VOWEL SIGN WESTERN PWO KAREN UE
+    { 0x1069, TMT_MARK_FULLWIDTH }, //MYANMAR SIGN WESTERN PWO KAREN TONE-1
+    { 0x106A, TMT_MARK_FULLWIDTH }, //MYANMAR SIGN WESTERN PWO KAREN TONE-2
+    { 0x106B, TMT_MARK_FULLWIDTH }, //MYANMAR SIGN WESTERN PWO KAREN TONE-3
+    { 0x106C, TMT_MARK_FULLWIDTH }, //MYANMAR SIGN WESTERN PWO KAREN TONE-4
+    { 0x106D, TMT_MARK_FULLWIDTH }, //MYANMAR SIGN WESTERN PWO KAREN TONE-5
+    { 0x1071, TMT_MARK }, // MYANMAR VOWEL SIGN GEBA KAREN I
+    { 0x1072, TMT_MARK }, // MYANMAR VOWEL SIGN KAYAH OE
+    { 0x1073, TMT_MARK }, // MYANMAR VOWEL SIGN KAYAH U
+    { 0x1074, TMT_MARK }, // MYANMAR VOWEL SIGN KAYAH EE
+    { 0x1082, TMT_MARK }, // MYANMAR CONSONANT SIGN SHAN MEDIAL WA
+    { 0x1083, TMT_MARK_FULLWIDTH }, //MYANMAR VOWEL SIGN SHAN AA
+    { 0x1084, TMT_MARK_FULLWIDTH }, //MYANMAR VOWEL SIGN SHAN E
+    { 0x1085, TMT_MARK }, // MYANMAR VOWEL SIGN SHAN E ABOVE
+    { 0x1086, TMT_MARK }, // MYANMAR VOWEL SIGN SHAN FINAL Y
+    { 0x1087, TMT_MARK_FULLWIDTH }, //MYANMAR SIGN SHAN TONE-2
+    { 0x1088, TMT_MARK_FULLWIDTH }, //MYANMAR SIGN SHAN TONE-3
+    { 0x1089, TMT_MARK_FULLWIDTH }, //MYANMAR SIGN SHAN TONE-5
+    { 0x108A, TMT_MARK_FULLWIDTH }, //MYANMAR SIGN SHAN TONE-6
+    { 0x108B, TMT_MARK_FULLWIDTH }, //MYANMAR SIGN SHAN COUNCIL TONE-2
+    { 0x108C, TMT_MARK_FULLWIDTH }, //MYANMAR SIGN SHAN COUNCIL TONE-3
+    { 0x108D, TMT_MARK }, // MYANMAR SIGN SHAN COUNCIL EMPHATIC TONE
+    { 0x108F, TMT_MARK_FULLWIDTH }, //MYANMAR SIGN RUMAI PALAUNG TONE-5
+    { 0x109A, TMT_MARK_FULLWIDTH }, //MYANMAR SIGN KHAMTI TONE-1
+    { 0x109B, TMT_MARK_FULLWIDTH }, //MYANMAR SIGN KHAMTI TONE-3
+    { 0x109C, TMT_MARK_FULLWIDTH }, //MYANMAR VOWEL SIGN AITON A
+    { 0x109D, TMT_MARK }, // MYANMAR VOWEL SIGN AITON AI
+    { 0x135D, TMT_MARK }, // ETHIOPIC COMBINING GEMINATION AND VOWEL LENGTH MARK
+    { 0x135E, TMT_MARK }, // ETHIOPIC COMBINING VOWEL LENGTH MARK
+    { 0x135F, TMT_MARK }, // ETHIOPIC COMBINING GEMINATION MARK
+    { 0x1712, TMT_MARK }, // TAGALOG VOWEL SIGN I
+    { 0x1713, TMT_MARK }, // TAGALOG VOWEL SIGN U
+    { 0x1714, TMT_MARK }, // TAGALOG SIGN VIRAMA
+    { 0x1715, TMT_MARK_FULLWIDTH }, //TAGALOG SIGN PAMUDPOD
+    { 0x1732, TMT_MARK }, // HANUNOO VOWEL SIGN I
+    { 0x1733, TMT_MARK }, // HANUNOO VOWEL SIGN U
+    { 0x1734, TMT_MARK_FULLWIDTH }, //HANUNOO SIGN PAMUDPOD
+    { 0x1752, TMT_MARK }, // BUHID VOWEL SIGN I
+    { 0x1753, TMT_MARK }, // BUHID VOWEL SIGN U
+    { 0x1772, TMT_MARK }, // TAGBANWA VOWEL SIGN I
+    { 0x1773, TMT_MARK }, // TAGBANWA VOWEL SIGN U
+    { 0x17B4, TMT_MARK }, // KHMER VOWEL INHERENT AQ
+    { 0x17B5, TMT_MARK }, // KHMER VOWEL INHERENT AA
+    { 0x17B6, TMT_MARK_FULLWIDTH }, //KHMER VOWEL SIGN AA
+    { 0x17B7, TMT_MARK }, // KHMER VOWEL SIGN I
+    { 0x17B8, TMT_MARK }, // KHMER VOWEL SIGN II
+    { 0x17B9, TMT_MARK }, // KHMER VOWEL SIGN Y
+    { 0x17BA, TMT_MARK }, // KHMER VOWEL SIGN YY
+    { 0x17BB, TMT_MARK }, // KHMER VOWEL SIGN U
+    { 0x17BC, TMT_MARK }, // KHMER VOWEL SIGN UU
+    { 0x17BD, TMT_MARK }, // KHMER VOWEL SIGN UA
+    { 0x17BE, TMT_MARK_FULLWIDTH }, //KHMER VOWEL SIGN OE
+    { 0x17BF, TMT_MARK_FULLWIDTH }, //KHMER VOWEL SIGN YA
+    { 0x17C0, TMT_MARK_FULLWIDTH }, //KHMER VOWEL SIGN IE
+    { 0x17C1, TMT_MARK_FULLWIDTH }, //KHMER VOWEL SIGN E
+    { 0x17C2, TMT_MARK_FULLWIDTH }, //KHMER VOWEL SIGN AE
+    { 0x17C3, TMT_MARK_FULLWIDTH }, //KHMER VOWEL SIGN AI
+    { 0x17C4, TMT_MARK_FULLWIDTH }, //KHMER VOWEL SIGN OO
+    { 0x17C5, TMT_MARK_FULLWIDTH }, //KHMER VOWEL SIGN AU
+    { 0x17C6, TMT_MARK }, // KHMER SIGN NIKAHIT
+    { 0x17C7, TMT_MARK_FULLWIDTH }, //KHMER SIGN REAHMUK
+    { 0x17C8, TMT_MARK_FULLWIDTH }, //KHMER SIGN YUUKALEAPINTU
+    { 0x17C9, TMT_MARK }, // KHMER SIGN MUUSIKATOAN
+    { 0x17CA, TMT_MARK }, // KHMER SIGN TRIISAP
+    { 0x17CB, TMT_MARK }, // KHMER SIGN BANTOC
+    { 0x17CC, TMT_MARK }, // KHMER SIGN ROBAT
+    { 0x17CD, TMT_MARK }, // KHMER SIGN TOANDAKHIAT
+    { 0x17CE, TMT_MARK }, // KHMER SIGN KAKABAT
+    { 0x17CF, TMT_MARK }, // KHMER SIGN AHSDA
+    { 0x17D0, TMT_MARK }, // KHMER SIGN SAMYOK SANNYA
+    { 0x17D1, TMT_MARK }, // KHMER SIGN VIRIAM
+    { 0x17D2, TMT_MARK }, // KHMER SIGN COENG
+    { 0x17D3, TMT_MARK }, // KHMER SIGN BATHAMASAT
+    { 0x17DD, TMT_MARK }, // KHMER SIGN ATTHACAN
+    { 0x180B, TMT_MARK }, // MONGOLIAN FREE VARIATION SELECTOR ONE
+    { 0x180C, TMT_MARK }, // MONGOLIAN FREE VARIATION SELECTOR TWO
+    { 0x180D, TMT_MARK }, // MONGOLIAN FREE VARIATION SELECTOR THREE
+    { 0x180E, TMT_FORMAT }, // MONGOLIAN VOWEL SEPARATOR
+    { 0x180F, TMT_MARK }, // MONGOLIAN FREE VARIATION SELECTOR FOUR
+    { 0x1885, TMT_MARK }, // MONGOLIAN LETTER ALI GALI BALUDA
+    { 0x1886, TMT_MARK }, // MONGOLIAN LETTER ALI GALI THREE BALUDA
+    { 0x18A9, TMT_MARK }, // MONGOLIAN LETTER ALI GALI DAGALGA
+    { 0x1920, TMT_MARK }, // LIMBU VOWEL SIGN A
+    { 0x1921, TMT_MARK }, // LIMBU VOWEL SIGN I
+    { 0x1922, TMT_MARK }, // LIMBU VOWEL SIGN U
+    { 0x1923, TMT_MARK_FULLWIDTH }, //LIMBU VOWEL SIGN EE
+    { 0x1924, TMT_MARK_FULLWIDTH }, //LIMBU VOWEL SIGN AI
+    { 0x1925, TMT_MARK_FULLWIDTH }, //LIMBU VOWEL SIGN OO
+    { 0x1926, TMT_MARK_FULLWIDTH }, //LIMBU VOWEL SIGN AU
+    { 0x1927, TMT_MARK }, // LIMBU VOWEL SIGN E
+    { 0x1928, TMT_MARK }, // LIMBU VOWEL SIGN O
+    { 0x1929, TMT_MARK_FULLWIDTH }, //LIMBU SUBJOINED LETTER YA
+    { 0x192A, TMT_MARK_FULLWIDTH }, //LIMBU SUBJOINED LETTER RA
+    { 0x192B, TMT_MARK_FULLWIDTH }, //LIMBU SUBJOINED LETTER WA
+    { 0x1930, TMT_MARK_FULLWIDTH }, //LIMBU SMALL LETTER KA
+    { 0x1931, TMT_MARK_FULLWIDTH }, //LIMBU SMALL LETTER NGA
+    { 0x1932, TMT_MARK }, // LIMBU SMALL LETTER ANUSVARA
+    { 0x1933, TMT_MARK_FULLWIDTH }, //LIMBU SMALL LETTER TA
+    { 0x1934, TMT_MARK_FULLWIDTH }, //LIMBU SMALL LETTER NA
+    { 0x1935, TMT_MARK_FULLWIDTH }, //LIMBU SMALL LETTER PA
+    { 0x1936, TMT_MARK_FULLWIDTH }, //LIMBU SMALL LETTER MA
+    { 0x1937, TMT_MARK_FULLWIDTH }, //LIMBU SMALL LETTER RA
+    { 0x1938, TMT_MARK_FULLWIDTH }, //LIMBU SMALL LETTER LA
+    { 0x1939, TMT_MARK }, // LIMBU SIGN MUKPHRENG
+    { 0x193A, TMT_MARK }, // LIMBU SIGN KEMPHRENG
+    { 0x193B, TMT_MARK }, // LIMBU SIGN SA-I
+    { 0x1A17, TMT_MARK }, // BUGINESE VOWEL SIGN I
+    { 0x1A18, TMT_MARK }, // BUGINESE VOWEL SIGN U
+    { 0x1A19, TMT_MARK_FULLWIDTH }, //BUGINESE VOWEL SIGN E
+    { 0x1A1A, TMT_MARK_FULLWIDTH }, //BUGINESE VOWEL SIGN O
+    { 0x1A1B, TMT_MARK }, // BUGINESE VOWEL SIGN AE
+    { 0x1A55, TMT_MARK_FULLWIDTH }, //TAI THAM CONSONANT SIGN MEDIAL RA
+    { 0x1A56, TMT_MARK }, // TAI THAM CONSONANT SIGN MEDIAL LA
+    { 0x1A57, TMT_MARK_FULLWIDTH }, //TAI THAM CONSONANT SIGN LA TANG LAI
+    { 0x1A58, TMT_MARK }, // TAI THAM SIGN MAI KANG LAI
+    { 0x1A59, TMT_MARK }, // TAI THAM CONSONANT SIGN FINAL NGA
+    { 0x1A5A, TMT_MARK }, // TAI THAM CONSONANT SIGN LOW PA
+    { 0x1A5B, TMT_MARK }, // TAI THAM CONSONANT SIGN HIGH RATHA OR LOW PA
+    { 0x1A5C, TMT_MARK }, // TAI THAM CONSONANT SIGN MA
+    { 0x1A5D, TMT_MARK }, // TAI THAM CONSONANT SIGN BA
+    { 0x1A5E, TMT_MARK }, // TAI THAM CONSONANT SIGN SA
+    { 0x1A60, TMT_MARK }, // TAI THAM SIGN SAKOT
+    { 0x1A61, TMT_MARK_FULLWIDTH }, //TAI THAM VOWEL SIGN A
+    { 0x1A62, TMT_MARK }, // TAI THAM VOWEL SIGN MAI SAT
+    { 0x1A63, TMT_MARK_FULLWIDTH }, //TAI THAM VOWEL SIGN AA
+    { 0x1A64, TMT_MARK_FULLWIDTH }, //TAI THAM VOWEL SIGN TALL AA
+    { 0x1A65, TMT_MARK }, // TAI THAM VOWEL SIGN I
+    { 0x1A66, TMT_MARK }, // TAI THAM VOWEL SIGN II
+    { 0x1A67, TMT_MARK }, // TAI THAM VOWEL SIGN UE
+    { 0x1A68, TMT_MARK }, // TAI THAM VOWEL SIGN UUE
+    { 0x1A69, TMT_MARK }, // TAI THAM VOWEL SIGN U
+    { 0x1A6A, TMT_MARK }, // TAI THAM VOWEL SIGN UU
+    { 0x1A6B, TMT_MARK }, // TAI THAM VOWEL SIGN O
+    { 0x1A6C, TMT_MARK }, // TAI THAM VOWEL SIGN OA BELOW
+    { 0x1A6D, TMT_MARK_FULLWIDTH }, //TAI THAM VOWEL SIGN OY
+    { 0x1A6E, TMT_MARK_FULLWIDTH }, //TAI THAM VOWEL SIGN E
+    { 0x1A6F, TMT_MARK_FULLWIDTH }, //TAI THAM VOWEL SIGN AE
+    { 0x1A70, TMT_MARK_FULLWIDTH }, //TAI THAM VOWEL SIGN OO
+    { 0x1A71, TMT_MARK_FULLWIDTH }, //TAI THAM VOWEL SIGN AI
+    { 0x1A72, TMT_MARK_FULLWIDTH }, //TAI THAM VOWEL SIGN THAM AI
+    { 0x1A73, TMT_MARK }, // TAI THAM VOWEL SIGN OA ABOVE
+    { 0x1A74, TMT_MARK }, // TAI THAM SIGN MAI KANG
+    { 0x1A75, TMT_MARK }, // TAI THAM SIGN TONE-1
+    { 0x1A76, TMT_MARK }, // TAI THAM SIGN TONE-2
+    { 0x1A77, TMT_MARK }, // TAI THAM SIGN KHUEN TONE-3
+    { 0x1A78, TMT_MARK }, // TAI THAM SIGN KHUEN TONE-4
+    { 0x1A79, TMT_MARK }, // TAI THAM SIGN KHUEN TONE-5
+    { 0x1A7A, TMT_MARK }, // TAI THAM SIGN RA HAAM
+    { 0x1A7B, TMT_MARK }, // TAI THAM SIGN MAI SAM
+    { 0x1A7C, TMT_MARK }, // TAI THAM SIGN KHUEN-LUE KARAN
+    { 0x1A7F, TMT_MARK }, // TAI THAM COMBINING CRYPTOGRAMMIC DOT
+    { 0x1AB0, TMT_MARK }, // COMBINING DOUBLED CIRCUMFLEX ACCENT
+    { 0x1AB1, TMT_MARK }, // COMBINING DIAERESIS-RING
+    { 0x1AB2, TMT_MARK }, // COMBINING INFINITY
+    { 0x1AB3, TMT_MARK }, // COMBINING DOWNWARDS ARROW
+    { 0x1AB4, TMT_MARK }, // COMBINING TRIPLE DOT
+    { 0x1AB5, TMT_MARK }, // COMBINING X-X BELOW
+    { 0x1AB6, TMT_MARK }, // COMBINING WIGGLY LINE BELOW
+    { 0x1AB7, TMT_MARK }, // COMBINING OPEN MARK BELOW
+    { 0x1AB8, TMT_MARK }, // COMBINING DOUBLE OPEN MARK BELOW
+    { 0x1AB9, TMT_MARK }, // COMBINING LIGHT CENTRALIZATION STROKE BELOW
+    { 0x1ABA, TMT_MARK }, // COMBINING STRONG CENTRALIZATION STROKE BELOW
+    { 0x1ABB, TMT_MARK }, // COMBINING PARENTHESES ABOVE
+    { 0x1ABC, TMT_MARK }, // COMBINING DOUBLE PARENTHESES ABOVE
+    { 0x1ABD, TMT_MARK }, // COMBINING PARENTHESES BELOW
+    { 0x1ABE, TMT_MARK }, //COMBINING PARENTHESES OVERLAY
+    { 0x1ABF, TMT_MARK }, // COMBINING LATIN SMALL LETTER W BELOW
+    { 0x1AC0, TMT_MARK }, // COMBINING LATIN SMALL LETTER TURNED W BELOW
+    { 0x1AC1, TMT_MARK }, // COMBINING LEFT PARENTHESIS ABOVE LEFT
+    { 0x1AC2, TMT_MARK }, // COMBINING RIGHT PARENTHESIS ABOVE RIGHT
+    { 0x1AC3, TMT_MARK }, // COMBINING LEFT PARENTHESIS BELOW LEFT
+    { 0x1AC4, TMT_MARK }, // COMBINING RIGHT PARENTHESIS BELOW RIGHT
+    { 0x1AC5, TMT_MARK }, // COMBINING SQUARE BRACKETS ABOVE
+    { 0x1AC6, TMT_MARK }, // COMBINING NUMBER SIGN ABOVE
+    { 0x1AC7, TMT_MARK }, // COMBINING INVERTED DOUBLE ARCH ABOVE
+    { 0x1AC8, TMT_MARK }, // COMBINING PLUS SIGN ABOVE
+    { 0x1AC9, TMT_MARK }, // COMBINING DOUBLE PLUS SIGN ABOVE
+    { 0x1ACA, TMT_MARK }, // COMBINING DOUBLE PLUS SIGN BELOW
+    { 0x1ACB, TMT_MARK }, // COMBINING TRIPLE ACUTE ACCENT
+    { 0x1ACC, TMT_MARK }, // COMBINING LATIN SMALL LETTER INSULAR G
+    { 0x1ACD, TMT_MARK }, // COMBINING LATIN SMALL LETTER INSULAR R
+    { 0x1ACE, TMT_MARK }, // COMBINING LATIN SMALL LETTER INSULAR T
+    { 0x1B00, TMT_MARK }, // BALINESE SIGN ULU RICEM
+    { 0x1B01, TMT_MARK }, // BALINESE SIGN ULU CANDRA
+    { 0x1B02, TMT_MARK }, // BALINESE SIGN CECEK
+    { 0x1B03, TMT_MARK }, // BALINESE SIGN SURANG
+    { 0x1B04, TMT_MARK_FULLWIDTH }, //BALINESE SIGN BISAH
+    { 0x1B34, TMT_MARK }, // BALINESE SIGN REREKAN
+    { 0x1B35, TMT_MARK_FULLWIDTH }, //BALINESE VOWEL SIGN TEDUNG
+    { 0x1B36, TMT_MARK }, // BALINESE VOWEL SIGN ULU
+    { 0x1B37, TMT_MARK }, // BALINESE VOWEL SIGN ULU SARI
+    { 0x1B38, TMT_MARK }, // BALINESE VOWEL SIGN SUKU
+    { 0x1B39, TMT_MARK }, // BALINESE VOWEL SIGN SUKU ILUT
+    { 0x1B3A, TMT_MARK }, // BALINESE VOWEL SIGN RA REPA
+    { 0x1B3B, TMT_MARK_FULLWIDTH }, //BALINESE VOWEL SIGN RA REPA TEDUNG
+    { 0x1B3C, TMT_MARK }, // BALINESE VOWEL SIGN LA LENGA
+    { 0x1B3D, TMT_MARK_FULLWIDTH }, //BALINESE VOWEL SIGN LA LENGA TEDUNG
+    { 0x1B3E, TMT_MARK_FULLWIDTH }, //BALINESE VOWEL SIGN TALING
+    { 0x1B3F, TMT_MARK_FULLWIDTH }, //BALINESE VOWEL SIGN TALING REPA
+    { 0x1B40, TMT_MARK_FULLWIDTH }, //BALINESE VOWEL SIGN TALING TEDUNG
+    { 0x1B41, TMT_MARK_FULLWIDTH }, //BALINESE VOWEL SIGN TALING REPA TEDUNG
+    { 0x1B42, TMT_MARK }, // BALINESE VOWEL SIGN PEPET
+    { 0x1B43, TMT_MARK_FULLWIDTH }, //BALINESE VOWEL SIGN PEPET TEDUNG
+    { 0x1B44, TMT_MARK_FULLWIDTH }, //BALINESE ADEG ADEG
+    { 0x1B6B, TMT_MARK }, // BALINESE MUSICAL SYMBOL COMBINING TEGEH
+    { 0x1B6C, TMT_MARK }, // BALINESE MUSICAL SYMBOL COMBINING ENDEP
+    { 0x1B6D, TMT_MARK }, // BALINESE MUSICAL SYMBOL COMBINING KEMPUL
+    { 0x1B6E, TMT_MARK }, // BALINESE MUSICAL SYMBOL COMBINING KEMPLI
+    { 0x1B6F, TMT_MARK }, // BALINESE MUSICAL SYMBOL COMBINING JEGOGAN
+    { 0x1B70, TMT_MARK }, // BALINESE MUSICAL SYMBOL COMBINING KEMPUL WITH JEGOGAN
+    { 0x1B71, TMT_MARK }, // BALINESE MUSICAL SYMBOL COMBINING KEMPLI WITH JEGOGAN
+    { 0x1B72, TMT_MARK }, // BALINESE MUSICAL SYMBOL COMBINING BENDE
+    { 0x1B73, TMT_MARK }, // BALINESE MUSICAL SYMBOL COMBINING GONG
+    { 0x1B80, TMT_MARK }, // SUNDANESE SIGN PANYECEK
+    { 0x1B81, TMT_MARK }, // SUNDANESE SIGN PANGLAYAR
+    { 0x1B82, TMT_MARK_FULLWIDTH }, //SUNDANESE SIGN PANGWISAD
+    { 0x1BA1, TMT_MARK_FULLWIDTH }, //SUNDANESE CONSONANT SIGN PAMINGKAL
+    { 0x1BA2, TMT_MARK }, // SUNDANESE CONSONANT SIGN PANYAKRA
+    { 0x1BA3, TMT_MARK }, // SUNDANESE CONSONANT SIGN PANYIKU
+    { 0x1BA4, TMT_MARK }, // SUNDANESE VOWEL SIGN PANGHULU
+    { 0x1BA5, TMT_MARK }, // SUNDANESE VOWEL SIGN PANYUKU
+    { 0x1BA6, TMT_MARK_FULLWIDTH }, //SUNDANESE VOWEL SIGN PANAELAENG
+    { 0x1BA7, TMT_MARK_FULLWIDTH }, //SUNDANESE VOWEL SIGN PANOLONG
+    { 0x1BA8, TMT_MARK }, // SUNDANESE VOWEL SIGN PAMEPET
+    { 0x1BA9, TMT_MARK }, // SUNDANESE VOWEL SIGN PANEULEUNG
+    { 0x1BAA, TMT_MARK_FULLWIDTH }, //SUNDANESE SIGN PAMAAEH
+    { 0x1BAB, TMT_MARK }, // SUNDANESE SIGN VIRAMA
+    { 0x1BAC, TMT_MARK }, // SUNDANESE CONSONANT SIGN PASANGAN MA
+    { 0x1BAD, TMT_MARK }, // SUNDANESE CONSONANT SIGN PASANGAN WA
+    { 0x1BE6, TMT_MARK }, // BATAK SIGN TOMPI
+    { 0x1BE7, TMT_MARK_FULLWIDTH }, //BATAK VOWEL SIGN E
+    { 0x1BE8, TMT_MARK }, // BATAK VOWEL SIGN PAKPAK E
+    { 0x1BE9, TMT_MARK }, // BATAK VOWEL SIGN EE
+    { 0x1BEA, TMT_MARK_FULLWIDTH }, //BATAK VOWEL SIGN I
+    { 0x1BEB, TMT_MARK_FULLWIDTH }, //BATAK VOWEL SIGN KARO I
+    { 0x1BEC, TMT_MARK_FULLWIDTH }, //BATAK VOWEL SIGN O
+    { 0x1BED, TMT_MARK }, // BATAK VOWEL SIGN KARO O
+    { 0x1BEE, TMT_MARK_FULLWIDTH }, //BATAK VOWEL SIGN U
+    { 0x1BEF, TMT_MARK }, // BATAK VOWEL SIGN U FOR SIMALUNGUN SA
+    { 0x1BF0, TMT_MARK }, // BATAK CONSONANT SIGN NG
+    { 0x1BF1, TMT_MARK }, // BATAK CONSONANT SIGN H
+    { 0x1BF2, TMT_MARK_FULLWIDTH }, //BATAK PANGOLAT
+    { 0x1BF3, TMT_MARK_FULLWIDTH }, //BATAK PANONGONAN
+    { 0x1C24, TMT_MARK_FULLWIDTH }, //LEPCHA SUBJOINED LETTER YA
+    { 0x1C25, TMT_MARK_FULLWIDTH }, //LEPCHA SUBJOINED LETTER RA
+    { 0x1C26, TMT_MARK_FULLWIDTH }, //LEPCHA VOWEL SIGN AA
+    { 0x1C27, TMT_MARK_FULLWIDTH }, //LEPCHA VOWEL SIGN I
+    { 0x1C28, TMT_MARK_FULLWIDTH }, //LEPCHA VOWEL SIGN O
+    { 0x1C29, TMT_MARK_FULLWIDTH }, //LEPCHA VOWEL SIGN OO
+    { 0x1C2A, TMT_MARK_FULLWIDTH }, //LEPCHA VOWEL SIGN U
+    { 0x1C2B, TMT_MARK_FULLWIDTH }, //LEPCHA VOWEL SIGN UU
+    { 0x1C2C, TMT_MARK }, // LEPCHA VOWEL SIGN E
+    { 0x1C2D, TMT_MARK }, // LEPCHA CONSONANT SIGN K
+    { 0x1C2E, TMT_MARK }, // LEPCHA CONSONANT SIGN M
+    { 0x1C2F, TMT_MARK }, // LEPCHA CONSONANT SIGN L
+    { 0x1C30, TMT_MARK }, // LEPCHA CONSONANT SIGN N
+    { 0x1C31, TMT_MARK }, // LEPCHA CONSONANT SIGN P
+    { 0x1C32, TMT_MARK }, // LEPCHA CONSONANT SIGN R
+    { 0x1C33, TMT_MARK }, // LEPCHA CONSONANT SIGN T
+    { 0x1C34, TMT_MARK_FULLWIDTH }, //LEPCHA CONSONANT SIGN NYIN-DO
+    { 0x1C35, TMT_MARK_FULLWIDTH }, //LEPCHA CONSONANT SIGN KANG
+    { 0x1C36, TMT_MARK }, // LEPCHA SIGN RAN
+    { 0x1C37, TMT_MARK }, // LEPCHA SIGN NUKTA
+    { 0x1CD0, TMT_MARK }, // VEDIC TONE KARSHANA
+    { 0x1CD1, TMT_MARK }, // VEDIC TONE SHARA
+    { 0x1CD2, TMT_MARK }, // VEDIC TONE PRENKHA
+    { 0x1CD4, TMT_MARK }, // VEDIC SIGN YAJURVEDIC MIDLINE SVARITA
+    { 0x1CD5, TMT_MARK }, // VEDIC TONE YAJURVEDIC AGGRAVATED INDEPENDENT SVARITA
+    { 0x1CD6, TMT_MARK }, // VEDIC TONE YAJURVEDIC INDEPENDENT SVARITA
+    { 0x1CD7, TMT_MARK }, // VEDIC TONE YAJURVEDIC KATHAKA INDEPENDENT SVARITA
+    { 0x1CD8, TMT_MARK }, // VEDIC TONE CANDRA BELOW
+    { 0x1CD9, TMT_MARK }, // VEDIC TONE YAJURVEDIC KATHAKA INDEPENDENT SVARITA SCHROEDER
+    { 0x1CDA, TMT_MARK }, // VEDIC TONE DOUBLE SVARITA
+    { 0x1CDB, TMT_MARK }, // VEDIC TONE TRIPLE SVARITA
+    { 0x1CDC, TMT_MARK }, // VEDIC TONE KATHAKA ANUDATTA
+    { 0x1CDD, TMT_MARK }, // VEDIC TONE DOT BELOW
+    { 0x1CDE, TMT_MARK }, // VEDIC TONE TWO DOTS BELOW
+    { 0x1CDF, TMT_MARK }, // VEDIC TONE THREE DOTS BELOW
+    { 0x1CE0, TMT_MARK }, // VEDIC TONE RIGVEDIC KASHMIRI INDEPENDENT SVARITA
+    { 0x1CE1, TMT_MARK_FULLWIDTH }, //VEDIC TONE ATHARVAVEDIC INDEPENDENT SVARITA
+    { 0x1CE2, TMT_MARK }, // VEDIC SIGN VISARGA SVARITA
+    { 0x1CE3, TMT_MARK }, // VEDIC SIGN VISARGA UDATTA
+    { 0x1CE4, TMT_MARK }, // VEDIC SIGN REVERSED VISARGA UDATTA
+    { 0x1CE5, TMT_MARK }, // VEDIC SIGN VISARGA ANUDATTA
+    { 0x1CE6, TMT_MARK }, // VEDIC SIGN REVERSED VISARGA ANUDATTA
+    { 0x1CE7, TMT_MARK }, // VEDIC SIGN VISARGA UDATTA WITH TAIL
+    { 0x1CE8, TMT_MARK }, // VEDIC SIGN VISARGA ANUDATTA WITH TAIL
+    { 0x1CED, TMT_MARK }, // VEDIC SIGN TIRYAK
+    { 0x1CF4, TMT_MARK }, // VEDIC TONE CANDRA ABOVE
+    { 0x1CF7, TMT_MARK_FULLWIDTH }, //VEDIC SIGN ATIKRAMA
+    { 0x1CF8, TMT_MARK }, // VEDIC TONE RING ABOVE
+    { 0x1CF9, TMT_MARK }, // VEDIC TONE DOUBLE RING ABOVE
+    { 0x1DC0, TMT_MARK }, // COMBINING DOTTED GRAVE ACCENT
+    { 0x1DC1, TMT_MARK }, // COMBINING DOTTED ACUTE ACCENT
+    { 0x1DC2, TMT_MARK }, // COMBINING SNAKE BELOW
+    { 0x1DC3, TMT_MARK }, // COMBINING SUSPENSION MARK
+    { 0x1DC4, TMT_MARK }, // COMBINING MACRON-ACUTE
+    { 0x1DC5, TMT_MARK }, // COMBINING GRAVE-MACRON
+    { 0x1DC6, TMT_MARK }, // COMBINING MACRON-GRAVE
+    { 0x1DC7, TMT_MARK }, // COMBINING ACUTE-MACRON
+    { 0x1DC8, TMT_MARK }, // COMBINING GRAVE-ACUTE-GRAVE
+    { 0x1DC9, TMT_MARK }, // COMBINING ACUTE-GRAVE-ACUTE
+    { 0x1DCA, TMT_MARK }, // COMBINING LATIN SMALL LETTER R BELOW
+    { 0x1DCB, TMT_MARK }, // COMBINING BREVE-MACRON
+    { 0x1DCC, TMT_MARK }, // COMBINING MACRON-BREVE
+    { 0x1DCD, TMT_MARK }, // COMBINING DOUBLE CIRCUMFLEX ABOVE
+    { 0x1DCE, TMT_MARK }, // COMBINING OGONEK ABOVE
+    { 0x1DCF, TMT_MARK }, // COMBINING ZIGZAG BELOW
+    { 0x1DD0, TMT_MARK }, // COMBINING IS BELOW
+    { 0x1DD1, TMT_MARK }, // COMBINING UR ABOVE
+    { 0x1DD2, TMT_MARK }, // COMBINING US ABOVE
+    { 0x1DD3, TMT_MARK }, // COMBINING LATIN SMALL LETTER FLATTENED OPEN A ABOVE
+    { 0x1DD4, TMT_MARK }, // COMBINING LATIN SMALL LETTER AE
+    { 0x1DD5, TMT_MARK }, // COMBINING LATIN SMALL LETTER AO
+    { 0x1DD6, TMT_MARK }, // COMBINING LATIN SMALL LETTER AV
+    { 0x1DD7, TMT_MARK }, // COMBINING LATIN SMALL LETTER C CEDILLA
+    { 0x1DD8, TMT_MARK }, // COMBINING LATIN SMALL LETTER INSULAR D
+    { 0x1DD9, TMT_MARK }, // COMBINING LATIN SMALL LETTER ETH
+    { 0x1DDA, TMT_MARK }, // COMBINING LATIN SMALL LETTER G
+    { 0x1DDB, TMT_MARK }, // COMBINING LATIN LETTER SMALL CAPITAL G
+    { 0x1DDC, TMT_MARK }, // COMBINING LATIN SMALL LETTER K
+    { 0x1DDD, TMT_MARK }, // COMBINING LATIN SMALL LETTER L
+    { 0x1DDE, TMT_MARK }, // COMBINING LATIN LETTER SMALL CAPITAL L
+    { 0x1DDF, TMT_MARK }, // COMBINING LATIN LETTER SMALL CAPITAL M
+    { 0x1DE0, TMT_MARK }, // COMBINING LATIN SMALL LETTER N
+    { 0x1DE1, TMT_MARK }, // COMBINING LATIN LETTER SMALL CAPITAL N
+    { 0x1DE2, TMT_MARK }, // COMBINING LATIN LETTER SMALL CAPITAL R
+    { 0x1DE3, TMT_MARK }, // COMBINING LATIN SMALL LETTER R ROTUNDA
+    { 0x1DE4, TMT_MARK }, // COMBINING LATIN SMALL LETTER S
+    { 0x1DE5, TMT_MARK }, // COMBINING LATIN SMALL LETTER LONG S
+    { 0x1DE6, TMT_MARK }, // COMBINING LATIN SMALL LETTER Z
+    { 0x1DE7, TMT_MARK }, // COMBINING LATIN SMALL LETTER ALPHA
+    { 0x1DE8, TMT_MARK }, // COMBINING LATIN SMALL LETTER B
+    { 0x1DE9, TMT_MARK }, // COMBINING LATIN SMALL LETTER BETA
+    { 0x1DEA, TMT_MARK }, // COMBINING LATIN SMALL LETTER SCHWA
+    { 0x1DEB, TMT_MARK }, // COMBINING LATIN SMALL LETTER F
+    { 0x1DEC, TMT_MARK }, // COMBINING LATIN SMALL LETTER L WITH DOUBLE MIDDLE TILDE
+    { 0x1DED, TMT_MARK }, // COMBINING LATIN SMALL LETTER O WITH LIGHT CENTRALIZATION STROKE
+    { 0x1DEE, TMT_MARK }, // COMBINING LATIN SMALL LETTER P
+    { 0x1DEF, TMT_MARK }, // COMBINING LATIN SMALL LETTER ESH
+    { 0x1DF0, TMT_MARK }, // COMBINING LATIN SMALL LETTER U WITH LIGHT CENTRALIZATION STROKE
+    { 0x1DF1, TMT_MARK }, // COMBINING LATIN SMALL LETTER W
+    { 0x1DF2, TMT_MARK }, // COMBINING LATIN SMALL LETTER A WITH DIAERESIS
+    { 0x1DF3, TMT_MARK }, // COMBINING LATIN SMALL LETTER O WITH DIAERESIS
+    { 0x1DF4, TMT_MARK }, // COMBINING LATIN SMALL LETTER U WITH DIAERESIS
+    { 0x1DF5, TMT_MARK }, // COMBINING UP TACK ABOVE
+    { 0x1DF6, TMT_MARK }, // COMBINING KAVYKA ABOVE RIGHT
+    { 0x1DF7, TMT_MARK }, // COMBINING KAVYKA ABOVE LEFT
+    { 0x1DF8, TMT_MARK }, // COMBINING DOT ABOVE LEFT
+    { 0x1DF9, TMT_MARK }, // COMBINING WIDE INVERTED BRIDGE BELOW
+    { 0x1DFA, TMT_MARK }, // COMBINING DOT BELOW LEFT
+    { 0x1DFB, TMT_MARK }, // COMBINING DELETION MARK
+    { 0x1DFC, TMT_MARK }, // COMBINING DOUBLE INVERTED BREVE BELOW
+    { 0x1DFD, TMT_MARK }, // COMBINING ALMOST EQUAL TO BELOW
+    { 0x1DFE, TMT_MARK }, // COMBINING LEFT ARROWHEAD ABOVE
+    { 0x1DFF, TMT_MARK }, // COMBINING RIGHT ARROWHEAD AND DOWN ARROWHEAD BELOW
+    { 0x200B, TMT_FORMAT }, // ZERO WIDTH SPACE
+    { 0x200C, TMT_FORMAT }, // ZERO WIDTH NON-JOINER
+    { 0x200D, TMT_FORMAT }, // ZERO WIDTH JOINER
+    { 0x200E, TMT_FORMAT }, // LEFT-TO-RIGHT MARK
+    { 0x200F, TMT_FORMAT }, // RIGHT-TO-LEFT MARK
+    { 0x202A, TMT_FORMAT }, // LEFT-TO-RIGHT EMBEDDING
+    { 0x202B, TMT_FORMAT }, // RIGHT-TO-LEFT EMBEDDING
+    { 0x202C, TMT_FORMAT }, // POP DIRECTIONAL FORMATTING
+    { 0x202D, TMT_FORMAT }, // LEFT-TO-RIGHT OVERRIDE
+    { 0x202E, TMT_FORMAT }, // RIGHT-TO-LEFT OVERRIDE
+    { 0x2060, TMT_FORMAT }, // WORD JOINER
+    { 0x2061, TMT_FORMAT }, // FUNCTION APPLICATION
+    { 0x2062, TMT_FORMAT }, // INVISIBLE TIMES
+    { 0x2063, TMT_FORMAT }, // INVISIBLE SEPARATOR
+    { 0x2064, TMT_FORMAT }, // INVISIBLE PLUS
+    { 0x2066, TMT_FORMAT }, // LEFT-TO-RIGHT ISOLATE
+    { 0x2067, TMT_FORMAT }, // RIGHT-TO-LEFT ISOLATE
+    { 0x2068, TMT_FORMAT }, // FIRST STRONG ISOLATE
+    { 0x2069, TMT_FORMAT }, // POP DIRECTIONAL ISOLATE
+    { 0x206A, TMT_FORMAT }, // INHIBIT SYMMETRIC SWAPPING
+    { 0x206B, TMT_FORMAT }, // ACTIVATE SYMMETRIC SWAPPING
+    { 0x206C, TMT_FORMAT }, // INHIBIT ARABIC FORM SHAPING
+    { 0x206D, TMT_FORMAT }, // ACTIVATE ARABIC FORM SHAPING
+    { 0x206E, TMT_FORMAT }, // NATIONAL DIGIT SHAPES
+    { 0x206F, TMT_FORMAT }, // NOMINAL DIGIT SHAPES
+    { 0x20D0, TMT_MARK }, // COMBINING LEFT HARPOON ABOVE
+    { 0x20D1, TMT_MARK }, // COMBINING RIGHT HARPOON ABOVE
+    { 0x20D2, TMT_MARK }, // COMBINING LONG VERTICAL LINE OVERLAY
+    { 0x20D3, TMT_MARK }, // COMBINING SHORT VERTICAL LINE OVERLAY
+    { 0x20D4, TMT_MARK }, // COMBINING ANTICLOCKWISE ARROW ABOVE
+    { 0x20D5, TMT_MARK }, // COMBINING CLOCKWISE ARROW ABOVE
+    { 0x20D6, TMT_MARK }, // COMBINING LEFT ARROW ABOVE
+    { 0x20D7, TMT_MARK }, // COMBINING RIGHT ARROW ABOVE
+    { 0x20D8, TMT_MARK }, // COMBINING RING OVERLAY
+    { 0x20D9, TMT_MARK }, // COMBINING CLOCKWISE RING OVERLAY
+    { 0x20DA, TMT_MARK }, // COMBINING ANTICLOCKWISE RING OVERLAY
+    { 0x20DB, TMT_MARK }, // COMBINING THREE DOTS ABOVE
+    { 0x20DC, TMT_MARK }, // COMBINING FOUR DOTS ABOVE
+    { 0x20DD, TMT_MARK }, //COMBINING ENCLOSING CIRCLE
+    { 0x20DE, TMT_MARK }, //COMBINING ENCLOSING SQUARE
+    { 0x20DF, TMT_MARK }, //COMBINING ENCLOSING DIAMOND
+    { 0x20E0, TMT_MARK }, //COMBINING ENCLOSING CIRCLE BACKSLASH
+    { 0x20E1, TMT_MARK }, // COMBINING LEFT RIGHT ARROW ABOVE
+    { 0x20E2, TMT_MARK }, //COMBINING ENCLOSING SCREEN
+    { 0x20E3, TMT_MARK }, //COMBINING ENCLOSING KEYCAP
+    { 0x20E4, TMT_MARK }, //COMBINING ENCLOSING UPWARD POINTING TRIANGLE
+    { 0x20E5, TMT_MARK }, // COMBINING REVERSE SOLIDUS OVERLAY
+    { 0x20E6, TMT_MARK }, // COMBINING DOUBLE VERTICAL STROKE OVERLAY
+    { 0x20E7, TMT_MARK }, // COMBINING ANNUITY SYMBOL
+    { 0x20E8, TMT_MARK }, // COMBINING TRIPLE UNDERDOT
+    { 0x20E9, TMT_MARK }, // COMBINING WIDE BRIDGE ABOVE
+    { 0x20EA, TMT_MARK }, // COMBINING LEFTWARDS ARROW OVERLAY
+    { 0x20EB, TMT_MARK }, // COMBINING LONG DOUBLE SOLIDUS OVERLAY
+    { 0x20EC, TMT_MARK }, // COMBINING RIGHTWARDS HARPOON WITH BARB DOWNWARDS
+    { 0x20ED, TMT_MARK }, // COMBINING LEFTWARDS HARPOON WITH BARB DOWNWARDS
+    { 0x20EE, TMT_MARK }, // COMBINING LEFT ARROW BELOW
+    { 0x20EF, TMT_MARK }, // COMBINING RIGHT ARROW BELOW
+    { 0x20F0, TMT_MARK }, // COMBINING ASTERISK ABOVE
+    { 0x2CEF, TMT_MARK }, // COPTIC COMBINING NI ABOVE
+    { 0x2CF0, TMT_MARK }, // COPTIC COMBINING SPIRITUS ASPER
+    { 0x2CF1, TMT_MARK }, // COPTIC COMBINING SPIRITUS LENIS
+    { 0x2D7F, TMT_MARK }, // TIFINAGH CONSONANT JOINER
+    { 0x2DE0, TMT_MARK }, // COMBINING CYRILLIC LETTER BE
+    { 0x2DE1, TMT_MARK }, // COMBINING CYRILLIC LETTER VE
+    { 0x2DE2, TMT_MARK }, // COMBINING CYRILLIC LETTER GHE
+    { 0x2DE3, TMT_MARK }, // COMBINING CYRILLIC LETTER DE
+    { 0x2DE4, TMT_MARK }, // COMBINING CYRILLIC LETTER ZHE
+    { 0x2DE5, TMT_MARK }, // COMBINING CYRILLIC LETTER ZE
+    { 0x2DE6, TMT_MARK }, // COMBINING CYRILLIC LETTER KA
+    { 0x2DE7, TMT_MARK }, // COMBINING CYRILLIC LETTER EL
+    { 0x2DE8, TMT_MARK }, // COMBINING CYRILLIC LETTER EM
+    { 0x2DE9, TMT_MARK }, // COMBINING CYRILLIC LETTER EN
+    { 0x2DEA, TMT_MARK }, // COMBINING CYRILLIC LETTER O
+    { 0x2DEB, TMT_MARK }, // COMBINING CYRILLIC LETTER PE
+    { 0x2DEC, TMT_MARK }, // COMBINING CYRILLIC LETTER ER
+    { 0x2DED, TMT_MARK }, // COMBINING CYRILLIC LETTER ES
+    { 0x2DEE, TMT_MARK }, // COMBINING CYRILLIC LETTER TE
+    { 0x2DEF, TMT_MARK }, // COMBINING CYRILLIC LETTER HA
+    { 0x2DF0, TMT_MARK }, // COMBINING CYRILLIC LETTER TSE
+    { 0x2DF1, TMT_MARK }, // COMBINING CYRILLIC LETTER CHE
+    { 0x2DF2, TMT_MARK }, // COMBINING CYRILLIC LETTER SHA
+    { 0x2DF3, TMT_MARK }, // COMBINING CYRILLIC LETTER SHCHA
+    { 0x2DF4, TMT_MARK }, // COMBINING CYRILLIC LETTER FITA
+    { 0x2DF5, TMT_MARK }, // COMBINING CYRILLIC LETTER ES-TE
+    { 0x2DF6, TMT_MARK }, // COMBINING CYRILLIC LETTER A
+    { 0x2DF7, TMT_MARK }, // COMBINING CYRILLIC LETTER IE
+    { 0x2DF8, TMT_MARK }, // COMBINING CYRILLIC LETTER DJERV
+    { 0x2DF9, TMT_MARK }, // COMBINING CYRILLIC LETTER MONOGRAPH UK
+    { 0x2DFA, TMT_MARK }, // COMBINING CYRILLIC LETTER YAT
+    { 0x2DFB, TMT_MARK }, // COMBINING CYRILLIC LETTER YU
+    { 0x2DFC, TMT_MARK }, // COMBINING CYRILLIC LETTER IOTIFIED A
+    { 0x2DFD, TMT_MARK }, // COMBINING CYRILLIC LETTER LITTLE YUS
+    { 0x2DFE, TMT_MARK }, // COMBINING CYRILLIC LETTER BIG YUS
+    { 0x2DFF, TMT_MARK }, // COMBINING CYRILLIC LETTER IOTIFIED BIG YUS
+    { 0x302A, TMT_MARK }, // IDEOGRAPHIC LEVEL TONE MARK
+    { 0x302B, TMT_MARK }, // IDEOGRAPHIC RISING TONE MARK
+    { 0x302C, TMT_MARK }, // IDEOGRAPHIC DEPARTING TONE MARK
+    { 0x302D, TMT_MARK }, // IDEOGRAPHIC ENTERING TONE MARK
+    { 0x302E, TMT_MARK_FULLWIDTH }, //HANGUL SINGLE DOT TONE MARK
+    { 0x302F, TMT_MARK_FULLWIDTH }, //HANGUL DOUBLE DOT TONE MARK
+    { 0x3099, TMT_MARK }, // COMBINING KATAKANA-HIRAGANA VOICED SOUND MARK
+    { 0x309A, TMT_MARK }, // COMBINING KATAKANA-HIRAGANA SEMI-VOICED SOUND MARK
+    { 0xA66F, TMT_MARK }, // COMBINING CYRILLIC VZMET
+    { 0xA670, TMT_MARK }, //COMBINING CYRILLIC TEN MILLIONS SIGN
+    { 0xA671, TMT_MARK }, //COMBINING CYRILLIC HUNDRED MILLIONS SIGN
+    { 0xA672, TMT_MARK }, //COMBINING CYRILLIC THOUSAND MILLIONS SIGN
+    { 0xA674, TMT_MARK }, // COMBINING CYRILLIC LETTER UKRAINIAN IE
+    { 0xA675, TMT_MARK }, // COMBINING CYRILLIC LETTER I
+    { 0xA676, TMT_MARK }, // COMBINING CYRILLIC LETTER YI
+    { 0xA677, TMT_MARK }, // COMBINING CYRILLIC LETTER U
+    { 0xA678, TMT_MARK }, // COMBINING CYRILLIC LETTER HARD SIGN
+    { 0xA679, TMT_MARK }, // COMBINING CYRILLIC LETTER YERU
+    { 0xA67A, TMT_MARK }, // COMBINING CYRILLIC LETTER SOFT SIGN
+    { 0xA67B, TMT_MARK }, // COMBINING CYRILLIC LETTER OMEGA
+    { 0xA67C, TMT_MARK }, // COMBINING CYRILLIC KAVYKA
+    { 0xA67D, TMT_MARK }, // COMBINING CYRILLIC PAYEROK
+    { 0xA69E, TMT_MARK }, // COMBINING CYRILLIC LETTER EF
+    { 0xA69F, TMT_MARK }, // COMBINING CYRILLIC LETTER IOTIFIED E
+    { 0xA6F0, TMT_MARK }, // BAMUM COMBINING MARK KOQNDON
+    { 0xA6F1, TMT_MARK }, // BAMUM COMBINING MARK TUKWENTIS
+    { 0xA802, TMT_MARK }, // SYLOTI NAGRI SIGN DVISVARA
+    { 0xA806, TMT_MARK }, // SYLOTI NAGRI SIGN HASANTA
+    { 0xA80B, TMT_MARK }, // SYLOTI NAGRI SIGN ANUSVARA
+    { 0xA823, TMT_MARK_FULLWIDTH }, //SYLOTI NAGRI VOWEL SIGN A
+    { 0xA824, TMT_MARK_FULLWIDTH }, //SYLOTI NAGRI VOWEL SIGN I
+    { 0xA825, TMT_MARK }, // SYLOTI NAGRI VOWEL SIGN U
+    { 0xA826, TMT_MARK }, // SYLOTI NAGRI VOWEL SIGN E
+    { 0xA827, TMT_MARK_FULLWIDTH }, //SYLOTI NAGRI VOWEL SIGN OO
+    { 0xA82C, TMT_MARK }, // SYLOTI NAGRI SIGN ALTERNATE HASANTA
+    { 0xA880, TMT_MARK_FULLWIDTH }, //SAURASHTRA SIGN ANUSVARA
+    { 0xA881, TMT_MARK_FULLWIDTH }, //SAURASHTRA SIGN VISARGA
+    { 0xA8B4, TMT_MARK_FULLWIDTH }, //SAURASHTRA CONSONANT SIGN HAARU
+    { 0xA8B5, TMT_MARK_FULLWIDTH }, //SAURASHTRA VOWEL SIGN AA
+    { 0xA8B6, TMT_MARK_FULLWIDTH }, //SAURASHTRA VOWEL SIGN I
+    { 0xA8B7, TMT_MARK_FULLWIDTH }, //SAURASHTRA VOWEL SIGN II
+    { 0xA8B8, TMT_MARK_FULLWIDTH }, //SAURASHTRA VOWEL SIGN U
+    { 0xA8B9, TMT_MARK_FULLWIDTH }, //SAURASHTRA VOWEL SIGN UU
+    { 0xA8BA, TMT_MARK_FULLWIDTH }, //SAURASHTRA VOWEL SIGN VOCALIC R
+    { 0xA8BB, TMT_MARK_FULLWIDTH }, //SAURASHTRA VOWEL SIGN VOCALIC RR
+    { 0xA8BC, TMT_MARK_FULLWIDTH }, //SAURASHTRA VOWEL SIGN VOCALIC L
+    { 0xA8BD, TMT_MARK_FULLWIDTH }, //SAURASHTRA VOWEL SIGN VOCALIC LL
+    { 0xA8BE, TMT_MARK_FULLWIDTH }, //SAURASHTRA VOWEL SIGN E
+    { 0xA8BF, TMT_MARK_FULLWIDTH }, //SAURASHTRA VOWEL SIGN EE
+    { 0xA8C0, TMT_MARK_FULLWIDTH }, //SAURASHTRA VOWEL SIGN AI
+    { 0xA8C1, TMT_MARK_FULLWIDTH }, //SAURASHTRA VOWEL SIGN O
+    { 0xA8C2, TMT_MARK_FULLWIDTH }, //SAURASHTRA VOWEL SIGN OO
+    { 0xA8C3, TMT_MARK_FULLWIDTH }, //SAURASHTRA VOWEL SIGN AU
+    { 0xA8C4, TMT_MARK }, // SAURASHTRA SIGN VIRAMA
+    { 0xA8C5, TMT_MARK }, // SAURASHTRA SIGN CANDRABINDU
+    { 0xA8E0, TMT_MARK }, // COMBINING DEVANAGARI DIGIT ZERO
+    { 0xA8E1, TMT_MARK }, // COMBINING DEVANAGARI DIGIT ONE
+    { 0xA8E2, TMT_MARK }, // COMBINING DEVANAGARI DIGIT TWO
+    { 0xA8E3, TMT_MARK }, // COMBINING DEVANAGARI DIGIT THREE
+    { 0xA8E4, TMT_MARK }, // COMBINING DEVANAGARI DIGIT FOUR
+    { 0xA8E5, TMT_MARK }, // COMBINING DEVANAGARI DIGIT FIVE
+    { 0xA8E6, TMT_MARK }, // COMBINING DEVANAGARI DIGIT SIX
+    { 0xA8E7, TMT_MARK }, // COMBINING DEVANAGARI DIGIT SEVEN
+    { 0xA8E8, TMT_MARK }, // COMBINING DEVANAGARI DIGIT EIGHT
+    { 0xA8E9, TMT_MARK }, // COMBINING DEVANAGARI DIGIT NINE
+    { 0xA8EA, TMT_MARK }, // COMBINING DEVANAGARI LETTER A
+    { 0xA8EB, TMT_MARK }, // COMBINING DEVANAGARI LETTER U
+    { 0xA8EC, TMT_MARK }, // COMBINING DEVANAGARI LETTER KA
+    { 0xA8ED, TMT_MARK }, // COMBINING DEVANAGARI LETTER NA
+    { 0xA8EE, TMT_MARK }, // COMBINING DEVANAGARI LETTER PA
+    { 0xA8EF, TMT_MARK }, // COMBINING DEVANAGARI LETTER RA
+    { 0xA8F0, TMT_MARK }, // COMBINING DEVANAGARI LETTER VI
+    { 0xA8F1, TMT_MARK }, // COMBINING DEVANAGARI SIGN AVAGRAHA
+    { 0xA8FF, TMT_MARK }, // DEVANAGARI VOWEL SIGN AY
+    { 0xA926, TMT_MARK }, // KAYAH LI VOWEL UE
+    { 0xA927, TMT_MARK }, // KAYAH LI VOWEL E
+    { 0xA928, TMT_MARK }, // KAYAH LI VOWEL U
+    { 0xA929, TMT_MARK }, // KAYAH LI VOWEL EE
+    { 0xA92A, TMT_MARK }, // KAYAH LI VOWEL O
+    { 0xA92B, TMT_MARK }, // KAYAH LI TONE PLOPHU
+    { 0xA92C, TMT_MARK }, // KAYAH LI TONE CALYA
+    { 0xA92D, TMT_MARK }, // KAYAH LI TONE CALYA PLOPHU
+    { 0xA947, TMT_MARK }, // REJANG VOWEL SIGN I
+    { 0xA948, TMT_MARK }, // REJANG VOWEL SIGN U
+    { 0xA949, TMT_MARK }, // REJANG VOWEL SIGN E
+    { 0xA94A, TMT_MARK }, // REJANG VOWEL SIGN AI
+    { 0xA94B, TMT_MARK }, // REJANG VOWEL SIGN O
+    { 0xA94C, TMT_MARK }, // REJANG VOWEL SIGN AU
+    { 0xA94D, TMT_MARK }, // REJANG VOWEL SIGN EU
+    { 0xA94E, TMT_MARK }, // REJANG VOWEL SIGN EA
+    { 0xA94F, TMT_MARK }, // REJANG CONSONANT SIGN NG
+    { 0xA950, TMT_MARK }, // REJANG CONSONANT SIGN N
+    { 0xA951, TMT_MARK }, // REJANG CONSONANT SIGN R
+    { 0xA952, TMT_MARK_FULLWIDTH }, //REJANG CONSONANT SIGN H
+    { 0xA953, TMT_MARK_FULLWIDTH }, //REJANG VIRAMA
+    { 0xA980, TMT_MARK }, // JAVANESE SIGN PANYANGGA
+    { 0xA981, TMT_MARK }, // JAVANESE SIGN CECAK
+    { 0xA982, TMT_MARK }, // JAVANESE SIGN LAYAR
+    { 0xA983, TMT_MARK_FULLWIDTH }, //JAVANESE SIGN WIGNYAN
+    { 0xA9B3, TMT_MARK }, // JAVANESE SIGN CECAK TELU
+    { 0xA9B4, TMT_MARK_FULLWIDTH }, //JAVANESE VOWEL SIGN TARUNG
+    { 0xA9B5, TMT_MARK_FULLWIDTH }, //JAVANESE VOWEL SIGN TOLONG
+    { 0xA9B6, TMT_MARK }, // JAVANESE VOWEL SIGN WULU
+    { 0xA9B7, TMT_MARK }, // JAVANESE VOWEL SIGN WULU MELIK
+    { 0xA9B8, TMT_MARK }, // JAVANESE VOWEL SIGN SUKU
+    { 0xA9B9, TMT_MARK }, // JAVANESE VOWEL SIGN SUKU MENDUT
+    { 0xA9BA, TMT_MARK_FULLWIDTH }, //JAVANESE VOWEL SIGN TALING
+    { 0xA9BB, TMT_MARK_FULLWIDTH }, //JAVANESE VOWEL SIGN DIRGA MURE
+    { 0xA9BC, TMT_MARK }, // JAVANESE VOWEL SIGN PEPET
+    { 0xA9BD, TMT_MARK }, // JAVANESE CONSONANT SIGN KERET
+    { 0xA9BE, TMT_MARK_FULLWIDTH }, //JAVANESE CONSONANT SIGN PENGKAL
+    { 0xA9BF, TMT_MARK_FULLWIDTH }, //JAVANESE CONSONANT SIGN CAKRA
+    { 0xA9C0, TMT_MARK_FULLWIDTH }, //JAVANESE PANGKON
+    { 0xA9E5, TMT_MARK }, // MYANMAR SIGN SHAN SAW
+    { 0xAA29, TMT_MARK }, // CHAM VOWEL SIGN AA
+    { 0xAA2A, TMT_MARK }, // CHAM VOWEL SIGN I
+    { 0xAA2B, TMT_MARK }, // CHAM VOWEL SIGN II
+    { 0xAA2C, TMT_MARK }, // CHAM VOWEL SIGN EI
+    { 0xAA2D, TMT_MARK }, // CHAM VOWEL SIGN U
+    { 0xAA2E, TMT_MARK }, // CHAM VOWEL SIGN OE
+    { 0xAA2F, TMT_MARK_FULLWIDTH }, //CHAM VOWEL SIGN O
+    { 0xAA30, TMT_MARK_FULLWIDTH }, //CHAM VOWEL SIGN AI
+    { 0xAA31, TMT_MARK }, // CHAM VOWEL SIGN AU
+    { 0xAA32, TMT_MARK }, // CHAM VOWEL SIGN UE
+    { 0xAA33, TMT_MARK_FULLWIDTH }, //CHAM CONSONANT SIGN YA
+    { 0xAA34, TMT_MARK_FULLWIDTH }, //CHAM CONSONANT SIGN RA
+    { 0xAA35, TMT_MARK }, // CHAM CONSONANT SIGN LA
+    { 0xAA36, TMT_MARK }, // CHAM CONSONANT SIGN WA
+    { 0xAA43, TMT_MARK }, // CHAM CONSONANT SIGN FINAL NG
+    { 0xAA4C, TMT_MARK }, // CHAM CONSONANT SIGN FINAL M
+    { 0xAA4D, TMT_MARK_FULLWIDTH }, //CHAM CONSONANT SIGN FINAL H
+    { 0xAA7B, TMT_MARK_FULLWIDTH }, //MYANMAR SIGN PAO KAREN TONE
+    { 0xAA7C, TMT_MARK }, // MYANMAR SIGN TAI LAING TONE-2
+    { 0xAA7D, TMT_MARK_FULLWIDTH }, //MYANMAR SIGN TAI LAING TONE-5
+    { 0xAAB0, TMT_MARK }, // TAI VIET MAI KANG
+    { 0xAAB2, TMT_MARK }, // TAI VIET VOWEL I
+    { 0xAAB3, TMT_MARK }, // TAI VIET VOWEL UE
+    { 0xAAB4, TMT_MARK }, // TAI VIET VOWEL U
+    { 0xAAB7, TMT_MARK }, // TAI VIET MAI KHIT
+    { 0xAAB8, TMT_MARK }, // TAI VIET VOWEL IA
+    { 0xAABE, TMT_MARK }, // TAI VIET VOWEL AM
+    { 0xAABF, TMT_MARK }, // TAI VIET TONE MAI EK
+    { 0xAAC1, TMT_MARK }, // TAI VIET TONE MAI THO
+    { 0xAAEB, TMT_MARK_FULLWIDTH }, //MEETEI MAYEK VOWEL SIGN II
+    { 0xAAEC, TMT_MARK }, // MEETEI MAYEK VOWEL SIGN UU
+    { 0xAAED, TMT_MARK }, // MEETEI MAYEK VOWEL SIGN AAI
+    { 0xAAEE, TMT_MARK_FULLWIDTH }, //MEETEI MAYEK VOWEL SIGN AU
+    { 0xAAEF, TMT_MARK_FULLWIDTH }, //MEETEI MAYEK VOWEL SIGN AAU
+    { 0xAAF5, TMT_MARK_FULLWIDTH }, //MEETEI MAYEK VOWEL SIGN VISARGA
+    { 0xAAF6, TMT_MARK }, // MEETEI MAYEK VIRAMA
+    { 0xABE3, TMT_MARK_FULLWIDTH }, //MEETEI MAYEK VOWEL SIGN ONAP
+    { 0xABE4, TMT_MARK_FULLWIDTH }, //MEETEI MAYEK VOWEL SIGN INAP
+    { 0xABE5, TMT_MARK }, // MEETEI MAYEK VOWEL SIGN ANAP
+    { 0xABE6, TMT_MARK_FULLWIDTH }, //MEETEI MAYEK VOWEL SIGN YENAP
+    { 0xABE7, TMT_MARK_FULLWIDTH }, //MEETEI MAYEK VOWEL SIGN SOUNAP
+    { 0xABE8, TMT_MARK }, // MEETEI MAYEK VOWEL SIGN UNAP
+    { 0xABE9, TMT_MARK_FULLWIDTH }, //MEETEI MAYEK VOWEL SIGN CHEINAP
+    { 0xABEA, TMT_MARK_FULLWIDTH }, //MEETEI MAYEK VOWEL SIGN NUNG
+    { 0xABEC, TMT_MARK_FULLWIDTH }, //MEETEI MAYEK LUM IYEK
+    { 0xABED, TMT_MARK }, // MEETEI MAYEK APUN IYEK
+    { 0xFB1E, TMT_MARK }, // HEBREW POINT JUDEO-SPANISH VARIKA
+    { 0xFE00, TMT_MARK }, // VARIATION SELECTOR-1
+    { 0xFE01, TMT_MARK }, // VARIATION SELECTOR-2
+    { 0xFE02, TMT_MARK }, // VARIATION SELECTOR-3
+    { 0xFE03, TMT_MARK }, // VARIATION SELECTOR-4
+    { 0xFE04, TMT_MARK }, // VARIATION SELECTOR-5
+    { 0xFE05, TMT_MARK }, // VARIATION SELECTOR-6
+    { 0xFE06, TMT_MARK }, // VARIATION SELECTOR-7
+    { 0xFE07, TMT_MARK }, // VARIATION SELECTOR-8
+    { 0xFE08, TMT_MARK }, // VARIATION SELECTOR-9
+    { 0xFE09, TMT_MARK }, // VARIATION SELECTOR-10
+    { 0xFE0A, TMT_MARK }, // VARIATION SELECTOR-11
+    { 0xFE0B, TMT_MARK }, // VARIATION SELECTOR-12
+    { 0xFE0C, TMT_MARK }, // VARIATION SELECTOR-13
+    { 0xFE0D, TMT_MARK }, // VARIATION SELECTOR-14
+    { 0xFE0E, TMT_MARK }, // VARIATION SELECTOR-15
+    { 0xFE0F, TMT_MARK }, // VARIATION SELECTOR-16
+    { 0xFE20, TMT_MARK }, // COMBINING LIGATURE LEFT HALF
+    { 0xFE21, TMT_MARK }, // COMBINING LIGATURE RIGHT HALF
+    { 0xFE22, TMT_MARK }, // COMBINING DOUBLE TILDE LEFT HALF
+    { 0xFE23, TMT_MARK }, // COMBINING DOUBLE TILDE RIGHT HALF
+    { 0xFE24, TMT_MARK }, // COMBINING MACRON LEFT HALF
+    { 0xFE25, TMT_MARK }, // COMBINING MACRON RIGHT HALF
+    { 0xFE26, TMT_MARK }, // COMBINING CONJOINING MACRON
+    { 0xFE27, TMT_MARK }, // COMBINING LIGATURE LEFT HALF BELOW
+    { 0xFE28, TMT_MARK }, // COMBINING LIGATURE RIGHT HALF BELOW
+    { 0xFE29, TMT_MARK }, // COMBINING TILDE LEFT HALF BELOW
+    { 0xFE2A, TMT_MARK }, // COMBINING TILDE RIGHT HALF BELOW
+    { 0xFE2B, TMT_MARK }, // COMBINING MACRON LEFT HALF BELOW
+    { 0xFE2C, TMT_MARK }, // COMBINING MACRON RIGHT HALF BELOW
+    { 0xFE2D, TMT_MARK }, // COMBINING CONJOINING MACRON BELOW
+    { 0xFE2E, TMT_MARK }, // COMBINING CYRILLIC TITLO LEFT HALF
+    { 0xFE2F, TMT_MARK }, // COMBINING CYRILLIC TITLO RIGHT HALF
+    { 0xFEFF, TMT_FORMAT }, // ZERO WIDTH NO-BREAK SPACE
+    { 0xFFF9, TMT_FORMAT }, // INTERLINEAR ANNOTATION ANCHOR
+    { 0xFFFA, TMT_FORMAT }, // INTERLINEAR ANNOTATION SEPARATOR
+    { 0xFFFB, TMT_FORMAT }, // INTERLINEAR ANNOTATION TERMINATOR
+    { 0x101FD, TMT_MARK }, // PHAISTOS DISC SIGN COMBINING OBLIQUE STROKE
+    { 0x102E0, TMT_MARK }, // COPTIC EPACT THOUSANDS MARK
+    { 0x10376, TMT_MARK }, // COMBINING OLD PERMIC LETTER AN
+    { 0x10377, TMT_MARK }, // COMBINING OLD PERMIC LETTER DOI
+    { 0x10378, TMT_MARK }, // COMBINING OLD PERMIC LETTER ZATA
+    { 0x10379, TMT_MARK }, // COMBINING OLD PERMIC LETTER NENOE
+    { 0x1037A, TMT_MARK }, // COMBINING OLD PERMIC LETTER SII
+    { 0x10A01, TMT_MARK }, // KHAROSHTHI VOWEL SIGN I
+    { 0x10A02, TMT_MARK }, // KHAROSHTHI VOWEL SIGN U
+    { 0x10A03, TMT_MARK }, // KHAROSHTHI VOWEL SIGN VOCALIC R
+    { 0x10A05, TMT_MARK }, // KHAROSHTHI VOWEL SIGN E
+    { 0x10A06, TMT_MARK }, // KHAROSHTHI VOWEL SIGN O
+    { 0x10A0C, TMT_MARK }, // KHAROSHTHI VOWEL LENGTH MARK
+    { 0x10A0D, TMT_MARK }, // KHAROSHTHI SIGN DOUBLE RING BELOW
+    { 0x10A0E, TMT_MARK }, // KHAROSHTHI SIGN ANUSVARA
+    { 0x10A0F, TMT_MARK }, // KHAROSHTHI SIGN VISARGA
+    { 0x10A38, TMT_MARK }, // KHAROSHTHI SIGN BAR ABOVE
+    { 0x10A39, TMT_MARK }, // KHAROSHTHI SIGN CAUDA
+    { 0x10A3A, TMT_MARK }, // KHAROSHTHI SIGN DOT BELOW
+    { 0x10A3F, TMT_MARK }, // KHAROSHTHI VIRAMA
+    { 0x10AE5, TMT_MARK }, // MANICHAEAN ABBREVIATION MARK ABOVE
+    { 0x10AE6, TMT_MARK }, // MANICHAEAN ABBREVIATION MARK BELOW
+    { 0x10D24, TMT_MARK }, // HANIFI ROHINGYA SIGN HARBAHAY
+    { 0x10D25, TMT_MARK }, // HANIFI ROHINGYA SIGN TAHALA
+    { 0x10D26, TMT_MARK }, // HANIFI ROHINGYA SIGN TANA
+    { 0x10D27, TMT_MARK }, // HANIFI ROHINGYA SIGN TASSI
+    { 0x10D69, TMT_MARK }, // GARAY VOWEL SIGN E
+    { 0x10D6A, TMT_MARK }, // GARAY CONSONANT GEMINATION MARK
+    { 0x10D6B, TMT_MARK }, // GARAY COMBINING DOT ABOVE
+    { 0x10D6C, TMT_MARK }, // GARAY COMBINING DOUBLE DOT ABOVE
+    { 0x10D6D, TMT_MARK }, // GARAY CONSONANT NASALIZATION MARK
+    { 0x10EAB, TMT_MARK }, // YEZIDI COMBINING HAMZA MARK
+    { 0x10EAC, TMT_MARK }, // YEZIDI COMBINING MADDA MARK
+    { 0x10EFC, TMT_MARK }, // ARABIC COMBINING ALEF OVERLAY
+    { 0x10EFD, TMT_MARK }, // ARABIC SMALL LOW WORD SAKTA
+    { 0x10EFE, TMT_MARK }, // ARABIC SMALL LOW WORD QASR
+    { 0x10EFF, TMT_MARK }, // ARABIC SMALL LOW WORD MADDA
+    { 0x10F46, TMT_MARK }, // SOGDIAN COMBINING DOT BELOW
+    { 0x10F47, TMT_MARK }, // SOGDIAN COMBINING TWO DOTS BELOW
+    { 0x10F48, TMT_MARK }, // SOGDIAN COMBINING DOT ABOVE
+    { 0x10F49, TMT_MARK }, // SOGDIAN COMBINING TWO DOTS ABOVE
+    { 0x10F4A, TMT_MARK }, // SOGDIAN COMBINING CURVE ABOVE
+    { 0x10F4B, TMT_MARK }, // SOGDIAN COMBINING CURVE BELOW
+    { 0x10F4C, TMT_MARK }, // SOGDIAN COMBINING HOOK ABOVE
+    { 0x10F4D, TMT_MARK }, // SOGDIAN COMBINING HOOK BELOW
+    { 0x10F4E, TMT_MARK }, // SOGDIAN COMBINING LONG HOOK BELOW
+    { 0x10F4F, TMT_MARK }, // SOGDIAN COMBINING RESH BELOW
+    { 0x10F50, TMT_MARK }, // SOGDIAN COMBINING STROKE BELOW
+    { 0x10F82, TMT_MARK }, // OLD UYGHUR COMBINING DOT ABOVE
+    { 0x10F83, TMT_MARK }, // OLD UYGHUR COMBINING DOT BELOW
+    { 0x10F84, TMT_MARK }, // OLD UYGHUR COMBINING TWO DOTS ABOVE
+    { 0x10F85, TMT_MARK }, // OLD UYGHUR COMBINING TWO DOTS BELOW
+    { 0x11000, TMT_MARK_FULLWIDTH }, //BRAHMI SIGN CANDRABINDU
+    { 0x11001, TMT_MARK }, // BRAHMI SIGN ANUSVARA
+    { 0x11002, TMT_MARK_FULLWIDTH }, //BRAHMI SIGN VISARGA
+    { 0x11038, TMT_MARK }, // BRAHMI VOWEL SIGN AA
+    { 0x11039, TMT_MARK }, // BRAHMI VOWEL SIGN BHATTIPROLU AA
+    { 0x1103A, TMT_MARK }, // BRAHMI VOWEL SIGN I
+    { 0x1103B, TMT_MARK }, // BRAHMI VOWEL SIGN II
+    { 0x1103C, TMT_MARK }, // BRAHMI VOWEL SIGN U
+    { 0x1103D, TMT_MARK }, // BRAHMI VOWEL SIGN UU
+    { 0x1103E, TMT_MARK }, // BRAHMI VOWEL SIGN VOCALIC R
+    { 0x1103F, TMT_MARK }, // BRAHMI VOWEL SIGN VOCALIC RR
+    { 0x11040, TMT_MARK }, // BRAHMI VOWEL SIGN VOCALIC L
+    { 0x11041, TMT_MARK }, // BRAHMI VOWEL SIGN VOCALIC LL
+    { 0x11042, TMT_MARK }, // BRAHMI VOWEL SIGN E
+    { 0x11043, TMT_MARK }, // BRAHMI VOWEL SIGN AI
+    { 0x11044, TMT_MARK }, // BRAHMI VOWEL SIGN O
+    { 0x11045, TMT_MARK }, // BRAHMI VOWEL SIGN AU
+    { 0x11046, TMT_MARK }, // BRAHMI VIRAMA
+    { 0x11070, TMT_MARK }, // BRAHMI SIGN OLD TAMIL VIRAMA
+    { 0x11073, TMT_MARK }, // BRAHMI VOWEL SIGN OLD TAMIL SHORT E
+    { 0x11074, TMT_MARK }, // BRAHMI VOWEL SIGN OLD TAMIL SHORT O
+    { 0x1107F, TMT_MARK }, // BRAHMI NUMBER JOINER
+    { 0x11080, TMT_MARK }, // KAITHI SIGN CANDRABINDU
+    { 0x11081, TMT_MARK }, // KAITHI SIGN ANUSVARA
+    { 0x11082, TMT_MARK_FULLWIDTH }, //KAITHI SIGN VISARGA
+    { 0x110B0, TMT_MARK_FULLWIDTH }, //KAITHI VOWEL SIGN AA
+    { 0x110B1, TMT_MARK_FULLWIDTH }, //KAITHI VOWEL SIGN I
+    { 0x110B2, TMT_MARK_FULLWIDTH }, //KAITHI VOWEL SIGN II
+    { 0x110B3, TMT_MARK }, // KAITHI VOWEL SIGN U
+    { 0x110B4, TMT_MARK }, // KAITHI VOWEL SIGN UU
+    { 0x110B5, TMT_MARK }, // KAITHI VOWEL SIGN E
+    { 0x110B6, TMT_MARK }, // KAITHI VOWEL SIGN AI
+    { 0x110B7, TMT_MARK_FULLWIDTH }, //KAITHI VOWEL SIGN O
+    { 0x110B8, TMT_MARK_FULLWIDTH }, //KAITHI VOWEL SIGN AU
+    { 0x110B9, TMT_MARK }, // KAITHI SIGN VIRAMA
+    { 0x110BA, TMT_MARK }, // KAITHI SIGN NUKTA
+    { 0x110BD, TMT_FORMAT }, // KAITHI NUMBER SIGN
+    { 0x110C2, TMT_MARK }, // KAITHI VOWEL SIGN VOCALIC R
+    { 0x110CD, TMT_FORMAT }, // KAITHI NUMBER SIGN ABOVE
+    { 0x11100, TMT_MARK }, // CHAKMA SIGN CANDRABINDU
+    { 0x11101, TMT_MARK }, // CHAKMA SIGN ANUSVARA
+    { 0x11102, TMT_MARK }, // CHAKMA SIGN VISARGA
+    { 0x11127, TMT_MARK }, // CHAKMA VOWEL SIGN A
+    { 0x11128, TMT_MARK }, // CHAKMA VOWEL SIGN I
+    { 0x11129, TMT_MARK }, // CHAKMA VOWEL SIGN II
+    { 0x1112A, TMT_MARK }, // CHAKMA VOWEL SIGN U
+    { 0x1112B, TMT_MARK }, // CHAKMA VOWEL SIGN UU
+    { 0x1112C, TMT_MARK_FULLWIDTH }, //CHAKMA VOWEL SIGN E
+    { 0x1112D, TMT_MARK }, // CHAKMA VOWEL SIGN AI
+    { 0x1112E, TMT_MARK }, // CHAKMA VOWEL SIGN O
+    { 0x1112F, TMT_MARK }, // CHAKMA VOWEL SIGN AU
+    { 0x11130, TMT_MARK }, // CHAKMA VOWEL SIGN OI
+    { 0x11131, TMT_MARK }, // CHAKMA O MARK
+    { 0x11132, TMT_MARK }, // CHAKMA AU MARK
+    { 0x11133, TMT_MARK }, // CHAKMA VIRAMA
+    { 0x11134, TMT_MARK }, // CHAKMA MAAYYAA
+    { 0x11145, TMT_MARK_FULLWIDTH }, //CHAKMA VOWEL SIGN AA
+    { 0x11146, TMT_MARK_FULLWIDTH }, //CHAKMA VOWEL SIGN EI
+    { 0x11173, TMT_MARK }, // MAHAJANI SIGN NUKTA
+    { 0x11180, TMT_MARK }, // SHARADA SIGN CANDRABINDU
+    { 0x11181, TMT_MARK }, // SHARADA SIGN ANUSVARA
+    { 0x11182, TMT_MARK_FULLWIDTH }, //SHARADA SIGN VISARGA
+    { 0x111B3, TMT_MARK_FULLWIDTH }, //SHARADA VOWEL SIGN AA
+    { 0x111B4, TMT_MARK_FULLWIDTH }, //SHARADA VOWEL SIGN I
+    { 0x111B5, TMT_MARK_FULLWIDTH }, //SHARADA VOWEL SIGN II
+    { 0x111B6, TMT_MARK }, // SHARADA VOWEL SIGN U
+    { 0x111B7, TMT_MARK }, // SHARADA VOWEL SIGN UU
+    { 0x111B8, TMT_MARK }, // SHARADA VOWEL SIGN VOCALIC R
+    { 0x111B9, TMT_MARK }, // SHARADA VOWEL SIGN VOCALIC RR
+    { 0x111BA, TMT_MARK }, // SHARADA VOWEL SIGN VOCALIC L
+    { 0x111BB, TMT_MARK }, // SHARADA VOWEL SIGN VOCALIC LL
+    { 0x111BC, TMT_MARK }, // SHARADA VOWEL SIGN E
+    { 0x111BD, TMT_MARK }, // SHARADA VOWEL SIGN AI
+    { 0x111BE, TMT_MARK }, // SHARADA VOWEL SIGN O
+    { 0x111BF, TMT_MARK_FULLWIDTH }, //SHARADA VOWEL SIGN AU
+    { 0x111C0, TMT_MARK_FULLWIDTH }, //SHARADA SIGN VIRAMA
+    { 0x111C9, TMT_MARK }, // SHARADA SANDHI MARK
+    { 0x111CA, TMT_MARK }, // SHARADA SIGN NUKTA
+    { 0x111CB, TMT_MARK }, // SHARADA VOWEL MODIFIER MARK
+    { 0x111CC, TMT_MARK }, // SHARADA EXTRA SHORT VOWEL MARK
+    { 0x111CE, TMT_MARK_FULLWIDTH }, //SHARADA VOWEL SIGN PRISHTHAMATRA E
+    { 0x111CF, TMT_MARK }, // SHARADA SIGN INVERTED CANDRABINDU
+    { 0x1122C, TMT_MARK_FULLWIDTH }, //KHOJKI VOWEL SIGN AA
+    { 0x1122D, TMT_MARK_FULLWIDTH }, //KHOJKI VOWEL SIGN I
+    { 0x1122E, TMT_MARK_FULLWIDTH }, //KHOJKI VOWEL SIGN II
+    { 0x1122F, TMT_MARK }, // KHOJKI VOWEL SIGN U
+    { 0x11230, TMT_MARK }, // KHOJKI VOWEL SIGN E
+    { 0x11231, TMT_MARK }, // KHOJKI VOWEL SIGN AI
+    { 0x11232, TMT_MARK_FULLWIDTH }, //KHOJKI VOWEL SIGN O
+    { 0x11233, TMT_MARK_FULLWIDTH }, //KHOJKI VOWEL SIGN AU
+    { 0x11234, TMT_MARK }, // KHOJKI SIGN ANUSVARA
+    { 0x11235, TMT_MARK_FULLWIDTH }, //KHOJKI SIGN VIRAMA
+    { 0x11236, TMT_MARK }, // KHOJKI SIGN NUKTA
+    { 0x11237, TMT_MARK }, // KHOJKI SIGN SHADDA
+    { 0x1123E, TMT_MARK }, // KHOJKI SIGN SUKUN
+    { 0x11241, TMT_MARK }, // KHOJKI VOWEL SIGN VOCALIC R
+    { 0x112DF, TMT_MARK }, // KHUDAWADI SIGN ANUSVARA
+    { 0x112E0, TMT_MARK_FULLWIDTH }, //KHUDAWADI VOWEL SIGN AA
+    { 0x112E1, TMT_MARK_FULLWIDTH }, //KHUDAWADI VOWEL SIGN I
+    { 0x112E2, TMT_MARK_FULLWIDTH }, //KHUDAWADI VOWEL SIGN II
+    { 0x112E3, TMT_MARK }, // KHUDAWADI VOWEL SIGN U
+    { 0x112E4, TMT_MARK }, // KHUDAWADI VOWEL SIGN UU
+    { 0x112E5, TMT_MARK }, // KHUDAWADI VOWEL SIGN E
+    { 0x112E6, TMT_MARK }, // KHUDAWADI VOWEL SIGN AI
+    { 0x112E7, TMT_MARK }, // KHUDAWADI VOWEL SIGN O
+    { 0x112E8, TMT_MARK }, // KHUDAWADI VOWEL SIGN AU
+    { 0x112E9, TMT_MARK }, // KHUDAWADI SIGN NUKTA
+    { 0x112EA, TMT_MARK }, // KHUDAWADI SIGN VIRAMA
+    { 0x11300, TMT_MARK }, // GRANTHA SIGN COMBINING ANUSVARA ABOVE
+    { 0x11301, TMT_MARK }, // GRANTHA SIGN CANDRABINDU
+    { 0x11302, TMT_MARK_FULLWIDTH }, //GRANTHA SIGN ANUSVARA
+    { 0x11303, TMT_MARK_FULLWIDTH }, //GRANTHA SIGN VISARGA
+    { 0x1133B, TMT_MARK }, // COMBINING BINDU BELOW
+    { 0x1133C, TMT_MARK }, // GRANTHA SIGN NUKTA
+    { 0x1133E, TMT_MARK_FULLWIDTH }, //GRANTHA VOWEL SIGN AA
+    { 0x1133F, TMT_MARK_FULLWIDTH }, //GRANTHA VOWEL SIGN I
+    { 0x11340, TMT_MARK }, // GRANTHA VOWEL SIGN II
+    { 0x11341, TMT_MARK_FULLWIDTH }, //GRANTHA VOWEL SIGN U
+    { 0x11342, TMT_MARK_FULLWIDTH }, //GRANTHA VOWEL SIGN UU
+    { 0x11343, TMT_MARK_FULLWIDTH }, //GRANTHA VOWEL SIGN VOCALIC R
+    { 0x11344, TMT_MARK_FULLWIDTH }, //GRANTHA VOWEL SIGN VOCALIC RR
+    { 0x11347, TMT_MARK_FULLWIDTH }, //GRANTHA VOWEL SIGN EE
+    { 0x11348, TMT_MARK_FULLWIDTH }, //GRANTHA VOWEL SIGN AI
+    { 0x1134B, TMT_MARK_FULLWIDTH }, //GRANTHA VOWEL SIGN OO
+    { 0x1134C, TMT_MARK_FULLWIDTH }, //GRANTHA VOWEL SIGN AU
+    { 0x1134D, TMT_MARK_FULLWIDTH }, //GRANTHA SIGN VIRAMA
+    { 0x11357, TMT_MARK_FULLWIDTH }, //GRANTHA AU LENGTH MARK
+    { 0x11362, TMT_MARK_FULLWIDTH }, //GRANTHA VOWEL SIGN VOCALIC L
+    { 0x11363, TMT_MARK_FULLWIDTH }, //GRANTHA VOWEL SIGN VOCALIC LL
+    { 0x11366, TMT_MARK }, // COMBINING GRANTHA DIGIT ZERO
+    { 0x11367, TMT_MARK }, // COMBINING GRANTHA DIGIT ONE
+    { 0x11368, TMT_MARK }, // COMBINING GRANTHA DIGIT TWO
+    { 0x11369, TMT_MARK }, // COMBINING GRANTHA DIGIT THREE
+    { 0x1136A, TMT_MARK }, // COMBINING GRANTHA DIGIT FOUR
+    { 0x1136B, TMT_MARK }, // COMBINING GRANTHA DIGIT FIVE
+    { 0x1136C, TMT_MARK }, // COMBINING GRANTHA DIGIT SIX
+    { 0x11370, TMT_MARK }, // COMBINING GRANTHA LETTER A
+    { 0x11371, TMT_MARK }, // COMBINING GRANTHA LETTER KA
+    { 0x11372, TMT_MARK }, // COMBINING GRANTHA LETTER NA
+    { 0x11373, TMT_MARK }, // COMBINING GRANTHA LETTER VI
+    { 0x11374, TMT_MARK }, // COMBINING GRANTHA LETTER PA
+    { 0x113B8, TMT_MARK_FULLWIDTH }, //TULU-TIGALARI VOWEL SIGN AA
+    { 0x113B9, TMT_MARK_FULLWIDTH }, //TULU-TIGALARI VOWEL SIGN I
+    { 0x113BA, TMT_MARK_FULLWIDTH }, //TULU-TIGALARI VOWEL SIGN II
+    { 0x113BB, TMT_MARK }, // TULU-TIGALARI VOWEL SIGN U
+    { 0x113BC, TMT_MARK }, // TULU-TIGALARI VOWEL SIGN UU
+    { 0x113BD, TMT_MARK }, // TULU-TIGALARI VOWEL SIGN VOCALIC R
+    { 0x113BE, TMT_MARK }, // TULU-TIGALARI VOWEL SIGN VOCALIC RR
+    { 0x113BF, TMT_MARK }, // TULU-TIGALARI VOWEL SIGN VOCALIC L
+    { 0x113C0, TMT_MARK }, // TULU-TIGALARI VOWEL SIGN VOCALIC LL
+    { 0x113C2, TMT_MARK_FULLWIDTH }, //TULU-TIGALARI VOWEL SIGN EE
+    { 0x113C5, TMT_MARK_FULLWIDTH }, //TULU-TIGALARI VOWEL SIGN AI
+    { 0x113C7, TMT_MARK_FULLWIDTH }, //TULU-TIGALARI VOWEL SIGN OO
+    { 0x113C8, TMT_MARK_FULLWIDTH }, //TULU-TIGALARI VOWEL SIGN AU
+    { 0x113C9, TMT_MARK_FULLWIDTH }, //TULU-TIGALARI AU LENGTH MARK
+    { 0x113CA, TMT_MARK_FULLWIDTH }, //TULU-TIGALARI SIGN CANDRA ANUNASIKA
+    { 0x113CC, TMT_MARK_FULLWIDTH }, //TULU-TIGALARI SIGN ANUSVARA
+    { 0x113CD, TMT_MARK_FULLWIDTH }, //TULU-TIGALARI SIGN VISARGA
+    { 0x113CE, TMT_MARK }, // TULU-TIGALARI SIGN VIRAMA
+    { 0x113CF, TMT_MARK_FULLWIDTH }, //TULU-TIGALARI SIGN LOOPED VIRAMA
+    { 0x113D0, TMT_MARK }, // TULU-TIGALARI CONJOINER
+    { 0x113D2, TMT_MARK }, // TULU-TIGALARI GEMINATION MARK
+    { 0x113E1, TMT_MARK }, // TULU-TIGALARI VEDIC TONE SVARITA
+    { 0x113E2, TMT_MARK }, // TULU-TIGALARI VEDIC TONE ANUDATTA
+    { 0x11435, TMT_MARK_FULLWIDTH }, //NEWA VOWEL SIGN AA
+    { 0x11436, TMT_MARK_FULLWIDTH }, //NEWA VOWEL SIGN I
+    { 0x11437, TMT_MARK_FULLWIDTH }, //NEWA VOWEL SIGN II
+    { 0x11438, TMT_MARK }, // NEWA VOWEL SIGN U
+    { 0x11439, TMT_MARK }, // NEWA VOWEL SIGN UU
+    { 0x1143A, TMT_MARK }, // NEWA VOWEL SIGN VOCALIC R
+    { 0x1143B, TMT_MARK }, // NEWA VOWEL SIGN VOCALIC RR
+    { 0x1143C, TMT_MARK }, // NEWA VOWEL SIGN VOCALIC L
+    { 0x1143D, TMT_MARK }, // NEWA VOWEL SIGN VOCALIC LL
+    { 0x1143E, TMT_MARK }, // NEWA VOWEL SIGN E
+    { 0x1143F, TMT_MARK }, // NEWA VOWEL SIGN AI
+    { 0x11440, TMT_MARK_FULLWIDTH }, //NEWA VOWEL SIGN O
+    { 0x11441, TMT_MARK_FULLWIDTH }, //NEWA VOWEL SIGN AU
+    { 0x11442, TMT_MARK }, // NEWA SIGN VIRAMA
+    { 0x11443, TMT_MARK }, // NEWA SIGN CANDRABINDU
+    { 0x11444, TMT_MARK }, // NEWA SIGN ANUSVARA
+    { 0x11445, TMT_MARK_FULLWIDTH }, //NEWA SIGN VISARGA
+    { 0x11446, TMT_MARK }, // NEWA SIGN NUKTA
+    { 0x1145E, TMT_MARK }, // NEWA SANDHI MARK
+    { 0x114B0, TMT_MARK_FULLWIDTH }, //TIRHUTA VOWEL SIGN AA
+    { 0x114B1, TMT_MARK_FULLWIDTH }, //TIRHUTA VOWEL SIGN I
+    { 0x114B2, TMT_MARK_FULLWIDTH }, //TIRHUTA VOWEL SIGN II
+    { 0x114B3, TMT_MARK }, // TIRHUTA VOWEL SIGN U
+    { 0x114B4, TMT_MARK }, // TIRHUTA VOWEL SIGN UU
+    { 0x114B5, TMT_MARK }, // TIRHUTA VOWEL SIGN VOCALIC R
+    { 0x114B6, TMT_MARK }, // TIRHUTA VOWEL SIGN VOCALIC RR
+    { 0x114B7, TMT_MARK }, // TIRHUTA VOWEL SIGN VOCALIC L
+    { 0x114B8, TMT_MARK }, // TIRHUTA VOWEL SIGN VOCALIC LL
+    { 0x114B9, TMT_MARK_FULLWIDTH }, //TIRHUTA VOWEL SIGN E
+    { 0x114BA, TMT_MARK }, // TIRHUTA VOWEL SIGN SHORT E
+    { 0x114BB, TMT_MARK_FULLWIDTH }, //TIRHUTA VOWEL SIGN AI
+    { 0x114BC, TMT_MARK_FULLWIDTH }, //TIRHUTA VOWEL SIGN O
+    { 0x114BD, TMT_MARK_FULLWIDTH }, //TIRHUTA VOWEL SIGN SHORT O
+    { 0x114BE, TMT_MARK_FULLWIDTH }, //TIRHUTA VOWEL SIGN AU
+    { 0x114BF, TMT_MARK }, // TIRHUTA SIGN CANDRABINDU
+    { 0x114C0, TMT_MARK }, // TIRHUTA SIGN ANUSVARA
+    { 0x114C1, TMT_MARK_FULLWIDTH }, //TIRHUTA SIGN VISARGA
+    { 0x114C2, TMT_MARK }, // TIRHUTA SIGN VIRAMA
+    { 0x114C3, TMT_MARK }, // TIRHUTA SIGN NUKTA
+    { 0x115AF, TMT_MARK_FULLWIDTH }, //SIDDHAM VOWEL SIGN AA
+    { 0x115B0, TMT_MARK_FULLWIDTH }, //SIDDHAM VOWEL SIGN I
+    { 0x115B1, TMT_MARK_FULLWIDTH }, //SIDDHAM VOWEL SIGN II
+    { 0x115B2, TMT_MARK }, // SIDDHAM VOWEL SIGN U
+    { 0x115B3, TMT_MARK }, // SIDDHAM VOWEL SIGN UU
+    { 0x115B4, TMT_MARK }, // SIDDHAM VOWEL SIGN VOCALIC R
+    { 0x115B5, TMT_MARK }, // SIDDHAM VOWEL SIGN VOCALIC RR
+    { 0x115B8, TMT_MARK_FULLWIDTH }, //SIDDHAM VOWEL SIGN E
+    { 0x115B9, TMT_MARK_FULLWIDTH }, //SIDDHAM VOWEL SIGN AI
+    { 0x115BA, TMT_MARK_FULLWIDTH }, //SIDDHAM VOWEL SIGN O
+    { 0x115BB, TMT_MARK_FULLWIDTH }, //SIDDHAM VOWEL SIGN AU
+    { 0x115BC, TMT_MARK }, // SIDDHAM SIGN CANDRABINDU
+    { 0x115BD, TMT_MARK }, // SIDDHAM SIGN ANUSVARA
+    { 0x115BE, TMT_MARK_FULLWIDTH }, //SIDDHAM SIGN VISARGA
+    { 0x115BF, TMT_MARK }, // SIDDHAM SIGN VIRAMA
+    { 0x115C0, TMT_MARK }, // SIDDHAM SIGN NUKTA
+    { 0x115DC, TMT_MARK }, // SIDDHAM VOWEL SIGN ALTERNATE U
+    { 0x115DD, TMT_MARK }, // SIDDHAM VOWEL SIGN ALTERNATE UU
+    { 0x11630, TMT_MARK_FULLWIDTH }, //MODI VOWEL SIGN AA
+    { 0x11631, TMT_MARK_FULLWIDTH }, //MODI VOWEL SIGN I
+    { 0x11632, TMT_MARK_FULLWIDTH }, //MODI VOWEL SIGN II
+    { 0x11633, TMT_MARK }, // MODI VOWEL SIGN U
+    { 0x11634, TMT_MARK }, // MODI VOWEL SIGN UU
+    { 0x11635, TMT_MARK }, // MODI VOWEL SIGN VOCALIC R
+    { 0x11636, TMT_MARK }, // MODI VOWEL SIGN VOCALIC RR
+    { 0x11637, TMT_MARK }, // MODI VOWEL SIGN VOCALIC L
+    { 0x11638, TMT_MARK }, // MODI VOWEL SIGN VOCALIC LL
+    { 0x11639, TMT_MARK }, // MODI VOWEL SIGN E
+    { 0x1163A, TMT_MARK }, // MODI VOWEL SIGN AI
+    { 0x1163B, TMT_MARK_FULLWIDTH }, //MODI VOWEL SIGN O
+    { 0x1163C, TMT_MARK_FULLWIDTH }, //MODI VOWEL SIGN AU
+    { 0x1163D, TMT_MARK }, // MODI SIGN ANUSVARA
+    { 0x1163E, TMT_MARK_FULLWIDTH }, //MODI SIGN VISARGA
+    { 0x1163F, TMT_MARK }, // MODI SIGN VIRAMA
+    { 0x11640, TMT_MARK }, // MODI SIGN ARDHACANDRA
+    { 0x116AB, TMT_MARK }, // TAKRI SIGN ANUSVARA
+    { 0x116AC, TMT_MARK_FULLWIDTH }, //TAKRI SIGN VISARGA
+    { 0x116AD, TMT_MARK }, // TAKRI VOWEL SIGN AA
+    { 0x116AE, TMT_MARK_FULLWIDTH }, //TAKRI VOWEL SIGN I
+    { 0x116AF, TMT_MARK_FULLWIDTH }, //TAKRI VOWEL SIGN II
+    { 0x116B0, TMT_MARK }, // TAKRI VOWEL SIGN U
+    { 0x116B1, TMT_MARK }, // TAKRI VOWEL SIGN UU
+    { 0x116B2, TMT_MARK }, // TAKRI VOWEL SIGN E
+    { 0x116B3, TMT_MARK }, // TAKRI VOWEL SIGN AI
+    { 0x116B4, TMT_MARK }, // TAKRI VOWEL SIGN O
+    { 0x116B5, TMT_MARK }, // TAKRI VOWEL SIGN AU
+    { 0x116B6, TMT_MARK_FULLWIDTH }, //TAKRI SIGN VIRAMA
+    { 0x116B7, TMT_MARK }, // TAKRI SIGN NUKTA
+    { 0x1171D, TMT_MARK }, // AHOM CONSONANT SIGN MEDIAL LA
+    { 0x1171E, TMT_MARK_FULLWIDTH }, //AHOM CONSONANT SIGN MEDIAL RA
+    { 0x1171F, TMT_MARK }, // AHOM CONSONANT SIGN MEDIAL LIGATING RA
+    { 0x11720, TMT_MARK_FULLWIDTH }, //AHOM VOWEL SIGN A
+    { 0x11721, TMT_MARK_FULLWIDTH }, //AHOM VOWEL SIGN AA
+    { 0x11722, TMT_MARK }, // AHOM VOWEL SIGN I
+    { 0x11723, TMT_MARK }, // AHOM VOWEL SIGN II
+    { 0x11724, TMT_MARK }, // AHOM VOWEL SIGN U
+    { 0x11725, TMT_MARK }, // AHOM VOWEL SIGN UU
+    { 0x11726, TMT_MARK_FULLWIDTH }, //AHOM VOWEL SIGN E
+    { 0x11727, TMT_MARK }, // AHOM VOWEL SIGN AW
+    { 0x11728, TMT_MARK }, // AHOM VOWEL SIGN O
+    { 0x11729, TMT_MARK }, // AHOM VOWEL SIGN AI
+    { 0x1172A, TMT_MARK }, // AHOM VOWEL SIGN AM
+    { 0x1172B, TMT_MARK }, // AHOM SIGN KILLER
+    { 0x1182C, TMT_MARK_FULLWIDTH }, //DOGRA VOWEL SIGN AA
+    { 0x1182D, TMT_MARK_FULLWIDTH }, //DOGRA VOWEL SIGN I
+    { 0x1182E, TMT_MARK_FULLWIDTH }, //DOGRA VOWEL SIGN II
+    { 0x1182F, TMT_MARK }, // DOGRA VOWEL SIGN U
+    { 0x11830, TMT_MARK }, // DOGRA VOWEL SIGN UU
+    { 0x11831, TMT_MARK }, // DOGRA VOWEL SIGN VOCALIC R
+    { 0x11832, TMT_MARK }, // DOGRA VOWEL SIGN VOCALIC RR
+    { 0x11833, TMT_MARK }, // DOGRA VOWEL SIGN E
+    { 0x11834, TMT_MARK }, // DOGRA VOWEL SIGN AI
+    { 0x11835, TMT_MARK }, // DOGRA VOWEL SIGN O
+    { 0x11836, TMT_MARK }, // DOGRA VOWEL SIGN AU
+    { 0x11837, TMT_MARK }, // DOGRA SIGN ANUSVARA
+    { 0x11838, TMT_MARK_FULLWIDTH }, //DOGRA SIGN VISARGA
+    { 0x11839, TMT_MARK }, // DOGRA SIGN VIRAMA
+    { 0x1183A, TMT_MARK }, // DOGRA SIGN NUKTA
+    { 0x11930, TMT_MARK_FULLWIDTH }, //DIVES AKURU VOWEL SIGN AA
+    { 0x11931, TMT_MARK_FULLWIDTH }, //DIVES AKURU VOWEL SIGN I
+    { 0x11932, TMT_MARK_FULLWIDTH }, //DIVES AKURU VOWEL SIGN II
+    { 0x11933, TMT_MARK_FULLWIDTH }, //DIVES AKURU VOWEL SIGN U
+    { 0x11934, TMT_MARK_FULLWIDTH }, //DIVES AKURU VOWEL SIGN UU
+    { 0x11935, TMT_MARK_FULLWIDTH }, //DIVES AKURU VOWEL SIGN E
+    { 0x11937, TMT_MARK_FULLWIDTH }, //DIVES AKURU VOWEL SIGN AI
+    { 0x11938, TMT_MARK_FULLWIDTH }, //DIVES AKURU VOWEL SIGN O
+    { 0x1193B, TMT_MARK }, // DIVES AKURU SIGN ANUSVARA
+    { 0x1193C, TMT_MARK }, // DIVES AKURU SIGN CANDRABINDU
+    { 0x1193D, TMT_MARK_FULLWIDTH }, //DIVES AKURU SIGN HALANTA
+    { 0x1193E, TMT_MARK }, // DIVES AKURU VIRAMA
+    { 0x11940, TMT_MARK_FULLWIDTH }, //DIVES AKURU MEDIAL YA
+    { 0x11942, TMT_MARK_FULLWIDTH }, //DIVES AKURU MEDIAL RA
+    { 0x11943, TMT_MARK }, // DIVES AKURU SIGN NUKTA
+    { 0x119D1, TMT_MARK_FULLWIDTH }, //NANDINAGARI VOWEL SIGN AA
+    { 0x119D2, TMT_MARK_FULLWIDTH }, //NANDINAGARI VOWEL SIGN I
+    { 0x119D3, TMT_MARK_FULLWIDTH }, //NANDINAGARI VOWEL SIGN II
+    { 0x119D4, TMT_MARK }, // NANDINAGARI VOWEL SIGN U
+    { 0x119D5, TMT_MARK }, // NANDINAGARI VOWEL SIGN UU
+    { 0x119D6, TMT_MARK }, // NANDINAGARI VOWEL SIGN VOCALIC R
+    { 0x119D7, TMT_MARK }, // NANDINAGARI VOWEL SIGN VOCALIC RR
+    { 0x119DA, TMT_MARK }, // NANDINAGARI VOWEL SIGN E
+    { 0x119DB, TMT_MARK }, // NANDINAGARI VOWEL SIGN AI
+    { 0x119DC, TMT_MARK_FULLWIDTH }, //NANDINAGARI VOWEL SIGN O
+    { 0x119DD, TMT_MARK_FULLWIDTH }, //NANDINAGARI VOWEL SIGN AU
+    { 0x119DE, TMT_MARK_FULLWIDTH }, //NANDINAGARI SIGN ANUSVARA
+    { 0x119DF, TMT_MARK_FULLWIDTH }, //NANDINAGARI SIGN VISARGA
+    { 0x119E0, TMT_MARK }, // NANDINAGARI SIGN VIRAMA
+    { 0x119E4, TMT_MARK_FULLWIDTH }, //NANDINAGARI VOWEL SIGN PRISHTHAMATRA E
+    { 0x11A01, TMT_MARK }, // ZANABAZAR SQUARE VOWEL SIGN I
+    { 0x11A02, TMT_MARK }, // ZANABAZAR SQUARE VOWEL SIGN UE
+    { 0x11A03, TMT_MARK }, // ZANABAZAR SQUARE VOWEL SIGN U
+    { 0x11A04, TMT_MARK }, // ZANABAZAR SQUARE VOWEL SIGN E
+    { 0x11A05, TMT_MARK }, // ZANABAZAR SQUARE VOWEL SIGN OE
+    { 0x11A06, TMT_MARK }, // ZANABAZAR SQUARE VOWEL SIGN O
+    { 0x11A07, TMT_MARK }, // ZANABAZAR SQUARE VOWEL SIGN AI
+    { 0x11A08, TMT_MARK }, // ZANABAZAR SQUARE VOWEL SIGN AU
+    { 0x11A09, TMT_MARK }, // ZANABAZAR SQUARE VOWEL SIGN REVERSED I
+    { 0x11A0A, TMT_MARK }, // ZANABAZAR SQUARE VOWEL LENGTH MARK
+    { 0x11A33, TMT_MARK }, // ZANABAZAR SQUARE FINAL CONSONANT MARK
+    { 0x11A34, TMT_MARK }, // ZANABAZAR SQUARE SIGN VIRAMA
+    { 0x11A35, TMT_MARK }, // ZANABAZAR SQUARE SIGN CANDRABINDU
+    { 0x11A36, TMT_MARK }, // ZANABAZAR SQUARE SIGN CANDRABINDU WITH ORNAMENT
+    { 0x11A37, TMT_MARK }, // ZANABAZAR SQUARE SIGN CANDRA WITH ORNAMENT
+    { 0x11A38, TMT_MARK }, // ZANABAZAR SQUARE SIGN ANUSVARA
+    { 0x11A39, TMT_MARK_FULLWIDTH }, //ZANABAZAR SQUARE SIGN VISARGA
+    { 0x11A3B, TMT_MARK }, // ZANABAZAR SQUARE CLUSTER-FINAL LETTER YA
+    { 0x11A3C, TMT_MARK }, // ZANABAZAR SQUARE CLUSTER-FINAL LETTER RA
+    { 0x11A3D, TMT_MARK }, // ZANABAZAR SQUARE CLUSTER-FINAL LETTER LA
+    { 0x11A3E, TMT_MARK }, // ZANABAZAR SQUARE CLUSTER-FINAL LETTER VA
+    { 0x11A47, TMT_MARK }, // ZANABAZAR SQUARE SUBJOINER
+    { 0x11A51, TMT_MARK }, // SOYOMBO VOWEL SIGN I
+    { 0x11A52, TMT_MARK }, // SOYOMBO VOWEL SIGN UE
+    { 0x11A53, TMT_MARK }, // SOYOMBO VOWEL SIGN U
+    { 0x11A54, TMT_MARK }, // SOYOMBO VOWEL SIGN E
+    { 0x11A55, TMT_MARK }, // SOYOMBO VOWEL SIGN O
+    { 0x11A56, TMT_MARK }, // SOYOMBO VOWEL SIGN OE
+    { 0x11A57, TMT_MARK_FULLWIDTH }, //SOYOMBO VOWEL SIGN AI
+    { 0x11A58, TMT_MARK_FULLWIDTH }, //SOYOMBO VOWEL SIGN AU
+    { 0x11A59, TMT_MARK }, // SOYOMBO VOWEL SIGN VOCALIC R
+    { 0x11A5A, TMT_MARK }, // SOYOMBO VOWEL SIGN VOCALIC L
+    { 0x11A5B, TMT_MARK }, // SOYOMBO VOWEL LENGTH MARK
+    { 0x11A8A, TMT_MARK }, // SOYOMBO FINAL CONSONANT SIGN G
+    { 0x11A8B, TMT_MARK }, // SOYOMBO FINAL CONSONANT SIGN K
+    { 0x11A8C, TMT_MARK }, // SOYOMBO FINAL CONSONANT SIGN NG
+    { 0x11A8D, TMT_MARK }, // SOYOMBO FINAL CONSONANT SIGN D
+    { 0x11A8E, TMT_MARK }, // SOYOMBO FINAL CONSONANT SIGN N
+    { 0x11A8F, TMT_MARK }, // SOYOMBO FINAL CONSONANT SIGN B
+    { 0x11A90, TMT_MARK }, // SOYOMBO FINAL CONSONANT SIGN M
+    { 0x11A91, TMT_MARK }, // SOYOMBO FINAL CONSONANT SIGN R
+    { 0x11A92, TMT_MARK }, // SOYOMBO FINAL CONSONANT SIGN L
+    { 0x11A93, TMT_MARK }, // SOYOMBO FINAL CONSONANT SIGN SH
+    { 0x11A94, TMT_MARK }, // SOYOMBO FINAL CONSONANT SIGN S
+    { 0x11A95, TMT_MARK }, // SOYOMBO FINAL CONSONANT SIGN -A
+    { 0x11A96, TMT_MARK }, // SOYOMBO SIGN ANUSVARA
+    { 0x11A97, TMT_MARK_FULLWIDTH }, //SOYOMBO SIGN VISARGA
+    { 0x11A98, TMT_MARK }, // SOYOMBO GEMINATION MARK
+    { 0x11A99, TMT_MARK }, // SOYOMBO SUBJOINER
+    { 0x11C2F, TMT_MARK_FULLWIDTH }, //BHAIKSUKI VOWEL SIGN AA
+    { 0x11C30, TMT_MARK }, // BHAIKSUKI VOWEL SIGN I
+    { 0x11C31, TMT_MARK }, // BHAIKSUKI VOWEL SIGN II
+    { 0x11C32, TMT_MARK }, // BHAIKSUKI VOWEL SIGN U
+    { 0x11C33, TMT_MARK }, // BHAIKSUKI VOWEL SIGN UU
+    { 0x11C34, TMT_MARK }, // BHAIKSUKI VOWEL SIGN VOCALIC R
+    { 0x11C35, TMT_MARK }, // BHAIKSUKI VOWEL SIGN VOCALIC RR
+    { 0x11C36, TMT_MARK }, // BHAIKSUKI VOWEL SIGN VOCALIC L
+    { 0x11C38, TMT_MARK }, // BHAIKSUKI VOWEL SIGN E
+    { 0x11C39, TMT_MARK }, // BHAIKSUKI VOWEL SIGN AI
+    { 0x11C3A, TMT_MARK }, // BHAIKSUKI VOWEL SIGN O
+    { 0x11C3B, TMT_MARK }, // BHAIKSUKI VOWEL SIGN AU
+    { 0x11C3C, TMT_MARK }, // BHAIKSUKI SIGN CANDRABINDU
+    { 0x11C3D, TMT_MARK }, // BHAIKSUKI SIGN ANUSVARA
+    { 0x11C3E, TMT_MARK_FULLWIDTH }, //BHAIKSUKI SIGN VISARGA
+    { 0x11C3F, TMT_MARK }, // BHAIKSUKI SIGN VIRAMA
+    { 0x11C92, TMT_MARK }, // MARCHEN SUBJOINED LETTER KA
+    { 0x11C93, TMT_MARK }, // MARCHEN SUBJOINED LETTER KHA
+    { 0x11C94, TMT_MARK }, // MARCHEN SUBJOINED LETTER GA
+    { 0x11C95, TMT_MARK }, // MARCHEN SUBJOINED LETTER NGA
+    { 0x11C96, TMT_MARK }, // MARCHEN SUBJOINED LETTER CA
+    { 0x11C97, TMT_MARK }, // MARCHEN SUBJOINED LETTER CHA
+    { 0x11C98, TMT_MARK }, // MARCHEN SUBJOINED LETTER JA
+    { 0x11C99, TMT_MARK }, // MARCHEN SUBJOINED LETTER NYA
+    { 0x11C9A, TMT_MARK }, // MARCHEN SUBJOINED LETTER TA
+    { 0x11C9B, TMT_MARK }, // MARCHEN SUBJOINED LETTER THA
+    { 0x11C9C, TMT_MARK }, // MARCHEN SUBJOINED LETTER DA
+    { 0x11C9D, TMT_MARK }, // MARCHEN SUBJOINED LETTER NA
+    { 0x11C9E, TMT_MARK }, // MARCHEN SUBJOINED LETTER PA
+    { 0x11C9F, TMT_MARK }, // MARCHEN SUBJOINED LETTER PHA
+    { 0x11CA0, TMT_MARK }, // MARCHEN SUBJOINED LETTER BA
+    { 0x11CA1, TMT_MARK }, // MARCHEN SUBJOINED LETTER MA
+    { 0x11CA2, TMT_MARK }, // MARCHEN SUBJOINED LETTER TSA
+    { 0x11CA3, TMT_MARK }, // MARCHEN SUBJOINED LETTER TSHA
+    { 0x11CA4, TMT_MARK }, // MARCHEN SUBJOINED LETTER DZA
+    { 0x11CA5, TMT_MARK }, // MARCHEN SUBJOINED LETTER WA
+    { 0x11CA6, TMT_MARK }, // MARCHEN SUBJOINED LETTER ZHA
+    { 0x11CA7, TMT_MARK }, // MARCHEN SUBJOINED LETTER ZA
+    { 0x11CA9, TMT_MARK_FULLWIDTH }, //MARCHEN SUBJOINED LETTER YA
+    { 0x11CAA, TMT_MARK }, // MARCHEN SUBJOINED LETTER RA
+    { 0x11CAB, TMT_MARK }, // MARCHEN SUBJOINED LETTER LA
+    { 0x11CAC, TMT_MARK }, // MARCHEN SUBJOINED LETTER SHA
+    { 0x11CAD, TMT_MARK }, // MARCHEN SUBJOINED LETTER SA
+    { 0x11CAE, TMT_MARK }, // MARCHEN SUBJOINED LETTER HA
+    { 0x11CAF, TMT_MARK }, // MARCHEN SUBJOINED LETTER A
+    { 0x11CB0, TMT_MARK }, // MARCHEN VOWEL SIGN AA
+    { 0x11CB1, TMT_MARK_FULLWIDTH }, //MARCHEN VOWEL SIGN I
+    { 0x11CB2, TMT_MARK }, // MARCHEN VOWEL SIGN U
+    { 0x11CB3, TMT_MARK }, // MARCHEN VOWEL SIGN E
+    { 0x11CB4, TMT_MARK_FULLWIDTH }, //MARCHEN VOWEL SIGN O
+    { 0x11CB5, TMT_MARK }, // MARCHEN SIGN ANUSVARA
+    { 0x11CB6, TMT_MARK }, // MARCHEN SIGN CANDRABINDU
+    { 0x11D31, TMT_MARK }, // MASARAM GONDI VOWEL SIGN AA
+    { 0x11D32, TMT_MARK }, // MASARAM GONDI VOWEL SIGN I
+    { 0x11D33, TMT_MARK }, // MASARAM GONDI VOWEL SIGN II
+    { 0x11D34, TMT_MARK }, // MASARAM GONDI VOWEL SIGN U
+    { 0x11D35, TMT_MARK }, // MASARAM GONDI VOWEL SIGN UU
+    { 0x11D36, TMT_MARK }, // MASARAM GONDI VOWEL SIGN VOCALIC R
+    { 0x11D3A, TMT_MARK }, // MASARAM GONDI VOWEL SIGN E
+    { 0x11D3C, TMT_MARK }, // MASARAM GONDI VOWEL SIGN AI
+    { 0x11D3D, TMT_MARK }, // MASARAM GONDI VOWEL SIGN O
+    { 0x11D3F, TMT_MARK }, // MASARAM GONDI VOWEL SIGN AU
+    { 0x11D40, TMT_MARK }, // MASARAM GONDI SIGN ANUSVARA
+    { 0x11D41, TMT_MARK }, // MASARAM GONDI SIGN VISARGA
+    { 0x11D42, TMT_MARK }, // MASARAM GONDI SIGN NUKTA
+    { 0x11D43, TMT_MARK }, // MASARAM GONDI SIGN CANDRA
+    { 0x11D44, TMT_MARK }, // MASARAM GONDI SIGN HALANTA
+    { 0x11D45, TMT_MARK }, // MASARAM GONDI VIRAMA
+    { 0x11D47, TMT_MARK }, // MASARAM GONDI RA-KARA
+    { 0x11D8A, TMT_MARK_FULLWIDTH }, //GUNJALA GONDI VOWEL SIGN AA
+    { 0x11D8B, TMT_MARK_FULLWIDTH }, //GUNJALA GONDI VOWEL SIGN I
+    { 0x11D8C, TMT_MARK_FULLWIDTH }, //GUNJALA GONDI VOWEL SIGN II
+    { 0x11D8D, TMT_MARK_FULLWIDTH }, //GUNJALA GONDI VOWEL SIGN U
+    { 0x11D8E, TMT_MARK_FULLWIDTH }, //GUNJALA GONDI VOWEL SIGN UU
+    { 0x11D90, TMT_MARK }, // GUNJALA GONDI VOWEL SIGN EE
+    { 0x11D91, TMT_MARK }, // GUNJALA GONDI VOWEL SIGN AI
+    { 0x11D93, TMT_MARK_FULLWIDTH }, //GUNJALA GONDI VOWEL SIGN OO
+    { 0x11D94, TMT_MARK_FULLWIDTH }, //GUNJALA GONDI VOWEL SIGN AU
+    { 0x11D95, TMT_MARK }, // GUNJALA GONDI SIGN ANUSVARA
+    { 0x11D96, TMT_MARK_FULLWIDTH }, //GUNJALA GONDI SIGN VISARGA
+    { 0x11D97, TMT_MARK }, // GUNJALA GONDI VIRAMA
+    { 0x11EF3, TMT_MARK }, // MAKASAR VOWEL SIGN I
+    { 0x11EF4, TMT_MARK }, // MAKASAR VOWEL SIGN U
+    { 0x11EF5, TMT_MARK_FULLWIDTH }, //MAKASAR VOWEL SIGN E
+    { 0x11EF6, TMT_MARK_FULLWIDTH }, //MAKASAR VOWEL SIGN O
+    { 0x11F00, TMT_MARK }, // KAWI SIGN CANDRABINDU
+    { 0x11F01, TMT_MARK }, // KAWI SIGN ANUSVARA
+    { 0x11F03, TMT_MARK_FULLWIDTH }, //KAWI SIGN VISARGA
+    { 0x11F34, TMT_MARK_FULLWIDTH }, //KAWI VOWEL SIGN AA
+    { 0x11F35, TMT_MARK_FULLWIDTH }, //KAWI VOWEL SIGN ALTERNATE AA
+    { 0x11F36, TMT_MARK }, // KAWI VOWEL SIGN I
+    { 0x11F37, TMT_MARK }, // KAWI VOWEL SIGN II
+    { 0x11F38, TMT_MARK }, // KAWI VOWEL SIGN U
+    { 0x11F39, TMT_MARK }, // KAWI VOWEL SIGN UU
+    { 0x11F3A, TMT_MARK }, // KAWI VOWEL SIGN VOCALIC R
+    { 0x11F3E, TMT_MARK_FULLWIDTH }, //KAWI VOWEL SIGN E
+    { 0x11F3F, TMT_MARK_FULLWIDTH }, //KAWI VOWEL SIGN AI
+    { 0x11F40, TMT_MARK }, // KAWI VOWEL SIGN EU
+    { 0x11F41, TMT_MARK_FULLWIDTH }, //KAWI SIGN KILLER
+    { 0x11F42, TMT_MARK }, // KAWI CONJOINER
+    { 0x11F5A, TMT_MARK }, // KAWI SIGN NUKTA
+    { 0x13430, TMT_FORMAT }, // EGYPTIAN HIEROGLYPH VERTICAL JOINER
+    { 0x13431, TMT_FORMAT }, // EGYPTIAN HIEROGLYPH HORIZONTAL JOINER
+    { 0x13432, TMT_FORMAT }, // EGYPTIAN HIEROGLYPH INSERT AT TOP START
+    { 0x13433, TMT_FORMAT }, // EGYPTIAN HIEROGLYPH INSERT AT BOTTOM START
+    { 0x13434, TMT_FORMAT }, // EGYPTIAN HIEROGLYPH INSERT AT TOP END
+    { 0x13435, TMT_FORMAT }, // EGYPTIAN HIEROGLYPH INSERT AT BOTTOM END
+    { 0x13436, TMT_FORMAT }, // EGYPTIAN HIEROGLYPH OVERLAY MIDDLE
+    { 0x13437, TMT_FORMAT }, // EGYPTIAN HIEROGLYPH BEGIN SEGMENT
+    { 0x13438, TMT_FORMAT }, // EGYPTIAN HIEROGLYPH END SEGMENT
+    { 0x13439, TMT_FORMAT }, // EGYPTIAN HIEROGLYPH INSERT AT MIDDLE
+    { 0x1343A, TMT_FORMAT }, // EGYPTIAN HIEROGLYPH INSERT AT TOP
+    { 0x1343B, TMT_FORMAT }, // EGYPTIAN HIEROGLYPH INSERT AT BOTTOM
+    { 0x1343C, TMT_FORMAT }, // EGYPTIAN HIEROGLYPH BEGIN ENCLOSURE
+    { 0x1343D, TMT_FORMAT }, // EGYPTIAN HIEROGLYPH END ENCLOSURE
+    { 0x1343E, TMT_FORMAT }, // EGYPTIAN HIEROGLYPH BEGIN WALLED ENCLOSURE
+    { 0x1343F, TMT_FORMAT }, // EGYPTIAN HIEROGLYPH END WALLED ENCLOSURE
+    { 0x13440, TMT_MARK }, // EGYPTIAN HIEROGLYPH MIRROR HORIZONTALLY
+    { 0x13447, TMT_MARK }, // EGYPTIAN HIEROGLYPH MODIFIER DAMAGED AT TOP START
+    { 0x13448, TMT_MARK }, // EGYPTIAN HIEROGLYPH MODIFIER DAMAGED AT BOTTOM START
+    { 0x13449, TMT_MARK }, // EGYPTIAN HIEROGLYPH MODIFIER DAMAGED AT START
+    { 0x1344A, TMT_MARK }, // EGYPTIAN HIEROGLYPH MODIFIER DAMAGED AT TOP END
+    { 0x1344B, TMT_MARK }, // EGYPTIAN HIEROGLYPH MODIFIER DAMAGED AT TOP
+    { 0x1344C, TMT_MARK }, // EGYPTIAN HIEROGLYPH MODIFIER DAMAGED AT BOTTOM START AND TOP END
+    { 0x1344D, TMT_MARK }, // EGYPTIAN HIEROGLYPH MODIFIER DAMAGED AT START AND TOP
+    { 0x1344E, TMT_MARK }, // EGYPTIAN HIEROGLYPH MODIFIER DAMAGED AT BOTTOM END
+    { 0x1344F, TMT_MARK }, // EGYPTIAN HIEROGLYPH MODIFIER DAMAGED AT TOP START AND BOTTOM END
+    { 0x13450, TMT_MARK }, // EGYPTIAN HIEROGLYPH MODIFIER DAMAGED AT BOTTOM
+    { 0x13451, TMT_MARK }, // EGYPTIAN HIEROGLYPH MODIFIER DAMAGED AT START AND BOTTOM
+    { 0x13452, TMT_MARK }, // EGYPTIAN HIEROGLYPH MODIFIER DAMAGED AT END
+    { 0x13453, TMT_MARK }, // EGYPTIAN HIEROGLYPH MODIFIER DAMAGED AT TOP AND END
+    { 0x13454, TMT_MARK }, // EGYPTIAN HIEROGLYPH MODIFIER DAMAGED AT BOTTOM AND END
+    { 0x13455, TMT_MARK }, // EGYPTIAN HIEROGLYPH MODIFIER DAMAGED
+    { 0x1611E, TMT_MARK }, // GURUNG KHEMA VOWEL SIGN AA
+    { 0x1611F, TMT_MARK }, // GURUNG KHEMA VOWEL SIGN I
+    { 0x16120, TMT_MARK }, // GURUNG KHEMA VOWEL SIGN II
+    { 0x16121, TMT_MARK }, // GURUNG KHEMA VOWEL SIGN U
+    { 0x16122, TMT_MARK }, // GURUNG KHEMA VOWEL SIGN UU
+    { 0x16123, TMT_MARK }, // GURUNG KHEMA VOWEL SIGN E
+    { 0x16124, TMT_MARK }, // GURUNG KHEMA VOWEL SIGN EE
+    { 0x16125, TMT_MARK }, // GURUNG KHEMA VOWEL SIGN AI
+    { 0x16126, TMT_MARK }, // GURUNG KHEMA VOWEL SIGN O
+    { 0x16127, TMT_MARK }, // GURUNG KHEMA VOWEL SIGN OO
+    { 0x16128, TMT_MARK }, // GURUNG KHEMA VOWEL SIGN AU
+    { 0x16129, TMT_MARK }, // GURUNG KHEMA VOWEL LENGTH MARK
+    { 0x1612A, TMT_MARK_FULLWIDTH }, //GURUNG KHEMA CONSONANT SIGN MEDIAL YA
+    { 0x1612B, TMT_MARK_FULLWIDTH }, //GURUNG KHEMA CONSONANT SIGN MEDIAL VA
+    { 0x1612C, TMT_MARK_FULLWIDTH }, //GURUNG KHEMA CONSONANT SIGN MEDIAL HA
+    { 0x1612D, TMT_MARK }, // GURUNG KHEMA SIGN ANUSVARA
+    { 0x1612E, TMT_MARK }, // GURUNG KHEMA CONSONANT SIGN MEDIAL RA
+    { 0x1612F, TMT_MARK }, // GURUNG KHEMA SIGN THOLHOMA
+    { 0x16AF0, TMT_MARK }, // BASSA VAH COMBINING HIGH TONE
+    { 0x16AF1, TMT_MARK }, // BASSA VAH COMBINING LOW TONE
+    { 0x16AF2, TMT_MARK }, // BASSA VAH COMBINING MID TONE
+    { 0x16AF3, TMT_MARK }, // BASSA VAH COMBINING LOW-MID TONE
+    { 0x16AF4, TMT_MARK }, // BASSA VAH COMBINING HIGH-LOW TONE
+    { 0x16B30, TMT_MARK }, // PAHAWH HMONG MARK CIM TUB
+    { 0x16B31, TMT_MARK }, // PAHAWH HMONG MARK CIM SO
+    { 0x16B32, TMT_MARK }, // PAHAWH HMONG MARK CIM KES
+    { 0x16B33, TMT_MARK }, // PAHAWH HMONG MARK CIM KHAV
+    { 0x16B34, TMT_MARK }, // PAHAWH HMONG MARK CIM SUAM
+    { 0x16B35, TMT_MARK }, // PAHAWH HMONG MARK CIM HOM
+    { 0x16B36, TMT_MARK }, // PAHAWH HMONG MARK CIM TAUM
+    { 0x16F4F, TMT_MARK }, // MIAO SIGN CONSONANT MODIFIER BAR
+    { 0x16F51, TMT_MARK_FULLWIDTH }, //MIAO SIGN ASPIRATION
+    { 0x16F52, TMT_MARK_FULLWIDTH }, //MIAO SIGN REFORMED VOICING
+    { 0x16F53, TMT_MARK_FULLWIDTH }, //MIAO SIGN REFORMED ASPIRATION
+    { 0x16F54, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN A
+    { 0x16F55, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN AA
+    { 0x16F56, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN AHH
+    { 0x16F57, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN AN
+    { 0x16F58, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN ANG
+    { 0x16F59, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN O
+    { 0x16F5A, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN OO
+    { 0x16F5B, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN WO
+    { 0x16F5C, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN W
+    { 0x16F5D, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN E
+    { 0x16F5E, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN EN
+    { 0x16F5F, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN ENG
+    { 0x16F60, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN OEY
+    { 0x16F61, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN I
+    { 0x16F62, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN IA
+    { 0x16F63, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN IAN
+    { 0x16F64, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN IANG
+    { 0x16F65, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN IO
+    { 0x16F66, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN IE
+    { 0x16F67, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN II
+    { 0x16F68, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN IU
+    { 0x16F69, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN ING
+    { 0x16F6A, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN U
+    { 0x16F6B, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN UA
+    { 0x16F6C, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN UAN
+    { 0x16F6D, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN UANG
+    { 0x16F6E, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN UU
+    { 0x16F6F, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN UEI
+    { 0x16F70, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN UNG
+    { 0x16F71, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN Y
+    { 0x16F72, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN YI
+    { 0x16F73, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN AE
+    { 0x16F74, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN AEE
+    { 0x16F75, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN ERR
+    { 0x16F76, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN ROUNDED ERR
+    { 0x16F77, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN ER
+    { 0x16F78, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN ROUNDED ER
+    { 0x16F79, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN AI
+    { 0x16F7A, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN EI
+    { 0x16F7B, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN AU
+    { 0x16F7C, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN OU
+    { 0x16F7D, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN N
+    { 0x16F7E, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN NG
+    { 0x16F7F, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN UOG
+    { 0x16F80, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN YUI
+    { 0x16F81, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN OG
+    { 0x16F82, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN OER
+    { 0x16F83, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN VW
+    { 0x16F84, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN IG
+    { 0x16F85, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN EA
+    { 0x16F86, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN IONG
+    { 0x16F87, TMT_MARK_FULLWIDTH }, //MIAO VOWEL SIGN UI
+    { 0x16F8F, TMT_MARK }, // MIAO TONE RIGHT
+    { 0x16F90, TMT_MARK }, // MIAO TONE TOP RIGHT
+    { 0x16F91, TMT_MARK }, // MIAO TONE ABOVE
+    { 0x16F92, TMT_MARK }, // MIAO TONE BELOW
+    { 0x16FE4, TMT_MARK }, // KHITAN SMALL SCRIPT FILLER
+    { 0x16FF0, TMT_MARK_FULLWIDTH }, //VIETNAMESE ALTERNATE READING MARK CA
+    { 0x16FF1, TMT_MARK_FULLWIDTH }, //VIETNAMESE ALTERNATE READING MARK NHAY
+    { 0x1BC9D, TMT_MARK }, // DUPLOYAN THICK LETTER SELECTOR
+    { 0x1BC9E, TMT_MARK }, // DUPLOYAN DOUBLE MARK
+    { 0x1BCA0, TMT_FORMAT }, // SHORTHAND FORMAT LETTER OVERLAP
+    { 0x1BCA1, TMT_FORMAT }, // SHORTHAND FORMAT CONTINUING OVERLAP
+    { 0x1BCA2, TMT_FORMAT }, // SHORTHAND FORMAT DOWN STEP
+    { 0x1BCA3, TMT_FORMAT }, // SHORTHAND FORMAT UP STEP
+    { 0x1CF00, TMT_MARK }, // ZNAMENNY COMBINING MARK GORAZDO NIZKO S KRYZHEM ON LEFT
+    { 0x1CF01, TMT_MARK }, // ZNAMENNY COMBINING MARK NIZKO S KRYZHEM ON LEFT
+    { 0x1CF02, TMT_MARK }, // ZNAMENNY COMBINING MARK TSATA ON LEFT
+    { 0x1CF03, TMT_MARK }, // ZNAMENNY COMBINING MARK GORAZDO NIZKO ON LEFT
+    { 0x1CF04, TMT_MARK }, // ZNAMENNY COMBINING MARK NIZKO ON LEFT
+    { 0x1CF05, TMT_MARK }, // ZNAMENNY COMBINING MARK SREDNE ON LEFT
+    { 0x1CF06, TMT_MARK }, // ZNAMENNY COMBINING MARK MALO POVYSHE ON LEFT
+    { 0x1CF07, TMT_MARK }, // ZNAMENNY COMBINING MARK POVYSHE ON LEFT
+    { 0x1CF08, TMT_MARK }, // ZNAMENNY COMBINING MARK VYSOKO ON LEFT
+    { 0x1CF09, TMT_MARK }, // ZNAMENNY COMBINING MARK MALO POVYSHE S KHOKHLOM ON LEFT
+    { 0x1CF0A, TMT_MARK }, // ZNAMENNY COMBINING MARK POVYSHE S KHOKHLOM ON LEFT
+    { 0x1CF0B, TMT_MARK }, // ZNAMENNY COMBINING MARK VYSOKO S KHOKHLOM ON LEFT
+    { 0x1CF0C, TMT_MARK }, // ZNAMENNY COMBINING MARK GORAZDO NIZKO S KRYZHEM ON RIGHT
+    { 0x1CF0D, TMT_MARK }, // ZNAMENNY COMBINING MARK NIZKO S KRYZHEM ON RIGHT
+    { 0x1CF0E, TMT_MARK }, // ZNAMENNY COMBINING MARK TSATA ON RIGHT
+    { 0x1CF0F, TMT_MARK }, // ZNAMENNY COMBINING MARK GORAZDO NIZKO ON RIGHT
+    { 0x1CF10, TMT_MARK }, // ZNAMENNY COMBINING MARK NIZKO ON RIGHT
+    { 0x1CF11, TMT_MARK }, // ZNAMENNY COMBINING MARK SREDNE ON RIGHT
+    { 0x1CF12, TMT_MARK }, // ZNAMENNY COMBINING MARK MALO POVYSHE ON RIGHT
+    { 0x1CF13, TMT_MARK }, // ZNAMENNY COMBINING MARK POVYSHE ON RIGHT
+    { 0x1CF14, TMT_MARK }, // ZNAMENNY COMBINING MARK VYSOKO ON RIGHT
+    { 0x1CF15, TMT_MARK }, // ZNAMENNY COMBINING MARK MALO POVYSHE S KHOKHLOM ON RIGHT
+    { 0x1CF16, TMT_MARK }, // ZNAMENNY COMBINING MARK POVYSHE S KHOKHLOM ON RIGHT
+    { 0x1CF17, TMT_MARK }, // ZNAMENNY COMBINING MARK VYSOKO S KHOKHLOM ON RIGHT
+    { 0x1CF18, TMT_MARK }, // ZNAMENNY COMBINING MARK TSATA S KRYZHEM
+    { 0x1CF19, TMT_MARK }, // ZNAMENNY COMBINING MARK MALO POVYSHE S KRYZHEM
+    { 0x1CF1A, TMT_MARK }, // ZNAMENNY COMBINING MARK STRANNO MALO POVYSHE
+    { 0x1CF1B, TMT_MARK }, // ZNAMENNY COMBINING MARK POVYSHE S KRYZHEM
+    { 0x1CF1C, TMT_MARK }, // ZNAMENNY COMBINING MARK POVYSHE STRANNO
+    { 0x1CF1D, TMT_MARK }, // ZNAMENNY COMBINING MARK VYSOKO S KRYZHEM
+    { 0x1CF1E, TMT_MARK }, // ZNAMENNY COMBINING MARK MALO POVYSHE STRANNO
+    { 0x1CF1F, TMT_MARK }, // ZNAMENNY COMBINING MARK GORAZDO VYSOKO
+    { 0x1CF20, TMT_MARK }, // ZNAMENNY COMBINING MARK ZELO
+    { 0x1CF21, TMT_MARK }, // ZNAMENNY COMBINING MARK ON
+    { 0x1CF22, TMT_MARK }, // ZNAMENNY COMBINING MARK RAVNO
+    { 0x1CF23, TMT_MARK }, // ZNAMENNY COMBINING MARK TIKHAYA
+    { 0x1CF24, TMT_MARK }, // ZNAMENNY COMBINING MARK BORZAYA
+    { 0x1CF25, TMT_MARK }, // ZNAMENNY COMBINING MARK UDARKA
+    { 0x1CF26, TMT_MARK }, // ZNAMENNY COMBINING MARK PODVERTKA
+    { 0x1CF27, TMT_MARK }, // ZNAMENNY COMBINING MARK LOMKA
+    { 0x1CF28, TMT_MARK }, // ZNAMENNY COMBINING MARK KUPNAYA
+    { 0x1CF29, TMT_MARK }, // ZNAMENNY COMBINING MARK KACHKA
+    { 0x1CF2A, TMT_MARK }, // ZNAMENNY COMBINING MARK ZEVOK
+    { 0x1CF2B, TMT_MARK }, // ZNAMENNY COMBINING MARK SKOBA
+    { 0x1CF2C, TMT_MARK }, // ZNAMENNY COMBINING MARK RAZSEKA
+    { 0x1CF2D, TMT_MARK }, // ZNAMENNY COMBINING MARK KRYZH ON LEFT
+    { 0x1CF30, TMT_MARK }, // ZNAMENNY COMBINING TONAL RANGE MARK MRACHNO
+    { 0x1CF31, TMT_MARK }, // ZNAMENNY COMBINING TONAL RANGE MARK SVETLO
+    { 0x1CF32, TMT_MARK }, // ZNAMENNY COMBINING TONAL RANGE MARK TRESVETLO
+    { 0x1CF33, TMT_MARK }, // ZNAMENNY COMBINING MARK ZADERZHKA
+    { 0x1CF34, TMT_MARK }, // ZNAMENNY COMBINING MARK DEMESTVENNY ZADERZHKA
+    { 0x1CF35, TMT_MARK }, // ZNAMENNY COMBINING MARK OTSECHKA
+    { 0x1CF36, TMT_MARK }, // ZNAMENNY COMBINING MARK PODCHASHIE
+    { 0x1CF37, TMT_MARK }, // ZNAMENNY COMBINING MARK PODCHASHIE WITH VERTICAL STROKE
+    { 0x1CF38, TMT_MARK }, // ZNAMENNY COMBINING MARK CHASHKA
+    { 0x1CF39, TMT_MARK }, // ZNAMENNY COMBINING MARK CHASHKA POLNAYA
+    { 0x1CF3A, TMT_MARK }, // ZNAMENNY COMBINING MARK OBLACHKO
+    { 0x1CF3B, TMT_MARK }, // ZNAMENNY COMBINING MARK SOROCHYA NOZHKA
+    { 0x1CF3C, TMT_MARK }, // ZNAMENNY COMBINING MARK TOCHKA
+    { 0x1CF3D, TMT_MARK }, // ZNAMENNY COMBINING MARK DVOETOCHIE
+    { 0x1CF3E, TMT_MARK }, // ZNAMENNY COMBINING ATTACHING VERTICAL OMET
+    { 0x1CF3F, TMT_MARK }, // ZNAMENNY COMBINING MARK CURVED OMET
+    { 0x1CF40, TMT_MARK }, // ZNAMENNY COMBINING MARK KRYZH
+    { 0x1CF41, TMT_MARK }, // ZNAMENNY COMBINING LOWER TONAL RANGE INDICATOR
+    { 0x1CF42, TMT_MARK }, // ZNAMENNY PRIZNAK MODIFIER LEVEL-2
+    { 0x1CF43, TMT_MARK }, // ZNAMENNY PRIZNAK MODIFIER LEVEL-3
+    { 0x1CF44, TMT_MARK }, // ZNAMENNY PRIZNAK MODIFIER DIRECTION FLIP
+    { 0x1CF45, TMT_MARK }, // ZNAMENNY PRIZNAK MODIFIER KRYZH
+    { 0x1CF46, TMT_MARK }, // ZNAMENNY PRIZNAK MODIFIER ROG
+    { 0x1D165, TMT_MARK_FULLWIDTH }, //MUSICAL SYMBOL COMBINING STEM
+    { 0x1D166, TMT_MARK_FULLWIDTH }, //MUSICAL SYMBOL COMBINING SPRECHGESANG STEM
+    { 0x1D167, TMT_MARK }, // MUSICAL SYMBOL COMBINING TREMOLO-1
+    { 0x1D168, TMT_MARK }, // MUSICAL SYMBOL COMBINING TREMOLO-2
+    { 0x1D169, TMT_MARK }, // MUSICAL SYMBOL COMBINING TREMOLO-3
+    { 0x1D16D, TMT_MARK_FULLWIDTH }, //MUSICAL SYMBOL COMBINING AUGMENTATION DOT
+    { 0x1D16E, TMT_MARK_FULLWIDTH }, //MUSICAL SYMBOL COMBINING FLAG-1
+    { 0x1D16F, TMT_MARK_FULLWIDTH }, //MUSICAL SYMBOL COMBINING FLAG-2
+    { 0x1D170, TMT_MARK_FULLWIDTH }, //MUSICAL SYMBOL COMBINING FLAG-3
+    { 0x1D171, TMT_MARK_FULLWIDTH }, //MUSICAL SYMBOL COMBINING FLAG-4
+    { 0x1D172, TMT_MARK_FULLWIDTH }, //MUSICAL SYMBOL COMBINING FLAG-5
+    { 0x1D173, TMT_FORMAT }, // MUSICAL SYMBOL BEGIN BEAM
+    { 0x1D174, TMT_FORMAT }, // MUSICAL SYMBOL END BEAM
+    { 0x1D175, TMT_FORMAT }, // MUSICAL SYMBOL BEGIN TIE
+    { 0x1D176, TMT_FORMAT }, // MUSICAL SYMBOL END TIE
+    { 0x1D177, TMT_FORMAT }, // MUSICAL SYMBOL BEGIN SLUR
+    { 0x1D178, TMT_FORMAT }, // MUSICAL SYMBOL END SLUR
+    { 0x1D179, TMT_FORMAT }, // MUSICAL SYMBOL BEGIN PHRASE
+    { 0x1D17A, TMT_FORMAT }, // MUSICAL SYMBOL END PHRASE
+    { 0x1D17B, TMT_MARK }, // MUSICAL SYMBOL COMBINING ACCENT
+    { 0x1D17C, TMT_MARK }, // MUSICAL SYMBOL COMBINING STACCATO
+    { 0x1D17D, TMT_MARK }, // MUSICAL SYMBOL COMBINING TENUTO
+    { 0x1D17E, TMT_MARK }, // MUSICAL SYMBOL COMBINING STACCATISSIMO
+    { 0x1D17F, TMT_MARK }, // MUSICAL SYMBOL COMBINING MARCATO
+    { 0x1D180, TMT_MARK }, // MUSICAL SYMBOL COMBINING MARCATO-STACCATO
+    { 0x1D181, TMT_MARK }, // MUSICAL SYMBOL COMBINING ACCENT-STACCATO
+    { 0x1D182, TMT_MARK }, // MUSICAL SYMBOL COMBINING LOURE
+    { 0x1D185, TMT_MARK }, // MUSICAL SYMBOL COMBINING DOIT
+    { 0x1D186, TMT_MARK }, // MUSICAL SYMBOL COMBINING RIP
+    { 0x1D187, TMT_MARK }, // MUSICAL SYMBOL COMBINING FLIP
+    { 0x1D188, TMT_MARK }, // MUSICAL SYMBOL COMBINING SMEAR
+    { 0x1D189, TMT_MARK }, // MUSICAL SYMBOL COMBINING BEND
+    { 0x1D18A, TMT_MARK }, // MUSICAL SYMBOL COMBINING DOUBLE TONGUE
+    { 0x1D18B, TMT_MARK }, // MUSICAL SYMBOL COMBINING TRIPLE TONGUE
+    { 0x1D1AA, TMT_MARK }, // MUSICAL SYMBOL COMBINING DOWN BOW
+    { 0x1D1AB, TMT_MARK }, // MUSICAL SYMBOL COMBINING UP BOW
+    { 0x1D1AC, TMT_MARK }, // MUSICAL SYMBOL COMBINING HARMONIC
+    { 0x1D1AD, TMT_MARK }, // MUSICAL SYMBOL COMBINING SNAP PIZZICATO
+    { 0x1D242, TMT_MARK }, // COMBINING GREEK MUSICAL TRISEME
+    { 0x1D243, TMT_MARK }, // COMBINING GREEK MUSICAL TETRASEME
+    { 0x1D244, TMT_MARK }, // COMBINING GREEK MUSICAL PENTASEME
+    { 0x1DA00, TMT_MARK }, // SIGNWRITING HEAD RIM
+    { 0x1DA01, TMT_MARK }, // SIGNWRITING HEAD MOVEMENT-WALLPLANE STRAIGHT
+    { 0x1DA02, TMT_MARK }, // SIGNWRITING HEAD MOVEMENT-WALLPLANE TILT
+    { 0x1DA03, TMT_MARK }, // SIGNWRITING HEAD MOVEMENT-FLOORPLANE STRAIGHT
+    { 0x1DA04, TMT_MARK }, // SIGNWRITING HEAD MOVEMENT-WALLPLANE CURVE
+    { 0x1DA05, TMT_MARK }, // SIGNWRITING HEAD MOVEMENT-FLOORPLANE CURVE
+    { 0x1DA06, TMT_MARK }, // SIGNWRITING HEAD MOVEMENT CIRCLE
+    { 0x1DA07, TMT_MARK }, // SIGNWRITING FACE DIRECTION POSITION NOSE FORWARD TILTING
+    { 0x1DA08, TMT_MARK }, // SIGNWRITING FACE DIRECTION POSITION NOSE UP OR DOWN
+    { 0x1DA09, TMT_MARK }, // SIGNWRITING FACE DIRECTION POSITION NOSE UP OR DOWN TILTING
+    { 0x1DA0A, TMT_MARK }, // SIGNWRITING EYEBROWS STRAIGHT UP
+    { 0x1DA0B, TMT_MARK }, // SIGNWRITING EYEBROWS STRAIGHT NEUTRAL
+    { 0x1DA0C, TMT_MARK }, // SIGNWRITING EYEBROWS STRAIGHT DOWN
+    { 0x1DA0D, TMT_MARK }, // SIGNWRITING DREAMY EYEBROWS NEUTRAL DOWN
+    { 0x1DA0E, TMT_MARK }, // SIGNWRITING DREAMY EYEBROWS DOWN NEUTRAL
+    { 0x1DA0F, TMT_MARK }, // SIGNWRITING DREAMY EYEBROWS UP NEUTRAL
+    { 0x1DA10, TMT_MARK }, // SIGNWRITING DREAMY EYEBROWS NEUTRAL UP
+    { 0x1DA11, TMT_MARK }, // SIGNWRITING FOREHEAD NEUTRAL
+    { 0x1DA12, TMT_MARK }, // SIGNWRITING FOREHEAD CONTACT
+    { 0x1DA13, TMT_MARK }, // SIGNWRITING FOREHEAD WRINKLED
+    { 0x1DA14, TMT_MARK }, // SIGNWRITING EYES OPEN
+    { 0x1DA15, TMT_MARK }, // SIGNWRITING EYES SQUEEZED
+    { 0x1DA16, TMT_MARK }, // SIGNWRITING EYES CLOSED
+    { 0x1DA17, TMT_MARK }, // SIGNWRITING EYE BLINK SINGLE
+    { 0x1DA18, TMT_MARK }, // SIGNWRITING EYE BLINK MULTIPLE
+    { 0x1DA19, TMT_MARK }, // SIGNWRITING EYES HALF OPEN
+    { 0x1DA1A, TMT_MARK }, // SIGNWRITING EYES WIDE OPEN
+    { 0x1DA1B, TMT_MARK }, // SIGNWRITING EYES HALF CLOSED
+    { 0x1DA1C, TMT_MARK }, // SIGNWRITING EYES WIDENING MOVEMENT
+    { 0x1DA1D, TMT_MARK }, // SIGNWRITING EYE WINK
+    { 0x1DA1E, TMT_MARK }, // SIGNWRITING EYELASHES UP
+    { 0x1DA1F, TMT_MARK }, // SIGNWRITING EYELASHES DOWN
+    { 0x1DA20, TMT_MARK }, // SIGNWRITING EYELASHES FLUTTERING
+    { 0x1DA21, TMT_MARK }, // SIGNWRITING EYEGAZE-WALLPLANE STRAIGHT
+    { 0x1DA22, TMT_MARK }, // SIGNWRITING EYEGAZE-WALLPLANE STRAIGHT DOUBLE
+    { 0x1DA23, TMT_MARK }, // SIGNWRITING EYEGAZE-WALLPLANE STRAIGHT ALTERNATING
+    { 0x1DA24, TMT_MARK }, // SIGNWRITING EYEGAZE-FLOORPLANE STRAIGHT
+    { 0x1DA25, TMT_MARK }, // SIGNWRITING EYEGAZE-FLOORPLANE STRAIGHT DOUBLE
+    { 0x1DA26, TMT_MARK }, // SIGNWRITING EYEGAZE-FLOORPLANE STRAIGHT ALTERNATING
+    { 0x1DA27, TMT_MARK }, // SIGNWRITING EYEGAZE-WALLPLANE CURVED
+    { 0x1DA28, TMT_MARK }, // SIGNWRITING EYEGAZE-FLOORPLANE CURVED
+    { 0x1DA29, TMT_MARK }, // SIGNWRITING EYEGAZE-WALLPLANE CIRCLING
+    { 0x1DA2A, TMT_MARK }, // SIGNWRITING CHEEKS PUFFED
+    { 0x1DA2B, TMT_MARK }, // SIGNWRITING CHEEKS NEUTRAL
+    { 0x1DA2C, TMT_MARK }, // SIGNWRITING CHEEKS SUCKED
+    { 0x1DA2D, TMT_MARK }, // SIGNWRITING TENSE CHEEKS HIGH
+    { 0x1DA2E, TMT_MARK }, // SIGNWRITING TENSE CHEEKS MIDDLE
+    { 0x1DA2F, TMT_MARK }, // SIGNWRITING TENSE CHEEKS LOW
+    { 0x1DA30, TMT_MARK }, // SIGNWRITING EARS
+    { 0x1DA31, TMT_MARK }, // SIGNWRITING NOSE NEUTRAL
+    { 0x1DA32, TMT_MARK }, // SIGNWRITING NOSE CONTACT
+    { 0x1DA33, TMT_MARK }, // SIGNWRITING NOSE WRINKLES
+    { 0x1DA34, TMT_MARK }, // SIGNWRITING NOSE WIGGLES
+    { 0x1DA35, TMT_MARK }, // SIGNWRITING AIR BLOWING OUT
+    { 0x1DA36, TMT_MARK }, // SIGNWRITING AIR SUCKING IN
+    { 0x1DA3B, TMT_MARK }, // SIGNWRITING MOUTH CLOSED NEUTRAL
+    { 0x1DA3C, TMT_MARK }, // SIGNWRITING MOUTH CLOSED FORWARD
+    { 0x1DA3D, TMT_MARK }, // SIGNWRITING MOUTH CLOSED CONTACT
+    { 0x1DA3E, TMT_MARK }, // SIGNWRITING MOUTH SMILE
+    { 0x1DA3F, TMT_MARK }, // SIGNWRITING MOUTH SMILE WRINKLED
+    { 0x1DA40, TMT_MARK }, // SIGNWRITING MOUTH SMILE OPEN
+    { 0x1DA41, TMT_MARK }, // SIGNWRITING MOUTH FROWN
+    { 0x1DA42, TMT_MARK }, // SIGNWRITING MOUTH FROWN WRINKLED
+    { 0x1DA43, TMT_MARK }, // SIGNWRITING MOUTH FROWN OPEN
+    { 0x1DA44, TMT_MARK }, // SIGNWRITING MOUTH OPEN CIRCLE
+    { 0x1DA45, TMT_MARK }, // SIGNWRITING MOUTH OPEN FORWARD
+    { 0x1DA46, TMT_MARK }, // SIGNWRITING MOUTH OPEN WRINKLED
+    { 0x1DA47, TMT_MARK }, // SIGNWRITING MOUTH OPEN OVAL
+    { 0x1DA48, TMT_MARK }, // SIGNWRITING MOUTH OPEN OVAL WRINKLED
+    { 0x1DA49, TMT_MARK }, // SIGNWRITING MOUTH OPEN OVAL YAWN
+    { 0x1DA4A, TMT_MARK }, // SIGNWRITING MOUTH OPEN RECTANGLE
+    { 0x1DA4B, TMT_MARK }, // SIGNWRITING MOUTH OPEN RECTANGLE WRINKLED
+    { 0x1DA4C, TMT_MARK }, // SIGNWRITING MOUTH OPEN RECTANGLE YAWN
+    { 0x1DA4D, TMT_MARK }, // SIGNWRITING MOUTH KISS
+    { 0x1DA4E, TMT_MARK }, // SIGNWRITING MOUTH KISS FORWARD
+    { 0x1DA4F, TMT_MARK }, // SIGNWRITING MOUTH KISS WRINKLED
+    { 0x1DA50, TMT_MARK }, // SIGNWRITING MOUTH TENSE
+    { 0x1DA51, TMT_MARK }, // SIGNWRITING MOUTH TENSE FORWARD
+    { 0x1DA52, TMT_MARK }, // SIGNWRITING MOUTH TENSE SUCKED
+    { 0x1DA53, TMT_MARK }, // SIGNWRITING LIPS PRESSED TOGETHER
+    { 0x1DA54, TMT_MARK }, // SIGNWRITING LIP LOWER OVER UPPER
+    { 0x1DA55, TMT_MARK }, // SIGNWRITING LIP UPPER OVER LOWER
+    { 0x1DA56, TMT_MARK }, // SIGNWRITING MOUTH CORNERS
+    { 0x1DA57, TMT_MARK }, // SIGNWRITING MOUTH WRINKLES SINGLE
+    { 0x1DA58, TMT_MARK }, // SIGNWRITING MOUTH WRINKLES DOUBLE
+    { 0x1DA59, TMT_MARK }, // SIGNWRITING TONGUE STICKING OUT FAR
+    { 0x1DA5A, TMT_MARK }, // SIGNWRITING TONGUE LICKING LIPS
+    { 0x1DA5B, TMT_MARK }, // SIGNWRITING TONGUE TIP BETWEEN LIPS
+    { 0x1DA5C, TMT_MARK }, // SIGNWRITING TONGUE TIP TOUCHING INSIDE MOUTH
+    { 0x1DA5D, TMT_MARK }, // SIGNWRITING TONGUE INSIDE MOUTH RELAXED
+    { 0x1DA5E, TMT_MARK }, // SIGNWRITING TONGUE MOVES AGAINST CHEEK
+    { 0x1DA5F, TMT_MARK }, // SIGNWRITING TONGUE CENTRE STICKING OUT
+    { 0x1DA60, TMT_MARK }, // SIGNWRITING TONGUE CENTRE INSIDE MOUTH
+    { 0x1DA61, TMT_MARK }, // SIGNWRITING TEETH
+    { 0x1DA62, TMT_MARK }, // SIGNWRITING TEETH MOVEMENT
+    { 0x1DA63, TMT_MARK }, // SIGNWRITING TEETH ON TONGUE
+    { 0x1DA64, TMT_MARK }, // SIGNWRITING TEETH ON TONGUE MOVEMENT
+    { 0x1DA65, TMT_MARK }, // SIGNWRITING TEETH ON LIPS
+    { 0x1DA66, TMT_MARK }, // SIGNWRITING TEETH ON LIPS MOVEMENT
+    { 0x1DA67, TMT_MARK }, // SIGNWRITING TEETH BITE LIPS
+    { 0x1DA68, TMT_MARK }, // SIGNWRITING MOVEMENT-WALLPLANE JAW
+    { 0x1DA69, TMT_MARK }, // SIGNWRITING MOVEMENT-FLOORPLANE JAW
+    { 0x1DA6A, TMT_MARK }, // SIGNWRITING NECK
+    { 0x1DA6B, TMT_MARK }, // SIGNWRITING HAIR
+    { 0x1DA6C, TMT_MARK }, // SIGNWRITING EXCITEMENT
+    { 0x1DA75, TMT_MARK }, // SIGNWRITING UPPER BODY TILTING FROM HIP JOINTS
+    { 0x1DA84, TMT_MARK }, // SIGNWRITING LOCATION HEAD NECK
+    { 0x1DA9B, TMT_MARK }, // SIGNWRITING FILL MODIFIER-2
+    { 0x1DA9C, TMT_MARK }, // SIGNWRITING FILL MODIFIER-3
+    { 0x1DA9D, TMT_MARK }, // SIGNWRITING FILL MODIFIER-4
+    { 0x1DA9E, TMT_MARK }, // SIGNWRITING FILL MODIFIER-5
+    { 0x1DA9F, TMT_MARK }, // SIGNWRITING FILL MODIFIER-6
+    { 0x1DAA1, TMT_MARK }, // SIGNWRITING ROTATION MODIFIER-2
+    { 0x1DAA2, TMT_MARK }, // SIGNWRITING ROTATION MODIFIER-3
+    { 0x1DAA3, TMT_MARK }, // SIGNWRITING ROTATION MODIFIER-4
+    { 0x1DAA4, TMT_MARK }, // SIGNWRITING ROTATION MODIFIER-5
+    { 0x1DAA5, TMT_MARK }, // SIGNWRITING ROTATION MODIFIER-6
+    { 0x1DAA6, TMT_MARK }, // SIGNWRITING ROTATION MODIFIER-7
+    { 0x1DAA7, TMT_MARK }, // SIGNWRITING ROTATION MODIFIER-8
+    { 0x1DAA8, TMT_MARK }, // SIGNWRITING ROTATION MODIFIER-9
+    { 0x1DAA9, TMT_MARK }, // SIGNWRITING ROTATION MODIFIER-10
+    { 0x1DAAA, TMT_MARK }, // SIGNWRITING ROTATION MODIFIER-11
+    { 0x1DAAB, TMT_MARK }, // SIGNWRITING ROTATION MODIFIER-12
+    { 0x1DAAC, TMT_MARK }, // SIGNWRITING ROTATION MODIFIER-13
+    { 0x1DAAD, TMT_MARK }, // SIGNWRITING ROTATION MODIFIER-14
+    { 0x1DAAE, TMT_MARK }, // SIGNWRITING ROTATION MODIFIER-15
+    { 0x1DAAF, TMT_MARK }, // SIGNWRITING ROTATION MODIFIER-16
+    { 0x1E000, TMT_MARK }, // COMBINING GLAGOLITIC LETTER AZU
+    { 0x1E001, TMT_MARK }, // COMBINING GLAGOLITIC LETTER BUKY
+    { 0x1E002, TMT_MARK }, // COMBINING GLAGOLITIC LETTER VEDE
+    { 0x1E003, TMT_MARK }, // COMBINING GLAGOLITIC LETTER GLAGOLI
+    { 0x1E004, TMT_MARK }, // COMBINING GLAGOLITIC LETTER DOBRO
+    { 0x1E005, TMT_MARK }, // COMBINING GLAGOLITIC LETTER YESTU
+    { 0x1E006, TMT_MARK }, // COMBINING GLAGOLITIC LETTER ZHIVETE
+    { 0x1E008, TMT_MARK }, // COMBINING GLAGOLITIC LETTER ZEMLJA
+    { 0x1E009, TMT_MARK }, // COMBINING GLAGOLITIC LETTER IZHE
+    { 0x1E00A, TMT_MARK }, // COMBINING GLAGOLITIC LETTER INITIAL IZHE
+    { 0x1E00B, TMT_MARK }, // COMBINING GLAGOLITIC LETTER I
+    { 0x1E00C, TMT_MARK }, // COMBINING GLAGOLITIC LETTER DJERVI
+    { 0x1E00D, TMT_MARK }, // COMBINING GLAGOLITIC LETTER KAKO
+    { 0x1E00E, TMT_MARK }, // COMBINING GLAGOLITIC LETTER LJUDIJE
+    { 0x1E00F, TMT_MARK }, // COMBINING GLAGOLITIC LETTER MYSLITE
+    { 0x1E010, TMT_MARK }, // COMBINING GLAGOLITIC LETTER NASHI
+    { 0x1E011, TMT_MARK }, // COMBINING GLAGOLITIC LETTER ONU
+    { 0x1E012, TMT_MARK }, // COMBINING GLAGOLITIC LETTER POKOJI
+    { 0x1E013, TMT_MARK }, // COMBINING GLAGOLITIC LETTER RITSI
+    { 0x1E014, TMT_MARK }, // COMBINING GLAGOLITIC LETTER SLOVO
+    { 0x1E015, TMT_MARK }, // COMBINING GLAGOLITIC LETTER TVRIDO
+    { 0x1E016, TMT_MARK }, // COMBINING GLAGOLITIC LETTER UKU
+    { 0x1E017, TMT_MARK }, // COMBINING GLAGOLITIC LETTER FRITU
+    { 0x1E018, TMT_MARK }, // COMBINING GLAGOLITIC LETTER HERU
+    { 0x1E01B, TMT_MARK }, // COMBINING GLAGOLITIC LETTER SHTA
+    { 0x1E01C, TMT_MARK }, // COMBINING GLAGOLITIC LETTER TSI
+    { 0x1E01D, TMT_MARK }, // COMBINING GLAGOLITIC LETTER CHRIVI
+    { 0x1E01E, TMT_MARK }, // COMBINING GLAGOLITIC LETTER SHA
+    { 0x1E01F, TMT_MARK }, // COMBINING GLAGOLITIC LETTER YERU
+    { 0x1E020, TMT_MARK }, // COMBINING GLAGOLITIC LETTER YERI
+    { 0x1E021, TMT_MARK }, // COMBINING GLAGOLITIC LETTER YATI
+    { 0x1E023, TMT_MARK }, // COMBINING GLAGOLITIC LETTER YU
+    { 0x1E024, TMT_MARK }, // COMBINING GLAGOLITIC LETTER SMALL YUS
+    { 0x1E026, TMT_MARK }, // COMBINING GLAGOLITIC LETTER YO
+    { 0x1E027, TMT_MARK }, // COMBINING GLAGOLITIC LETTER IOTATED SMALL YUS
+    { 0x1E028, TMT_MARK }, // COMBINING GLAGOLITIC LETTER BIG YUS
+    { 0x1E029, TMT_MARK }, // COMBINING GLAGOLITIC LETTER IOTATED BIG YUS
+    { 0x1E02A, TMT_MARK }, // COMBINING GLAGOLITIC LETTER FITA
+    { 0x1E08F, TMT_MARK }, // COMBINING CYRILLIC SMALL LETTER BYELORUSSIAN-UKRAINIAN I
+    { 0x1E130, TMT_MARK }, // NYIAKENG PUACHUE HMONG TONE-B
+    { 0x1E131, TMT_MARK }, // NYIAKENG PUACHUE HMONG TONE-M
+    { 0x1E132, TMT_MARK }, // NYIAKENG PUACHUE HMONG TONE-J
+    { 0x1E133, TMT_MARK }, // NYIAKENG PUACHUE HMONG TONE-V
+    { 0x1E134, TMT_MARK }, // NYIAKENG PUACHUE HMONG TONE-S
+    { 0x1E135, TMT_MARK }, // NYIAKENG PUACHUE HMONG TONE-G
+    { 0x1E136, TMT_MARK }, // NYIAKENG PUACHUE HMONG TONE-D
+    { 0x1E2AE, TMT_MARK }, // TOTO SIGN RISING TONE
+    { 0x1E2EC, TMT_MARK }, // WANCHO TONE TUP
+    { 0x1E2ED, TMT_MARK }, // WANCHO TONE TUPNI
+    { 0x1E2EE, TMT_MARK }, // WANCHO TONE KOI
+    { 0x1E2EF, TMT_MARK }, // WANCHO TONE KOINI
+    { 0x1E4EC, TMT_MARK }, // NAG MUNDARI SIGN MUHOR
+    { 0x1E4ED, TMT_MARK }, // NAG MUNDARI SIGN TOYOR
+    { 0x1E4EE, TMT_MARK }, // NAG MUNDARI SIGN IKIR
+    { 0x1E4EF, TMT_MARK }, // NAG MUNDARI SIGN SUTUH
+    { 0x1E5EE, TMT_MARK }, // OL ONAL SIGN MU
+    { 0x1E5EF, TMT_MARK }, // OL ONAL SIGN IKIR
+    { 0x1E8D0, TMT_MARK }, // MENDE KIKAKUI COMBINING NUMBER TEENS
+    { 0x1E8D1, TMT_MARK }, // MENDE KIKAKUI COMBINING NUMBER TENS
+    { 0x1E8D2, TMT_MARK }, // MENDE KIKAKUI COMBINING NUMBER HUNDREDS
+    { 0x1E8D3, TMT_MARK }, // MENDE KIKAKUI COMBINING NUMBER THOUSANDS
+    { 0x1E8D4, TMT_MARK }, // MENDE KIKAKUI COMBINING NUMBER TEN THOUSANDS
+    { 0x1E8D5, TMT_MARK }, // MENDE KIKAKUI COMBINING NUMBER HUNDRED THOUSANDS
+    { 0x1E8D6, TMT_MARK }, // MENDE KIKAKUI COMBINING NUMBER MILLIONS
+    { 0x1E944, TMT_MARK }, // ADLAM ALIF LENGTHENER
+    { 0x1E945, TMT_MARK }, // ADLAM VOWEL LENGTHENER
+    { 0x1E946, TMT_MARK }, // ADLAM GEMINATION MARK
+    { 0x1E947, TMT_MARK }, // ADLAM HAMZA
+    { 0x1E948, TMT_MARK }, // ADLAM CONSONANT MODIFIER
+    { 0x1E949, TMT_MARK }, // ADLAM GEMINATE CONSONANT MODIFIER
+    { 0x1E94A, TMT_MARK }, // ADLAM NUKTA
+    { 0xE0001, TMT_FORMAT }, // LANGUAGE TAG
+    { 0xE0020, TMT_FORMAT }, // TAG SPACE
+    { 0xE0021, TMT_FORMAT }, // TAG EXCLAMATION MARK
+    { 0xE0022, TMT_FORMAT }, // TAG QUOTATION MARK
+    { 0xE0023, TMT_FORMAT }, // TAG NUMBER SIGN
+    { 0xE0024, TMT_FORMAT }, // TAG DOLLAR SIGN
+    { 0xE0025, TMT_FORMAT }, // TAG PERCENT SIGN
+    { 0xE0026, TMT_FORMAT }, // TAG AMPERSAND
+    { 0xE0027, TMT_FORMAT }, // TAG APOSTROPHE
+    { 0xE0028, TMT_FORMAT }, // TAG LEFT PARENTHESIS
+    { 0xE0029, TMT_FORMAT }, // TAG RIGHT PARENTHESIS
+    { 0xE002A, TMT_FORMAT }, // TAG ASTERISK
+    { 0xE002B, TMT_FORMAT }, // TAG PLUS SIGN
+    { 0xE002C, TMT_FORMAT }, // TAG COMMA
+    { 0xE002D, TMT_FORMAT }, // TAG HYPHEN-MINUS
+    { 0xE002E, TMT_FORMAT }, // TAG FULL STOP
+    { 0xE002F, TMT_FORMAT }, // TAG SOLIDUS
+    { 0xE0030, TMT_FORMAT }, // TAG DIGIT ZERO
+    { 0xE0031, TMT_FORMAT }, // TAG DIGIT ONE
+    { 0xE0032, TMT_FORMAT }, // TAG DIGIT TWO
+    { 0xE0033, TMT_FORMAT }, // TAG DIGIT THREE
+    { 0xE0034, TMT_FORMAT }, // TAG DIGIT FOUR
+    { 0xE0035, TMT_FORMAT }, // TAG DIGIT FIVE
+    { 0xE0036, TMT_FORMAT }, // TAG DIGIT SIX
+    { 0xE0037, TMT_FORMAT }, // TAG DIGIT SEVEN
+    { 0xE0038, TMT_FORMAT }, // TAG DIGIT EIGHT
+    { 0xE0039, TMT_FORMAT }, // TAG DIGIT NINE
+    { 0xE003A, TMT_FORMAT }, // TAG COLON
+    { 0xE003B, TMT_FORMAT }, // TAG SEMICOLON
+    { 0xE003C, TMT_FORMAT }, // TAG LESS-THAN SIGN
+    { 0xE003D, TMT_FORMAT }, // TAG EQUALS SIGN
+    { 0xE003E, TMT_FORMAT }, // TAG GREATER-THAN SIGN
+    { 0xE003F, TMT_FORMAT }, // TAG QUESTION MARK
+    { 0xE0040, TMT_FORMAT }, // TAG COMMERCIAL AT
+    { 0xE0041, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER A
+    { 0xE0042, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER B
+    { 0xE0043, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER C
+    { 0xE0044, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER D
+    { 0xE0045, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER E
+    { 0xE0046, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER F
+    { 0xE0047, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER G
+    { 0xE0048, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER H
+    { 0xE0049, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER I
+    { 0xE004A, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER J
+    { 0xE004B, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER K
+    { 0xE004C, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER L
+    { 0xE004D, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER M
+    { 0xE004E, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER N
+    { 0xE004F, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER O
+    { 0xE0050, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER P
+    { 0xE0051, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER Q
+    { 0xE0052, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER R
+    { 0xE0053, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER S
+    { 0xE0054, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER T
+    { 0xE0055, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER U
+    { 0xE0056, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER V
+    { 0xE0057, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER W
+    { 0xE0058, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER X
+    { 0xE0059, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER Y
+    { 0xE005A, TMT_FORMAT }, // TAG LATIN CAPITAL LETTER Z
+    { 0xE005B, TMT_FORMAT }, // TAG LEFT SQUARE BRACKET
+    { 0xE005C, TMT_FORMAT }, // TAG REVERSE SOLIDUS
+    { 0xE005D, TMT_FORMAT }, // TAG RIGHT SQUARE BRACKET
+    { 0xE005E, TMT_FORMAT }, // TAG CIRCUMFLEX ACCENT
+    { 0xE005F, TMT_FORMAT }, // TAG LOW LINE
+    { 0xE0060, TMT_FORMAT }, // TAG GRAVE ACCENT
+    { 0xE0061, TMT_FORMAT }, // TAG LATIN SMALL LETTER A
+    { 0xE0062, TMT_FORMAT }, // TAG LATIN SMALL LETTER B
+    { 0xE0063, TMT_FORMAT }, // TAG LATIN SMALL LETTER C
+    { 0xE0064, TMT_FORMAT }, // TAG LATIN SMALL LETTER D
+    { 0xE0065, TMT_FORMAT }, // TAG LATIN SMALL LETTER E
+    { 0xE0066, TMT_FORMAT }, // TAG LATIN SMALL LETTER F
+    { 0xE0067, TMT_FORMAT }, // TAG LATIN SMALL LETTER G
+    { 0xE0068, TMT_FORMAT }, // TAG LATIN SMALL LETTER H
+    { 0xE0069, TMT_FORMAT }, // TAG LATIN SMALL LETTER I
+    { 0xE006A, TMT_FORMAT }, // TAG LATIN SMALL LETTER J
+    { 0xE006B, TMT_FORMAT }, // TAG LATIN SMALL LETTER K
+    { 0xE006C, TMT_FORMAT }, // TAG LATIN SMALL LETTER L
+    { 0xE006D, TMT_FORMAT }, // TAG LATIN SMALL LETTER M
+    { 0xE006E, TMT_FORMAT }, // TAG LATIN SMALL LETTER N
+    { 0xE006F, TMT_FORMAT }, // TAG LATIN SMALL LETTER O
+    { 0xE0070, TMT_FORMAT }, // TAG LATIN SMALL LETTER P
+    { 0xE0071, TMT_FORMAT }, // TAG LATIN SMALL LETTER Q
+    { 0xE0072, TMT_FORMAT }, // TAG LATIN SMALL LETTER R
+    { 0xE0073, TMT_FORMAT }, // TAG LATIN SMALL LETTER S
+    { 0xE0074, TMT_FORMAT }, // TAG LATIN SMALL LETTER T
+    { 0xE0075, TMT_FORMAT }, // TAG LATIN SMALL LETTER U
+    { 0xE0076, TMT_FORMAT }, // TAG LATIN SMALL LETTER V
+    { 0xE0077, TMT_FORMAT }, // TAG LATIN SMALL LETTER W
+    { 0xE0078, TMT_FORMAT }, // TAG LATIN SMALL LETTER X
+    { 0xE0079, TMT_FORMAT }, // TAG LATIN SMALL LETTER Y
+    { 0xE007A, TMT_FORMAT }, // TAG LATIN SMALL LETTER Z
+    { 0xE007B, TMT_FORMAT }, // TAG LEFT CURLY BRACKET
+    { 0xE007C, TMT_FORMAT }, // TAG VERTICAL LINE
+    { 0xE007D, TMT_FORMAT }, // TAG RIGHT CURLY BRACKET
+    { 0xE007E, TMT_FORMAT }, // TAG TILDE
+    { 0xE007F, TMT_FORMAT }, // CANCEL TAG
+    { 0xE0100, TMT_MARK }, // VARIATION SELECTOR-17
+    { 0xE0101, TMT_MARK }, // VARIATION SELECTOR-18
+    { 0xE0102, TMT_MARK }, // VARIATION SELECTOR-19
+    { 0xE0103, TMT_MARK }, // VARIATION SELECTOR-20
+    { 0xE0104, TMT_MARK }, // VARIATION SELECTOR-21
+    { 0xE0105, TMT_MARK }, // VARIATION SELECTOR-22
+    { 0xE0106, TMT_MARK }, // VARIATION SELECTOR-23
+    { 0xE0107, TMT_MARK }, // VARIATION SELECTOR-24
+    { 0xE0108, TMT_MARK }, // VARIATION SELECTOR-25
+    { 0xE0109, TMT_MARK }, // VARIATION SELECTOR-26
+    { 0xE010A, TMT_MARK }, // VARIATION SELECTOR-27
+    { 0xE010B, TMT_MARK }, // VARIATION SELECTOR-28
+    { 0xE010C, TMT_MARK }, // VARIATION SELECTOR-29
+    { 0xE010D, TMT_MARK }, // VARIATION SELECTOR-30
+    { 0xE010E, TMT_MARK }, // VARIATION SELECTOR-31
+    { 0xE010F, TMT_MARK }, // VARIATION SELECTOR-32
+    { 0xE0110, TMT_MARK }, // VARIATION SELECTOR-33
+    { 0xE0111, TMT_MARK }, // VARIATION SELECTOR-34
+    { 0xE0112, TMT_MARK }, // VARIATION SELECTOR-35
+    { 0xE0113, TMT_MARK }, // VARIATION SELECTOR-36
+    { 0xE0114, TMT_MARK }, // VARIATION SELECTOR-37
+    { 0xE0115, TMT_MARK }, // VARIATION SELECTOR-38
+    { 0xE0116, TMT_MARK }, // VARIATION SELECTOR-39
+    { 0xE0117, TMT_MARK }, // VARIATION SELECTOR-40
+    { 0xE0118, TMT_MARK }, // VARIATION SELECTOR-41
+    { 0xE0119, TMT_MARK }, // VARIATION SELECTOR-42
+    { 0xE011A, TMT_MARK }, // VARIATION SELECTOR-43
+    { 0xE011B, TMT_MARK }, // VARIATION SELECTOR-44
+    { 0xE011C, TMT_MARK }, // VARIATION SELECTOR-45
+    { 0xE011D, TMT_MARK }, // VARIATION SELECTOR-46
+    { 0xE011E, TMT_MARK }, // VARIATION SELECTOR-47
+    { 0xE011F, TMT_MARK }, // VARIATION SELECTOR-48
+    { 0xE0120, TMT_MARK }, // VARIATION SELECTOR-49
+    { 0xE0121, TMT_MARK }, // VARIATION SELECTOR-50
+    { 0xE0122, TMT_MARK }, // VARIATION SELECTOR-51
+    { 0xE0123, TMT_MARK }, // VARIATION SELECTOR-52
+    { 0xE0124, TMT_MARK }, // VARIATION SELECTOR-53
+    { 0xE0125, TMT_MARK }, // VARIATION SELECTOR-54
+    { 0xE0126, TMT_MARK }, // VARIATION SELECTOR-55
+    { 0xE0127, TMT_MARK }, // VARIATION SELECTOR-56
+    { 0xE0128, TMT_MARK }, // VARIATION SELECTOR-57
+    { 0xE0129, TMT_MARK }, // VARIATION SELECTOR-58
+    { 0xE012A, TMT_MARK }, // VARIATION SELECTOR-59
+    { 0xE012B, TMT_MARK }, // VARIATION SELECTOR-60
+    { 0xE012C, TMT_MARK }, // VARIATION SELECTOR-61
+    { 0xE012D, TMT_MARK }, // VARIATION SELECTOR-62
+    { 0xE012E, TMT_MARK }, // VARIATION SELECTOR-63
+    { 0xE012F, TMT_MARK }, // VARIATION SELECTOR-64
+    { 0xE0130, TMT_MARK }, // VARIATION SELECTOR-65
+    { 0xE0131, TMT_MARK }, // VARIATION SELECTOR-66
+    { 0xE0132, TMT_MARK }, // VARIATION SELECTOR-67
+    { 0xE0133, TMT_MARK }, // VARIATION SELECTOR-68
+    { 0xE0134, TMT_MARK }, // VARIATION SELECTOR-69
+    { 0xE0135, TMT_MARK }, // VARIATION SELECTOR-70
+    { 0xE0136, TMT_MARK }, // VARIATION SELECTOR-71
+    { 0xE0137, TMT_MARK }, // VARIATION SELECTOR-72
+    { 0xE0138, TMT_MARK }, // VARIATION SELECTOR-73
+    { 0xE0139, TMT_MARK }, // VARIATION SELECTOR-74
+    { 0xE013A, TMT_MARK }, // VARIATION SELECTOR-75
+    { 0xE013B, TMT_MARK }, // VARIATION SELECTOR-76
+    { 0xE013C, TMT_MARK }, // VARIATION SELECTOR-77
+    { 0xE013D, TMT_MARK }, // VARIATION SELECTOR-78
+    { 0xE013E, TMT_MARK }, // VARIATION SELECTOR-79
+    { 0xE013F, TMT_MARK }, // VARIATION SELECTOR-80
+    { 0xE0140, TMT_MARK }, // VARIATION SELECTOR-81
+    { 0xE0141, TMT_MARK }, // VARIATION SELECTOR-82
+    { 0xE0142, TMT_MARK }, // VARIATION SELECTOR-83
+    { 0xE0143, TMT_MARK }, // VARIATION SELECTOR-84
+    { 0xE0144, TMT_MARK }, // VARIATION SELECTOR-85
+    { 0xE0145, TMT_MARK }, // VARIATION SELECTOR-86
+    { 0xE0146, TMT_MARK }, // VARIATION SELECTOR-87
+    { 0xE0147, TMT_MARK }, // VARIATION SELECTOR-88
+    { 0xE0148, TMT_MARK }, // VARIATION SELECTOR-89
+    { 0xE0149, TMT_MARK }, // VARIATION SELECTOR-90
+    { 0xE014A, TMT_MARK }, // VARIATION SELECTOR-91
+    { 0xE014B, TMT_MARK }, // VARIATION SELECTOR-92
+    { 0xE014C, TMT_MARK }, // VARIATION SELECTOR-93
+    { 0xE014D, TMT_MARK }, // VARIATION SELECTOR-94
+    { 0xE014E, TMT_MARK }, // VARIATION SELECTOR-95
+    { 0xE014F, TMT_MARK }, // VARIATION SELECTOR-96
+    { 0xE0150, TMT_MARK }, // VARIATION SELECTOR-97
+    { 0xE0151, TMT_MARK }, // VARIATION SELECTOR-98
+    { 0xE0152, TMT_MARK }, // VARIATION SELECTOR-99
+    { 0xE0153, TMT_MARK }, // VARIATION SELECTOR-100
+    { 0xE0154, TMT_MARK }, // VARIATION SELECTOR-101
+    { 0xE0155, TMT_MARK }, // VARIATION SELECTOR-102
+    { 0xE0156, TMT_MARK }, // VARIATION SELECTOR-103
+    { 0xE0157, TMT_MARK }, // VARIATION SELECTOR-104
+    { 0xE0158, TMT_MARK }, // VARIATION SELECTOR-105
+    { 0xE0159, TMT_MARK }, // VARIATION SELECTOR-106
+    { 0xE015A, TMT_MARK }, // VARIATION SELECTOR-107
+    { 0xE015B, TMT_MARK }, // VARIATION SELECTOR-108
+    { 0xE015C, TMT_MARK }, // VARIATION SELECTOR-109
+    { 0xE015D, TMT_MARK }, // VARIATION SELECTOR-110
+    { 0xE015E, TMT_MARK }, // VARIATION SELECTOR-111
+    { 0xE015F, TMT_MARK }, // VARIATION SELECTOR-112
+    { 0xE0160, TMT_MARK }, // VARIATION SELECTOR-113
+    { 0xE0161, TMT_MARK }, // VARIATION SELECTOR-114
+    { 0xE0162, TMT_MARK }, // VARIATION SELECTOR-115
+    { 0xE0163, TMT_MARK }, // VARIATION SELECTOR-116
+    { 0xE0164, TMT_MARK }, // VARIATION SELECTOR-117
+    { 0xE0165, TMT_MARK }, // VARIATION SELECTOR-118
+    { 0xE0166, TMT_MARK }, // VARIATION SELECTOR-119
+    { 0xE0167, TMT_MARK }, // VARIATION SELECTOR-120
+    { 0xE0168, TMT_MARK }, // VARIATION SELECTOR-121
+    { 0xE0169, TMT_MARK }, // VARIATION SELECTOR-122
+    { 0xE016A, TMT_MARK }, // VARIATION SELECTOR-123
+    { 0xE016B, TMT_MARK }, // VARIATION SELECTOR-124
+    { 0xE016C, TMT_MARK }, // VARIATION SELECTOR-125
+    { 0xE016D, TMT_MARK }, // VARIATION SELECTOR-126
+    { 0xE016E, TMT_MARK }, // VARIATION SELECTOR-127
+    { 0xE016F, TMT_MARK }, // VARIATION SELECTOR-128
+    { 0xE0170, TMT_MARK }, // VARIATION SELECTOR-129
+    { 0xE0171, TMT_MARK }, // VARIATION SELECTOR-130
+    { 0xE0172, TMT_MARK }, // VARIATION SELECTOR-131
+    { 0xE0173, TMT_MARK }, // VARIATION SELECTOR-132
+    { 0xE0174, TMT_MARK }, // VARIATION SELECTOR-133
+    { 0xE0175, TMT_MARK }, // VARIATION SELECTOR-134
+    { 0xE0176, TMT_MARK }, // VARIATION SELECTOR-135
+    { 0xE0177, TMT_MARK }, // VARIATION SELECTOR-136
+    { 0xE0178, TMT_MARK }, // VARIATION SELECTOR-137
+    { 0xE0179, TMT_MARK }, // VARIATION SELECTOR-138
+    { 0xE017A, TMT_MARK }, // VARIATION SELECTOR-139
+    { 0xE017B, TMT_MARK }, // VARIATION SELECTOR-140
+    { 0xE017C, TMT_MARK }, // VARIATION SELECTOR-141
+    { 0xE017D, TMT_MARK }, // VARIATION SELECTOR-142
+    { 0xE017E, TMT_MARK }, // VARIATION SELECTOR-143
+    { 0xE017F, TMT_MARK }, // VARIATION SELECTOR-144
+    { 0xE0180, TMT_MARK }, // VARIATION SELECTOR-145
+    { 0xE0181, TMT_MARK }, // VARIATION SELECTOR-146
+    { 0xE0182, TMT_MARK }, // VARIATION SELECTOR-147
+    { 0xE0183, TMT_MARK }, // VARIATION SELECTOR-148
+    { 0xE0184, TMT_MARK }, // VARIATION SELECTOR-149
+    { 0xE0185, TMT_MARK }, // VARIATION SELECTOR-150
+    { 0xE0186, TMT_MARK }, // VARIATION SELECTOR-151
+    { 0xE0187, TMT_MARK }, // VARIATION SELECTOR-152
+    { 0xE0188, TMT_MARK }, // VARIATION SELECTOR-153
+    { 0xE0189, TMT_MARK }, // VARIATION SELECTOR-154
+    { 0xE018A, TMT_MARK }, // VARIATION SELECTOR-155
+    { 0xE018B, TMT_MARK }, // VARIATION SELECTOR-156
+    { 0xE018C, TMT_MARK }, // VARIATION SELECTOR-157
+    { 0xE018D, TMT_MARK }, // VARIATION SELECTOR-158
+    { 0xE018E, TMT_MARK }, // VARIATION SELECTOR-159
+    { 0xE018F, TMT_MARK }, // VARIATION SELECTOR-160
+    { 0xE0190, TMT_MARK }, // VARIATION SELECTOR-161
+    { 0xE0191, TMT_MARK }, // VARIATION SELECTOR-162
+    { 0xE0192, TMT_MARK }, // VARIATION SELECTOR-163
+    { 0xE0193, TMT_MARK }, // VARIATION SELECTOR-164
+    { 0xE0194, TMT_MARK }, // VARIATION SELECTOR-165
+    { 0xE0195, TMT_MARK }, // VARIATION SELECTOR-166
+    { 0xE0196, TMT_MARK }, // VARIATION SELECTOR-167
+    { 0xE0197, TMT_MARK }, // VARIATION SELECTOR-168
+    { 0xE0198, TMT_MARK }, // VARIATION SELECTOR-169
+    { 0xE0199, TMT_MARK }, // VARIATION SELECTOR-170
+    { 0xE019A, TMT_MARK }, // VARIATION SELECTOR-171
+    { 0xE019B, TMT_MARK }, // VARIATION SELECTOR-172
+    { 0xE019C, TMT_MARK }, // VARIATION SELECTOR-173
+    { 0xE019D, TMT_MARK }, // VARIATION SELECTOR-174
+    { 0xE019E, TMT_MARK }, // VARIATION SELECTOR-175
+    { 0xE019F, TMT_MARK }, // VARIATION SELECTOR-176
+    { 0xE01A0, TMT_MARK }, // VARIATION SELECTOR-177
+    { 0xE01A1, TMT_MARK }, // VARIATION SELECTOR-178
+    { 0xE01A2, TMT_MARK }, // VARIATION SELECTOR-179
+    { 0xE01A3, TMT_MARK }, // VARIATION SELECTOR-180
+    { 0xE01A4, TMT_MARK }, // VARIATION SELECTOR-181
+    { 0xE01A5, TMT_MARK }, // VARIATION SELECTOR-182
+    { 0xE01A6, TMT_MARK }, // VARIATION SELECTOR-183
+    { 0xE01A7, TMT_MARK }, // VARIATION SELECTOR-184
+    { 0xE01A8, TMT_MARK }, // VARIATION SELECTOR-185
+    { 0xE01A9, TMT_MARK }, // VARIATION SELECTOR-186
+    { 0xE01AA, TMT_MARK }, // VARIATION SELECTOR-187
+    { 0xE01AB, TMT_MARK }, // VARIATION SELECTOR-188
+    { 0xE01AC, TMT_MARK }, // VARIATION SELECTOR-189
+    { 0xE01AD, TMT_MARK }, // VARIATION SELECTOR-190
+    { 0xE01AE, TMT_MARK }, // VARIATION SELECTOR-191
+    { 0xE01AF, TMT_MARK }, // VARIATION SELECTOR-192
+    { 0xE01B0, TMT_MARK }, // VARIATION SELECTOR-193
+    { 0xE01B1, TMT_MARK }, // VARIATION SELECTOR-194
+    { 0xE01B2, TMT_MARK }, // VARIATION SELECTOR-195
+    { 0xE01B3, TMT_MARK }, // VARIATION SELECTOR-196
+    { 0xE01B4, TMT_MARK }, // VARIATION SELECTOR-197
+    { 0xE01B5, TMT_MARK }, // VARIATION SELECTOR-198
+    { 0xE01B6, TMT_MARK }, // VARIATION SELECTOR-199
+    { 0xE01B7, TMT_MARK }, // VARIATION SELECTOR-200
+    { 0xE01B8, TMT_MARK }, // VARIATION SELECTOR-201
+    { 0xE01B9, TMT_MARK }, // VARIATION SELECTOR-202
+    { 0xE01BA, TMT_MARK }, // VARIATION SELECTOR-203
+    { 0xE01BB, TMT_MARK }, // VARIATION SELECTOR-204
+    { 0xE01BC, TMT_MARK }, // VARIATION SELECTOR-205
+    { 0xE01BD, TMT_MARK }, // VARIATION SELECTOR-206
+    { 0xE01BE, TMT_MARK }, // VARIATION SELECTOR-207
+    { 0xE01BF, TMT_MARK }, // VARIATION SELECTOR-208
+    { 0xE01C0, TMT_MARK }, // VARIATION SELECTOR-209
+    { 0xE01C1, TMT_MARK }, // VARIATION SELECTOR-210
+    { 0xE01C2, TMT_MARK }, // VARIATION SELECTOR-211
+    { 0xE01C3, TMT_MARK }, // VARIATION SELECTOR-212
+    { 0xE01C4, TMT_MARK }, // VARIATION SELECTOR-213
+    { 0xE01C5, TMT_MARK }, // VARIATION SELECTOR-214
+    { 0xE01C6, TMT_MARK }, // VARIATION SELECTOR-215
+    { 0xE01C7, TMT_MARK }, // VARIATION SELECTOR-216
+    { 0xE01C8, TMT_MARK }, // VARIATION SELECTOR-217
+    { 0xE01C9, TMT_MARK }, // VARIATION SELECTOR-218
+    { 0xE01CA, TMT_MARK }, // VARIATION SELECTOR-219
+    { 0xE01CB, TMT_MARK }, // VARIATION SELECTOR-220
+    { 0xE01CC, TMT_MARK }, // VARIATION SELECTOR-221
+    { 0xE01CD, TMT_MARK }, // VARIATION SELECTOR-222
+    { 0xE01CE, TMT_MARK }, // VARIATION SELECTOR-223
+    { 0xE01CF, TMT_MARK }, // VARIATION SELECTOR-224
+    { 0xE01D0, TMT_MARK }, // VARIATION SELECTOR-225
+    { 0xE01D1, TMT_MARK }, // VARIATION SELECTOR-226
+    { 0xE01D2, TMT_MARK }, // VARIATION SELECTOR-227
+    { 0xE01D3, TMT_MARK }, // VARIATION SELECTOR-228
+    { 0xE01D4, TMT_MARK }, // VARIATION SELECTOR-229
+    { 0xE01D5, TMT_MARK }, // VARIATION SELECTOR-230
+    { 0xE01D6, TMT_MARK }, // VARIATION SELECTOR-231
+    { 0xE01D7, TMT_MARK }, // VARIATION SELECTOR-232
+    { 0xE01D8, TMT_MARK }, // VARIATION SELECTOR-233
+    { 0xE01D9, TMT_MARK }, // VARIATION SELECTOR-234
+    { 0xE01DA, TMT_MARK }, // VARIATION SELECTOR-235
+    { 0xE01DB, TMT_MARK }, // VARIATION SELECTOR-236
+    { 0xE01DC, TMT_MARK }, // VARIATION SELECTOR-237
+    { 0xE01DD, TMT_MARK }, // VARIATION SELECTOR-238
+    { 0xE01DE, TMT_MARK }, // VARIATION SELECTOR-239
+    { 0xE01DF, TMT_MARK }, // VARIATION SELECTOR-240
+    { 0xE01E0, TMT_MARK }, // VARIATION SELECTOR-241
+    { 0xE01E1, TMT_MARK }, // VARIATION SELECTOR-242
+    { 0xE01E2, TMT_MARK }, // VARIATION SELECTOR-243
+    { 0xE01E3, TMT_MARK }, // VARIATION SELECTOR-244
+    { 0xE01E4, TMT_MARK }, // VARIATION SELECTOR-245
+    { 0xE01E5, TMT_MARK }, // VARIATION SELECTOR-246
+    { 0xE01E6, TMT_MARK }, // VARIATION SELECTOR-247
+    { 0xE01E7, TMT_MARK }, // VARIATION SELECTOR-248
+    { 0xE01E8, TMT_MARK }, // VARIATION SELECTOR-249
+    { 0xE01E9, TMT_MARK }, // VARIATION SELECTOR-250
+    { 0xE01EA, TMT_MARK }, // VARIATION SELECTOR-251
+    { 0xE01EB, TMT_MARK }, // VARIATION SELECTOR-252
+    { 0xE01EC, TMT_MARK }, // VARIATION SELECTOR-253
+    { 0xE01ED, TMT_MARK }, // VARIATION SELECTOR-254
+    { 0xE01EE, TMT_MARK }, // VARIATION SELECTOR-255
+    { 0xE01EF, TMT_MARK }, // VARIATION SELECTOR-256
+};
+
+tmt_mark_t 
+get_wc_unicode_mark_type(tmt_wchar_t wc) {
+	if (wc < unicode_mark_types[0].code) {
+		return TMT_NOT_MARK;
+	}
+	int len = sizeof(unicode_mark_types) / sizeof(struct code_mark);
+	int lo_idx = 0;
+	int hi_idx = len - 1;
+	int pos = hi_idx / 2;
+	while (true) {
+		if (wc == unicode_mark_types[pos].code) {
+			return unicode_mark_types[pos].mark;
+		}
+		if (wc < unicode_mark_types[pos].code) {
+			hi_idx = pos - 1;
+		} else if (wc > unicode_mark_types[pos].code) {
+			lo_idx = pos + 1;
+		}
+		if (hi_idx < lo_idx) {
+			break;
+		}
+		pos = lo_idx + (hi_idx - lo_idx + 1) / 2;
+	}
+	return TMT_NOT_MARK;
+}
+
