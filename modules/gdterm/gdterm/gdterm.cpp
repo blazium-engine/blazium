@@ -916,7 +916,6 @@ void GDTerm::gui_input(const Ref<InputEvent> &p_event) {
 				emit_signal("bell_request");
 				return;
 			}
-			//assert(sizeof(wchar_t) == sizeof(int64_t));
 			wchar_t unicode = (wchar_t)ke->get_unicode();
 			Key code = ke->get_keycode_with_modifiers();
 			if (_is_copy_request(code)) {
