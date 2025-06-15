@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+from misc.utility.scons_hints import *
+
+Import("env")
+Import("env_modules")
+
+
+env_thirdparty = env.Clone()
+env_thirdparty.disable_warnings()
+env_thirdparty.add_source_files(env_thirdparty.modules_sources, "#thirdparty/libtmt/*.c")
+
+env_gdterm = env_modules.Clone()
+
+# Platform-specific setting for gdterm
+if env_gdterm["platform"] == "windows":
+    env_gdterm.add_source_files(env.modules_sources, "gdterm/pty/platform/windows/*.cpp")
+    env_thirdparty.Append(CCFLAGS=["/wd4200"])
+    windows_defines = ["FORCE_UTF8", "_CRT_SECURE_NO_WARNINGS", "_CRT_NONSTDC_NO_DEPRECATE", "UNICODE", "_UNICODE"]
+    # Architecture-specific defines
+    if env["arch"] == "x86_64":
+        windows_defines.extend(
+            [
+                "_WIN64",
+                "WIN64",
+                "_AMD64_",
+            ]
+        )
+    elif env["arch"] == "x86":
+        windows_defines.extend(
+            [
+                "_X86_",
+                "WIN32",
+            ]
+        )
+    elif env["arch"] == "arm64":
+        windows_defines.extend(
+            [
+                "_WIN64",
+                "WIN64",
+                "_ARM64_",
+                "_M_ARM64",
+            ]
+        )
+    else:
+        print(f"Warning: Unknown architecture {env['arch']}, Windows build may fail")
+    env_gdterm.Append(CPPDEFINES=windows_defines, CCFLAGS="-DUNICODE")
+else:
+    env_gdterm.add_source_files(env.modules_sources, "gdterm/pty/platform/linux/*.cpp")
+    env_gdterm.Append(
+        CPPDEFINES=[
+            "FORCE_UTF8",
+        ],
+    )
+
+if env_gdterm["platform"] == "macos":
+    env_gdterm.Append(
+        CPPDEFINES=[
+            "USE_COMMAND_KEY_FOR_SHORTCUT",
+            "USE_PTY_UTIL_H",
+        ]
+    )
+elif env_gdterm["platform"] == "linuxbsd":
+    env_gdterm.Append(
+        CPPDEFINES=[
+            "USE_PRIMARY_CLIPBOARD",
+        ]
+    )
+
+
+env_gdterm.Prepend(CPPPATH=["thirdparty"])
+# Add main gdterm sources
+env_gdterm.add_source_files(env.modules_sources, "gdterm/pty/*.cpp")
+env_gdterm.add_source_files(env.modules_sources, "gdterm/*.cpp")
+env_gdterm.add_source_files(env.modules_sources, "*.cpp")
