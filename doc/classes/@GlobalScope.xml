@@ -1581,9 +1581,6 @@
 		<member name="Geometry3D" type="Geometry3D" setter="" getter="">
 			The [Geometry3D] singleton.
 		</member>
-		<member name="GifManager" type="GifManager" setter="" getter="">
-			The [GifManager] singleton.
-		</member>
 		<member name="IP" type="IP" setter="" getter="">
 			The [IP] singleton.
 		</member>
