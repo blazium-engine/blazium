@@ -51,7 +51,7 @@ Ref<AnimatedTexture> GifManager::i_f_to_a_t(const Ref<ImageFrames> &frames) {
 	a.instantiate();
 	int count = frames->get_frame_count();
 	a->set_frames(count);
-	for (size_t i = 0; i < count; i++) {
+	for (int i = 0; i < count; i++) {
 		a->set_frame_duration(i, frames->get_frame_delay(i));
 		Ref<ImageTexture> tex = ImageTexture::create_from_image(frames->get_frame_image(i));
 		a->set_frame_texture(i, tex);
@@ -86,7 +86,7 @@ Ref<SpriteFrames> GifManager::i_f_to_s_f(const Ref<ImageFrames> &frames, double 
 
 	// Use the average time of all the frames.
 	// real_t total_time = 0.0;
-	for (size_t i = 0; i < count; i++) {
+	for (int i = 0; i < count; i++) {
 		//float duration = frames->get_frame_delay(i);
 		// total_time += duration;
 		Ref<ImageTexture> tex = ImageTexture::create_from_image(frames->get_frame_image(i));
@@ -99,7 +99,7 @@ Ref<SpriteFrames> GifManager::i_f_to_s_f(const Ref<ImageFrames> &frames, double 
 	sframes->set_animation_speed("gif", fps); // fps
 
 	// Update durations
-	for (size_t i = 0; i < count; i++) {
+	for (int i = 0; i < count; i++) {
 		float durationSeconds = frames->get_frame_delay(i);
 		// float relativeDuration = durationSeconds * average_time;
 		float relativeDuration = durationSeconds * fps;
