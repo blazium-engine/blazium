@@ -11,9 +11,7 @@ def get_doc_classes():
         "ImageFrames",
         "GifManager",
         "GifToSpriteFramesImportPlugin",
-        "GifToSpriteFramesPlugin",
         "GifToAnimatedTextureImportPlugin",
-        "GifToAnimatedTexturePlugin",
     ]
 
 

@@ -4,40 +4,9 @@
 #include "core/core_bind.h"
 #include "core/io/resource_importer.h"
 #include "core/io/resource_saver.h"
-#include "editor/plugins/editor_plugin.cpp"
 #include "scene/resources/animated_texture.h"
 
 #include <thirdparty/giflib/gif_lib.h>
-
-#define godotgif_stringify(name) #name
-
-GifToAnimatedTexturePlugin::GifToAnimatedTexturePlugin() {
-}
-
-GifToAnimatedTexturePlugin::~GifToAnimatedTexturePlugin() {
-}
-
-String GifToAnimatedTexturePlugin::get_plugin_name() const {
-	return "GIF to AnimatedTexture";
-}
-
-const Ref<Texture2D> GifToAnimatedTexturePlugin::get_plugin_icon() const {
-	return memnew(Texture2D());
-}
-
-bool GifToAnimatedTexturePlugin::has_main_screen() const {
-	return false;
-}
-
-void GifToAnimatedTexturePlugin::make_visible(bool visible) {
-}
-
-void GifToAnimatedTexturePlugin::edit(Object *object) {
-}
-
-bool GifToAnimatedTexturePlugin::handles(Object *object) const {
-	return false;
-}
 
 String GifToAnimatedTextureImportPlugin::get_importer_name() const {
 	return "import_gif_to_animated_texture";

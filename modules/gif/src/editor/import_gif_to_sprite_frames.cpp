@@ -3,40 +3,9 @@
 #include "../image_frames.h"
 #include "core/core_bind.h"
 #include "core/io/resource_saver.h"
-#include "editor/plugins/editor_plugin.cpp"
 #include "scene/resources/sprite_frames.h"
 
 #include <thirdparty/giflib/gif_lib.h>
-
-#define godotgif_stringify(name) #name
-
-GifToSpriteFramesPlugin::GifToSpriteFramesPlugin() {
-}
-
-GifToSpriteFramesPlugin::~GifToSpriteFramesPlugin() {
-}
-
-String GifToSpriteFramesPlugin::get_plugin_name() const {
-	return "GIF to SpriteFrames";
-}
-
-const Ref<Texture2D> GifToSpriteFramesPlugin::get_plugin_icon() const {
-	return memnew(Texture2D());
-}
-
-bool GifToSpriteFramesPlugin::has_main_screen() const {
-	return false;
-}
-
-void GifToSpriteFramesPlugin::make_visible(bool visible) {
-}
-
-void GifToSpriteFramesPlugin::edit(Object *object) {
-}
-
-bool GifToSpriteFramesPlugin::handles(Object *object) const {
-	return false;
-}
 
 String GifToSpriteFramesImportPlugin::get_importer_name() const {
 	return "import_gif_to_sprite_frames";

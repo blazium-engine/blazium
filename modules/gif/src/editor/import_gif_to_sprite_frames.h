@@ -2,15 +2,14 @@
 #define IMPORT_GIF_TO_SPRITE_FRAMES_H
 
 #include "../image_frames.h"
+#include "core/io/resource_importer.h"
 #include "core/object/object.h"
-#include "editor/import/editor_import_plugin.h"
-#include "editor/plugins/editor_plugin.h"
 #include "scene/resources/texture.h"
 
 #include <thirdparty/giflib/gif_lib.h>
 
-class GifToSpriteFramesImportPlugin : public EditorImportPlugin {
-	GDCLASS(GifToSpriteFramesImportPlugin, EditorImportPlugin);
+class GifToSpriteFramesImportPlugin : public ResourceImporter {
+	GDCLASS(GifToSpriteFramesImportPlugin, ResourceImporter);
 
 public:
 	enum Presets {
@@ -32,20 +31,6 @@ public:
 	virtual Error import(ResourceUID::ID p_source_id, const String &p_source_file, const String &p_save_path, const HashMap<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files, Variant *r_metadata) override;
 
 private:
-};
-
-class GifToSpriteFramesPlugin : public EditorPlugin {
-	GDCLASS(GifToSpriteFramesPlugin, EditorPlugin);
-
-public:
-	GifToSpriteFramesPlugin();
-	~GifToSpriteFramesPlugin();
-	virtual String get_plugin_name() const override;
-	virtual const Ref<Texture2D> get_plugin_icon() const override;
-	virtual bool has_main_screen() const override;
-	virtual void make_visible(bool visible) override;
-	virtual void edit(Object *object) override;
-	virtual bool handles(Object *object) const override;
 };
 
 VARIANT_ENUM_CAST(GifToSpriteFramesImportPlugin::Presets);
