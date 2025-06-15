@@ -1,7 +1,6 @@
 #include "register_types.h"
 
 #include "core/core_bind.cpp"
-#include "editor/plugins/editor_plugin.h"
 #include "src/editor/import_gif_to_animated_texture.h"
 #include "src/editor/import_gif_to_sprite_frames.h"
 #include "src/gifmanager.h"
