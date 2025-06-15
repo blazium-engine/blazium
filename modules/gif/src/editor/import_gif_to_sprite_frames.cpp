@@ -11,13 +11,9 @@
 #define godotgif_stringify(name) #name
 
 GifToSpriteFramesPlugin::GifToSpriteFramesPlugin() {
-	gtatip.instantiate();
-	add_import_plugin(gtatip);
 }
 
 GifToSpriteFramesPlugin::~GifToSpriteFramesPlugin() {
-	remove_import_plugin(gtatip);
-	gtatip.unref();
 }
 
 String GifToSpriteFramesPlugin::get_plugin_name() const {

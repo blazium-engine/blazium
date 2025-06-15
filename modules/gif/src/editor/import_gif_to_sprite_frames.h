@@ -37,8 +37,6 @@ private:
 class GifToSpriteFramesPlugin : public EditorPlugin {
 	GDCLASS(GifToSpriteFramesPlugin, EditorPlugin);
 
-	Ref<GifToSpriteFramesImportPlugin> gtatip;
-
 public:
 	GifToSpriteFramesPlugin();
 	~GifToSpriteFramesPlugin();

@@ -37,8 +37,6 @@ private:
 class GifToAnimatedTexturePlugin : public EditorPlugin {
 	GDCLASS(GifToAnimatedTexturePlugin, EditorPlugin);
 
-	Ref<GifToAnimatedTextureImportPlugin> gtatip;
-
 public:
 	GifToAnimatedTexturePlugin();
 	~GifToAnimatedTexturePlugin();

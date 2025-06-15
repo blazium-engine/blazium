@@ -12,13 +12,9 @@
 #define godotgif_stringify(name) #name
 
 GifToAnimatedTexturePlugin::GifToAnimatedTexturePlugin() {
-	gtatip.instantiate();
-	add_import_plugin(gtatip);
 }
 
 GifToAnimatedTexturePlugin::~GifToAnimatedTexturePlugin() {
-	remove_import_plugin(gtatip);
-	gtatip.unref();
 }
 
 String GifToAnimatedTexturePlugin::get_plugin_name() const {

@@ -8,6 +8,8 @@
 #include "src/image_frames.h"
 
 static GifManager *GifMngrPtr;
+static GifToSpriteFramesImportPlugin *GifToSpriteFramesImportPluginPtr;
+static GifToAnimatedTextureImportPlugin *gif_to_animated_texture_import_plugin;
 
 void initialize_gif_module(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE) {
@@ -20,9 +22,13 @@ void initialize_gif_module(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR) {
 		ClassDB::register_class<GifToSpriteFramesImportPlugin>();
 		ClassDB::register_class<GifToSpriteFramesPlugin>();
+		GifToSpriteFramesImportPluginPtr = memnew(GifToSpriteFramesImportPlugin);
+		ResourceFormatImporter::get_singleton()->add_importer(GifToSpriteFramesImportPluginPtr);
 		EditorPlugins::add_by_type<GifToSpriteFramesPlugin>();
 
 		ClassDB::register_class<GifToAnimatedTextureImportPlugin>();
+		gif_to_animated_texture_import_plugin = memnew(GifToAnimatedTextureImportPlugin);
+		ResourceFormatImporter::get_singleton()->add_importer(gif_to_animated_texture_import_plugin);
 		ClassDB::register_class<GifToAnimatedTexturePlugin>();
 		EditorPlugins::add_by_type<GifToAnimatedTexturePlugin>();
 	}
@@ -35,7 +41,11 @@ void uninitialize_gif_module(ModuleInitializationLevel p_level) {
 	}
 
 	if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR) {
+		memdelete(GifToSpriteFramesImportPluginPtr);
+		ResourceFormatImporter::get_singleton()->remove_importer(GifToSpriteFramesImportPluginPtr);
 		//EditorPlugins::remove_by_type<GifToSpriteFramesPlugin>();
+		memdelete(gif_to_animated_texture_import_plugin);
+		ResourceFormatImporter::get_singleton()->remove_importer(gif_to_animated_texture_import_plugin);
 		//EditorPlugins::remove_by_type<GifToAnimatedTexturePlugin>();
 	}
 }
