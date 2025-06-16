@@ -18,7 +18,7 @@ void initialize_gif_module(ModuleInitializationLevel p_level) {
 		core_bind::Engine::get_singleton()->register_singleton("GifManager", GifManager::get_singleton());
 	}
 
-	if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR) {
+	if (p_level == MODULE_INITIALIZATION_LEVEL_SERVERS) {
 		ClassDB::register_class<GifToSpriteFramesImportPlugin>();
 		GifToSpriteFramesImportPluginPtr = memnew(GifToSpriteFramesImportPlugin);
 		ResourceFormatImporter::get_singleton()->add_importer(GifToSpriteFramesImportPluginPtr);
@@ -35,12 +35,10 @@ void uninitialize_gif_module(ModuleInitializationLevel p_level) {
 		memdelete(GifMngrPtr);
 	}
 
-	if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR) {
+	if (p_level == MODULE_INITIALIZATION_LEVEL_SERVERS) {
 		memdelete(GifToSpriteFramesImportPluginPtr);
 		ResourceFormatImporter::get_singleton()->remove_importer(GifToSpriteFramesImportPluginPtr);
-		//EditorPlugins::remove_by_type<GifToSpriteFramesPlugin>();
 		memdelete(gif_to_animated_texture_import_plugin);
 		ResourceFormatImporter::get_singleton()->remove_importer(gif_to_animated_texture_import_plugin);
-		//EditorPlugins::remove_by_type<GifToAnimatedTexturePlugin>();
 	}
 }
