@@ -36,9 +36,9 @@ void uninitialize_gif_module(ModuleInitializationLevel p_level) {
 	}
 
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SERVERS) {
-		memdelete(GifToSpriteFramesImportPluginPtr);
 		ResourceFormatImporter::get_singleton()->remove_importer(GifToSpriteFramesImportPluginPtr);
-		memdelete(gif_to_animated_texture_import_plugin);
+		memdelete(GifToSpriteFramesImportPluginPtr);
 		ResourceFormatImporter::get_singleton()->remove_importer(gif_to_animated_texture_import_plugin);
+		memdelete(gif_to_animated_texture_import_plugin);
 	}
 }
