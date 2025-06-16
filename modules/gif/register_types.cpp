@@ -8,7 +8,7 @@
 
 static GifManager *GifMngrPtr;
 static GifToSpriteFramesImportPlugin *GifToSpriteFramesImportPluginPtr;
-static GifToAnimatedTextureImportPlugin *gif_to_animated_texture_import_plugin;
+static GifToAnimatedTextureImportPlugin *GifToAnimatedTextureImportPluginPtr;
 
 void initialize_gif_module(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE) {
@@ -24,8 +24,8 @@ void initialize_gif_module(ModuleInitializationLevel p_level) {
 		ResourceFormatImporter::get_singleton()->add_importer(GifToSpriteFramesImportPluginPtr);
 
 		ClassDB::register_class<GifToAnimatedTextureImportPlugin>();
-		gif_to_animated_texture_import_plugin = memnew(GifToAnimatedTextureImportPlugin);
-		ResourceFormatImporter::get_singleton()->add_importer(gif_to_animated_texture_import_plugin);
+		GifToAnimatedTextureImportPluginPtr = memnew(GifToAnimatedTextureImportPlugin);
+		ResourceFormatImporter::get_singleton()->add_importer(GifToAnimatedTextureImportPluginPtr);
 	}
 }
 
@@ -36,9 +36,11 @@ void uninitialize_gif_module(ModuleInitializationLevel p_level) {
 	}
 
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SERVERS) {
-		ResourceFormatImporter::get_singleton()->remove_importer(GifToSpriteFramesImportPluginPtr);
-		memdelete(GifToSpriteFramesImportPluginPtr);
-		ResourceFormatImporter::get_singleton()->remove_importer(gif_to_animated_texture_import_plugin);
-		memdelete(gif_to_animated_texture_import_plugin);
+		if (GifToSpriteFramesImportPluginPtr) {
+			ResourceFormatImporter::get_singleton()->remove_importer(GifToSpriteFramesImportPluginPtr);
+		}
+		if (GifToAnimatedTextureImportPluginPtr) {
+			ResourceFormatImporter::get_singleton()->remove_importer(GifToAnimatedTextureImportPluginPtr);
+		}
 	}
 }
