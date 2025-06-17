@@ -1862,6 +1862,16 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 		// ColorPickerButton.
 		p_theme->set_icon("bg", "ColorPickerButton", p_theme->get_icon(SNAME("GuiMiniCheckerboard"), EditorStringName(EditorIcons)));
 	}
+
+	// GDTerm
+	{
+		p_theme->set_font(SceneStringName(font), SNAME("GDTerm"), p_theme->get_font(SNAME("source"), EditorStringName(EditorFonts)));
+		p_theme->set_font(SNAME("bold_font"), SNAME("GDTerm"), p_theme->get_font(SNAME("bold"), EditorStringName(EditorFonts)));
+		p_theme->set_font(SNAME("dim_font"), SNAME("GDTerm"), p_theme->get_font(SNAME("source"), EditorStringName(EditorFonts)));
+		p_theme->set_font_size(SNAME("font_size"), SNAME("GDTerm"), p_theme->get_font_size(SNAME("source_size"), EditorStringName(EditorFonts)));
+		p_theme->set_color(SNAME("background"), SNAME("GDTerm"), p_config.dark_color_1);
+		p_theme->set_color(SNAME("foreground"), SNAME("GDTerm"), Color(0.875, 0.875, 0.875));
+	}
 }
 
 void EditorThemeManager::_populate_editor_styles(const Ref<EditorTheme> &p_theme, ThemeConfiguration &p_config) {

@@ -1600,6 +1600,7 @@ void make_default_theme(Ref<Font> p_font, float p_scale, TextServer::SubpixelPos
 	t->set_constant("scrollbar_margin_top", "Tree", -1);
 	t->set_constant("scrollbar_margin_right", "Tree", -1);
 	t->set_constant("scrollbar_margin_bottom", "Tree", -1);
+	t->set_font_size(SceneStringName(font_size), "GDTerm", -1);
 
 	t->set_constant("icon_max_width", "Button", 0);
 	t->set_constant("align_to_largest_stylebox", "Button", 0);
@@ -1674,6 +1675,25 @@ void make_default_theme(Ref<Font> p_font, float p_scale, TextServer::SubpixelPos
 	t->set_color("line_number_color", "CodeEdit", Color(0.67, 0.67, 0.67, 0.4));
 	t->set_color("line_length_guideline_color", "CodeEdit", Color(0.3, 0.5, 0.8, 0.1));
 
+	t->set_color("black", "GDTerm", Color("#000000"));
+	t->set_color("red", "GDTerm", Color("#BB0000"));
+	t->set_color("green", "GDTerm", Color("#00BB00"));
+	t->set_color("yellow", "GDTerm", Color("#BBBB00"));
+	t->set_color("blue", "GDTerm", Color("#0000BB"));
+	t->set_color("magenta", "GDTerm", Color("#BB00BB"));
+	t->set_color("cyan", "GDTerm", Color("#00BBBB"));
+	t->set_color("white", "GDTerm", Color("#BBBBBB"));
+	t->set_color("bright_black", "GDTerm", Color("#555555"));
+	t->set_color("bright_red", "GDTerm", Color("#DD5555"));
+	t->set_color("bright_green", "GDTerm", Color("#55DD55"));
+	t->set_color("bright_yellow", "GDTerm", Color("#DDDD55"));
+	t->set_color("bright_blue", "GDTerm", Color("#5555DD"));
+	t->set_color("bright_magenta", "GDTerm", Color("#DD55DD"));
+	t->set_color("bright_cyan", "GDTerm", Color("#55DDDD"));
+	t->set_color("bright_white", "GDTerm", Color("#DDDDDD"));
+	t->set_color("foreground", "GDTerm", Color("#111111"));
+	t->set_color("background", "GDTerm", Color("#EEEEEE"));
+
 	embedded_style->set_content_margin_individual(10, 28, 10, 8);
 	embedded_unfocused_style->set_content_margin_individual(10, 28, 10, 8);
 	embedded_style->set_expand_margin_individual(8, 32, 8, 6);
@@ -1704,6 +1724,9 @@ void make_default_theme(Ref<Font> p_font, float p_scale, TextServer::SubpixelPos
 	t->set_font("title_font", "Window", Ref<Font>());
 	t->set_font("normal_font", "RichTextLabel", Ref<Font>());
 	t->set_font("mono_font", "RichTextLabel", Ref<Font>());
+	t->set_font(SceneStringName(font), "GDTerm", Ref<Font>());
+	t->set_font("dim_font", "GDTerm", Ref<Font>());
+	t->set_font("bold_font", "GDTerm", Ref<Font>());
 
 	ThemeDB::get_singleton()->set_default_theme(t);
 	ThemeDB::get_singleton()->set_fallback_base_scale(scale);

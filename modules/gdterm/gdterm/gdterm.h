@@ -33,30 +33,35 @@ struct GDTermLine {
 };
 
 class GDTerm : public Control, TermRenderer {
-	GDCLASS(GDTerm, Control)
+	GDCLASS(GDTerm, Control);
 
-	Ref<Font> font;
-	Ref<Font> dim_font;
-	Ref<Font> bold_font;
-	int font_size;
-	Color black;
-	Color red;
-	Color green;
-	Color yellow;
-	Color blue;
-	Color magenta;
-	Color cyan;
-	Color white;
-	Color bright_black;
-	Color bright_red;
-	Color bright_green;
-	Color bright_yellow;
-	Color bright_blue;
-	Color bright_magenta;
-	Color bright_cyan;
-	Color bright_white;
-	Color foreground;
-	Color background;
+private:
+	struct ThemeCache {
+		Ref<Font> font;
+		Ref<Font> dim_font;
+		Ref<Font> bold_font;
+		int font_size;
+
+		Color black;
+		Color red;
+		Color green;
+		Color yellow;
+		Color blue;
+		Color magenta;
+		Color cyan;
+		Color white;
+		Color bright_black;
+		Color bright_red;
+		Color bright_green;
+		Color bright_yellow;
+		Color bright_blue;
+		Color bright_magenta;
+		Color bright_cyan;
+		Color bright_white;
+		Color foreground;
+		Color background;
+	} theme_cache;
+
 	String vt_handler_log_path;
 	bool send_alt_meta_as_escape;
 
@@ -131,72 +136,6 @@ public:
 	GDTerm();
 	~GDTerm();
 
-	void set_font(const Ref<Font> &p_font);
-	Ref<Font> get_font() const;
-
-	void set_dim_font(const Ref<Font> &p_dim_font);
-	Ref<Font> get_dim_font() const;
-
-	void set_bold_font(const Ref<Font> &p_bold_font);
-	Ref<Font> get_bold_font() const;
-
-	void set_font_size(int p_font_size);
-	int get_font_size() const;
-
-	void set_black(Color c);
-	Color get_black() const;
-
-	void set_red(Color c);
-	Color get_red() const;
-
-	void set_green(Color c);
-	Color get_green() const;
-
-	void set_yellow(Color c);
-	Color get_yellow() const;
-
-	void set_blue(Color c);
-	Color get_blue() const;
-
-	void set_magenta(Color c);
-	Color get_magenta() const;
-
-	void set_cyan(Color c);
-	Color get_cyan() const;
-
-	void set_white(Color c);
-	Color get_white() const;
-
-	void set_bright_black(Color c);
-	Color get_bright_black() const;
-
-	void set_bright_red(Color c);
-	Color get_bright_red() const;
-
-	void set_bright_green(Color c);
-	Color get_bright_green() const;
-
-	void set_bright_yellow(Color c);
-	Color get_bright_yellow() const;
-
-	void set_bright_blue(Color c);
-	Color get_bright_blue() const;
-
-	void set_bright_magenta(Color c);
-	Color get_bright_magenta() const;
-
-	void set_bright_cyan(Color c);
-	Color get_bright_cyan() const;
-
-	void set_bright_white(Color c);
-	Color get_bright_white() const;
-
-	void set_foreground(Color c);
-	Color get_foreground() const;
-
-	void set_background(Color c);
-	Color get_background() const;
-
 	void set_vt_handler_log_path(String c);
 	String get_vt_handler_log_path() const;
 
@@ -268,10 +207,7 @@ private:
 	void _on_cursor_timeout();
 	void _on_blink_timeout();
 	void _on_bell_request();
-	void _on_focus_entered();
-	void _on_focus_exited();
 	void _on_inactive();
-	void _on_resized();
 };
 
 #endif // GDTERM_H

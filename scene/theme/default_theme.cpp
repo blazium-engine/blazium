@@ -1190,6 +1190,32 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_constant("text_highlight_h_padding", "RichTextLabel", Math::round(3 * scale));
 	theme->set_constant("text_highlight_v_padding", "RichTextLabel", Math::round(3 * scale));
 
+	// GDTerm
+	theme->set_color("black", "GDTerm", Color("#000000"));
+	theme->set_color("red", "GDTerm", Color("#BB0000"));
+	theme->set_color("green", "GDTerm", Color("#00BB00"));
+	theme->set_color("yellow", "GDTerm", Color("#BBBB00"));
+	theme->set_color("blue", "GDTerm", Color("#0000BB"));
+	theme->set_color("magenta", "GDTerm", Color("#BB00BB"));
+	theme->set_color("cyan", "GDTerm", Color("#00BBBB"));
+	theme->set_color("white", "GDTerm", Color("#BBBBBB"));
+	theme->set_color("bright_black", "GDTerm", Color("#555555"));
+	theme->set_color("bright_red", "GDTerm", Color("#DD5555"));
+	theme->set_color("bright_green", "GDTerm", Color("#55DD55"));
+	theme->set_color("bright_yellow", "GDTerm", Color("#DDDD55"));
+	theme->set_color("bright_blue", "GDTerm", Color("#5555DD"));
+	theme->set_color("bright_magenta", "GDTerm", Color("#DD55DD"));
+	theme->set_color("bright_cyan", "GDTerm", Color("#55DDDD"));
+	theme->set_color("bright_white", "GDTerm", Color("#DDDDDD"));
+	theme->set_color("foreground", "GDTerm", Color("#111111"));
+	theme->set_color("background", "GDTerm", Color("#EEEEEE"));
+
+	theme->set_font(SceneStringName(font), "GDTerm", Ref<Font>());
+	theme->set_font("dim_font", "GDTerm", Ref<Font>());
+	theme->set_font("bold_font", "GDTerm", Ref<Font>());
+
+	theme->set_font_size(SceneStringName(font_size), "GDTerm", 14);
+
 	// Containers
 
 	theme->set_icon("h_grabber", "SplitContainer", icons["hsplitter"]);

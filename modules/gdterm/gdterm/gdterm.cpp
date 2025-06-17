@@ -1,4 +1,6 @@
 #include "gdterm.h"
+#include "scene/resources/theme.h"
+#include "scene/theme/theme_db.h"
 
 #ifdef USE_PRIMARY_CLIPBOARD
 #include "servers/display_server.h"
@@ -27,50 +29,6 @@ static const int SELECT_MODE_LINE = 3;
 extern PtyProxy *create_proxy(TermRenderer *renderer);
 
 void GDTerm::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("get_font"), &GDTerm::get_font);
-	ClassDB::bind_method(D_METHOD("set_font", "font"), &GDTerm::set_font);
-	ClassDB::bind_method(D_METHOD("get_dim_font"), &GDTerm::get_dim_font);
-	ClassDB::bind_method(D_METHOD("set_dim_font", "dim_font"), &GDTerm::set_dim_font);
-	ClassDB::bind_method(D_METHOD("get_bold_font"), &GDTerm::get_bold_font);
-	ClassDB::bind_method(D_METHOD("set_bold_font", "bold_font"), &GDTerm::set_bold_font);
-	ClassDB::bind_method(D_METHOD("get_font_size"), &GDTerm::get_font_size);
-	ClassDB::bind_method(D_METHOD("set_font_size", "font_size"), &GDTerm::set_font_size);
-	ClassDB::bind_method(D_METHOD("get_black"), &GDTerm::get_black);
-	ClassDB::bind_method(D_METHOD("set_black", "black"), &GDTerm::set_black);
-	ClassDB::bind_method(D_METHOD("get_red"), &GDTerm::get_red);
-	ClassDB::bind_method(D_METHOD("set_red", "red"), &GDTerm::set_red);
-	ClassDB::bind_method(D_METHOD("get_green"), &GDTerm::get_green);
-	ClassDB::bind_method(D_METHOD("set_green", "green"), &GDTerm::set_green);
-	ClassDB::bind_method(D_METHOD("get_yellow"), &GDTerm::get_yellow);
-	ClassDB::bind_method(D_METHOD("set_yellow", "yellow"), &GDTerm::set_yellow);
-	ClassDB::bind_method(D_METHOD("get_blue"), &GDTerm::get_blue);
-	ClassDB::bind_method(D_METHOD("set_blue", "blue"), &GDTerm::set_blue);
-	ClassDB::bind_method(D_METHOD("get_magenta"), &GDTerm::get_magenta);
-	ClassDB::bind_method(D_METHOD("set_magenta", "magenta"), &GDTerm::set_magenta);
-	ClassDB::bind_method(D_METHOD("get_cyan"), &GDTerm::get_cyan);
-	ClassDB::bind_method(D_METHOD("set_cyan", "cyan"), &GDTerm::set_cyan);
-	ClassDB::bind_method(D_METHOD("get_white"), &GDTerm::get_white);
-	ClassDB::bind_method(D_METHOD("set_white", "white"), &GDTerm::set_white);
-	ClassDB::bind_method(D_METHOD("get_bright_black"), &GDTerm::get_bright_black);
-	ClassDB::bind_method(D_METHOD("set_bright_black", "black"), &GDTerm::set_bright_black);
-	ClassDB::bind_method(D_METHOD("get_bright_red"), &GDTerm::get_bright_red);
-	ClassDB::bind_method(D_METHOD("set_bright_red", "red"), &GDTerm::set_bright_red);
-	ClassDB::bind_method(D_METHOD("get_bright_green"), &GDTerm::get_bright_green);
-	ClassDB::bind_method(D_METHOD("set_bright_green", "green"), &GDTerm::set_bright_green);
-	ClassDB::bind_method(D_METHOD("get_bright_yellow"), &GDTerm::get_bright_yellow);
-	ClassDB::bind_method(D_METHOD("set_bright_yellow", "yellow"), &GDTerm::set_bright_yellow);
-	ClassDB::bind_method(D_METHOD("get_bright_blue"), &GDTerm::get_bright_blue);
-	ClassDB::bind_method(D_METHOD("set_bright_blue", "blue"), &GDTerm::set_bright_blue);
-	ClassDB::bind_method(D_METHOD("get_bright_magenta"), &GDTerm::get_bright_magenta);
-	ClassDB::bind_method(D_METHOD("set_bright_magenta", "magenta"), &GDTerm::set_bright_magenta);
-	ClassDB::bind_method(D_METHOD("get_bright_cyan"), &GDTerm::get_bright_cyan);
-	ClassDB::bind_method(D_METHOD("set_bright_cyan", "cyan"), &GDTerm::set_bright_cyan);
-	ClassDB::bind_method(D_METHOD("get_bright_white"), &GDTerm::get_bright_white);
-	ClassDB::bind_method(D_METHOD("set_bright_white", "white"), &GDTerm::set_bright_white);
-	ClassDB::bind_method(D_METHOD("get_foreground"), &GDTerm::get_foreground);
-	ClassDB::bind_method(D_METHOD("set_foreground", "foreground"), &GDTerm::set_foreground);
-	ClassDB::bind_method(D_METHOD("get_background"), &GDTerm::get_background);
-	ClassDB::bind_method(D_METHOD("set_background", "background"), &GDTerm::set_background);
 	ClassDB::bind_method(D_METHOD("get_vt_handler_log_path"), &GDTerm::get_vt_handler_log_path);
 	ClassDB::bind_method(D_METHOD("set_vt_handler_log_path", "vt_handler_log_path"), &GDTerm::set_vt_handler_log_path);
 	ClassDB::bind_method(D_METHOD("get_send_alt_meta_as_escape"), &GDTerm::get_send_alt_meta_as_escape);
@@ -88,38 +46,38 @@ void GDTerm::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("_on_cursor_timeout"), &GDTerm::_on_cursor_timeout);
 	ClassDB::bind_method(D_METHOD("_on_blink_timeout"), &GDTerm::_on_blink_timeout);
 	ClassDB::bind_method(D_METHOD("_on_bell_request"), &GDTerm::_on_bell_request);
-	ClassDB::bind_method(D_METHOD("_on_focus_entered"), &GDTerm::_on_focus_entered);
-	ClassDB::bind_method(D_METHOD("_on_focus_exited"), &GDTerm::_on_focus_exited);
 	ClassDB::bind_method(D_METHOD("_on_inactive"), &GDTerm::_on_inactive);
-	ClassDB::bind_method(D_METHOD("_on_resized"), &GDTerm::_on_resized);
 	ClassDB::bind_method(D_METHOD("_notify_scrollback"), &GDTerm::_notify_scrollback);
 	ClassDB::bind_method(D_METHOD("_resize_pty"), &GDTerm::_resize_pty);
 
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "font", PROPERTY_HINT_RESOURCE_TYPE, "Font"), "set_font", "get_font");
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "dim_font", PROPERTY_HINT_RESOURCE_TYPE, "Font"), "set_dim_font", "get_dim_font");
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "bold_font", PROPERTY_HINT_RESOURCE_TYPE, "Font"), "set_bold_font", "get_bold_font");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "font_size", PROPERTY_HINT_RANGE, "8,24,2"), "set_font_size", "get_font_size");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "black"), "set_black", "get_black");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "red"), "set_red", "get_red");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "green"), "set_green", "get_green");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "yellow"), "set_yellow", "get_yellow");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "blue"), "set_blue", "get_blue");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "magenta"), "set_magenta", "get_magenta");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "cyan"), "set_cyan", "get_cyan");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "white"), "set_white", "get_white");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "bright_black"), "set_bright_black", "get_bright_black");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "bright_red"), "set_bright_red", "get_bright_red");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "bright_green"), "set_bright_green", "get_bright_green");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "bright_yellow"), "set_bright_yellow", "get_bright_yellow");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "bright_blue"), "set_bright_blue", "get_bright_blue");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "bright_magenta"), "set_bright_magenta", "get_bright_magenta");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "bright_cyan"), "set_bright_cyan", "get_bright_cyan");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "bright_white"), "set_bright_white", "get_bright_white");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "foreground"), "set_foreground", "get_foreground");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "background"), "set_background", "get_background");
-
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "vt_handler_log_path"), "set_vt_handler_log_path", "get_vt_handler_log_path");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "send_alt_meta_as_escape"), "set_send_alt_meta_as_escape", "get_send_alt_meta_as_escape");
+
+	BIND_THEME_ITEM(Theme::DATA_TYPE_FONT, GDTerm, font);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_FONT, GDTerm, dim_font);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_FONT, GDTerm, bold_font);
+
+	BIND_THEME_ITEM(Theme::DATA_TYPE_FONT_SIZE, GDTerm, font_size);
+
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, black);
+
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, red);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, green);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, yellow);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, blue);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, magenta);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, cyan);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, white);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, bright_black);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, bright_red);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, bright_green);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, bright_yellow);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, bright_blue);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, bright_magenta);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, bright_cyan);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, bright_white);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, foreground);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, GDTerm, background);
 
 	ADD_SIGNAL(MethodInfo("bell_request"));
 	ADD_SIGNAL(MethodInfo("inactive"));
@@ -129,25 +87,6 @@ void GDTerm::_bind_methods() {
 }
 
 GDTerm::GDTerm() {
-	font_size = 14;
-	black = Color("#000000");
-	red = Color("#BB0000");
-	green = Color("#00BB00");
-	yellow = Color("#BBBB00");
-	blue = Color("#0000BB");
-	magenta = Color("#BB00BB");
-	cyan = Color("#00BBBB");
-	white = Color("#BBBBBB");
-	bright_black = Color("#555555");
-	bright_red = Color("#DD5555");
-	bright_green = Color("#55DD55");
-	bright_yellow = Color("#DDDD55");
-	bright_blue = Color("#5555DD");
-	bright_magenta = Color("#DD55DD");
-	bright_cyan = Color("#55DDDD");
-	bright_white = Color("#DDDDDD");
-	foreground = Color("#111111");
-	background = Color("#EEEEEE");
 	set_clip_contents(true);
 	set_focus_mode(Control::FocusMode::FOCUS_ALL);
 	set_vt_handler_log_path("");
@@ -243,190 +182,9 @@ void GDTerm::_ready() {
 	_blink_timer->set_one_shot(false);
 	_blink_timer->connect("timeout", Callable(this, "_on_blink_timeout"));
 	add_child(_blink_timer);
-
-	connect("focus_entered", Callable(this, "_on_focus_entered"));
-	connect("focus_exited", Callable(this, "_on_focus_exited"));
-	connect("resized", Callable(this, "_on_resized"));
 }
 
-void GDTerm::set_black(Color c) {
-	if (black != c) {
-		black = c;
-	}
-}
-
-Color GDTerm::get_black() const {
-	return black;
-}
-
-void GDTerm::set_red(Color c) {
-	if (red != c) {
-		red = c;
-	}
-}
-
-Color GDTerm::get_red() const {
-	return red;
-}
-
-void GDTerm::set_green(Color c) {
-	if (green != c) {
-		green = c;
-	}
-}
-
-Color GDTerm::get_green() const {
-	return green;
-}
-
-void GDTerm::set_yellow(Color c) {
-	if (yellow != c) {
-		yellow = c;
-	}
-}
-
-Color GDTerm::get_yellow() const {
-	return yellow;
-}
-
-void GDTerm::set_blue(Color c) {
-	if (blue != c) {
-		blue = c;
-	}
-}
-
-Color GDTerm::get_blue() const {
-	return blue;
-}
-
-void GDTerm::set_magenta(Color c) {
-	if (magenta != c) {
-		magenta = c;
-	}
-}
-
-Color GDTerm::get_magenta() const {
-	return magenta;
-}
-
-void GDTerm::set_cyan(Color c) {
-	if (cyan != c) {
-		cyan = c;
-	}
-}
-
-Color GDTerm::get_cyan() const {
-	return cyan;
-}
-
-void GDTerm::set_white(Color c) {
-	if (white != c) {
-		white = c;
-	}
-}
-
-Color GDTerm::get_white() const {
-	return white;
-}
-
-void GDTerm::set_bright_black(Color c) {
-	if (bright_black != c) {
-		bright_black = c;
-	}
-}
-
-Color GDTerm::get_bright_black() const {
-	return bright_black;
-}
-
-void GDTerm::set_bright_red(Color c) {
-	if (bright_red != c) {
-		bright_red = c;
-	}
-}
-
-Color GDTerm::get_bright_red() const {
-	return bright_red;
-}
-
-void GDTerm::set_bright_green(Color c) {
-	if (bright_green != c) {
-		bright_green = c;
-	}
-}
-
-Color GDTerm::get_bright_green() const {
-	return bright_green;
-}
-
-void GDTerm::set_bright_yellow(Color c) {
-	if (bright_yellow != c) {
-		bright_yellow = c;
-	}
-}
-
-Color GDTerm::get_bright_yellow() const {
-	return bright_yellow;
-}
-
-void GDTerm::set_bright_blue(Color c) {
-	if (bright_blue != c) {
-		bright_blue = c;
-	}
-}
-
-Color GDTerm::get_bright_blue() const {
-	return bright_blue;
-}
-
-void GDTerm::set_bright_magenta(Color c) {
-	if (bright_magenta != c) {
-		bright_magenta = c;
-	}
-}
-
-Color GDTerm::get_bright_magenta() const {
-	return bright_magenta;
-}
-
-void GDTerm::set_bright_cyan(Color c) {
-	if (bright_cyan != c) {
-		bright_cyan = c;
-	}
-}
-
-Color GDTerm::get_bright_cyan() const {
-	return bright_cyan;
-}
-
-void GDTerm::set_bright_white(Color c) {
-	if (bright_white != c) {
-		bright_white = c;
-	}
-}
-
-Color GDTerm::get_bright_white() const {
-	return bright_white;
-}
-
-void GDTerm::set_foreground(Color c) {
-	if (foreground != c) {
-		foreground = c;
-	}
-}
-
-Color GDTerm::get_foreground() const {
-	return foreground;
-}
-
-void GDTerm::set_background(Color c) {
-	if (background != c) {
-		background = c;
-	}
-}
-
-String
-GDTerm::get_vt_handler_log_path() const {
+String GDTerm::get_vt_handler_log_path() const {
 	return vt_handler_log_path;
 }
 
@@ -451,55 +209,6 @@ void GDTerm::set_send_alt_meta_as_escape(bool f) {
 
 bool GDTerm::get_send_alt_meta_as_escape() const {
 	return _send_alt_meta_as_escape;
-}
-
-Color GDTerm::get_background() const {
-	return background;
-}
-
-void GDTerm::set_font(const Ref<Font> &p_font) {
-	if (font != p_font) {
-		font = p_font;
-		_do_resize();
-	}
-}
-
-Ref<Font>
-GDTerm::get_font() const {
-	return font;
-}
-
-void GDTerm::set_dim_font(const Ref<Font> &p_dim_font) {
-	if (dim_font != p_dim_font) {
-		dim_font = p_dim_font;
-	}
-}
-
-Ref<Font>
-GDTerm::get_dim_font() const {
-	return dim_font;
-}
-
-void GDTerm::set_bold_font(const Ref<Font> &p_bold_font) {
-	if (bold_font != p_bold_font) {
-		bold_font = p_bold_font;
-	}
-}
-
-Ref<Font>
-GDTerm::get_bold_font() const {
-	return bold_font;
-}
-
-void GDTerm::set_font_size(int p_font_size) {
-	if (font_size != p_font_size) {
-		font_size = p_font_size;
-		_do_resize();
-	}
-}
-
-int GDTerm::get_font_size() const {
-	return font_size;
 }
 
 void GDTerm::clear() {
@@ -570,18 +279,18 @@ bool GDTerm::is_active() {
 }
 
 void GDTerm::_draw_term_line(Vector2 &pos, const GDTermLine &line, int cursor_row, int actual_row) {
-	float font_height = font->get_height(font_size);
-	float font_ascent = font->get_ascent(font_size);
-	float font_underline = font->get_underline_position(font_size);
-	Color fg_color = foreground;
-	Color bg_color = background;
+	float font_height = theme_cache.font->get_height(theme_cache.font_size);
+	float font_ascent = theme_cache.font->get_ascent(theme_cache.font_size);
+	float font_underline = theme_cache.font->get_underline_position(theme_cache.font_size);
+	Color fg_color = theme_cache.foreground;
+	Color bg_color = theme_cache.background;
 	bool reverse = false;
 	bool invisible = false;
 	bool blinking = false;
 	bool underline = false;
 	bool fullwidth = false;
 
-	Ref<Font> cur_font = font;
+	Ref<Font> cur_font = theme_cache.font;
 	Vector2 seg_pos = pos;
 
 	Color cur_fg = fg_color;
@@ -625,15 +334,15 @@ void GDTerm::_draw_term_line(Vector2 &pos, const GDTermLine &line, int cursor_ro
 				glyph_width *= 2.0;
 				col_width = 2;
 			}
-			Vector2 glyph_size = cur_font->get_string_size(glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size);
+			Vector2 glyph_size = cur_font->get_string_size(glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, theme_cache.font_size);
 			Rect2 rect = Rect2(seg_pos.x, seg_pos.y - font_ascent, glyph_size.x, font_height);
-			if (cur_bg != background) {
+			if (cur_bg != theme_cache.background) {
 				draw_rect(rect, cur_bg, true);
 			}
 			if (outline_cursor) {
 				draw_rect(rect, cur_fg, false);
 			}
-			draw_string(cur_font, seg_pos, glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, cur_fg);
+			draw_string(cur_font, seg_pos, glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, theme_cache.font_size, cur_fg);
 			if (underline) {
 				draw_line(Vector2(seg_pos.x, seg_pos.y + font_underline), Vector2(seg_pos.x + _font_space_size.x, seg_pos.y + font_underline), cur_fg);
 			}
@@ -646,10 +355,10 @@ void GDTerm::_draw_term_line(Vector2 &pos, const GDTermLine &line, int cursor_ro
 			float tag_blue = CLAMP(tag.blue, 0, 255) / 255.0f;
 			switch (tag.code) {
 				case BOLD:
-					cur_font = bold_font;
+					cur_font = theme_cache.bold_font;
 					break;
 				case DIM:
-					cur_font = dim_font;
+					cur_font = theme_cache.dim_font;
 					break;
 				case REVERSE:
 					reverse = true;
@@ -667,103 +376,103 @@ void GDTerm::_draw_term_line(Vector2 &pos, const GDTermLine &line, int cursor_ro
 					fullwidth = true;
 					break;
 				case FG_COLOR_BLACK:
-					fg_color = black;
+					fg_color = theme_cache.black;
 					break;
 				case FG_COLOR_RED:
-					fg_color = red;
+					fg_color = theme_cache.red;
 					break;
 				case FG_COLOR_GREEN:
-					fg_color = green;
+					fg_color = theme_cache.green;
 					break;
 				case FG_COLOR_YELLOW:
-					fg_color = yellow;
+					fg_color = theme_cache.yellow;
 					break;
 				case FG_COLOR_BLUE:
-					fg_color = blue;
+					fg_color = theme_cache.blue;
 					break;
 				case FG_COLOR_MAGENTA:
-					fg_color = magenta;
+					fg_color = theme_cache.magenta;
 					break;
 				case FG_COLOR_CYAN:
-					fg_color = cyan;
+					fg_color = theme_cache.cyan;
 					break;
 				case FG_COLOR_WHITE:
-					fg_color = white;
+					fg_color = theme_cache.white;
 					break;
 				case FG_COLOR_BRIGHT_BLACK:
-					fg_color = bright_black;
+					fg_color = theme_cache.bright_black;
 					break;
 				case FG_COLOR_BRIGHT_RED:
-					fg_color = bright_red;
+					fg_color = theme_cache.bright_red;
 					break;
 				case FG_COLOR_BRIGHT_GREEN:
-					fg_color = bright_green;
+					fg_color = theme_cache.bright_green;
 					break;
 				case FG_COLOR_BRIGHT_YELLOW:
-					fg_color = bright_yellow;
+					fg_color = theme_cache.bright_yellow;
 					break;
 				case FG_COLOR_BRIGHT_BLUE:
-					fg_color = bright_blue;
+					fg_color = theme_cache.bright_blue;
 					break;
 				case FG_COLOR_BRIGHT_MAGENTA:
-					fg_color = bright_magenta;
+					fg_color = theme_cache.bright_magenta;
 					break;
 				case FG_COLOR_BRIGHT_CYAN:
-					fg_color = bright_cyan;
+					fg_color = theme_cache.bright_cyan;
 					break;
 				case FG_COLOR_BRIGHT_WHITE:
-					fg_color = bright_white;
+					fg_color = theme_cache.bright_white;
 					break;
 				case FG_COLOR_RGB:
 					fg_color = Color(tag_red, tag_green, tag_blue);
 					break;
 				case BG_COLOR_BLACK:
-					bg_color = black;
+					bg_color = theme_cache.black;
 					break;
 				case BG_COLOR_RED:
-					bg_color = red;
+					bg_color = theme_cache.red;
 					break;
 				case BG_COLOR_GREEN:
-					bg_color = green;
+					bg_color = theme_cache.green;
 					break;
 				case BG_COLOR_YELLOW:
-					bg_color = yellow;
+					bg_color = theme_cache.yellow;
 					break;
 				case BG_COLOR_BLUE:
-					bg_color = blue;
+					bg_color = theme_cache.blue;
 					break;
 				case BG_COLOR_MAGENTA:
-					bg_color = magenta;
+					bg_color = theme_cache.magenta;
 					break;
 				case BG_COLOR_CYAN:
-					bg_color = cyan;
+					bg_color = theme_cache.cyan;
 					break;
 				case BG_COLOR_WHITE:
-					bg_color = white;
+					bg_color = theme_cache.white;
 					break;
 				case BG_COLOR_BRIGHT_BLACK:
-					bg_color = bright_black;
+					bg_color = theme_cache.bright_black;
 					break;
 				case BG_COLOR_BRIGHT_RED:
-					bg_color = bright_red;
+					bg_color = theme_cache.bright_red;
 					break;
 				case BG_COLOR_BRIGHT_GREEN:
-					bg_color = bright_green;
+					bg_color = theme_cache.bright_green;
 					break;
 				case BG_COLOR_BRIGHT_YELLOW:
-					bg_color = bright_yellow;
+					bg_color = theme_cache.bright_yellow;
 					break;
 				case BG_COLOR_BRIGHT_BLUE:
-					bg_color = bright_blue;
+					bg_color = theme_cache.bright_blue;
 					break;
 				case BG_COLOR_BRIGHT_MAGENTA:
-					bg_color = bright_magenta;
+					bg_color = theme_cache.bright_magenta;
 					break;
 				case BG_COLOR_BRIGHT_CYAN:
-					bg_color = bright_cyan;
+					bg_color = theme_cache.bright_cyan;
 					break;
 				case BG_COLOR_BRIGHT_WHITE:
-					bg_color = bright_white;
+					bg_color = theme_cache.bright_white;
 					break;
 				case BG_COLOR_RGB:
 					bg_color = Color(tag_red, tag_green, tag_blue);
@@ -776,7 +485,7 @@ void GDTerm::_draw_term_line(Vector2 &pos, const GDTermLine &line, int cursor_ro
 			switch (tag.code) {
 				case BOLD:
 				case DIM:
-					cur_font = font;
+					cur_font = theme_cache.font;
 					break;
 				case REVERSE:
 					reverse = false;
@@ -810,7 +519,7 @@ void GDTerm::_draw_term_line(Vector2 &pos, const GDTermLine &line, int cursor_ro
 				case FG_COLOR_BRIGHT_CYAN:
 				case FG_COLOR_BRIGHT_WHITE:
 				case FG_COLOR_RGB:
-					fg_color = foreground;
+					fg_color = theme_cache.foreground;
 					break;
 				case BG_COLOR_BLACK:
 				case BG_COLOR_RED:
@@ -829,7 +538,7 @@ void GDTerm::_draw_term_line(Vector2 &pos, const GDTermLine &line, int cursor_ro
 				case BG_COLOR_BRIGHT_CYAN:
 				case BG_COLOR_BRIGHT_WHITE:
 				case BG_COLOR_RGB:
-					bg_color = background;
+					bg_color = theme_cache.background;
 					break;
 				default:
 					break;
@@ -854,19 +563,14 @@ void GDTerm::_process(double p_delta) {
 }
 
 void GDTerm::_draw() {
-	// Don't draw unless there is a font
-	if (font.is_null() || dim_font.is_null() || bold_font.is_null()) {
-		return;
-	}
-
 	// Get any pending updates that came in on other threads
 	// into the active set of rendering directives
 	_make_pending_active();
 
-	draw_rect(get_rect(), background, true);
-	Vector2 font_space_size = font->get_string_size(" ", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size);
-	float font_height = font->get_height(font_size);
-	float font_ascent = font->get_ascent(font_size);
+	draw_rect(get_rect(), theme_cache.background, true);
+	Vector2 font_space_size = theme_cache.font->get_string_size(" ", HORIZONTAL_ALIGNMENT_LEFT, -1, theme_cache.font_size);
+	float font_height = theme_cache.font->get_height(theme_cache.font_size);
+	float font_ascent = theme_cache.font->get_ascent(theme_cache.font_size);
 	float xpos = 0.0;
 	float ypos = font_ascent;
 	Vector2 pos(xpos, ypos);
@@ -883,7 +587,7 @@ void GDTerm::_draw() {
 		line_idx += 1;
 	}
 	Rect2 rect = Rect2(pos.x, pos.y - font_ascent, (_cols + 1) * font_space_size.x, font_height);
-	draw_rect(rect, background, true);
+	draw_rect(rect, theme_cache.background, true);
 }
 
 void GDTerm::_notification(int p_what) {
@@ -892,10 +596,28 @@ void GDTerm::_notification(int p_what) {
 			_draw();
 			break;
 		}
+
+		case NOTIFICATION_THEME_CHANGED: {
+			_do_resize();
+		} break;
+
+		case NOTIFICATION_FOCUS_ENTER: {
+			queue_redraw();
+		} break;
+
+		case NOTIFICATION_FOCUS_EXIT: {
+			queue_redraw();
+		} break;
+
+		case NOTIFICATION_RESIZED: {
+			_do_resize();
+		} break;
+
 		case NOTIFICATION_ENTER_TREE: {
 			_ready();
 			break;
 		}
+
 		case NOTIFICATION_INTERNAL_PROCESS: {
 			double remaining = get_process_delta_time();
 			_process(remaining);
@@ -1233,8 +955,7 @@ bool GDTerm::_blink_on_line(GDTermLine &line) const {
 	return false;
 }
 
-const GDTermLine &
-GDTerm::_get_term_line(int row) const {
+const GDTermLine &GDTerm::_get_term_line(int row) const {
 	if (row < (int)_scrollback.size()) {
 		return _scrollback[row];
 	}
@@ -1359,8 +1080,7 @@ void GDTerm::send_input(String text) {
 	}
 }
 
-String
-GDTerm::get_selected_text() const {
+String GDTerm::get_selected_text() const {
 	std::string selection;
 	if (_selection_active) {
 		int start_row = _select_start_row;
@@ -1594,15 +1314,11 @@ bool GDTerm::_is_control_c(Key code) {
 }
 
 void GDTerm::_do_resize() {
-	if (font.is_null()) {
-		return;
-	}
-
-	_font_space_size = font->get_string_size("W", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size);
-
 	if (!is_inside_tree()) {
 		return;
 	}
+
+	_font_space_size = theme_cache.font->get_string_size("W", HORIZONTAL_ALIGNMENT_LEFT, -1, theme_cache.font_size);
 
 	Vector2 size = get_size();
 
@@ -1629,8 +1345,7 @@ void GDTerm::_do_resize() {
 	queue_redraw();
 }
 
-Vector2
-GDTerm::get_minimum_size() const {
+Vector2 GDTerm::get_minimum_size() const {
 	return _min_size;
 }
 
@@ -1733,18 +1448,6 @@ void GDTerm::_on_inactive() {
 
 void GDTerm::_on_bell_request() {
 	emit_signal("bell_request");
-}
-
-void GDTerm::_on_focus_entered() {
-	queue_redraw();
-}
-
-void GDTerm::_on_focus_exited() {
-	queue_redraw();
-}
-
-void GDTerm::_on_resized() {
-	_do_resize();
 }
 
 void GDTerm::_notify_scrollback() {
