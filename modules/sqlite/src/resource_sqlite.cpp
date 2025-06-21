@@ -299,9 +299,9 @@ Dictionary SQLiteDatabase::get_tables() const {
 	}
 	Dictionary result_dict;
 	for (int i = 0; i < result->get_result().size(); i++) {
-		Array row = result->get_result()[i];
-		for (int j = 0; j < row.size(); j++) {
-			String name = row[j];
+		Dictionary row = result->get_result()[i];
+		for (Variant key : row.keys()) {
+			String name = row.get("name", String());
 			if (!name.begins_with("sqlite_")) {
 				TypedArray<SQLiteColumnSchema> columns = get_columns(name);
 				TypedArray<String> column_names;
