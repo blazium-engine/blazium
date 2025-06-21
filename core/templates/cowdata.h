@@ -190,7 +190,11 @@ public:
 	_FORCE_INLINE_ const T *ptr() const {
 		return _ptr;
 	}
-
+// Only on msvc
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4724)
+#endif
 	_FORCE_INLINE_ Size size() const {
 		USize *size = (USize *)_get_size();
 		if (size) {
@@ -199,6 +203,9 @@ public:
 			return 0;
 		}
 	}
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 	_FORCE_INLINE_ void clear() { resize(0); }
 	_FORCE_INLINE_ bool is_empty() const { return _ptr == nullptr; }
