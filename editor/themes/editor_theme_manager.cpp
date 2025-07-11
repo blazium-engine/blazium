@@ -291,8 +291,8 @@ EditorThemeManager::ThemeConfiguration EditorThemeManager::_create_theme_config(
 				preset_base_color = Color(0.18, 0.18, 0.18);
 				preset_contrast = 0.3;
 			} else if (config.preset == "Breeze Dark") {
-				preset_accent_color = Color(0.26, 0.76, 1.00);
-				preset_base_color = Color(0.24, 0.26, 0.28);
+				preset_accent_color = Color(0.239, 0.682, 0.914);
+				preset_base_color = Color(0.1255, 0.1373, 0.149);
 				preset_contrast = 0.3;
 			} else if (config.preset == "Godot") {
 				preset_accent_color = Color(0.44, 0.73, 0.98);
