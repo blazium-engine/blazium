@@ -152,7 +152,6 @@ repos:
             platform/(?!android|ios|linuxbsd|macos|web|windows)\w+/.*|
             platform/android/java/editor/src/main/java/com/android/.*|
             platform/android/java/lib/src/com/.*|
-            modules/gif/.*|
             modules/blazium_sdk/.*|
             modules/godotsteam/.*|
             modules/sixway_mtl/.*|
