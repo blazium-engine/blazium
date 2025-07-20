@@ -154,7 +154,6 @@ repos:
             platform/android/java/lib/src/com/.*|
             modules/blazium_sdk/.*|
             modules/godotsteam/.*|
-            modules/sixway_mtl/.*|
             scene/theme/blazium_default_theme.cpp|
             scene/theme/blazium_default_theme.h|
             platform/android/java/lib/src/org/godotengine/godot/gl/GLSurfaceView\.java$|
@@ -168,11 +167,7 @@ repos:
         language: python
         entry: python misc/scripts/header_guards.py
         files: \.(h|hpp|hh|hxx)$
-        exclude: |
-          (?x)^(
-            .*/(dummy|thread|platform_config|platform_gl)\.h$|
-            modules/sixway_mtl/.*
-          )
+        exclude: ^.*/(dummy|thread|platform_config|platform_gl)\.h$
 
       - id: file-format
         name: file-format
