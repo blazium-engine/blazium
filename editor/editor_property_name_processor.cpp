@@ -325,11 +325,6 @@ EditorPropertyNameProcessor::EditorPropertyNameProcessor() {
 	capitalize_string_remaps["xz"] = "XZ";
 	capitalize_string_remaps["yz"] = "YZ";
 
-	// Six-Way Lighting Module
-	capitalize_string_remaps["rtb"] = "RTB";
-	capitalize_string_remaps["lbf"] = "LBF";
-	capitalize_string_remaps["tea"] = "TEA";
-
 	// Articles, conjunctions, prepositions.
 	// The following initialization is parsed in `editor/translations/scripts/common.py` with a regex.
 	// The word definition format should be kept synced with the regex.
