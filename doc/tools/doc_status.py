@@ -238,12 +238,12 @@ class ClassStatus:
         )
 
         if self.name.startswith("Total"):
-            output["url"] = color("url", "https://docs.blazium.app/classes/")
+            output["url"] = color("url", "https://docs.godotengine.org/en/latest/classes/")
             if flags["s"]:
                 output["comment"] = color("part_good", "ALL OK")
         else:
             output["url"] = color(
-                "url", "https://docs.blazium.app/classes/class_{name}.html".format(name=self.name.lower())
+                "url", "https://docs.godotengine.org/en/latest/classes/class_{name}.html".format(name=self.name.lower())
             )
 
             if flags["s"] and not flags["g"] and self.is_ok():
