@@ -16,7 +16,7 @@ comprehensive set of common tools, so that
 users can focus on making games without having to reinvent the wheel. Games can
 be exported with one click to a number of platforms, including the major desktop
 platforms (Linux, macOS, Windows), mobile platforms (Android, iOS), as well as
-Web-based platforms and [consoles](https://docs.blazium.app/tutorials/platform/consoles.html).
+Web-based platforms and [consoles](docs.godotengine.org/en/stable/tutorials/platform/consoles.html).
 
 ## Free, open source and community-driven
 
@@ -50,7 +50,7 @@ Official binaries for the Blazium editor can be found [on the Blazium website](h
 
 ### Compiling from source
 
-[See the official docs](https://docs.blazium.app/contributing/development/compiling/)
+[See the official docs](docs.godotengine.org/en/stable/contributing/development/compiling/)
 for compilation instructions for every supported platform.
 
 ## Community and contributing
@@ -64,15 +64,16 @@ To get started contributing to the project, see the [contributing guide](CONTRIB
 This document also includes guidelines for reporting bugs.
 
 ## Documentation and demos
-
+<!--
 The official documentation is hosted on [DigitalOcean](https://docs.blazium.app).
 It is maintained by the Blazium community in its own [GitHub repository](https://github.com/blazium-engine/blazium-docs).
+-->
 
-The [class reference](https://docs.blazium.app/classes/index.html)
+The [class reference](docs.godotengine.org/en/stable/classes/index.html)
 is also accessible from the Blazium editor.
 
 There are also a number of other
-[learning resources](https://docs.blazium.app/community/tutorials.html)
+[learning resources](docs.godotengine.org/en/stable/community/tutorials.html)
 provided by the community, such as text and video tutorials, demos, etc.
 
 
