@@ -190,6 +190,11 @@ jobs:
         run: |
           ${{ matrix.bin }} --headless --generate-mono-glue ./modules/mono/glue
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'
+
       - name: Build .NET solutions
         if: matrix.build-mono
         run: |
