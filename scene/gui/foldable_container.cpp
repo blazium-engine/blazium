@@ -295,7 +295,14 @@ void FoldableContainer::_notification(int p_what) {
 				icon_pos.x = title_style->get_margin(SIDE_LEFT);
 				title_text_pos.x += icon->get_width() + h_separation;
 			}
-			icon->draw(ci, title_rect.position + icon_pos);
+
+			Color arrow_color;
+			if (is_hovering) {
+				arrow_color = theme_cache.arrow_hover_color;
+			} else {
+				arrow_color = folded ? theme_cache.arrow_collapsed_color : theme_cache.arrow_normal_color;
+			}
+			icon->draw(ci, title_rect.position + icon_pos, arrow_color);
 
 			Color font_color = folded ? theme_cache.title_collapsed_font_color : theme_cache.title_font_color;
 			if (is_hovering) {
