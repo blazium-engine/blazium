@@ -44,6 +44,12 @@ public:
 		ACTION_MODE_BUTTON_RELEASE,
 	};
 
+	enum SizeMode {
+		SIZE_MODE_IGNORE,
+		SIZE_MODE_FIT_WIDTH,
+		SIZE_MODE_FIT_HEIGHT,
+	};
+
 private:
 	BitField<MouseButtonMask> button_mask = MouseButtonMask::LEFT;
 	bool toggle_mode = false;
@@ -55,6 +61,8 @@ private:
 	ObjectID shortcut_context;
 
 	ActionMode action_mode = ACTION_MODE_BUTTON_RELEASE;
+	SizeMode size_mode = SIZE_MODE_IGNORE;
+
 	struct Status {
 		bool pressed = false;
 		bool hovering = false;
@@ -84,6 +92,8 @@ protected:
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
 	virtual void shortcut_input(const Ref<InputEvent> &p_event) override;
 	void _notification(int p_what);
+
+	Size2 _get_final_minimum_size(const Size2 &p_min_size) const;
 
 	bool _was_pressed_by_mouse() const;
 	void _accessibility_action_click(const Variant &p_data);
@@ -122,6 +132,9 @@ public:
 	void set_action_mode(ActionMode p_mode);
 	ActionMode get_action_mode() const;
 
+	void set_size_mode(SizeMode p_size_mode);
+	SizeMode get_size_mode() const;
+
 	void set_keep_pressed_outside(bool p_on);
 	bool is_keep_pressed_outside() const;
 
@@ -147,6 +160,7 @@ public:
 
 VARIANT_ENUM_CAST(BaseButton::DrawMode)
 VARIANT_ENUM_CAST(BaseButton::ActionMode)
+VARIANT_ENUM_CAST(BaseButton::SizeMode)
 
 class ButtonGroup : public Resource {
 	GDCLASS(ButtonGroup, Resource);
