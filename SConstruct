@@ -14,6 +14,7 @@ from importlib.util import module_from_spec, spec_from_file_location
 from types import ModuleType
 
 from SCons import __version__ as scons_raw_version
+from SCons.Builder import ListEmitter
 
 # Explicitly resolve the helper modules, this is done to avoid clash with
 # modules of the same name that might be randomly added (e.g. someone adding
@@ -232,6 +233,13 @@ opts.Add(BoolVariable("engine_update_check", "Enable engine update checks in the
 opts.Add(BoolVariable("steamapi", "Enable minimal SteamAPI integration for usage time tracking (editor only)", False))
 opts.Add("cache_path", "Path to a directory where SCons cache files will be stored. No value disables the cache.", "")
 opts.Add("cache_limit", "Max size (in GiB) for the SCons cache. 0 means no limit.", "0")
+opts.Add(
+    BoolVariable(
+        "redirect_build_objects",
+        "Enable redirecting built objects/libraries to `bin/obj/` to declutter the repository.",
+        True,
+    )
+)
 
 # Thirdparty libraries
 opts.Add(BoolVariable("builtin_brotli", "Use the built-in Brotli library", True))
@@ -1044,6 +1052,14 @@ if env["ninja"]:
 if env["threads"]:
     env.Append(CPPDEFINES=["THREADS_ENABLED"])
 
+# Ensure build objects are put in their own folder if `redirect_build_objects` is enabled.
+env.Prepend(LIBEMITTER=[methods.redirect_emitter])
+env.Prepend(SHLIBEMITTER=[methods.redirect_emitter])
+for key in (emitters := env.StaticObject.builder.emitter):
+    emitters[key] = ListEmitter([methods.redirect_emitter] + env.Flatten(emitters[key]))
+for key in (emitters := env.SharedObject.builder.emitter):
+    emitters[key] = ListEmitter([methods.redirect_emitter] + env.Flatten(emitters[key]))
+
 # Build subdirs, the build order is dependent on link order.
 Export("env")
 
@@ -1075,11 +1091,11 @@ if "check_c_headers" in env:
     for header in headers:
         if conf.CheckCHeader(header):
             env.AppendUnique(CPPDEFINES=[headers[header]])
+conf.Finish()
 
-
-methods.show_progress(env)
-# TODO: replace this with `env.Dump(format="json")`
-# once we start requiring SCons 4.0 as min version.
-methods.dump(env)
-methods.prepare_purge(env)
-methods.prepare_timer()
+# Miscellaneous & post-build methods.
+if not env.GetOption("clean") and not env.GetOption("help"):
+    methods.dump(env)
+    methods.show_progress(env)
+    methods.prepare_purge(env)
+    methods.prepare_timer()
