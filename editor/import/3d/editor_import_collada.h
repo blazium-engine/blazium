@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef EDITOR_IMPORT_COLLADA_H
-#define EDITOR_IMPORT_COLLADA_H
+#pragma once
 
 #include "editor/import/3d/resource_importer_scene.h"
 
@@ -43,5 +42,3 @@ public:
 
 	EditorSceneFormatImporterCollada();
 };
-
-#endif // EDITOR_IMPORT_COLLADA_H

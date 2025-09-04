@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef RESOURCE_SAVER_SQLITE_H
-#define RESOURCE_SAVER_SQLITE_H
+#pragma once
 
 #include "core/io/resource_saver.h"
 
@@ -44,4 +43,3 @@ public:
 	virtual void get_recognized_extensions(const Ref<Resource> &p_resource, List<String> *p_extensions) const override;
 	virtual bool recognize(const Ref<Resource> &p_resource) const override;
 };
-#endif // RESOURCE_SAVER_SQLITE_H

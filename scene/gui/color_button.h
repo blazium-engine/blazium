@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef COLOR_BUTTON_H
-#define COLOR_BUTTON_H
+#pragma once
 
 #include "scene/gui/base_button.h"
 
@@ -75,5 +74,3 @@ public:
 
 	ColorButton(const Color &p_color = Color(1, 1, 1));
 };
-
-#endif // COLOR_BUTTON_H

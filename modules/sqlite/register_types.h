@@ -28,12 +28,9 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef SQLITE_REGISTER_TYPES_H
-#define SQLITE_REGISTER_TYPES_H
+#pragma once
 
 #include "modules/register_module_types.h"
 
 void initialize_sqlite_module(ModuleInitializationLevel p_level);
 void uninitialize_sqlite_module(ModuleInitializationLevel p_level);
-
-#endif // SQLITE_REGISTER_TYPES_H

@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef GODOT_SQLITE_H
-#define GODOT_SQLITE_H
+#pragma once
 
 #include "../thirdparty/spmemvfs/spmemvfs.h"
 #include "../thirdparty/sqlite/sqlite3.h"
@@ -215,4 +214,3 @@ public:
 	String get_last_error_message() const;
 	int get_last_error_code() const;
 };
-#endif // GODOT_SQLITE_H

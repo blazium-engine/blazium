@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef MATH_FUNCS_H
-#define MATH_FUNCS_H
+#pragma once
 
 #include "core/error/error_macros.h"
 #include "core/math/math_defs.h"
@@ -874,5 +873,3 @@ _ALWAYS_INLINE_ float snap_scalar_separation(float p_offset, float p_step, float
 }
 
 }; // namespace Math
-
-#endif // MATH_FUNCS_H

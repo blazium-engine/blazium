@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef XR_VRS_H
-#define XR_VRS_H
+#pragma once
 
 #include "core/object/class_db.h"
 #include "core/object/object.h"
@@ -63,5 +62,3 @@ public:
 
 	RID make_vrs_texture(const Size2 &p_target_size, const PackedVector2Array &p_eye_foci);
 };
-
-#endif // XR_VRS_H

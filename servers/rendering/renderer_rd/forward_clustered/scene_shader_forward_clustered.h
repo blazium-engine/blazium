@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef SCENE_SHADER_FORWARD_CLUSTERED_H
-#define SCENE_SHADER_FORWARD_CLUSTERED_H
+#pragma once
 
 #include "servers/rendering/renderer_rd/renderer_scene_render_rd.h"
 #include "servers/rendering/renderer_rd/shaders/forward_clustered/scene_forward_clustered.glsl.gen.h"
@@ -261,5 +260,3 @@ public:
 };
 
 } // namespace RendererSceneRenderImplementation
-
-#endif // SCENE_SHADER_FORWARD_CLUSTERED_H

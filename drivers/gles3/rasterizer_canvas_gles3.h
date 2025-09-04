@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef RASTERIZER_CANVAS_GLES3_H
-#define RASTERIZER_CANVAS_GLES3_H
+#pragma once
 
 #ifdef GLES3_ENABLED
 
@@ -389,5 +388,3 @@ public:
 };
 
 #endif // GLES3_ENABLED
-
-#endif // RASTERIZER_CANVAS_GLES3_H

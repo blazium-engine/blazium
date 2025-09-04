@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef NODE_SQLITE_H
-#define NODE_SQLITE_H
+#pragma once
 
 #include "resource_sqlite.h"
 #include "scene/main/node.h"
@@ -47,4 +46,3 @@ public:
 	Ref<SQLiteDatabase> get_database() { return database; }
 	void set_database(Ref<SQLiteDatabase> p_database) { database = p_database; }
 };
-#endif // NODE_SQLITE_H

@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef RESOURCE_SQLITE_H
-#define RESOURCE_SQLITE_H
+#pragma once
 
 #include "core/io/resource.h"
 #include "core/variant/typed_array.h"
@@ -65,5 +64,3 @@ public:
 	SQLiteDatabase();
 	~SQLiteDatabase();
 };
-
-#endif // RESOURCE_SQLITE_H

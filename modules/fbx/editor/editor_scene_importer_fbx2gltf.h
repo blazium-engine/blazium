@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef EDITOR_SCENE_IMPORTER_FBX2GLTF_H
-#define EDITOR_SCENE_IMPORTER_FBX2GLTF_H
+#pragma once
 
 #ifdef TOOLS_ENABLED
 
@@ -55,5 +54,3 @@ public:
 };
 
 #endif // TOOLS_ENABLED
-
-#endif // EDITOR_SCENE_IMPORTER_FBX2GLTF_H

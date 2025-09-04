@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef COLOR_H
-#define COLOR_H
+#pragma once
 
 #include "core/math/math_funcs.h"
 
@@ -393,5 +392,3 @@ constexpr bool Color::operator<(const Color &p_color) const {
 constexpr Color operator*(float p_scalar, const Color &p_color) {
 	return p_color * p_scalar;
 }
-
-#endif // COLOR_H

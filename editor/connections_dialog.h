@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef CONNECTIONS_DIALOG_H
-#define CONNECTIONS_DIALOG_H
+#pragma once
 
 #include "scene/gui/box_container.h"
 #include "scene/gui/dialogs.h"
@@ -272,5 +271,3 @@ public:
 	ConnectionsDock();
 	~ConnectionsDock();
 };
-
-#endif // CONNECTIONS_DIALOG_H

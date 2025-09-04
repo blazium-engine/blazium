@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef MENU_BUTTON_H
-#define MENU_BUTTON_H
+#pragma once
 
 #include "scene/gui/button.h"
 #include "scene/property_list_helper.h"
@@ -79,5 +78,3 @@ public:
 	MenuButton(const String &p_text = String());
 	~MenuButton();
 };
-
-#endif // MENU_BUTTON_H

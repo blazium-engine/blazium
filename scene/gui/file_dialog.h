@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef FILE_DIALOG_H
-#define FILE_DIALOG_H
+#pragma once
 
 #include "scene/gui/dialogs.h"
 #include "scene/property_list_helper.h"
@@ -299,5 +298,3 @@ public:
 
 VARIANT_ENUM_CAST(FileDialog::FileMode);
 VARIANT_ENUM_CAST(FileDialog::Access);
-
-#endif // FILE_DIALOG_H

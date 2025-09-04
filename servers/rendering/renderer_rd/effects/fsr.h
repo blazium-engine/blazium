@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef FSR_RD_H
-#define FSR_RD_H
+#pragma once
 
 #include "../storage_rd/render_scene_buffers_rd.h"
 #include "servers/rendering/renderer_rd/shaders/effects/fsr_upscale.glsl.gen.h"
@@ -65,5 +64,3 @@ private:
 };
 
 } // namespace RendererRD
-
-#endif // FSR_RD_H

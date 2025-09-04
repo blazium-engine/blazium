@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef SCROLL_CONTAINER_H
-#define SCROLL_CONTAINER_H
+#pragma once
 
 #include "scene/gui/container.h"
 
@@ -138,5 +137,3 @@ public:
 };
 
 VARIANT_ENUM_CAST(ScrollContainer::ScrollMode);
-
-#endif // SCROLL_CONTAINER_H

@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef VARIANT_H
-#define VARIANT_H
+#pragma once
 
 #include "core/core_string_names.h"
 #include "core/input/input_enums.h"
@@ -1020,5 +1019,3 @@ Array::ConstIterator &Array::ConstIterator::operator--() {
 	element_ptr--;
 	return *this;
 }
-
-#endif // VARIANT_H

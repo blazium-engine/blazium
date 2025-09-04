@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef BVH_H
-#define BVH_H
+#pragma once
 
 // BVH
 // This class provides a wrapper around BVH tree, which contains most of the functionality
@@ -804,5 +803,3 @@ public:
 };
 
 #undef BVHTREE_CLASS
-
-#endif // BVH_H

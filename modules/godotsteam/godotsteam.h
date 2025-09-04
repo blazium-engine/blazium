@@ -1,5 +1,4 @@
-#ifndef GODOTSTEAM_H
-#define GODOTSTEAM_H
+#pragma once
 
 // Turn off MSVC-only warning about strcpy
 #ifdef _MSC_VER
@@ -3244,5 +3243,3 @@ VARIANT_ENUM_CAST(Steam::WorkshopVideoProvider);
 VARIANT_ENUM_CAST(Steam::WorkshopVote);
 
 VARIANT_ENUM_CAST(Steam::XboxOrigin);
-
-#endif // GODOTSTEAM_H

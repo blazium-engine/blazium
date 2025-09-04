@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef SCENE_TREE_EDITOR_H
-#define SCENE_TREE_EDITOR_H
+#pragma once
 
 #include "scene/gui/control.h"
 #include "scene/gui/dialogs.h"
@@ -287,5 +286,3 @@ public:
 	SceneTreeDialog();
 	~SceneTreeDialog();
 };
-
-#endif // SCENE_TREE_EDITOR_H

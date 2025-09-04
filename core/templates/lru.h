@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef LRU_H
-#define LRU_H
+#pragma once
 
 #include "core/math/math_funcs.h"
 #include "hash_map.h"
@@ -123,5 +122,3 @@ public:
 		capacity = p_capacity;
 	}
 };
-
-#endif // LRU_H

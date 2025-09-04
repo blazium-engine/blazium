@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef RESOURCE_LOADER_SQLITE_H
-#define RESOURCE_LOADER_SQLITE_H
+#pragma once
 
 #include "core/io/resource_loader.h"
 
@@ -45,4 +44,3 @@ public:
 	virtual bool handles_type(const String &p_type) const override;
 	virtual String get_resource_type(const String &p_path) const override;
 };
-#endif // RESOURCE_LOADER_SQLITE_H

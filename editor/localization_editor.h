@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef LOCALIZATION_EDITOR_H
-#define LOCALIZATION_EDITOR_H
+#pragma once
 
 #include "editor/editor_locale_dialog.h"
 #include "scene/gui/box_container.h"
@@ -99,5 +98,3 @@ public:
 
 	LocalizationEditor();
 };
-
-#endif // LOCALIZATION_EDITOR_H
