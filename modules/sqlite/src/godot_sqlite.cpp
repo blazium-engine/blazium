@@ -104,12 +104,11 @@ String SQLiteQuery::get_last_error_message() const {
 }
 
 TypedArray<SQLiteColumnSchema> SQLiteQuery::get_columns() {
+	ERR_FAIL_NULL_V(stmt, TypedArray<SQLiteColumnSchema>());
+
 	if (is_ready() == false) {
 		ERR_FAIL_COND_V(prepare() == false, Array());
 	}
-
-	// At this point stmt can't be null.
-	CRASH_COND(stmt == nullptr);
 
 	TypedArray<SQLiteColumnSchema> res;
 	const int col_count = sqlite3_column_count(stmt);
@@ -223,6 +222,8 @@ bool SQLiteAccess::close() {
 		memory_read = false;
 		return result;
 	}
+
+	return true;
 }
 
 sqlite3_stmt *SQLiteAccess::prepare(const char *query) {
@@ -436,13 +437,21 @@ bool SQLiteAccess::backup(const String &path) {
 	sqlite3 *destination_db;
 	int result = sqlite3_open_v2(destination_path.utf8().get_data(), &destination_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, NULL);
 
-	ERR_FAIL_COND_V_MSG(result != SQLITE_OK, false,
-			"Cannot create backup database, error:" + itos(result));
+	if (result != SQLITE_OK) {
+		ERR_PRINT("Cannot create backup database, error:" + itos(result));
+		sqlite3_close_v2(destination_db);
+		return false;
+	}
+
 	// Get database pointer
 	sqlite3 *dbs = get_handler();
 
-	ERR_FAIL_COND_V_MSG(dbs == nullptr, 1,
-			"Cannot backup. The database was not opened.");
+	if (dbs == nullptr) {
+		ERR_PRINT("Cannot backup. The database was not opened.");
+		sqlite3_close_v2(destination_db);
+		return false;
+	}
+
 	sqlite3_backup *backup = sqlite3_backup_init(destination_db, "main", dbs, "main");
 	if (backup) {
 		sqlite3_backup_step(backup, -1);
