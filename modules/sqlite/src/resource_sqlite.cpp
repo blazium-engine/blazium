@@ -176,6 +176,7 @@ Ref<SQLiteQuery> SQLiteDatabase::insert_row(const String &p_name, const Dictiona
 }
 
 Ref<SQLiteQuery> SQLiteDatabase::insert_rows(const String &p_name, const TypedArray<Dictionary> &p_row_array) {
+	ERR_FAIL_COND_V(p_row_array.is_empty(), Ref<SQLiteQuery>());
 	String query_string, key_string, value_string = "", values_string = "";
 	Dictionary row0 = p_row_array[0];
 	Array keys = row0.keys();
@@ -293,10 +294,8 @@ int SQLiteDatabase::get_last_error_code() const {
 Dictionary SQLiteDatabase::get_tables() const {
 	Ref<SQLiteQuery> query = db->create_query("SELECT name FROM sqlite_master WHERE type = \"table\"");
 	Ref<SQLiteQueryResult> result = query->execute(Array());
-	if (result->get_error() != "") {
-		ERR_PRINT("Error getting table names: " + result->get_error() + " " + result->get_error_code());
-		return Dictionary();
-	}
+	ERR_FAIL_COND_V_MSG(result->get_error() != "", Dictionary(), "Error getting table names: " + result->get_error() + " " + result->get_error_code());
+
 	Dictionary result_dict;
 	for (int i = 0; i < result->get_result().size(); i++) {
 		Dictionary row = result->get_result()[i];
@@ -322,5 +321,6 @@ SQLiteDatabase::SQLiteDatabase() {
 }
 
 SQLiteDatabase::~SQLiteDatabase() {
+	db->close();
 	db.unref();
 }
