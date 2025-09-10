@@ -4118,6 +4118,8 @@ void CanvasItemEditor::_notification(int p_what) {
 			button_grid_toggle->set_pressed_no_signal(_is_grid_visible());
 			_update_lock_and_group_button();
 
+			// WARNING: Don't connect SceneTree node_changed signal here to _update_lock_and_group_button. see https://github.com/godotengine/godot/pull/110320
+
 			ProjectSettings::get_singleton()->connect("settings_changed", callable_mp(this, &CanvasItemEditor::_project_settings_changed));
 		} break;
 
