@@ -1804,6 +1804,26 @@ void EditorThemeManager::_populate_standard_styles(const Ref<EditorTheme> &p_the
 		}
 	}
 
+	// ColorButton
+	{
+		int x6_scale = Math::round(6 * EDSCALE);
+		p_theme->set_stylebox(CoreStringName(normal), "ColorButton", make_flat_stylebox(p_config.dark_color_1, x6_scale, x6_scale, x6_scale, x6_scale, p_config.corner_radius));
+		p_theme->set_stylebox("hover", "ColorButton", make_flat_stylebox(p_config.mono_color * Color(1, 1, 1, 0.11), x6_scale, x6_scale, x6_scale, x6_scale, p_config.corner_radius));
+		p_theme->set_stylebox("disabled", "ColorButton", make_flat_stylebox(p_config.disabled_bg_color, x6_scale, x6_scale, x6_scale, x6_scale, p_config.corner_radius));
+		Ref<StyleBoxFlat> color_button_pressed = make_flat_stylebox(p_config.dark_color_1.darkened(0.125), x6_scale, x6_scale, x6_scale, x6_scale, p_config.corner_radius);
+		color_button_pressed->set_border_width_all(4 * EDSCALE);
+		color_button_pressed->set_border_color(p_config.extra_border_color_2);
+		p_theme->set_stylebox(SceneStringName(pressed), "ColorButton", color_button_pressed);
+		Ref<StyleBoxFlat> color_button_focus = make_flat_stylebox(p_config.dark_color_1, 0, 0, 0, 0, MAX(p_config.corner_radius - 1, 0));
+		color_button_focus->set_draw_center(false);
+		color_button_focus->set_border_width_all(2 * EDSCALE);
+		color_button_focus->set_border_color(p_config.accent_color);
+		p_theme->set_stylebox("focus", "ColorButton", color_button_focus);
+
+		p_theme->set_icon("bg", "ColorButton", p_theme->get_icon(SNAME("GuiMiniCheckerboard"), EditorStringName(EditorIcons)));
+		p_theme->set_icon("overbright_indicator", "ColorButton", p_theme->get_icon(SNAME("OverbrightIndicator"), EditorStringName(EditorIcons)));
+	}
+
 	// ColorPicker and related nodes.
 	{
 		// ColorPicker.
