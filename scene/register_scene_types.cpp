@@ -51,6 +51,7 @@
 #include "scene/gui/check_box.h"
 #include "scene/gui/check_button.h"
 #include "scene/gui/code_edit.h"
+#include "scene/gui/color_button.h"
 #include "scene/gui/color_picker.h"
 #include "scene/gui/color_rect.h"
 #include "scene/gui/control.h"
@@ -458,6 +459,7 @@ void register_scene_types() {
 	GDREGISTER_CLASS(CheckBox);
 	GDREGISTER_CLASS(CheckButton);
 	GDREGISTER_CLASS(LinkButton);
+	GDREGISTER_CLASS(ColorButton);
 	GDREGISTER_CLASS(Panel);
 	GDREGISTER_VIRTUAL_CLASS(Range);
 
