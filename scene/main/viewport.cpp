@@ -2617,6 +2617,7 @@ void Viewport::_gui_update_mouse_over() {
 	// Send Mouse Exit notifications.
 	for (int exit_control_index : needs_exit) {
 		gui.mouse_over_hierarchy[exit_control_index]->notification(Control::NOTIFICATION_MOUSE_EXIT);
+		gui.mouse_over_hierarchy[exit_control_index]->emit_signal(SceneStringName(mouse_exited));
 	}
 
 	// Update the mouse over hierarchy.
@@ -2628,6 +2629,7 @@ void Viewport::_gui_update_mouse_over() {
 	// Send Mouse Enter notifications.
 	for (int i = needs_enter.size() - 1; i >= 0; i--) {
 		needs_enter[i]->notification(Control::NOTIFICATION_MOUSE_ENTER);
+		needs_enter[i]->emit_signal(SceneStringName(mouse_entered));
 	}
 
 	gui.sending_mouse_enter_exit_notifications = false;
@@ -3299,6 +3301,7 @@ void Viewport::_update_mouse_over(Vector2 p_pos) {
 			for (int i = over_ancestors.size() - 1; i >= 0; i--) {
 				gui.mouse_over_hierarchy.push_back(over_ancestors[i]);
 				over_ancestors[i]->notification(Control::NOTIFICATION_MOUSE_ENTER);
+				over_ancestors[i]->emit_signal(SceneStringName(mouse_entered));
 			}
 
 			// Send Mouse Enter Self notification.
@@ -3390,6 +3393,7 @@ void Viewport::_drop_mouse_over(Control *p_until_control) {
 	for (int i = gui.mouse_over_hierarchy.size() - 1; i >= notification_until; i--) {
 		if (gui.mouse_over_hierarchy[i]->is_inside_tree()) {
 			gui.mouse_over_hierarchy[i]->notification(Control::NOTIFICATION_MOUSE_EXIT);
+			gui.mouse_over_hierarchy[i]->emit_signal(SceneStringName(mouse_exited));
 		}
 	}
 	gui.mouse_over_hierarchy.resize(notification_until);
@@ -5171,7 +5175,7 @@ void Viewport::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "anisotropic_filtering_level", PROPERTY_HINT_ENUM, String::utf8("Disabled (Fastest),2× (Faster),4× (Fast),8× (Average),16x (Slow)")), "set_anisotropic_filtering_level", "get_anisotropic_filtering_level");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "fsr_sharpness", PROPERTY_HINT_RANGE, "0,2,0.1"), "set_fsr_sharpness", "get_fsr_sharpness");
 	ADD_GROUP("Variable Rate Shading", "vrs_");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "vrs_mode", PROPERTY_HINT_ENUM, "Disabled,Texture,Depth buffer,XR"), "set_vrs_mode", "get_vrs_mode");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "vrs_mode", PROPERTY_HINT_ENUM, "Disabled,Texture,XR"), "set_vrs_mode", "get_vrs_mode");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "vrs_update_mode", PROPERTY_HINT_ENUM, "Disabled,Once,Always"), "set_vrs_update_mode", "get_vrs_update_mode");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "vrs_texture", PROPERTY_HINT_RESOURCE_TYPE, "Texture2D"), "set_vrs_texture", "get_vrs_texture");
 #endif
