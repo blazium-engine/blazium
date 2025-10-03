@@ -8,8 +8,8 @@ GODOT_ICON ICON platform/windows/godot.ico
 1 RT_MANIFEST "godot.manifest"
 
 1 VERSIONINFO
-FILEVERSION     GODOT_VERSION_MAJOR,GODOT_VERSION_MINOR,GODOT_VERSION_PATCH,0
-PRODUCTVERSION  GODOT_VERSION_MAJOR,GODOT_VERSION_MINOR,GODOT_VERSION_PATCH,0
+FILEVERSION     BLAZIUM_VERSION_MAJOR,BLAZIUM_VERSION_MINOR,BLAZIUM_VERSION_PATCH,0
+PRODUCTVERSION  BLAZIUM_VERSION_MAJOR,BLAZIUM_VERSION_MINOR,BLAZIUM_VERSION_PATCH,0
 FILEOS          4
 FILETYPE        1
 BEGIN
@@ -17,14 +17,14 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "CompanyName",            "Godot Engine"
+            VALUE "CompanyName",            "Blazium Engine"
             VALUE "FileDescription",        GODOT_VERSION_NAME
-            VALUE "FileVersion",            GODOT_VERSION_NUMBER
+            VALUE "FileVersion",            BLAZIUM_VERSION_NUMBER
             VALUE "ProductName",            GODOT_VERSION_NAME
             VALUE "Licence",                "MIT"
-            VALUE "LegalCopyright",         "(c) 2007-present Juan Linietsky, Ariel Manzur and Godot Engine contributors"
-            VALUE "Info",                   "https://godotengine.org"
-            VALUE "ProductVersion",         GODOT_VERSION_FULL_BUILD
+            VALUE "LegalCopyright",         "(c) 2024-present Blazium Engine contributors, (c) 2007-present Juan Linietsky, Ariel Manzur and Godot Engine contributors"
+            VALUE "Info",                   "https://blazium.app"
+            VALUE "ProductVersion",         BLAZIUM_VERSION_FULL_BUILD
         END
     END
     BLOCK "VarFileInfo"
