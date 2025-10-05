@@ -286,7 +286,7 @@ public:
 	void set_structured_text_bidi_override(int p_column, TextServer::StructuredTextParser p_parser);
 	TextServer::StructuredTextParser get_structured_text_bidi_override(int p_column) const;
 
-	void set_structured_text_bidi_override_options(int p_column, Array p_args);
+	void set_structured_text_bidi_override_options(int p_column, const Array &p_args);
 	Array get_structured_text_bidi_override_options(int p_column) const;
 
 	void set_language(int p_column, const String &p_language);
@@ -549,6 +549,8 @@ private:
 
 	int compute_item_height(TreeItem *p_item) const;
 	int get_item_height(TreeItem *p_item) const;
+	Point2i convert_rtl_position(const Point2i &pos, int width = 0) const;
+	Rect2i convert_rtl_rect(const Rect2i &Rect2) const;
 	void _update_all();
 	void update_column(int p_col);
 	void update_item_cell(TreeItem *p_item, int p_col) const;

@@ -30,6 +30,8 @@
 
 #include "ustring.h"
 
+STATIC_ASSERT_INCOMPLETE_TYPE(class, Dictionary);
+
 #include "core/crypto/crypto_core.h"
 #include "core/math/color.h"
 #include "core/math/math_funcs.h"
@@ -1253,7 +1255,7 @@ Vector<float> String::split_floats_mk(const Vector<String> &p_splitters, bool p_
 
 	String buffer = *this;
 	while (true) {
-		int idx;
+		int idx = 0;
 		int end = findmk(p_splitters, from, &idx);
 		int spl_len = 1;
 		if (end < 0) {
@@ -1308,7 +1310,7 @@ Vector<int> String::split_ints_mk(const Vector<String> &p_splitters, bool p_allo
 	int len = length();
 
 	while (true) {
-		int idx;
+		int idx = 0;
 		int end = findmk(p_splitters, from, &idx);
 		int spl_len = 1;
 		if (end < 0) {
