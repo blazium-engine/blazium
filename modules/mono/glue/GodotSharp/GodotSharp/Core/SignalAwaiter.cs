@@ -59,7 +59,7 @@ namespace Godot
                 }
                 else
                 {
-                    awaiter._result = [];
+                    awaiter._result = Array.Empty<Variant>();
                 }
 
                 awaiter._continuation?.Invoke();

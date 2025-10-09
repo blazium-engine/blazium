@@ -440,7 +440,12 @@ namespace GodotTools
                 var msbuildProject = ProjectUtils.Open(GodotSharpDirs.ProjectCsProjPath)
                                      ?? throw new InvalidOperationException("Cannot open C# project.");
 
-                ProjectUtils.UpgradeProjectIfNeeded(msbuildProject, GodotSharpDirs.ProjectAssemblyName);
+                // NOTE: The order in which changes are made to the project is important
+
+                // Migrate to MSBuild project Sdks style if using the old style
+                ProjectUtils.MigrateToProjectSdksStyle(msbuildProject, GodotSharpDirs.ProjectAssemblyName);
+
+                ProjectUtils.EnsureGodotSdkIsUpToDate(msbuildProject);
 
                 if (msbuildProject.HasUnsavedChanges)
                 {

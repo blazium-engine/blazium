@@ -36,17 +36,17 @@ public partial class CsTranslationParserPlugin : EditorTranslationParserPlugin
     private const string TranslationClass = "Godot.GodotObject";
     private const string TranslationMethodTr = "Tr";
     private const string TranslationMethodTrN = "TrN";
-    private static readonly string[] _configurations = ["Debug", "Release"];
-    private static readonly string[] _targetPlatforms = ["windows", "linuxbsd", "macos", "android", "ios", "web"];
+    private static readonly string[] _configurations = new string[] { "Debug", "Release" };
+    private static readonly string[] _targetPlatforms = new string[] { "windows", "linuxbsd", "macos", "android", "ios", "web" };
 
     public override string[] _GetRecognizedExtensions()
     {
-        return ["cs"];
+        return new string[] { "cs" };
     }
 
     public override Array<string[]> _ParseFile(string path)
     {
-        _ret = [];
+        _ret = new Array<string[]>();
 
         if (_projectReferences == null)
         {
@@ -297,7 +297,7 @@ public partial class CsTranslationParserPlugin : EditorTranslationParserPlugin
 
                 if (constantValue is { HasValue: true, Value: string message })
                 {
-                    _ret.Add([message, "", "", comment]);
+                    _ret.Add(new string[] { message, "", "", comment });
                 }
 
                 break;
@@ -313,7 +313,7 @@ public partial class CsTranslationParserPlugin : EditorTranslationParserPlugin
                 if (msgValue is { HasValue: true, Value: string message } &&
                     ctxValue is { HasValue: true, Value: string context })
                 {
-                    _ret.Add([message, context, "", comment]);
+                    _ret.Add(new string[] { message, context, "", comment });
                 }
 
                 break;
@@ -345,7 +345,7 @@ public partial class CsTranslationParserPlugin : EditorTranslationParserPlugin
                 context = ctx;
             }
         }
-        _ret.Add([singular, context, plural, comment]);
+        _ret.Add(new string[] { singular, context, plural, comment });
     }
 
     private List<MetadataReference> GetProjectReferences(string projectPath, string configuration = "Debug", string? targetPlatform = null)
@@ -382,7 +382,7 @@ public partial class CsTranslationParserPlugin : EditorTranslationParserPlugin
         project.SetProperty("GodotTargetPlatform", targetPlatform);
 
         var buildParameters = new BuildParameters(projectCollection);
-        var buildRequest = new BuildRequestData(project.FullPath, project.GlobalProperties, null, ["GetTargetPath"], null);
+        var buildRequest = new BuildRequestData(project.FullPath, project.GlobalProperties, null, new string[] { "GetTargetPath" }, null);
         var buildResult = BuildManager.DefaultBuildManager.Build(buildParameters, buildRequest);
 
         if (buildResult.OverallResult == BuildResultCode.Success)
@@ -402,7 +402,7 @@ public partial class CsTranslationParserPlugin : EditorTranslationParserPlugin
         {
             MSBuildLocator.RegisterDefaults();
         }
-        string[] defineConstants = [];
+        string[] defineConstants = new string[0];
 
         var projectCollection = new ProjectCollection();
         var project = projectCollection.LoadProject(projectPath);
@@ -423,7 +423,7 @@ public partial class CsTranslationParserPlugin : EditorTranslationParserPlugin
         task.SetParameter("Overwrite", "true");
 
         var buildParameters = new BuildParameters(projectCollection);
-        var buildRequest = new BuildRequestData(project.FullPath, project.GlobalProperties, null, ["GetDefineConstants"], null);
+        var buildRequest = new BuildRequestData(project.FullPath, project.GlobalProperties, null, new string[] { "GetDefineConstants" }, null);
         var buildResult = BuildManager.DefaultBuildManager.Build(buildParameters, buildRequest);
 
         if (buildResult.OverallResult == BuildResultCode.Success)

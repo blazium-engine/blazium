@@ -2,8 +2,9 @@
 
   <PropertyGroup>
     <ProjectGuid>{AEBF0036-DA76-4341-B651-A3F2856AB2FA}</ProjectGuid>
-    <TargetFramework>net8.0</TargetFramework>
-    <LangVersion>12</LangVersion>
+    <TargetFramework>net6.0</TargetFramework>
+    <EnablePreviewFeatures>true</EnablePreviewFeatures>
+    <LangVersion>11</LangVersion>
     <OutputPath>bin/$(Configuration)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <RootNamespace>Godot</RootNamespace>

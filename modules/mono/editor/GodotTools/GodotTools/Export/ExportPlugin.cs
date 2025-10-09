@@ -191,7 +191,7 @@ namespace GodotTools.Export
                 BuildConfig = isDebug ? "ExportDebug" : "ExportRelease",
                 IncludeDebugSymbols = (bool)GetOption("dotnet/include_debug_symbols"),
                 RidOS = DetermineRuntimeIdentifierOS(platform, useAndroidLinuxBionic),
-                Archs = [],
+                Archs = new(),
                 UseTempDir = platform != OS.Platforms.iOS, // xcode project links directly to files in the publish dir, so use one that sticks around.
                 BundleOutputs = true,
             };
@@ -232,7 +232,7 @@ namespace GodotTools.Export
                 targets.Add(new PublishConfig
                 {
                     BuildConfig = publishConfig.BuildConfig,
-                    Archs = ["arm64", "x86_64"],
+                    Archs = new() { "arm64", "x86_64" },
                     BundleOutputs = false,
                     IncludeDebugSymbols = publishConfig.IncludeDebugSymbols,
                     RidOS = OS.DotNetOS.iOSSimulator,

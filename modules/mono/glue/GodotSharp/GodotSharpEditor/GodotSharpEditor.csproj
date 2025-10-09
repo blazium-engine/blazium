@@ -1,8 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{8FBEC238-D944-4074-8548-B3B524305905}</ProjectGuid>
-    <TargetFramework>net8.0</TargetFramework>
-    <LangVersion>12</LangVersion>
+    <TargetFramework>net6.0</TargetFramework>
+    <EnablePreviewFeatures>true</EnablePreviewFeatures>
+    <LangVersion>11</LangVersion>
     <OutputPath>bin/$(Configuration)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <RootNamespace>Godot</RootNamespace>
