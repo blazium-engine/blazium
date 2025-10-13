@@ -749,7 +749,7 @@ SceneDebuggerObject::SceneDebuggerObject(ObjectID p_id) {
 	class_name = obj->get_class();
 
 	if (ScriptInstance *si = obj->get_script_instance()) {
-		// Read script instance constants and variables
+		// Read script instance constants and variables.
 		if (!si->get_script().is_null()) {
 			Script *s = si->get_script().ptr();
 			_parse_script_properties(s, si);
@@ -813,9 +813,23 @@ void SceneDebuggerObject::_parse_script_properties(Script *p_script, ScriptInsta
 		base = base->get_base_script();
 	}
 
+	HashSet<String> exported_members;
+
+	List<PropertyInfo> pinfo;
+	p_instance->get_property_list(&pinfo);
+	for (const PropertyInfo &E : pinfo) {
+		if (E.usage & (PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_CATEGORY)) {
+			exported_members.insert(E.name);
+		}
+	}
+
 	// Members
 	for (KeyValue<const Script *, HashSet<StringName>> sm : members) {
 		for (const StringName &E : sm.value) {
+			if (exported_members.has(E)) {
+				continue; // Exported variables already show up in the inspector.
+			}
+
 			Variant m;
 			if (p_instance->get(E, m)) {
 				String script_path = sm.key == p_script ? "" : sm.key->get_path().get_file() + "/";
