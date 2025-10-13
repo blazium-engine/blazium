@@ -25,9 +25,6 @@
 /custom.py
 misc/hooks/pre-commit-custom-*
 
-# Documentation and development notes
-/ignore/
-
 #############################
 ### Godot generated files ###
 #############################
