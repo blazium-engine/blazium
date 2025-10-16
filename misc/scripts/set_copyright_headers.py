@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import glob
 import os
 import sys
 
@@ -42,28 +43,92 @@ license_text = """\
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/"""
 
+# File extensions to process
+VALID_EXTENSIONS = {".cpp", ".h", ".hpp", ".c", ".cc", ".cxx", ".java", ".m", ".mm", ".glsl", ".inc"}
+
 # Parse command line arguments
 use_blazium = "--blazium" in sys.argv
 use_godot = "--godot" in sys.argv
+recursive = "--recursive" in sys.argv or "-r" in sys.argv
 
 if use_blazium:
     sys.argv.remove("--blazium")
 if use_godot:
     sys.argv.remove("--godot")
+if "--recursive" in sys.argv:
+    sys.argv.remove("--recursive")
+if "-r" in sys.argv:
+    sys.argv.remove("-r")
 
 # Validate arguments
 if len(sys.argv) < 2:
-    print("Invalid usage of copyright_headers.py, it should be called with a path to one or multiple files.")
-    print("Usage: python copyright_headers.py [--blazium] [--godot] <file1> [file2] ...")
+    print("Invalid usage of set_copyright_headers.py, it should be called with a path to one or multiple files.")
+    print("Usage: python set_copyright_headers.py [--blazium] [--godot] [--recursive|-r] <path1> [path2] ...")
     print("  --blazium: Include Blazium Engine contributors copyright")
     print("  --godot: Include Godot Engine contributors copyright (includes Juan Linietsky, Ariel Manzur)")
+    print("  --recursive, -r: Recursively process directories")
     print("  Both --blazium and --godot: Include all copyright lines")
+    print("")
+    print("Paths can be:")
+    print("  - Individual files: file.cpp")
+    print("  - Wildcards: *.cpp, src/*.h")
+    print("  - Directories: src/ (processes all valid files in directory)")
     sys.exit(1)
 
 if not use_blazium and not use_godot:
     print("Error: At least one of --blazium or --godot flag must be specified.")
-    print("Usage: python copyright_headers.py [--blazium] [--godot] <file1> [file2] ...")
+    print("Usage: python set_copyright_headers.py [--blazium] [--godot] [--recursive|-r] <path1> [path2] ...")
     sys.exit(1)
+
+
+# Function to collect files from various input types
+def collect_files(paths, recursive=False):
+    """Collect all files to process from given paths (files, wildcards, or directories)."""
+    files_to_process = []
+
+    for path_pattern in paths:
+        path_pattern = path_pattern.strip()
+
+        # Check if it's a wildcard pattern
+        if "*" in path_pattern or "?" in path_pattern:
+            # Use glob to expand wildcards
+            if recursive:
+                # For recursive, use ** pattern
+                matched_files = glob.glob(path_pattern, recursive=True)
+            else:
+                matched_files = glob.glob(path_pattern)
+
+            for matched in matched_files:
+                if os.path.isfile(matched):
+                    ext = os.path.splitext(matched)[1]
+                    if ext in VALID_EXTENSIONS:
+                        files_to_process.append(matched)
+
+        # Check if it's a directory
+        elif os.path.isdir(path_pattern):
+            if recursive:
+                # Walk through all subdirectories
+                for root, dirs, files in os.walk(path_pattern):
+                    for file in files:
+                        ext = os.path.splitext(file)[1]
+                        if ext in VALID_EXTENSIONS:
+                            files_to_process.append(os.path.join(root, file))
+            else:
+                # Only process files in the immediate directory
+                for item in os.listdir(path_pattern):
+                    full_path = os.path.join(path_pattern, item)
+                    if os.path.isfile(full_path):
+                        ext = os.path.splitext(item)[1]
+                        if ext in VALID_EXTENSIONS:
+                            files_to_process.append(full_path)
+
+        # It's a regular file
+        elif os.path.isfile(path_pattern):
+            files_to_process.append(path_pattern)
+        else:
+            print(f"Warning: Path not found: {path_pattern}")
+
+    return files_to_process
 
 
 # Build the header based on flags
@@ -118,30 +183,18 @@ def build_header():
 
 header = build_header()
 
-for f in sys.argv[1:]:
+# Collect all files to process
+files_to_process = collect_files(sys.argv[1:], recursive)
+
+if not files_to_process:
+    print("No files found to process.")
+    sys.exit(0)
+
+print(f"Processing {len(files_to_process)} file(s)...")
+
+# Process files
+for f in files_to_process:
     fname = f
-
-    # Read the file first to check if it has an existing Godot or Blazium header
-    with open(fname.strip(), "r", encoding="utf-8") as fileread:
-        file_content = fileread.read()
-
-    # Check for existing headers
-    has_godot_header = "GODOT ENGINE" in file_content and "https://godotengine.org" in file_content
-    has_blazium_header = "BLAZIUM ENGINE" in file_content and "https://blazium.app" in file_content
-
-    # Skip files that already have the appropriate header
-    if use_blazium and not use_godot:
-        # If only --blazium flag, skip files that already have any header
-        if has_blazium_header or has_godot_header:
-            continue
-    elif use_godot and not use_blazium:
-        # If only --godot flag, skip files that already have Godot header
-        if has_godot_header:
-            continue
-    elif use_blazium and use_godot:
-        # If both flags, skip files that already have Blazium header (which includes all copyrights)
-        if has_blazium_header:
-            continue
 
     # Handle replacing $filename with actual filename and keep alignment
     fsingle = os.path.basename(fname.strip())
@@ -194,3 +247,7 @@ for f in sys.argv[1:]:
     # Write
     with open(fname.strip(), "w", encoding="utf-8", newline="\n") as filewrite:
         filewrite.write(text)
+
+    print(f"  Processed: {fname}")
+
+print(f"\nSuccessfully processed {len(files_to_process)} file(s).")
