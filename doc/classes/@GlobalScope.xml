@@ -1674,6 +1674,9 @@
 		<member name="TranslationServer" type="TranslationServer" setter="" getter="">
 			The [TranslationServer] singleton.
 		</member>
+		<member name="TwitchAPI" type="TwitchAPI" setter="" getter="">
+			The [TwitchAPI] singleton.
+		</member>
 		<member name="WorkerThreadPool" type="WorkerThreadPool" setter="" getter="">
 			The [WorkerThreadPool] singleton.
 		</member>
