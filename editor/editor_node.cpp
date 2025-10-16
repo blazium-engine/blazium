@@ -61,6 +61,7 @@
 #include "scene/gui/rich_text_label.h"
 #include "scene/gui/split_container.h"
 #include "scene/gui/tab_container.h"
+#include "scene/main/timer.h"
 #include "scene/main/window.h"
 #include "scene/property_utils.h"
 #include "scene/resources/image_texture.h"
@@ -526,6 +527,7 @@ void EditorNode::_update_from_settings() {
 	RS::get_singleton()->decals_set_filter(RS::DecalFilter(int(GLOBAL_GET("rendering/textures/decals/filter"))));
 	RS::get_singleton()->light_projectors_set_filter(RS::LightProjectorFilter(int(GLOBAL_GET("rendering/textures/light_projectors/filter"))));
 	RS::get_singleton()->lightmaps_set_bicubic_filter(GLOBAL_GET("rendering/lightmapping/lightmap_gi/use_bicubic_filter"));
+	RS::get_singleton()->material_set_use_debanding(GLOBAL_GET("rendering/anti_aliasing/quality/use_debanding"));
 
 	SceneTree *tree = get_tree();
 	tree->set_debug_collisions_color(GLOBAL_GET("debug/shapes/collision/shape_color"));
@@ -4066,6 +4068,7 @@ void EditorNode::set_addon_plugin_enabled(const String &p_addon, bool p_enabled,
 	Ref<Script> scr; // We need to save it for creating "ep" below.
 
 	// Only try to load the script if it has a name. Else, the plugin has no init script.
+	EditorPlugin *ep = nullptr;
 	if (script_path.length() > 0) {
 		script_path = addon_path.get_base_dir().path_join(script_path);
 		// We should not use the cached version on startup to prevent a script reload
@@ -4100,10 +4103,15 @@ void EditorNode::set_addon_plugin_enabled(const String &p_addon, bool p_enabled,
 			show_warning(vformat(TTR("Unable to load addon script from path: '%s'. Script is not in tool mode."), script_path));
 			return;
 		}
+
+		Object *obj = ClassDB::instantiate(scr->get_instance_base_type());
+		ep = Object::cast_to<EditorPlugin>(obj);
+		ERR_FAIL_NULL(ep);
+		ep->set_script(scr);
+	} else {
+		ep = memnew(EditorPlugin);
 	}
 
-	EditorPlugin *ep = memnew(EditorPlugin);
-	ep->set_script(scr);
 	ep->set_plugin_version(plugin_version);
 	addon_name_to_plugin[addon_path] = ep;
 	add_editor_plugin(ep, p_config_changed);
@@ -8466,7 +8474,7 @@ EditorNode::EditorNode() {
 	default_layout->set_value(docks_section, "dock_5", "Inspector,Node,History");
 
 	int hsplits[] = { 0, 270, -270, 0 };
-	DEV_ASSERT((int)std::size(hsplits) == editor_dock_manager->get_hsplit_count());
+	DEV_ASSERT((int)std_size(hsplits) == editor_dock_manager->get_hsplit_count());
 	for (int i = 0; i < editor_dock_manager->get_hsplit_count(); i++) {
 		default_layout->set_value(docks_section, "dock_hsplit_" + itos(i + 1), hsplits[i]);
 	}

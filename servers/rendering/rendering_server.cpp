@@ -2341,6 +2341,8 @@ void RenderingServer::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("material_set_next_pass", "material", "next_material"), &RenderingServer::material_set_next_pass);
 
+	ClassDB::bind_method(D_METHOD("material_set_use_debanding", "enable"), &RenderingServer::material_set_use_debanding);
+
 	BIND_CONSTANT(MATERIAL_RENDER_PRIORITY_MIN);
 	BIND_CONSTANT(MATERIAL_RENDER_PRIORITY_MAX);
 
@@ -3649,9 +3651,9 @@ void RenderingServer::init() {
 	GLOBAL_DEF_RST(PropertyInfo(Variant::INT, "rendering/reflections/sky_reflections/ggx_samples", PROPERTY_HINT_RANGE, "0,256,1"), 32);
 	GLOBAL_DEF(PropertyInfo(Variant::INT, "rendering/reflections/sky_reflections/ggx_samples.mobile", PROPERTY_HINT_RANGE, "0,128,1"), 16);
 	GLOBAL_DEF("rendering/reflections/sky_reflections/fast_filter_high_quality", false);
-	GLOBAL_DEF_RST(PropertyInfo(Variant::INT, "rendering/reflections/reflection_atlas/reflection_size", PROPERTY_HINT_RANGE, "0,4096,1"), 256);
-	GLOBAL_DEF(PropertyInfo(Variant::INT, "rendering/reflections/reflection_atlas/reflection_size.mobile", PROPERTY_HINT_RANGE, "0,2048,1"), 128);
-	GLOBAL_DEF(PropertyInfo(Variant::INT, "rendering/reflections/reflection_atlas/reflection_count", PROPERTY_HINT_RANGE, "0,256,1"), 64);
+	GLOBAL_DEF_RST(PropertyInfo(Variant::INT, "rendering/reflections/reflection_atlas/reflection_size", PROPERTY_HINT_RANGE, "4,4096,1"), 256);
+	GLOBAL_DEF(PropertyInfo(Variant::INT, "rendering/reflections/reflection_atlas/reflection_size.mobile", PROPERTY_HINT_RANGE, "4,2048,1"), 128);
+	GLOBAL_DEF(PropertyInfo(Variant::INT, "rendering/reflections/reflection_atlas/reflection_count", PROPERTY_HINT_RANGE, "1,256,1"), 64);
 	GLOBAL_DEF_RST("rendering/reflections/specular_occlusion/enabled", true);
 
 	GLOBAL_DEF("rendering/global_illumination/gi/use_half_resolution", false);
@@ -3697,6 +3699,8 @@ void RenderingServer::init() {
 	GLOBAL_DEF(PropertyInfo(Variant::FLOAT, "rendering/anti_aliasing/screen_space_roughness_limiter/limit", PROPERTY_HINT_RANGE, "0.01,1.0,0.01"), 0.18);
 
 	GLOBAL_DEF_RST(PropertyInfo(Variant::FLOAT, "rendering/anti_aliasing/quality/smaa_edge_detection_threshold", PROPERTY_HINT_RANGE, "0.01,0.2,0.01"), 0.05);
+
+	GLOBAL_DEF("rendering/anti_aliasing/quality/use_debanding", false);
 
 	{
 		String mode_hints;

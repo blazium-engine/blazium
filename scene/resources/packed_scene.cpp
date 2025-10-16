@@ -31,8 +31,10 @@
 #include "packed_scene.h"
 
 #include "core/config/engine.h"
+#include "core/io/file_access.h"
 #include "core/io/missing_resource.h"
 #include "core/io/resource_loader.h"
+#include "core/object/script_language.h"
 #include "core/templates/local_vector.h"
 #include "scene/2d/node_2d.h"
 #include "scene/gui/control.h"
