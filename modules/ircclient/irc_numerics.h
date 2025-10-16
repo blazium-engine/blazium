@@ -247,4 +247,3 @@ constexpr const char *NOTE = "NOTE";
 } // namespace StandardReplies
 
 } // namespace IRCNumerics
-

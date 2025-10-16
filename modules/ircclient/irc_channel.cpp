@@ -138,13 +138,13 @@ String IRCChannel::get_user_modes(const String &p_nick) const {
 }
 
 bool IRCChannel::is_user_operator(const String &p_nick) const {
-	String modes = get_user_modes(p_nick);
-	return modes.contains("@") || modes.contains("~") || modes.contains("&");
+	String nick_modes = get_user_modes(p_nick);
+	return nick_modes.contains("@") || nick_modes.contains("~") || nick_modes.contains("&");
 }
 
 bool IRCChannel::is_user_voiced(const String &p_nick) const {
-	String modes = get_user_modes(p_nick);
-	return modes.contains("+");
+	String nick_modes = get_user_modes(p_nick);
+	return nick_modes.contains("+");
 }
 
 IRCChannel::IRCChannel() {
@@ -152,4 +152,3 @@ IRCChannel::IRCChannel() {
 
 IRCChannel::~IRCChannel() {
 }
-

@@ -43,7 +43,7 @@
 void IRCClient::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("connect_to_server", "host", "port", "use_ssl", "nick", "username", "realname", "password"), &IRCClient::connect_to_server, DEFVAL(""));
 	ClassDB::bind_method(D_METHOD("disconnect_from_server", "quit_message"), &IRCClient::disconnect_from_server, DEFVAL(""));
-	ClassDB::bind_method(D_METHOD("is_connected"), &IRCClient::is_connected);
+	ClassDB::bind_method(D_METHOD("is_irc_connected"), &IRCClient::is_irc_connected);
 	ClassDB::bind_method(D_METHOD("get_status"), &IRCClient::get_status);
 
 	ClassDB::bind_method(D_METHOD("poll"), &IRCClient::poll);
@@ -239,14 +239,14 @@ void IRCClient::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("send_typing_notification", "channel", "typing"), &IRCClient::send_typing_notification);
 	ClassDB::bind_method(D_METHOD("send_reaction", "channel", "msgid", "reaction"), &IRCClient::send_reaction);
 	ClassDB::bind_method(D_METHOD("remove_reaction", "channel", "msgid", "reaction"), &IRCClient::remove_reaction);
-	
+
 	ClassDB::bind_method(D_METHOD("set_bot_mode", "enabled"), &IRCClient::set_bot_mode);
 	ClassDB::bind_method(D_METHOD("get_bot_mode"), &IRCClient::get_bot_mode);
-	
+
 	ClassDB::bind_method(D_METHOD("send_reply", "target", "message", "reply_to_msgid"), &IRCClient::send_reply);
 	ClassDB::bind_method(D_METHOD("send_reply_notice", "target", "message", "reply_to_msgid"), &IRCClient::send_reply_notice);
 	ClassDB::bind_method(D_METHOD("get_reply_to_msgid", "tags"), &IRCClient::get_reply_to_msgid);
-	
+
 	ClassDB::bind_method(D_METHOD("has_sts_policy", "hostname"), &IRCClient::has_sts_policy);
 	ClassDB::bind_method(D_METHOD("clear_sts_policy", "hostname"), &IRCClient::clear_sts_policy);
 	ClassDB::bind_method(D_METHOD("clear_all_sts_policies"), &IRCClient::clear_all_sts_policies);
@@ -297,7 +297,7 @@ void IRCClient::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("capability_denied", PropertyInfo(Variant::STRING, "capability")));
 	ADD_SIGNAL(MethodInfo("sasl_success"));
 	ADD_SIGNAL(MethodInfo("sasl_failed", PropertyInfo(Variant::STRING, "reason")));
-	
+
 	// Account Registration signals (IRCv3 draft)
 	ADD_SIGNAL(MethodInfo("account_registration_success", PropertyInfo(Variant::STRING, "account")));
 	ADD_SIGNAL(MethodInfo("account_registration_failed", PropertyInfo(Variant::STRING, "reason")));
@@ -329,11 +329,11 @@ Error IRCClient::connect_to_server(const String &p_host, int p_port, bool p_use_
 	if (status != STATUS_DISCONNECTED) {
 		disconnect_from_server();
 	}
-	
+
 	// Check for STS policy (IRCv3 Strict Transport Security)
 	int actual_port = p_port;
 	bool actual_use_ssl = p_use_ssl;
-	
+
 	if (has_sts_policy(p_host)) {
 		const STSPolicy &policy = sts_policies[p_host];
 		// STS policy requires TLS upgrade
@@ -422,12 +422,12 @@ void IRCClient::disconnect_from_server(const String &p_quit_message) {
 		cap_negotiation_active = false;
 		sasl_in_progress = false;
 		monitored_nicks.clear();
-		
+
 		// Don't clear message history on disconnect - user might want to review it
 	}
 }
 
-bool IRCClient::is_connected() const {
+bool IRCClient::is_irc_connected() const {
 	return status == STATUS_CONNECTED;
 }
 
@@ -448,15 +448,15 @@ Error IRCClient::poll() {
 	for (int i = active_transfers.size() - 1; i >= 0; i--) {
 		Ref<IRCDCCTransfer> transfer = active_transfers[i];
 		if (transfer.is_valid()) {
-			Error err = transfer->poll();
+			transfer->poll();
 
 			IRCDCCTransfer::Status transfer_status = transfer->get_status();
-			if (transfer_status == IRCDCCTransfer::STATUS_TRANSFERRING) {
+			if (transfer_status == IRCDCCTransfer::DCC_STATUS_TRANSFERRING) {
 				emit_signal("dcc_progress", i, transfer->get_transferred(), transfer->get_file_size());
-			} else if (transfer_status == IRCDCCTransfer::STATUS_COMPLETED) {
+			} else if (transfer_status == IRCDCCTransfer::DCC_STATUS_COMPLETED) {
 				emit_signal("dcc_completed", i);
 				active_transfers.remove_at(i);
-			} else if (transfer_status == IRCDCCTransfer::STATUS_FAILED) {
+			} else if (transfer_status == IRCDCCTransfer::DCC_STATUS_FAILED) {
 				emit_signal("dcc_failed", i, transfer->get_error_message());
 				active_transfers.remove_at(i);
 			}
@@ -574,8 +574,8 @@ Error IRCClient::poll() {
 void IRCClient::send_raw(const String &p_message) {
 	// Validate message length
 	if (!_validate_message_length(p_message)) {
-		WARN_PRINT(vformat("IRC message exceeds 512 byte limit (%d bytes): %s", 
-			p_message.utf8().length() + 2, p_message.substr(0, 50)));
+		WARN_PRINT(vformat("IRC message exceeds 512 byte limit (%d bytes): %s",
+				p_message.utf8().length() + 2, p_message.substr(0, 50)));
 		// Still queue it but warn - server will likely truncate or reject
 	}
 	_send_with_priority(p_message, 0); // Normal priority
@@ -738,7 +738,7 @@ void IRCClient::disable_sasl() {
 Error IRCClient::send_dcc_file(const String &p_nick, const String &p_file_path) {
 	Ref<IRCDCCTransfer> transfer;
 	transfer.instantiate();
-	transfer->set_type(IRCDCCTransfer::TYPE_FILE_SEND);
+	transfer->set_transfer_type(IRCDCCTransfer::TYPE_FILE_SEND);
 	transfer->set_remote_nick(p_nick);
 
 	// Get filename from path and sanitize it
@@ -878,7 +878,7 @@ void IRCClient::_process_message(const String &p_raw_message) {
 		metrics.total_latency_ms += latency;
 		metrics.ping_count++;
 		last_ping_sent = 0;
-		
+
 		emit_signal("latency_measured", latency);
 	}
 
@@ -956,7 +956,7 @@ void IRCClient::_handle_numeric(Ref<IRCMessage> p_message) {
 
 			// Initialize connection metrics
 			metrics.connection_time = Time::get_singleton()->get_ticks_msec();
-			
+
 			// Set bot mode if enabled (IRCv3)
 			if (bot_mode_enabled) {
 				send_raw("MODE " + current_nick + " +B");
@@ -976,7 +976,7 @@ void IRCClient::_handle_numeric(Ref<IRCMessage> p_message) {
 					String key = param.substr(0, eq_pos);
 					String value = param.substr(eq_pos + 1);
 					features[key] = value;
-					
+
 					// Check for UTF8ONLY token (IRCv3)
 					if (key == "UTF8ONLY") {
 						// Server only accepts UTF-8
@@ -985,7 +985,7 @@ void IRCClient::_handle_numeric(Ref<IRCMessage> p_message) {
 					}
 				} else {
 					features[param] = true;
-					
+
 					// Check for UTF8ONLY token without value (IRCv3)
 					if (param == "UTF8ONLY") {
 						// Server only accepts UTF-8
@@ -1135,9 +1135,9 @@ void IRCClient::_handle_command(Ref<IRCMessage> p_message) {
 					if (dcc_parts.size() >= 5 && dcc_parts[0] == "SEND") {
 						Ref<IRCDCCTransfer> transfer;
 						transfer.instantiate();
-						transfer->set_type(IRCDCCTransfer::TYPE_FILE_RECEIVE);
+						transfer->set_transfer_type(IRCDCCTransfer::TYPE_FILE_RECEIVE);
 						transfer->set_remote_nick(sender);
-						
+
 						// Sanitize the filename for security
 						String sanitized_filename = _sanitize_dcc_filename(dcc_parts[1]);
 						transfer->set_filename(sanitized_filename);
@@ -1145,7 +1145,7 @@ void IRCClient::_handle_command(Ref<IRCMessage> p_message) {
 						// Parse IP address (could be IPv4 integer or IPv6 string)
 						String ip_str = dcc_parts[2];
 						IPAddress ip;
-						
+
 						if (ip_str.contains(":")) {
 							// IPv6 address string
 							ip = IPAddress(ip_str);
@@ -1160,7 +1160,7 @@ void IRCClient::_handle_command(Ref<IRCMessage> p_message) {
 							ip.set_ipv4((uint8_t *)&ip_int);
 							transfer->set_use_ipv6(false);
 						}
-						
+
 						transfer->set_address(ip);
 						transfer->set_port(dcc_parts[3].to_int());
 						transfer->set_file_size(dcc_parts[4].to_int());
@@ -1195,18 +1195,18 @@ void IRCClient::_handle_command(Ref<IRCMessage> p_message) {
 				if (tags.has("msgid")) {
 					String msg_id = tags["msgid"];
 					message_id_to_text[msg_id] = text;
-					
-				// Limit tracked messages
-				if ((int)message_id_to_text.size() > max_tracked_messages) {
-					// Remove oldest (simple approach - could be improved with LRU)
-					// HashMap doesn't have keys() method - iterate and remove first
-					if (message_id_to_text.size() > 0) {
-						HashMap<String, String>::Iterator it = message_id_to_text.begin();
-						if (it) {
-							message_id_to_text.remove(it);
+
+					// Limit tracked messages
+					if ((int)message_id_to_text.size() > max_tracked_messages) {
+						// Remove oldest (simple approach - could be improved with LRU)
+						// HashMap doesn't have keys() method - iterate and remove first
+						if (message_id_to_text.size() > 0) {
+							HashMap<String, String>::Iterator it = message_id_to_text.begin();
+							if (it) {
+								message_id_to_text.remove(it);
+							}
 						}
 					}
-				}
 				}
 
 				// Check for highlights
@@ -1215,7 +1215,7 @@ void IRCClient::_handle_command(Ref<IRCMessage> p_message) {
 				}
 
 				emit_signal("privmsg", sender, target, text, tags);
-				
+
 				// Add to message history if enabled
 				if (history_enabled) {
 					HistoryMessage hist_msg;
@@ -1224,9 +1224,9 @@ void IRCClient::_handle_command(Ref<IRCMessage> p_message) {
 					hist_msg.target = target;
 					hist_msg.message = text;
 					hist_msg.tags = tags;
-					
+
 					message_history.push_back(hist_msg);
-					
+
 					// Trim history if it exceeds max size
 					if (message_history.size() > max_history_size) {
 						message_history.remove_at(0);
@@ -1265,24 +1265,24 @@ void IRCClient::_handle_command(Ref<IRCMessage> p_message) {
 		// IRCv3 BATCH command
 		if (params.size() >= 1) {
 			String batch_ref = params[0];
-			
+
 			if (batch_ref.begins_with("+")) {
 				// Start batch
 				String ref_tag = batch_ref.substr(1);
 				String batch_type = params.size() >= 2 ? params[1] : "";
-				
+
 				BatchInfo batch;
 				batch.batch_type = batch_type;
 				for (int i = 2; i < params.size(); i++) {
 					batch.params.push_back(params[i]);
 				}
 				active_batches[ref_tag] = batch;
-				
+
 				emit_signal("batch_started", ref_tag, batch_type, batch.params);
 			} else if (batch_ref.begins_with("-")) {
 				// End batch
 				String ref_tag = batch_ref.substr(1);
-				
+
 				if (active_batches.has(ref_tag)) {
 					const BatchInfo &batch = active_batches[ref_tag];
 					// Convert Vector to Array for signal emission
@@ -1431,7 +1431,7 @@ void IRCClient::_handle_command(Ref<IRCMessage> p_message) {
 		if (params.size() >= 1) {
 			String nick = p_message->get_nick();
 			String new_realname = params[0];
-			
+
 			if (users.has(nick)) {
 				users[nick]->set_realname(new_realname);
 			}
@@ -1454,7 +1454,7 @@ void IRCClient::_send_immediate(const String &p_message) {
 #endif
 
 	String message = p_message + "\r\n";
-	
+
 	// Convert to configured encoding
 	PackedByteArray encoded_data = _convert_to_encoding(message, encoding);
 	stream->put_data(encoded_data.ptr(), encoded_data.size());
@@ -1495,7 +1495,7 @@ void IRCClient::_process_send_queue() {
 	}
 
 	uint64_t current_time = Time::get_singleton()->get_ticks_msec();
-	
+
 	// Refill token bucket
 	_refill_token_bucket();
 
@@ -1514,7 +1514,7 @@ void IRCClient::_process_send_queue() {
 
 void IRCClient::_refill_token_bucket() {
 	uint64_t current_time = Time::get_singleton()->get_ticks_msec();
-	
+
 	if (last_token_refill == 0) {
 		last_token_refill = current_time;
 		return;
@@ -1553,17 +1553,17 @@ void IRCClient::_handle_capability_response(Ref<IRCMessage> p_message) {
 
 			for (int i = 0; i < caps.size(); i++) {
 				String cap = caps[i];
-				
+
 				// Check for capability with value (e.g., sts=6697,2592000)
 				int eq_pos = cap.find("=");
 				if (eq_pos != -1) {
 					String cap_name = cap.substr(0, eq_pos);
 					String cap_value = cap.substr(eq_pos + 1);
-					
+
 					if (!available_capabilities.has(cap_name)) {
 						available_capabilities.push_back(cap_name);
 					}
-					
+
 					// Handle STS capability
 					if (cap_name == "sts") {
 						_handle_sts_capability(cap_value);
@@ -1711,8 +1711,7 @@ void IRCClient::_parse_names_reply(const String &p_channel, const String &p_name
 		String modes = "";
 
 		// Strip mode prefixes (@, +, etc.)
-		while (!name.is_empty() && (name[0] == '@' || name[0] == '+' || name[0] == '%' ||
-												name[0] == '~' || name[0] == '&')) {
+		while (!name.is_empty() && (name[0] == '@' || name[0] == '+' || name[0] == '%' || name[0] == '~' || name[0] == '&')) {
 			modes += name[0];
 			name = name.substr(1);
 		}
@@ -1858,10 +1857,10 @@ Dictionary IRCClient::parse_formatting(const String &p_text) {
 
 String IRCClient::_strip_irc_formatting(const String &p_text) const {
 	String result;
-	
+
 	for (int i = 0; i < p_text.length(); i++) {
 		char32_t c = p_text[i];
-		
+
 		// mIRC color codes: ^C[foreground][,background]
 		if (c == 0x03) { // Color code
 			i++; // Skip color code char
@@ -1925,12 +1924,11 @@ String IRCClient::_strip_irc_formatting(const String &p_text) const {
 				}
 			}
 			i--; // Adjust for loop increment
-		}
-		else {
+		} else {
 			result += c;
 		}
 	}
-	
+
 	return result;
 }
 
@@ -1947,18 +1945,18 @@ Dictionary IRCClient::_parse_irc_formatting(const String &p_text) const {
 	current_format["reverse"] = false;
 	current_format["foreground"] = "";
 	current_format["background"] = "";
-	
+
 	for (int i = 0; i < p_text.length(); i++) {
 		char32_t c = p_text[i];
-		
+
 		bool format_changed = false;
-		
+
 		// Color code
 		if (c == 0x03) {
 			i++;
 			String fg_color;
 			String bg_color;
-			
+
 			// Parse foreground color (up to 2 digits)
 			int digits = 0;
 			while (i < p_text.length() && is_digit(p_text[i]) && digits < 2) {
@@ -1966,7 +1964,7 @@ Dictionary IRCClient::_parse_irc_formatting(const String &p_text) const {
 				i++;
 				digits++;
 			}
-			
+
 			// Check for background color
 			if (i < p_text.length() && p_text[i] == ',') {
 				i++; // Skip comma
@@ -1977,9 +1975,9 @@ Dictionary IRCClient::_parse_irc_formatting(const String &p_text) const {
 					digits++;
 				}
 			}
-			
+
 			i--; // Adjust for loop increment
-			
+
 			if (!fg_color.is_empty()) {
 				current_format["foreground"] = fg_color.to_int();
 			}
@@ -2004,7 +2002,7 @@ Dictionary IRCClient::_parse_irc_formatting(const String &p_text) const {
 				}
 			}
 			i--;
-			
+
 			if (hex_color.length() == 6) {
 				current_format["hex_color"] = "#" + hex_color;
 			}
@@ -2052,11 +2050,10 @@ Dictionary IRCClient::_parse_irc_formatting(const String &p_text) const {
 			current_format["background"] = "";
 			current_format["hex_color"] = "";
 			format_changed = true;
-		}
-		else {
+		} else {
 			current_text += c;
 		}
-		
+
 		// If format changed and we have text, save current segment
 		if (format_changed && !current_text.is_empty()) {
 			Dictionary segment;
@@ -2066,7 +2063,7 @@ Dictionary IRCClient::_parse_irc_formatting(const String &p_text) const {
 			current_text = "";
 		}
 	}
-	
+
 	// Add final segment
 	if (!current_text.is_empty()) {
 		Dictionary segment;
@@ -2074,10 +2071,10 @@ Dictionary IRCClient::_parse_irc_formatting(const String &p_text) const {
 		segment["format"] = current_format.duplicate();
 		segments.push_back(segment);
 	}
-	
+
 	result["segments"] = segments;
 	result["plain_text"] = _strip_irc_formatting(p_text);
-	
+
 	return result;
 }
 
@@ -2086,26 +2083,29 @@ String IRCClient::_detect_encoding(const PackedByteArray &p_data) const {
 	// Check for UTF-8 validity first
 	bool valid_utf8 = true;
 	int i = 0;
-	
+
 	while (i < p_data.size()) {
 		uint8_t byte = p_data[i];
-		
+
 		// ASCII (0x00-0x7F) - compatible with UTF-8
 		if (byte <= 0x7F) {
 			i++;
 			continue;
 		}
-		
+
 		// Check UTF-8 multi-byte sequences
 		int seq_length = 0;
-		if ((byte & 0xE0) == 0xC0) seq_length = 2;      // 110xxxxx
-		else if ((byte & 0xF0) == 0xE0) seq_length = 3; // 1110xxxx
-		else if ((byte & 0xF8) == 0xF0) seq_length = 4; // 11110xxx
-		else {
+		if ((byte & 0xE0) == 0xC0) {
+			seq_length = 2; // 110xxxxx
+		} else if ((byte & 0xF0) == 0xE0) {
+			seq_length = 3; // 1110xxxx
+		} else if ((byte & 0xF8) == 0xF0) {
+			seq_length = 4; // 11110xxx
+		} else {
 			valid_utf8 = false;
 			break;
 		}
-		
+
 		// Verify continuation bytes
 		for (int j = 1; j < seq_length; j++) {
 			if (i + j >= p_data.size() || (p_data[i + j] & 0xC0) != 0x80) {
@@ -2113,15 +2113,17 @@ String IRCClient::_detect_encoding(const PackedByteArray &p_data) const {
 				break;
 			}
 		}
-		
-		if (!valid_utf8) break;
+
+		if (!valid_utf8) {
+			break;
+		}
 		i += seq_length;
 	}
-	
+
 	if (valid_utf8) {
 		return "UTF-8";
 	}
-	
+
 	// Check for common non-ASCII patterns suggesting ISO-8859-1/Windows-1252
 	// These encodings allow all byte values 0x80-0xFF
 	// If we have high bytes but invalid UTF-8, likely ISO-8859-1
@@ -2130,7 +2132,7 @@ String IRCClient::_detect_encoding(const PackedByteArray &p_data) const {
 			return "ISO-8859-1"; // Most common fallback for IRC
 		}
 	}
-	
+
 	// Pure ASCII, UTF-8 compatible
 	return "UTF-8";
 }
@@ -2155,7 +2157,7 @@ String IRCClient::_convert_from_encoding(const PackedByteArray &p_data, const St
 			0x0090, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014,
 			0x02DC, 0x2122, 0x0161, 0x203A, 0x0153, 0x009D, 0x017E, 0x0178
 		};
-		
+
 		String result;
 		for (int i = 0; i < p_data.size(); i++) {
 			uint8_t byte = p_data[i];
@@ -2174,7 +2176,7 @@ String IRCClient::_convert_from_encoding(const PackedByteArray &p_data, const St
 
 PackedByteArray IRCClient::_convert_to_encoding(const String &p_text, const String &p_encoding) const {
 	PackedByteArray result;
-	
+
 	if (p_encoding == "UTF-8") {
 		CharString utf8 = p_text.utf8();
 		result.resize(utf8.length());
@@ -2197,7 +2199,7 @@ PackedByteArray IRCClient::_convert_to_encoding(const String &p_text, const Stri
 			0x201D, 0x2022, 0x2013, 0x2014, 0x02DC, 0x2122, 0x0161, 0x203A,
 			0x0153, 0x017E, 0x0178
 		};
-		
+
 		for (int i = 0; i < p_text.length(); i++) {
 			char32_t c = p_text[i];
 			if (c <= 0x7F) {
@@ -2225,7 +2227,7 @@ PackedByteArray IRCClient::_convert_to_encoding(const String &p_text, const Stri
 		result.resize(utf8.length());
 		memcpy(result.ptrw(), utf8.get_data(), utf8.length());
 	}
-	
+
 	return result;
 }
 
@@ -2265,7 +2267,7 @@ bool IRCClient::get_history_enabled() const {
 
 void IRCClient::set_max_history_size(int p_size) {
 	max_history_size = MAX(0, p_size);
-	
+
 	// Trim existing history if new size is smaller
 	while (message_history.size() > max_history_size) {
 		message_history.remove_at(0);
@@ -2278,7 +2280,7 @@ int IRCClient::get_max_history_size() const {
 
 Array IRCClient::get_message_history() const {
 	Array result;
-	
+
 	for (int i = 0; i < message_history.size(); i++) {
 		Dictionary msg_dict;
 		msg_dict["timestamp"] = message_history[i].timestamp;
@@ -2288,7 +2290,7 @@ Array IRCClient::get_message_history() const {
 		msg_dict["tags"] = message_history[i].tags;
 		result.push_back(msg_dict);
 	}
-	
+
 	return result;
 }
 
@@ -2354,7 +2356,7 @@ void IRCClient::_attempt_reconnect() {
 	}
 
 	reconnect_attempts++;
-	
+
 	// Exponential backoff: delay * 2^(attempts-1), capped at 5 minutes
 	int actual_delay = MIN(reconnect_delay * (1 << (reconnect_attempts - 1)), 300);
 	next_reconnect_time = current_time + (actual_delay * 1000);
@@ -2372,7 +2374,7 @@ void IRCClient::_attempt_reconnect() {
 			port = fallback.port;
 			use_ssl = fallback.use_ssl;
 			current_server_index++;
-			
+
 			// Reset to primary server after trying all fallbacks
 			if (current_server_index >= fallback_servers.size()) {
 				current_server_index = 0;
@@ -2382,7 +2384,7 @@ void IRCClient::_attempt_reconnect() {
 
 	// Try to reconnect
 	Error err = connect_to_server(host, port, use_ssl, last_nick, last_username, last_realname, last_password);
-	
+
 	if (err == OK) {
 		reconnect_attempts = 0; // Reset on successful connection
 		current_server_index = 0; // Reset to primary server
@@ -2507,7 +2509,7 @@ bool IRCClient::_mask_matches(const String &p_mask, const String &p_nick) const 
 	// Simple wildcard matching for IRC masks
 	// Supports * (any) and ? (single char)
 	// Format: nick!user@host or just nick
-	
+
 	if (p_mask == p_nick) {
 		return true; // Exact match
 	}
@@ -2570,11 +2572,11 @@ void IRCClient::identify_chanserv(const String &p_channel, const String &p_passw
 // Channel LIST with filters
 void IRCClient::list_channels(const String &p_pattern, int p_min_users, int p_max_users) {
 	String list_cmd = "LIST";
-	
+
 	if (!p_pattern.is_empty()) {
 		list_cmd += " " + p_pattern;
 	}
-	
+
 	// ELIST support (if server supports it)
 	String elist_params;
 	if (p_min_users > 0) {
@@ -2586,18 +2588,18 @@ void IRCClient::list_channels(const String &p_pattern, int p_min_users, int p_ma
 		}
 		elist_params += "<=" + String::num_int64(p_max_users);
 	}
-	
+
 	if (!elist_params.is_empty()) {
 		list_cmd += " " + elist_params;
 	}
-	
+
 	send_raw(list_cmd);
 }
 
 // IRCv3 Chathistory implementation
 void IRCClient::request_chathistory(const String &p_target, const String &p_timestamp_start, const String &p_timestamp_end, int p_limit) {
-	String cmd = vformat("CHATHISTORY BETWEEN %s timestamp=%s timestamp=%s %d", 
-		p_target, p_timestamp_start, p_timestamp_end, p_limit);
+	String cmd = vformat("CHATHISTORY BETWEEN %s timestamp=%s timestamp=%s %d",
+			p_target, p_timestamp_start, p_timestamp_end, p_limit);
 	send_raw(cmd);
 }
 
@@ -2682,7 +2684,7 @@ void IRCClient::kickban_user(const String &p_channel, const String &p_nick, cons
 	// First ban (by nick!*@*)
 	String ban_mask = p_nick + "!*@*";
 	ban_user(p_channel, ban_mask);
-	
+
 	// Then kick
 	kick_user(p_channel, p_nick, p_reason);
 }
@@ -2690,32 +2692,32 @@ void IRCClient::kickban_user(const String &p_channel, const String &p_nick, cons
 // Nick completion helpers
 PackedStringArray IRCClient::get_matching_nicks(const String &p_channel, const String &p_prefix) const {
 	PackedStringArray matches;
-	
+
 	if (!channels.has(p_channel)) {
 		return matches;
 	}
-	
+
 	Ref<IRCChannel> channel = channels[p_channel];
 	PackedStringArray nicks = channel->get_users();
-	
+
 	String prefix_lower = p_prefix.to_lower();
-	
+
 	for (int i = 0; i < nicks.size(); i++) {
 		if (nicks[i].to_lower().begins_with(prefix_lower)) {
 			matches.push_back(nicks[i]);
 		}
 	}
-	
+
 	return matches;
 }
 
 String IRCClient::complete_nick(const String &p_channel, const String &p_partial, int p_cycle) const {
 	PackedStringArray matches = get_matching_nicks(p_channel, p_partial);
-	
+
 	if (matches.size() == 0) {
 		return p_partial;
 	}
-	
+
 	int index = p_cycle % matches.size();
 	return matches[index];
 }
@@ -2725,7 +2727,7 @@ void IRCClient::add_highlight_pattern(const String &p_pattern) {
 	if (!highlight_patterns.has(p_pattern)) {
 		highlight_patterns.push_back(p_pattern);
 	}
-	
+
 	// Always highlight own nick
 	if (!highlight_patterns.has(current_nick)) {
 		highlight_patterns.push_back(current_nick);
@@ -2751,39 +2753,39 @@ PackedStringArray IRCClient::get_highlight_patterns() const {
 
 bool IRCClient::is_highlighted(const String &p_message, const String &p_nick) const {
 	String check_nick = p_nick.is_empty() ? current_nick : p_nick;
-	
+
 	// Check if message contains current nick
 	if (p_message.findn(check_nick) != -1) {
 		return true;
 	}
-	
+
 	// Check custom highlight patterns
 	for (int i = 0; i < highlight_patterns.size(); i++) {
 		if (p_message.findn(highlight_patterns[i]) != -1) {
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
 // URL extraction
 PackedStringArray IRCClient::extract_urls(const String &p_message) const {
 	PackedStringArray urls;
-	
+
 	// Simple URL regex pattern
 	RegEx regex;
 	regex.compile("(https?://[^\\s]+)|(www\\.[^\\s]+)");
-	
+
 	TypedArray<RegExMatch> matches = regex.search_all(p_message);
-	
+
 	for (int i = 0; i < matches.size(); i++) {
 		Ref<RegExMatch> match = matches[i];
 		if (match.is_valid()) {
 			urls.push_back(match->get_string(0)); // Get full match (group 0)
 		}
 	}
-	
+
 	return urls;
 }
 
@@ -2806,19 +2808,19 @@ int IRCClient::get_max_tracked_messages() const {
 // Connection metrics
 Dictionary IRCClient::get_connection_stats() const {
 	Dictionary stats;
-	
+
 	uint64_t current_time = Time::get_singleton()->get_ticks_msec();
-	uint64_t uptime = (status == STATUS_CONNECTED && metrics.connection_time > 0) 
-		? (current_time - metrics.connection_time) / 1000 
-		: 0;
-	
+	uint64_t uptime = (status == STATUS_CONNECTED && metrics.connection_time > 0)
+			? (current_time - metrics.connection_time) / 1000
+			: 0;
+
 	stats["uptime"] = uptime;
 	stats["messages_sent"] = metrics.messages_sent;
 	stats["messages_received"] = metrics.messages_received;
 	stats["bytes_sent"] = metrics.bytes_sent;
 	stats["bytes_received"] = metrics.bytes_received;
 	stats["average_latency"] = get_average_latency();
-	
+
 	return stats;
 }
 
@@ -3007,34 +3009,34 @@ Ref<IRCUser> IRCClient::get_user(const String &p_nick) const {
 	if (global_users.has(p_nick)) {
 		return global_users[p_nick];
 	}
-	
+
 	// Check in channel-specific users
 	if (users.has(p_nick)) {
 		return users[p_nick];
 	}
-	
+
 	return Ref<IRCUser>();
 }
 
 PackedStringArray IRCClient::get_common_channels(const String &p_nick) const {
 	PackedStringArray common;
-	
+
 	// Iterate over HashMap using const iterator
 	for (HashMap<String, Ref<IRCChannel>>::ConstIterator it = channels.begin(); it != channels.end(); ++it) {
 		const String &channel_name = it->key;
 		const Ref<IRCChannel> &channel = it->value;
-		
+
 		if (channel.is_valid() && channel->has_user(p_nick)) {
 			common.push_back(channel_name);
 		}
 	}
-	
+
 	return common;
 }
 
 Dictionary IRCClient::get_user_info(const String &p_nick) const {
 	Dictionary info;
-	
+
 	Ref<IRCUser> user = get_user(p_nick);
 	if (user.is_valid()) {
 		info["nick"] = user->get_nick();
@@ -3043,9 +3045,9 @@ Dictionary IRCClient::get_user_info(const String &p_nick) const {
 		info["realname"] = user->get_realname();
 		info["account"] = user->get_account();
 	}
-	
+
 	info["common_channels"] = get_common_channels(p_nick);
-	
+
 	return info;
 }
 
@@ -3116,7 +3118,7 @@ bool IRCClient::has_sts_policy(const String &p_hostname) const {
 	if (!sts_policies.has(p_hostname)) {
 		return false;
 	}
-	
+
 	// Check if policy has expired
 	const STSPolicy &policy = sts_policies[p_hostname];
 	uint64_t current_time = Time::get_singleton()->get_unix_time_from_system();
@@ -3134,20 +3136,20 @@ void IRCClient::clear_all_sts_policies() {
 void IRCClient::_handle_sts_capability(const String &p_sts_value) {
 	// Parse STS capability value: sts=port,duration[,preload]
 	// Example: sts=6697,2592000 or sts=6697,2592000,preload
-	
+
 	PackedStringArray parts = p_sts_value.split(",");
 	if (parts.size() < 2) {
 		return; // Invalid STS format
 	}
-	
+
 	STSPolicy policy;
 	policy.port = parts[0].to_int();
 	policy.duration = parts[1].to_int();
 	policy.preload = parts.size() >= 3 && parts[2] == "preload";
-	
+
 	uint64_t current_time = Time::get_singleton()->get_unix_time_from_system();
 	policy.expiry_time = current_time + policy.duration;
-	
+
 	// Store policy for current hostname
 	if (!last_host.is_empty()) {
 		sts_policies[last_host] = policy;
@@ -3169,4 +3171,3 @@ IRCClient::IRCClient() {
 IRCClient::~IRCClient() {
 	disconnect_from_server();
 }
-

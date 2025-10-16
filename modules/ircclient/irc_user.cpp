@@ -137,4 +137,3 @@ IRCUser::IRCUser() {
 
 IRCUser::~IRCUser() {
 }
-

@@ -37,4 +37,3 @@ def get_doc_path():
     Returns the path to the documentation directory.
     """
     return "doc_classes"
-

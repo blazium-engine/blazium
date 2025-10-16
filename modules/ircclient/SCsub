@@ -15,4 +15,3 @@ env_ircclient.add_source_files(env.modules_sources, "twitch/*.cpp")
 # Optional mbedtls support for SSL/TLS
 if env["module_mbedtls_enabled"]:
     env_ircclient.Append(CPPDEFINES=["MODULE_MBEDTLS_ENABLED"])
-

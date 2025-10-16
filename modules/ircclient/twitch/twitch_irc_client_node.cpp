@@ -36,7 +36,7 @@ void TwitchIRCClientNode::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("connect_to_twitch", "username", "oauth_token", "use_ssl"), &TwitchIRCClientNode::connect_to_twitch, DEFVAL(true));
 	ClassDB::bind_method(D_METHOD("disconnect_from_twitch", "quit_message"), &TwitchIRCClientNode::disconnect_from_twitch, DEFVAL(""));
-	ClassDB::bind_method(D_METHOD("is_connected"), &TwitchIRCClientNode::is_connected);
+	ClassDB::bind_method(D_METHOD("is_irc_connected"), &TwitchIRCClientNode::is_irc_connected);
 
 	ClassDB::bind_method(D_METHOD("join_channel", "channel"), &TwitchIRCClientNode::join_channel);
 	ClassDB::bind_method(D_METHOD("part_channel", "channel"), &TwitchIRCClientNode::part_channel);
@@ -132,7 +132,7 @@ void TwitchIRCClientNode::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_EXIT_TREE: {
-			if (client.is_valid() && client->is_connected()) {
+			if (client.is_valid() && client->is_irc_connected()) {
 				client->disconnect_from_twitch();
 			}
 		} break;
@@ -151,8 +151,8 @@ void TwitchIRCClientNode::disconnect_from_twitch(const String &p_quit_message) {
 	client->disconnect_from_twitch(p_quit_message);
 }
 
-bool TwitchIRCClientNode::is_connected() const {
-	return client->is_connected();
+bool TwitchIRCClientNode::is_irc_connected() const {
+	return client->is_irc_connected();
 }
 
 void TwitchIRCClientNode::join_channel(const String &p_channel) {
@@ -246,4 +246,3 @@ TwitchIRCClientNode::TwitchIRCClientNode() {
 
 TwitchIRCClientNode::~TwitchIRCClientNode() {
 }
-

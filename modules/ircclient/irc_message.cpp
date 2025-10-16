@@ -43,7 +43,7 @@ void IRCMessage::_bind_methods() {
 	ClassDB::bind_static_method("IRCMessage", D_METHOD("is_json", "value"), &IRCMessage::is_json);
 	ClassDB::bind_static_method("IRCMessage", D_METHOD("parse_json_string", "value"), &IRCMessage::parse_json_string);
 
-	ClassDB::bind_method(D_METHOD("to_string"), &IRCMessage::to_string);
+	// Note: to_string() is inherited from Object and automatically available - don't bind it again
 
 	ClassDB::bind_method(D_METHOD("set_tags", "tags"), &IRCMessage::set_tags);
 	ClassDB::bind_method(D_METHOD("get_tags"), &IRCMessage::get_tags);
@@ -169,7 +169,8 @@ Ref<IRCMessage> IRCMessage::parse(const String &p_raw_message) {
 		return message;
 	}
 
-	String remaining = p_raw_message.strip_edges();
+	// Don't use strip_edges() - it may strip control characters like \x01 (CTCP delimiter)
+	String remaining = p_raw_message;
 	int pos = 0;
 
 	// Parse IRCv3 tags (@tags)
@@ -183,7 +184,8 @@ Ref<IRCMessage> IRCMessage::parse(const String &p_raw_message) {
 		String tags_string = remaining.substr(1, space_pos - 1);
 		message->tags = _parse_tags(tags_string);
 
-		remaining = remaining.substr(space_pos + 1).strip_edges();
+		// Don't strip_edges - preserve control characters
+		remaining = remaining.substr(space_pos + 1);
 		pos = 0;
 	}
 
@@ -196,7 +198,8 @@ Ref<IRCMessage> IRCMessage::parse(const String &p_raw_message) {
 		}
 
 		message->prefix = remaining.substr(1, space_pos - 1);
-		remaining = remaining.substr(space_pos + 1).strip_edges();
+		// Don't strip_edges - preserve control characters
+		remaining = remaining.substr(space_pos + 1);
 		pos = 0;
 	}
 
@@ -209,13 +212,14 @@ Ref<IRCMessage> IRCMessage::parse(const String &p_raw_message) {
 	}
 
 	message->command = remaining.substr(0, space_pos);
-	remaining = remaining.substr(space_pos + 1).strip_edges();
+	// Don't strip_edges - preserve control characters like \x01 (CTCP)
+	remaining = remaining.substr(space_pos + 1);
 
 	// Parse parameters
 	PackedStringArray params_array;
 	while (!remaining.is_empty()) {
 		if (remaining[0] == ':') {
-			// Trailing parameter - rest of the message
+			// Trailing parameter - rest of the message (don't strip, preserve all characters including CTCP \x01)
 			params_array.push_back(remaining.substr(1));
 			break;
 		}
@@ -228,14 +232,15 @@ Ref<IRCMessage> IRCMessage::parse(const String &p_raw_message) {
 		}
 
 		params_array.push_back(remaining.substr(0, space_pos));
-		remaining = remaining.substr(space_pos + 1).strip_edges();
+		// Skip the space but don't strip_edges() - preserve control characters like \x01
+		remaining = remaining.substr(space_pos + 1);
 	}
 
 	message->params = params_array;
 	return message;
 }
 
-String IRCMessage::to_string() const {
+String IRCMessage::to_string() {
 	String result;
 
 	// Add tags
@@ -270,8 +275,9 @@ String IRCMessage::to_string() const {
 		result += " ";
 		const String &param = params[i];
 
-		// Last parameter with spaces or starting with : should be trailing
-		if (i == params.size() - 1 && (param.contains(" ") || param.begins_with(":"))) {
+		// Last parameter should always be trailing (prefixed with :) for consistency
+		// This matches common IRC client behavior and RFC recommendations
+		if (i == params.size() - 1) {
 			result += ":" + param;
 		} else {
 			result += param;
@@ -458,23 +464,23 @@ bool IRCMessage::is_base64(const String &p_value) {
 	buf.resize(strlen / 4 * 3 + 1);
 	uint8_t *w = buf.ptrw();
 	size_t arr_len = 0;
-	
+
 	return CryptoCore::b64_decode(&w[0], buf.size(), &arr_len, (unsigned char *)cstr.get_data(), strlen) == OK && arr_len > 0;
 }
 
 String IRCMessage::decode_base64_string(const String &p_value) {
 	int strlen = p_value.length();
 	CharString cstr = p_value.ascii();
-	
+
 	Vector<uint8_t> buf;
 	buf.resize(strlen / 4 * 3 + 1 + 1); // +1 for null terminator
 	uint8_t *w = buf.ptrw();
 	size_t arr_len = 0;
-	
+
 	if (CryptoCore::b64_decode(&w[0], buf.size(), &arr_len, (unsigned char *)cstr.get_data(), strlen) != OK) {
 		return "";
 	}
-	
+
 	w[arr_len] = 0; // Null terminate
 	return String::utf8((const char *)&w[0]);
 }
@@ -585,4 +591,3 @@ IRCMessage::IRCMessage() {
 
 IRCMessage::~IRCMessage() {
 }
-

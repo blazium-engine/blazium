@@ -83,7 +83,7 @@ public:
 	// Twitch connection
 	Error connect_to_twitch(const String &p_username, const String &p_oauth_token, bool p_use_ssl = true);
 	void disconnect_from_twitch(const String &p_quit_message = "");
-	bool is_connected() const;
+	bool is_irc_connected() const;
 
 	// Polling (must be called regularly)
 	Error poll();
@@ -123,4 +123,3 @@ public:
 	TwitchIRCClient();
 	~TwitchIRCClient();
 };
-

@@ -63,7 +63,7 @@ public:
 	// Forwarded connection methods
 	Error connect_to_server(const String &p_host, int p_port, bool p_use_ssl, const String &p_nick, const String &p_username, const String &p_realname, const String &p_password = "");
 	void disconnect_from_server(const String &p_quit_message = "");
-	bool is_connected() const;
+	bool is_irc_connected() const;
 	IRCClient::Status get_status() const;
 
 	// Forwarded message sending methods
@@ -193,16 +193,16 @@ public:
 	Ref<IRCUser> get_user(const String &p_nick) const;
 	PackedStringArray get_common_channels(const String &p_nick) const;
 	Dictionary get_user_info(const String &p_nick) const;
-	
+
 	// Bot Mode (IRCv3)
 	void set_bot_mode(bool p_enabled);
 	bool get_bot_mode() const;
-	
+
 	// Reply Threading (IRCv3 draft/reply)
 	void send_reply(const String &p_target, const String &p_message, const String &p_reply_to_msgid);
 	void send_reply_notice(const String &p_target, const String &p_message, const String &p_reply_to_msgid);
 	String get_reply_to_msgid(const Dictionary &p_tags) const;
-	
+
 	// STS (Strict Transport Security) - IRCv3
 	bool has_sts_policy(const String &p_hostname) const;
 	void clear_sts_policy(const String &p_hostname);
@@ -310,4 +310,3 @@ public:
 	IRCClientNode();
 	~IRCClientNode();
 };
-

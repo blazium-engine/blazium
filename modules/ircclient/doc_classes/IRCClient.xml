@@ -1,5 +1,5 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<class xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="IRCClient" inherits="RefCounted" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="IRCClient" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
 	<brief_description>
 		Core IRC client implementation with full IRCv3 support, SSL/TLS, SASL, DCC, and advanced features.
 	</brief_description>
@@ -599,6 +599,12 @@
 			<param index="0" name="nick" type="String" />
 			<description>
 				Returns [code]true[/code] if the nickname matches any ignore mask (supports wildcards). [param nick] - Nick.
+			</description>
+		</method>
+		<method name="is_irc_connected" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] if the client is connected to an IRC server and ready to send/receive messages.
 			</description>
 		</method>
 		<method name="join_channel">

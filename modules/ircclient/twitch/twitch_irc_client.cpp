@@ -38,7 +38,7 @@ void TwitchIRCClient::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("connect_to_twitch", "username", "oauth_token", "use_ssl"), &TwitchIRCClient::connect_to_twitch, DEFVAL(true));
 	ClassDB::bind_method(D_METHOD("disconnect_from_twitch", "quit_message"), &TwitchIRCClient::disconnect_from_twitch, DEFVAL(""));
-	ClassDB::bind_method(D_METHOD("is_connected"), &TwitchIRCClient::is_connected);
+	ClassDB::bind_method(D_METHOD("is_irc_connected"), &TwitchIRCClient::is_irc_connected);
 
 	ClassDB::bind_method(D_METHOD("poll"), &TwitchIRCClient::poll);
 
@@ -139,8 +139,8 @@ void TwitchIRCClient::disconnect_from_twitch(const String &p_quit_message) {
 	irc_client->disconnect_from_server(p_quit_message);
 }
 
-bool TwitchIRCClient::is_connected() const {
-	return irc_client->is_connected();
+bool TwitchIRCClient::is_irc_connected() const {
+	return irc_client->is_irc_connected();
 }
 
 Error TwitchIRCClient::poll() {
@@ -574,4 +574,3 @@ TwitchIRCClient::~TwitchIRCClient() {
 		irc_client->disconnect_from_server();
 	}
 }
-

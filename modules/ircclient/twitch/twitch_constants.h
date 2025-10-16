@@ -170,4 +170,3 @@ constexpr const char *VIPS = "vip";
 } // namespace Tags
 
 } // namespace TwitchIRC
-

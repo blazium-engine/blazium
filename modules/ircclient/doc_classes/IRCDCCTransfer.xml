@@ -68,7 +68,7 @@
 		</member>
 		<member name="transferred" type="int" setter="" getter="get_transferred" default="0">
 		</member>
-		<member name="type" type="int" setter="set_type" getter="get_type" enum="IRCDCCTransfer.Type" default="0">
+		<member name="type" type="int" setter="set_transfer_type" getter="get_transfer_type" enum="IRCDCCTransfer.Type" default="0">
 		</member>
 		<member name="use_ipv6" type="bool" setter="set_use_ipv6" getter="get_use_ipv6" default="false">
 		</member>
@@ -80,17 +80,17 @@
 		</constant>
 		<constant name="TYPE_CHAT" value="2" enum="Type">
 		</constant>
-		<constant name="STATUS_PENDING" value="0" enum="Status">
+		<constant name="DCC_STATUS_PENDING" value="0" enum="Status">
 		</constant>
-		<constant name="STATUS_CONNECTING" value="1" enum="Status">
+		<constant name="DCC_STATUS_CONNECTING" value="1" enum="Status">
 		</constant>
-		<constant name="STATUS_TRANSFERRING" value="2" enum="Status">
+		<constant name="DCC_STATUS_TRANSFERRING" value="2" enum="Status">
 		</constant>
-		<constant name="STATUS_COMPLETED" value="3" enum="Status">
+		<constant name="DCC_STATUS_COMPLETED" value="3" enum="Status">
 		</constant>
-		<constant name="STATUS_FAILED" value="4" enum="Status">
+		<constant name="DCC_STATUS_FAILED" value="4" enum="Status">
 		</constant>
-		<constant name="STATUS_CANCELLED" value="5" enum="Status">
+		<constant name="DCC_STATUS_CANCELLED" value="5" enum="Status">
 		</constant>
 	</constants>
 </class>

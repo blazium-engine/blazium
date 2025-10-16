@@ -34,8 +34,8 @@
 #include "core/io/file_access.h"
 
 void IRCDCCTransfer::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("set_type", "type"), &IRCDCCTransfer::set_type);
-	ClassDB::bind_method(D_METHOD("get_type"), &IRCDCCTransfer::get_type);
+	ClassDB::bind_method(D_METHOD("set_transfer_type", "type"), &IRCDCCTransfer::set_transfer_type);
+	ClassDB::bind_method(D_METHOD("get_transfer_type"), &IRCDCCTransfer::get_transfer_type);
 
 	ClassDB::bind_method(D_METHOD("set_status", "status"), &IRCDCCTransfer::set_status);
 	ClassDB::bind_method(D_METHOD("get_status"), &IRCDCCTransfer::get_status);
@@ -74,7 +74,7 @@ void IRCDCCTransfer::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("get_progress"), &IRCDCCTransfer::get_progress);
 
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "type"), "set_type", "get_type");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "type"), "set_transfer_type", "get_transfer_type");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "status"), "set_status", "get_status");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "remote_nick"), "set_remote_nick", "get_remote_nick");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "filename"), "set_filename", "get_filename");
@@ -89,19 +89,19 @@ void IRCDCCTransfer::_bind_methods() {
 	BIND_ENUM_CONSTANT(TYPE_FILE_RECEIVE);
 	BIND_ENUM_CONSTANT(TYPE_CHAT);
 
-	BIND_ENUM_CONSTANT(STATUS_PENDING);
-	BIND_ENUM_CONSTANT(STATUS_CONNECTING);
-	BIND_ENUM_CONSTANT(STATUS_TRANSFERRING);
-	BIND_ENUM_CONSTANT(STATUS_COMPLETED);
-	BIND_ENUM_CONSTANT(STATUS_FAILED);
-	BIND_ENUM_CONSTANT(STATUS_CANCELLED);
+	BIND_ENUM_CONSTANT(DCC_STATUS_PENDING);
+	BIND_ENUM_CONSTANT(DCC_STATUS_CONNECTING);
+	BIND_ENUM_CONSTANT(DCC_STATUS_TRANSFERRING);
+	BIND_ENUM_CONSTANT(DCC_STATUS_COMPLETED);
+	BIND_ENUM_CONSTANT(DCC_STATUS_FAILED);
+	BIND_ENUM_CONSTANT(DCC_STATUS_CANCELLED);
 }
 
-void IRCDCCTransfer::set_type(Type p_type) {
+void IRCDCCTransfer::set_transfer_type(Type p_type) {
 	type = p_type;
 }
 
-IRCDCCTransfer::Type IRCDCCTransfer::get_type() const {
+IRCDCCTransfer::Type IRCDCCTransfer::get_transfer_type() const {
 	return type;
 }
 
@@ -218,7 +218,7 @@ String IRCDCCTransfer::_create_dcc_send_message() const {
 }
 
 Error IRCDCCTransfer::accept() {
-	if (status != STATUS_PENDING) {
+	if (status != DCC_STATUS_PENDING) {
 		return ERR_INVALID_PARAMETER;
 	}
 
@@ -230,20 +230,20 @@ Error IRCDCCTransfer::accept() {
 }
 
 Error IRCDCCTransfer::reject() {
-	if (status != STATUS_PENDING) {
+	if (status != DCC_STATUS_PENDING) {
 		return ERR_INVALID_PARAMETER;
 	}
 
-	status = STATUS_CANCELLED;
+	status = DCC_STATUS_CANCELLED;
 	return OK;
 }
 
 Error IRCDCCTransfer::cancel() {
-	if (status == STATUS_COMPLETED || status == STATUS_FAILED) {
+	if (status == DCC_STATUS_COMPLETED || status == DCC_STATUS_FAILED) {
 		return ERR_INVALID_PARAMETER;
 	}
 
-	status = STATUS_CANCELLED;
+	status = DCC_STATUS_CANCELLED;
 
 	if (connection.is_valid()) {
 		connection->disconnect_from_host();
@@ -277,7 +277,7 @@ Error IRCDCCTransfer::start_send(const String &p_file_path) {
 	file = FileAccess::open(p_file_path, FileAccess::READ);
 	if (file.is_null()) {
 		error_message = "Failed to open file for reading";
-		status = STATUS_FAILED;
+		status = DCC_STATUS_FAILED;
 		return ERR_FILE_CANT_OPEN;
 	}
 
@@ -290,12 +290,12 @@ Error IRCDCCTransfer::start_send(const String &p_file_path) {
 	Error err = server->listen(0); // Use random port
 	if (err != OK) {
 		error_message = "Failed to start listening socket";
-		status = STATUS_FAILED;
+		status = DCC_STATUS_FAILED;
 		return err;
 	}
 
 	port = server->get_local_port();
-	status = STATUS_CONNECTING;
+	status = DCC_STATUS_CONNECTING;
 
 	return OK;
 }
@@ -313,7 +313,7 @@ Error IRCDCCTransfer::start_receive() {
 	file = FileAccess::open(local_path, (FileAccess::ModeFlags)flags);
 	if (file.is_null()) {
 		error_message = "Failed to open file for writing";
-		status = STATUS_FAILED;
+		status = DCC_STATUS_FAILED;
 		return ERR_FILE_CANT_WRITE;
 	}
 
@@ -326,35 +326,35 @@ Error IRCDCCTransfer::start_receive() {
 	Error err = connection->connect_to_host(address, port);
 	if (err != OK) {
 		error_message = "Failed to connect to sender";
-		status = STATUS_FAILED;
+		status = DCC_STATUS_FAILED;
 		return err;
 	}
 
-	status = STATUS_CONNECTING;
+	status = DCC_STATUS_CONNECTING;
 	return OK;
 }
 
 Error IRCDCCTransfer::poll() {
-	if (status == STATUS_COMPLETED || status == STATUS_FAILED || status == STATUS_CANCELLED) {
+	if (status == DCC_STATUS_COMPLETED || status == DCC_STATUS_FAILED || status == DCC_STATUS_CANCELLED) {
 		return OK;
 	}
 
 	if (type == TYPE_FILE_SEND) {
 		// Sending file
-		if (status == STATUS_CONNECTING) {
+		if (status == DCC_STATUS_CONNECTING) {
 			if (server.is_valid() && server->is_connection_available()) {
 				connection = server->take_connection();
 				server->stop();
 				server.unref();
-				status = STATUS_TRANSFERRING;
+				status = DCC_STATUS_TRANSFERRING;
 			}
 		}
 
-		if (status == STATUS_TRANSFERRING && connection.is_valid()) {
+		if (status == DCC_STATUS_TRANSFERRING && connection.is_valid()) {
 			Error err = connection->poll();
 			if (err != OK && err != ERR_BUSY) {
 				error_message = "Connection error";
-				status = STATUS_FAILED;
+				status = DCC_STATUS_FAILED;
 				return err;
 			}
 
@@ -376,7 +376,7 @@ Error IRCDCCTransfer::poll() {
 				}
 
 				if (transferred >= file_size) {
-					status = STATUS_COMPLETED;
+					status = DCC_STATUS_COMPLETED;
 					connection->disconnect_from_host();
 					file->close();
 				}
@@ -384,24 +384,24 @@ Error IRCDCCTransfer::poll() {
 		}
 	} else if (type == TYPE_FILE_RECEIVE) {
 		// Receiving file
-		if (status == STATUS_CONNECTING && connection.is_valid()) {
+		if (status == DCC_STATUS_CONNECTING && connection.is_valid()) {
 			Error err = connection->poll();
 			if (err != OK && err != ERR_BUSY) {
 				error_message = "Connection error";
-				status = STATUS_FAILED;
+				status = DCC_STATUS_FAILED;
 				return err;
 			}
 
 			if (connection->get_status() == StreamPeerTCP::STATUS_CONNECTED) {
-				status = STATUS_TRANSFERRING;
+				status = DCC_STATUS_TRANSFERRING;
 			}
 		}
 
-		if (status == STATUS_TRANSFERRING && connection.is_valid()) {
+		if (status == DCC_STATUS_TRANSFERRING && connection.is_valid()) {
 			Error err = connection->poll();
 			if (err != OK && err != ERR_BUSY) {
 				error_message = "Connection error";
-				status = STATUS_FAILED;
+				status = DCC_STATUS_FAILED;
 				return err;
 			}
 
@@ -432,7 +432,7 @@ Error IRCDCCTransfer::poll() {
 			}
 
 			if (transferred >= file_size) {
-				status = STATUS_COMPLETED;
+				status = DCC_STATUS_COMPLETED;
 				connection->disconnect_from_host();
 				file->close();
 			}
@@ -458,4 +458,3 @@ IRCDCCTransfer::~IRCDCCTransfer() {
 		file->close();
 	}
 }
-

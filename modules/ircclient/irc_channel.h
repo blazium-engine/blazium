@@ -83,4 +83,3 @@ public:
 	IRCChannel();
 	~IRCChannel();
 };
-

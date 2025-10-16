@@ -213,4 +213,3 @@ TwitchMessage::TwitchMessage() {
 
 TwitchMessage::~TwitchMessage() {
 }
-

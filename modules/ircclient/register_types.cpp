@@ -68,4 +68,3 @@ void uninitialize_ircclient_module(ModuleInitializationLevel p_level) {
 
 	// Nothing to uninitialize
 }
-

@@ -35,4 +35,3 @@
 
 void initialize_ircclient_module(ModuleInitializationLevel p_level);
 void uninitialize_ircclient_module(ModuleInitializationLevel p_level);
-

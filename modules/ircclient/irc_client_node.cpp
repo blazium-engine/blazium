@@ -36,7 +36,7 @@ void IRCClientNode::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("connect_to_server", "host", "port", "use_ssl", "nick", "username", "realname", "password"), &IRCClientNode::connect_to_server, DEFVAL(""));
 	ClassDB::bind_method(D_METHOD("disconnect_from_server", "quit_message"), &IRCClientNode::disconnect_from_server, DEFVAL(""));
-	ClassDB::bind_method(D_METHOD("is_connected"), &IRCClientNode::is_connected);
+	ClassDB::bind_method(D_METHOD("is_irc_connected"), &IRCClientNode::is_irc_connected);
 	ClassDB::bind_method(D_METHOD("get_status"), &IRCClientNode::get_status);
 
 	ClassDB::bind_method(D_METHOD("send_raw", "message"), &IRCClientNode::send_raw);
@@ -150,14 +150,14 @@ void IRCClientNode::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("capability_denied", PropertyInfo(Variant::STRING, "capability")));
 	ADD_SIGNAL(MethodInfo("sasl_success"));
 	ADD_SIGNAL(MethodInfo("sasl_failed", PropertyInfo(Variant::STRING, "reason")));
-	
+
 	// Account Registration signals (IRCv3 draft)
 	ADD_SIGNAL(MethodInfo("account_registration_success", PropertyInfo(Variant::STRING, "account")));
 	ADD_SIGNAL(MethodInfo("account_registration_failed", PropertyInfo(Variant::STRING, "reason")));
 	ADD_SIGNAL(MethodInfo("account_verification_required", PropertyInfo(Variant::STRING, "account"), PropertyInfo(Variant::STRING, "method")));
 	ADD_SIGNAL(MethodInfo("account_verification_success", PropertyInfo(Variant::STRING, "account")));
 	ADD_SIGNAL(MethodInfo("account_verification_failed", PropertyInfo(Variant::STRING, "reason")));
-	
+
 	ADD_SIGNAL(MethodInfo("tag_json_data", PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::DICTIONARY, "data")));
 	ADD_SIGNAL(MethodInfo("tag_base64_data", PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::STRING, "encoded"), PropertyInfo(Variant::STRING, "decoded")));
 	ADD_SIGNAL(MethodInfo("standard_reply_fail", PropertyInfo(Variant::STRING, "command"), PropertyInfo(Variant::STRING, "code"), PropertyInfo(Variant::STRING, "context"), PropertyInfo(Variant::STRING, "description"), PropertyInfo(Variant::DICTIONARY, "tags")));
@@ -210,18 +210,18 @@ void IRCClientNode::_notification(int p_what) {
 				client->connect("capability_denied", Callable(this, "emit_signal").bind("capability_denied"));
 				client->connect("sasl_success", Callable(this, "emit_signal").bind("sasl_success"));
 				client->connect("sasl_failed", Callable(this, "emit_signal").bind("sasl_failed"));
-				
+
 				// Account Registration signals
 				client->connect("account_registration_success", Callable(this, "emit_signal").bind("account_registration_success"));
 				client->connect("account_registration_failed", Callable(this, "emit_signal").bind("account_registration_failed"));
 				client->connect("account_verification_required", Callable(this, "emit_signal").bind("account_verification_required"));
 				client->connect("account_verification_success", Callable(this, "emit_signal").bind("account_verification_success"));
 				client->connect("account_verification_failed", Callable(this, "emit_signal").bind("account_verification_failed"));
-				
+
 				client->connect("tag_json_data", Callable(this, "emit_signal").bind("tag_json_data"));
-			client->connect("tag_base64_data", Callable(this, "emit_signal").bind("tag_base64_data"));
-			client->connect("numeric_730_mononline", Callable(this, "emit_signal").bind("numeric_730_mononline"));
-			client->connect("numeric_731_monoffline", Callable(this, "emit_signal").bind("numeric_731_monoffline"));
+				client->connect("tag_base64_data", Callable(this, "emit_signal").bind("tag_base64_data"));
+				client->connect("numeric_730_mononline", Callable(this, "emit_signal").bind("numeric_730_mononline"));
+				client->connect("numeric_731_monoffline", Callable(this, "emit_signal").bind("numeric_731_monoffline"));
 				client->connect("standard_reply_fail", Callable(this, "emit_signal").bind("standard_reply_fail"));
 				client->connect("standard_reply_warn", Callable(this, "emit_signal").bind("standard_reply_warn"));
 				client->connect("standard_reply_note", Callable(this, "emit_signal").bind("standard_reply_note"));
@@ -260,8 +260,8 @@ void IRCClientNode::disconnect_from_server(const String &p_quit_message) {
 	client->disconnect_from_server(p_quit_message);
 }
 
-bool IRCClientNode::is_connected() const {
-	return client->is_connected();
+bool IRCClientNode::is_irc_connected() const {
+	return client->is_irc_connected();
 }
 
 IRCClient::Status IRCClientNode::get_status() const {
@@ -399,7 +399,6 @@ PackedStringArray IRCClientNode::get_joined_channels() const {
 String IRCClientNode::get_current_nick() const {
 	return client->get_current_nick();
 }
-
 
 void IRCClientNode::set_messages_per_second(int p_rate) {
 	client->set_messages_per_second(p_rate);
@@ -953,4 +952,3 @@ IRCClientNode::~IRCClientNode() {
 		client->disconnect_from_server();
 	}
 }
-

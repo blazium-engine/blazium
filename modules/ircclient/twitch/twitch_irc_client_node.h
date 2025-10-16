@@ -52,7 +52,7 @@ public:
 	// Twitch connection
 	Error connect_to_twitch(const String &p_username, const String &p_oauth_token, bool p_use_ssl = true);
 	void disconnect_from_twitch(const String &p_quit_message = "");
-	bool is_connected() const;
+	bool is_irc_connected() const;
 
 	// Twitch-specific operations
 	void join_channel(const String &p_channel);
@@ -86,4 +86,3 @@ public:
 	TwitchIRCClientNode();
 	~TwitchIRCClientNode();
 };
-

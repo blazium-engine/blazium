@@ -50,17 +50,17 @@ public:
 	};
 
 	enum Status {
-		STATUS_PENDING,
-		STATUS_CONNECTING,
-		STATUS_TRANSFERRING,
-		STATUS_COMPLETED,
-		STATUS_FAILED,
-		STATUS_CANCELLED,
+		DCC_STATUS_PENDING,
+		DCC_STATUS_CONNECTING,
+		DCC_STATUS_TRANSFERRING,
+		DCC_STATUS_COMPLETED,
+		DCC_STATUS_FAILED,
+		DCC_STATUS_CANCELLED,
 	};
 
 private:
 	Type type = TYPE_FILE_SEND;
-	Status status = STATUS_PENDING;
+	Status status = DCC_STATUS_PENDING;
 
 	String remote_nick;
 	String filename;
@@ -78,7 +78,7 @@ private:
 	Ref<FileAccess> file;
 
 	String error_message;
-	
+
 	// Internal DCC protocol helpers
 	String _create_dcc_send_message() const;
 
@@ -86,8 +86,8 @@ protected:
 	static void _bind_methods();
 
 public:
-	void set_type(Type p_type);
-	Type get_type() const;
+	void set_transfer_type(Type p_type);
+	Type get_transfer_type() const;
 
 	void set_status(Status p_status);
 	Status get_status() const;
@@ -141,4 +141,3 @@ public:
 
 VARIANT_ENUM_CAST(IRCDCCTransfer::Type);
 VARIANT_ENUM_CAST(IRCDCCTransfer::Status);
-

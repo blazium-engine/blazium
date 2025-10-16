@@ -116,7 +116,8 @@ TEST_CASE("[IRCClient][IRCMessage] IRCv3 tags parsing") {
 
 TEST_CASE("[IRCClient][IRCMessage] CTCP parsing") {
 	SUBCASE("[IRCClient][IRCMessage] CTCP ACTION") {
-		Ref<IRCMessage> msg = IRCMessage::parse(":nick!user@host PRIVMSG #channel :\x01" "ACTION waves hello\x01");
+		Ref<IRCMessage> msg = IRCMessage::parse(":nick!user@host PRIVMSG #channel :\x01"
+												"ACTION waves hello\x01");
 
 		CHECK(msg->is_ctcp());
 		CHECK(msg->get_ctcp_command() == "ACTION");
@@ -124,7 +125,8 @@ TEST_CASE("[IRCClient][IRCMessage] CTCP parsing") {
 	}
 
 	SUBCASE("[IRCClient][IRCMessage] CTCP VERSION") {
-		Ref<IRCMessage> msg = IRCMessage::parse(":nick!user@host PRIVMSG target :\x01" "VERSION\x01");
+		Ref<IRCMessage> msg = IRCMessage::parse(":nick!user@host PRIVMSG target :\x01"
+												"VERSION\x01");
 
 		CHECK(msg->is_ctcp());
 		CHECK(msg->get_ctcp_command() == "VERSION");
@@ -133,7 +135,8 @@ TEST_CASE("[IRCClient][IRCMessage] CTCP parsing") {
 
 	SUBCASE("[IRCClient][IRCMessage] CTCP encoding") {
 		String encoded = IRCMessage::encode_ctcp("VERSION", "Blazium IRC 1.0");
-		CHECK(encoded == "\x01" "VERSION Blazium IRC 1.0\x01");
+		CHECK(encoded == "\x01"
+						 "VERSION Blazium IRC 1.0\x01");
 	}
 }
 
@@ -200,4 +203,3 @@ TEST_CASE("[IRCClient][IRCMessage] Edge cases") {
 }
 
 } // namespace TestIRCClient
-

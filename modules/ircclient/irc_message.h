@@ -57,7 +57,7 @@ public:
 	static Ref<IRCMessage> parse(const String &p_raw_message);
 
 	// Convert back to wire format
-	String to_string() const;
+	virtual String to_string() override; // Override Object::to_string() - must match base signature
 
 	// Getters and setters
 	void set_tags(const Dictionary &p_tags);
@@ -102,4 +102,3 @@ public:
 	IRCMessage();
 	~IRCMessage();
 };
-

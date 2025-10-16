@@ -93,6 +93,12 @@
 				Returns the user state. [param channel] - Channel.
 			</description>
 		</method>
+		<method name="is_irc_connected" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] if the client is connected to Twitch IRC and ready to send/receive messages.
+			</description>
+		</method>
 		<method name="join_channel">
 			<return type="void" />
 			<param index="0" name="channel" type="String" />

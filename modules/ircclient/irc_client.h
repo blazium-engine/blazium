@@ -78,7 +78,7 @@ private:
 
 	String current_server;
 	int current_port = 6667;
-	
+
 	// DCC Configuration
 	IPAddress dcc_local_ip;
 	bool dcc_local_ip_configured = false;
@@ -117,7 +117,7 @@ private:
 	List<QueuedMessage> send_queue;
 	uint64_t last_send_time = 0;
 	int messages_per_second = 2;
-	
+
 	// Token bucket flood protection
 	int token_bucket_size = 5; // Burst capacity
 	int token_bucket_tokens = 5;
@@ -133,10 +133,10 @@ private:
 	HashMap<String, Ref<IRCChannel>> channels;
 	HashMap<String, Ref<IRCUser>> users;
 	Vector<Ref<IRCDCCTransfer>> active_transfers;
-	
+
 	// MONITOR (IRCv3.3)
 	PackedStringArray monitored_nicks;
-	
+
 	// Message history
 	struct HistoryMessage {
 		uint64_t timestamp;
@@ -231,10 +231,10 @@ private:
 
 	// Read markers (IRCv3)
 	HashMap<String, String> read_markers; // channel -> timestamp/msgid
-	
+
 	// Bot mode (IRCv3)
 	bool bot_mode_enabled = false;
-	
+
 	// STS (Strict Transport Security) - IRCv3
 	struct STSPolicy {
 		int port = 6697;
@@ -292,7 +292,7 @@ public:
 	// Connection management
 	Error connect_to_server(const String &p_host, int p_port, bool p_use_ssl, const String &p_nick, const String &p_username, const String &p_realname, const String &p_password = "");
 	void disconnect_from_server(const String &p_quit_message = "");
-	bool is_connected() const;
+	bool is_irc_connected() const;
 	Status get_status() const;
 
 	// Polling (must be called regularly)
@@ -314,7 +314,7 @@ public:
 	void set_mode(const String &p_target, const String &p_modes, const PackedStringArray &p_params = PackedStringArray());
 	void send_whois(const String &p_nick);
 	void set_realname(const String &p_realname); // IRCv3.3 SETNAME
-	
+
 	// MONITOR commands (IRCv3.3)
 	void monitor_add(const String &p_nick);
 	void monitor_remove(const String &p_nick);
@@ -488,7 +488,7 @@ public:
 	void whowas_user(const String &p_nick, int p_count = 1);
 	void invite_user(const String &p_channel, const String &p_nick);
 	void userhost(const String &p_nick);
-	
+
 	// Account Registration (IRCv3 draft)
 	void register_account(const String &p_account, const String &p_password, const String &p_email = "");
 	void verify_account(const String &p_account, const String &p_code);
@@ -524,16 +524,16 @@ public:
 	void send_typing_notification(const String &p_channel, bool p_typing);
 	void send_reaction(const String &p_channel, const String &p_msgid, const String &p_reaction);
 	void remove_reaction(const String &p_channel, const String &p_msgid, const String &p_reaction);
-	
+
 	// Bot Mode (IRCv3)
 	void set_bot_mode(bool p_enabled);
 	bool get_bot_mode() const;
-	
+
 	// Reply Threading (IRCv3 draft/reply)
 	void send_reply(const String &p_target, const String &p_message, const String &p_reply_to_msgid);
 	void send_reply_notice(const String &p_target, const String &p_message, const String &p_reply_to_msgid);
 	String get_reply_to_msgid(const Dictionary &p_tags) const;
-	
+
 	// STS (Strict Transport Security) - IRCv3
 	bool has_sts_policy(const String &p_hostname) const;
 	void clear_sts_policy(const String &p_hostname);
@@ -544,4 +544,3 @@ public:
 };
 
 VARIANT_ENUM_CAST(IRCClient::Status);
-
