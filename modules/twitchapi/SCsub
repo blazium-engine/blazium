@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+from misc.utility.scons_hints import *
+
+Import("env")
+Import("env_modules")
+
+env_twitchapi = env_modules.Clone()
+
+# Add all .cpp files in the module root
+env_twitchapi.add_source_files(env.modules_sources, "*.cpp")
+
+# Add all .cpp files in the requests subdirectory
+env_twitchapi.add_source_files(env.modules_sources, "requests/*.cpp")
