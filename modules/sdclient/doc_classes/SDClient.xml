@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="SDClient" inherits="Object" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Elgato Stream Deck WebSocket client for plugin development.
+	</brief_description>
+	<description>
+		SDClient provides a complete implementation of the Elgato Stream Deck WebSocket API, allowing you to create native plugins that communicate with the Stream Deck software.
+
+		The module supports two connection modes:
+		- Native plugin mode: Parse command-line arguments provided by Stream Deck and connect automatically
+		- Manual mode: Connect manually for testing and custom scenarios
+
+		Events can be handled through both callbacks (via [method subscribe_to_event]) and Godot signals.
+
+		Example usage for native plugin mode:
+		[codeblock]
+		func _ready():
+		    var sd = SDClient.get_singleton()
+		    sd.parse_command_line_args()
+		    sd.connect_from_args()
+		    sd.key_down.connect(_on_key_down)
+
+		func _process(delta):
+		    SDClient.get_singleton().poll()
+
+		func _on_key_down(action, context, device, payload):
+		    print("Key pressed: ", action)
+		    SDClient.get_singleton().show_ok(context)
+		[/codeblock]
+	</description>
+	<tutorials>
+		<link title="Elgato Stream Deck SDK">https://docs.elgato.com/streamdeck/sdk/</link>
+	</tutorials>
+	<methods>
+		<method name="connect_from_args">
+			<return type="int" enum="Error" />
+			<description>
+				Connects to Stream Deck using the command-line arguments parsed by [method parse_command_line_args].
+				Returns [constant OK] on success.
+			</description>
+		</method>
+		<method name="connect_manual">
+			<return type="int" enum="Error" />
+			<param index="0" name="port" type="int" />
+			<param index="1" name="uuid" type="String" />
+			<param index="2" name="register_event" type="String" />
+			<description>
+				Manually connects to Stream Deck at the specified port with the given UUID and registration event.
+				This is useful for testing without being launched by Stream Deck software.
+			</description>
+		</method>
+		<method name="disconnect_from_stream_deck">
+			<return type="void" />
+			<description>
+				Disconnects from the Stream Deck WebSocket server and clears all context tracking.
+			</description>
+		</method>
+		<method name="get_application_info" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns information about the Stream Deck application. The dictionary contains:
+				- [code]language[/code]: Current UI language (e.g., "en")
+				- [code]platform[/code]: Operating system (e.g., "mac", "windows")
+				- [code]platformVersion[/code]: OS version string
+				- [code]version[/code]: Stream Deck software version
+			</description>
+		</method>
+		<method name="get_colors" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns the preferred UI colors from Stream Deck, useful for matching the plugin's property inspector UI to the application theme. The dictionary contains color values as hex strings for various UI elements:
+				- [code]buttonPressedBackgroundColor[/code]
+				- [code]buttonPressedBorderColor[/code]
+				- [code]buttonPressedTextColor[/code]
+				- [code]highlightColor[/code]
+				And more. Use these to create a consistent visual experience.
+			</description>
+		</method>
+		<method name="get_connection_state" qualifiers="const">
+			<return type="int" enum="SDClient.ConnectionState" />
+			<description>
+				Returns the current connection state.
+			</description>
+		</method>
+		<method name="get_devices" qualifiers="const">
+			<return type="Array" />
+			<description>
+				Returns an array of all connected Stream Deck devices. Each device is represented as a Dictionary containing:
+				- [code]id[/code]: Unique device identifier
+				- [code]name[/code]: User-assigned device name
+				- [code]size[/code]: Dictionary with [code]columns[/code] and [code]rows[/code] indicating the button grid dimensions
+				- [code]type[/code]: Device type enumeration (0=Stream Deck, 1=Mini, 2=XL, 9=Plus, 10=Neo, etc.)
+			</description>
+		</method>
+		<method name="get_global_settings">
+			<return type="void" />
+			<param index="0" name="context" type="String" />
+			<description>
+				Requests global settings for the plugin. Global settings are shared across all instances of all actions in your plugin. The response will trigger the [signal did_receive_global_settings] signal.
+				Use this for plugin-wide configuration that should be consistent across all action instances.
+			</description>
+		</method>
+		<method name="get_registration_info" qualifiers="const">
+			<return type="Dictionary" />
+			<description>
+				Returns the complete registration information provided by Stream Deck in the [code]-info[/code] command-line parameter. This is a comprehensive dictionary containing:
+				- [code]application[/code]: Application info (language, platform, version)
+				- [code]colors[/code]: Theme colors for UI consistency
+				- [code]devices[/code]: Array of connected Stream Deck devices
+				- [code]devicePixelRatio[/code]: Display scaling factor
+				And more. Access specific subsets via [method get_devices], [method get_application_info], and [method get_colors] for convenience.
+			</description>
+		</method>
+		<method name="get_secrets">
+			<return type="void" />
+			<param index="0" name="context" type="String" />
+			<description>
+				Requests secrets stored by the plugin (Stream Deck 7.0+). Secrets are encrypted credentials stored securely by Stream Deck. The response will trigger the [signal did_receive_secrets] signal.
+				Use this for storing sensitive information like API keys, passwords, and authentication tokens.
+			</description>
+		</method>
+		<method name="get_settings">
+			<return type="void" />
+			<param index="0" name="context" type="String" />
+			<description>
+				Requests settings for a specific action instance identified by [param context]. Each action instance has its own settings that are independent of other instances. The response will trigger the [signal did_receive_settings] signal.
+				Settings are typically configured through the property inspector UI and persist across Stream Deck restarts.
+			</description>
+		</method>
+		<method name="is_stream_deck_connected" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] if currently connected and registered with the Stream Deck software.
+			</description>
+		</method>
+		<method name="log_message">
+			<return type="void" />
+			<param index="0" name="message" type="String" />
+			<description>
+				Logs a message to Stream Deck's log file for debugging.
+			</description>
+		</method>
+		<method name="open_url">
+			<return type="void" />
+			<param index="0" name="url" type="String" />
+			<description>
+				Opens a URL in the default browser.
+			</description>
+		</method>
+		<method name="parse_command_line_args">
+			<return type="int" enum="Error" />
+			<description>
+				Parses the command-line arguments provided by Stream Deck when launching the plugin.
+				Looks for [code]-port[/code], [code]-pluginUUID[/code], [code]-registerEvent[/code], and [code]-info[/code] parameters.
+				Returns [constant OK] if all required arguments were found.
+			</description>
+		</method>
+		<method name="poll">
+			<return type="void" />
+			<description>
+				Processes incoming WebSocket messages and updates connection state. Must be called regularly (e.g., in [code]_process[/code]).
+			</description>
+		</method>
+		<method name="send_to_property_inspector">
+			<return type="void" />
+			<param index="0" name="action" type="String" />
+			<param index="1" name="context" type="String" />
+			<param index="2" name="payload" type="Variant" />
+			<description>
+				Sends a message to the property inspector UI for bidirectional communication. The property inspector is the HTML-based configuration UI that appears when users click on an action in the Stream Deck software.
+				The [param payload] can be any JSON-serializable data structure (Dictionary, Array, String, Number, etc.) that will be received by the property inspector's JavaScript code.
+				[codeblock]
+				# Send current state to property inspector
+				SDClient.send_to_property_inspector(action, context, {"volume": 75, "muted": false})
+				[/codeblock]
+			</description>
+		</method>
+		<method name="set_feedback">
+			<return type="void" />
+			<param index="0" name="context" type="String" />
+			<param index="1" name="feedback" type="Dictionary" />
+			<description>
+				Sets feedback values for an action instance using the current layout. The [param feedback] dictionary should contain layout-specific key-value pairs that correspond to items defined in the layout JSON file. This is used for Stream Deck+ displays and encoder feedback.
+				[codeblock]
+				# Example: Update a value indicator
+				SDClient.set_feedback(context, {"value": 75, "indicator": {"value": 75}})
+				[/codeblock]
+			</description>
+		</method>
+		<method name="set_feedback_layout">
+			<return type="void" />
+			<param index="0" name="context" type="String" />
+			<param index="1" name="layout" type="String" />
+			<description>
+				Sets the layout for an action instance. The [param layout] can be:
+				- A pre-defined layout name from the Stream Deck+ SDK (e.g., "$A0", "$B1")
+				- A relative path to a custom layout JSON file in your plugin (e.g., "layouts/custom.json")
+				Use this before calling [method set_feedback] to update the visual representation on Stream Deck+ displays.
+			</description>
+		</method>
+		<method name="set_global_settings">
+			<return type="void" />
+			<param index="0" name="context" type="String" />
+			<param index="1" name="settings" type="Dictionary" />
+			<description>
+				Sets global settings for the plugin. Global settings are shared across all instances of all actions in your plugin and are persisted by Stream Deck. The [param settings] dictionary completely replaces the existing global settings.
+			</description>
+		</method>
+		<method name="set_image">
+			<return type="void" />
+			<param index="0" name="context" type="String" />
+			<param index="1" name="image" type="String" default="&quot;&quot;" />
+			<param index="2" name="state" type="int" default="-1" />
+			<param index="3" name="target" type="int" default="0" />
+			<description>
+				Sets the image for an action instance. The [param image] can be:
+				- A path to a local image file (e.g., "images/icon.png")
+				- A base64-encoded image with MIME type prefix (e.g., "data:image/png;base64,iVBORw0...")
+				- An empty string to reset to the default image
+				The [param state] parameter specifies which state to update (0 or 1 for multi-state actions, -1 for all states).
+				The [param target] parameter controls where the image is displayed (0 = hardware and software, 1 = hardware only, 2 = software only).
+			</description>
+		</method>
+		<method name="set_settings">
+			<return type="void" />
+			<param index="0" name="context" type="String" />
+			<param index="1" name="settings" type="Dictionary" />
+			<description>
+				Sets settings for a specific action instance identified by [param context]. The [param settings] dictionary completely replaces the existing settings for this instance. Settings are persisted by Stream Deck and survive application restarts.
+			</description>
+		</method>
+		<method name="set_state">
+			<return type="void" />
+			<param index="0" name="context" type="String" />
+			<param index="1" name="state" type="int" />
+			<description>
+				Sets the current state of a multi-state action. The [param state] must be 0 or 1. Multi-state actions can have different images and titles for each state, allowing toggle-style buttons (e.g., mute/unmute, on/off).
+				State changes are immediately reflected in the Stream Deck hardware and software UI.
+			</description>
+		</method>
+		<method name="set_title">
+			<return type="void" />
+			<param index="0" name="context" type="String" />
+			<param index="1" name="title" type="String" default="&quot;&quot;" />
+			<param index="2" name="state" type="int" default="-1" />
+			<param index="3" name="target" type="int" default="0" />
+			<description>
+				Sets the title displayed for an action instance. Use an empty string to reset to the user's configured title.
+				The [param state] parameter specifies which state to update (0 or 1 for multi-state actions, -1 for all states).
+				The [param target] parameter controls where the title is displayed (0 = hardware and software, 1 = hardware only, 2 = software only).
+			</description>
+		</method>
+		<method name="set_trigger_description">
+			<return type="void" />
+			<param index="0" name="context" type="String" />
+			<param index="1" name="rotate" type="String" default="&quot;&quot;" />
+			<param index="2" name="push" type="String" default="&quot;&quot;" />
+			<param index="3" name="touch" type="String" default="&quot;&quot;" />
+			<param index="4" name="long_touch" type="String" default="&quot;&quot;" />
+			<description>
+				Sets descriptions for encoder action triggers (dial interactions) on Stream Deck+ devices. These descriptions appear in the Stream Deck software UI to inform users about what each interaction does.
+				- [param rotate]: Description shown when the dial is rotated
+				- [param push]: Description shown when the dial is pressed
+				- [param touch]: Description shown when the touchscreen is tapped
+				- [param long_touch]: Description shown when the touchscreen is long-pressed
+			</description>
+		</method>
+		<method name="show_alert">
+			<return type="void" />
+			<param index="0" name="context" type="String" />
+			<description>
+				Temporarily shows an alert icon (exclamation mark in yellow triangle) on the action instance. Used for visual feedback when an action fails.
+			</description>
+		</method>
+		<method name="show_ok">
+			<return type="void" />
+			<param index="0" name="context" type="String" />
+			<description>
+				Temporarily shows an "OK" icon (check-mark in green circle) on the action instance. Used for visual feedback when an action succeeds.
+			</description>
+		</method>
+		<method name="subscribe_to_event">
+			<return type="void" />
+			<param index="0" name="event_name" type="String" />
+			<param index="1" name="callback" type="Callable" />
+			<description>
+				Subscribes a callback to a specific event. The callback will receive a Dictionary containing the full event data.
+				Event names should match the Stream Deck API event names:
+				- "keyDown", "keyUp" - Key press events
+				- "dialRotate", "dialDown", "dialUp" - Encoder events
+				- "touchTap" - Touchscreen events
+				- "willAppear", "willDisappear" - Action lifecycle
+				- "didReceiveSettings", "didReceiveGlobalSettings" - Settings events
+				And more. See the Stream Deck SDK documentation for the complete list.
+			</description>
+		</method>
+		<method name="switch_to_profile">
+			<return type="void" />
+			<param index="0" name="context" type="String" />
+			<param index="1" name="device" type="String" />
+			<param index="2" name="profile" type="String" default="&quot;&quot;" />
+			<param index="3" name="page" type="int" default="-1" />
+			<description>
+				Switches to a profile distributed with the plugin. Can only switch to profiles defined in the manifest's [code]Profiles[/code] array, not user-created profiles.
+				- [param context]: The context of the action triggering the profile switch
+				- [param device]: The device identifier to switch the profile on
+				- [param profile]: Name of the profile to switch to (empty string to switch to previous profile)
+				- [param page]: Optional page number within the profile (0-based, -1 to keep current page)
+			</description>
+		</method>
+		<method name="unsubscribe_from_event">
+			<return type="void" />
+			<param index="0" name="event_name" type="String" />
+			<param index="1" name="callback" type="Callable" />
+			<description>
+				Unsubscribes a callback from a specific event.
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="application_did_launch">
+			<param index="0" name="application" type="String" />
+			<description>
+				Emitted when a monitored application launches.
+			</description>
+		</signal>
+		<signal name="application_did_terminate">
+			<param index="0" name="application" type="String" />
+			<description>
+				Emitted when a monitored application terminates.
+			</description>
+		</signal>
+		<signal name="device_did_change">
+			<param index="0" name="device" type="String" />
+			<param index="1" name="device_info" type="Dictionary" />
+			<description>
+				Emitted when a Stream Deck device changes (name, size, etc.). Available from Stream Deck 7.0.
+			</description>
+		</signal>
+		<signal name="device_did_connect">
+			<param index="0" name="device" type="String" />
+			<param index="1" name="device_info" type="Dictionary" />
+			<description>
+				Emitted when a Stream Deck device is connected.
+			</description>
+		</signal>
+		<signal name="device_did_disconnect">
+			<param index="0" name="device" type="String" />
+			<description>
+				Emitted when a Stream Deck device is disconnected.
+			</description>
+		</signal>
+		<signal name="dial_down">
+			<param index="0" name="action" type="String" />
+			<param index="1" name="context" type="String" />
+			<param index="2" name="device" type="String" />
+			<param index="3" name="payload" type="Dictionary" />
+			<description>
+				Emitted when a dial (encoder) is pressed down.
+			</description>
+		</signal>
+		<signal name="dial_rotate">
+			<param index="0" name="action" type="String" />
+			<param index="1" name="context" type="String" />
+			<param index="2" name="device" type="String" />
+			<param index="3" name="payload" type="Dictionary" />
+			<description>
+				Emitted when a dial is rotated. The payload contains "ticks" (rotation amount) and "pressed" (whether dial was pressed during rotation).
+			</description>
+		</signal>
+		<signal name="dial_up">
+			<param index="0" name="action" type="String" />
+			<param index="1" name="context" type="String" />
+			<param index="2" name="device" type="String" />
+			<param index="3" name="payload" type="Dictionary" />
+			<description>
+				Emitted when a dial (encoder) is released.
+			</description>
+		</signal>
+		<signal name="did_receive_deep_link">
+			<param index="0" name="url" type="String" />
+			<description>
+				Emitted when the plugin is launched via a system deep link.
+			</description>
+		</signal>
+		<signal name="did_receive_global_settings">
+			<param index="0" name="settings" type="Dictionary" />
+			<description>
+				Emitted in response to [method get_global_settings].
+			</description>
+		</signal>
+		<signal name="did_receive_property_inspector_message">
+			<param index="0" name="action" type="String" />
+			<param index="1" name="context" type="String" />
+			<param index="2" name="payload" type="Variant" />
+			<description>
+				Emitted when the property inspector sends a message to the plugin.
+			</description>
+		</signal>
+		<signal name="did_receive_secrets">
+			<param index="0" name="secrets" type="Dictionary" />
+			<description>
+				Emitted in response to [method get_secrets]. Available from Stream Deck 7.0.
+			</description>
+		</signal>
+		<signal name="did_receive_settings">
+			<param index="0" name="action" type="String" />
+			<param index="1" name="context" type="String" />
+			<param index="2" name="device" type="String" />
+			<param index="3" name="payload" type="Dictionary" />
+			<description>
+				Emitted in response to [method get_settings].
+			</description>
+		</signal>
+		<signal name="key_down">
+			<param index="0" name="action" type="String" />
+			<param index="1" name="context" type="String" />
+			<param index="2" name="device" type="String" />
+			<param index="3" name="payload" type="Dictionary" />
+			<description>
+				Emitted when a key is pressed.
+			</description>
+		</signal>
+		<signal name="key_up">
+			<param index="0" name="action" type="String" />
+			<param index="1" name="context" type="String" />
+			<param index="2" name="device" type="String" />
+			<param index="3" name="payload" type="Dictionary" />
+			<description>
+				Emitted when a key is released.
+			</description>
+		</signal>
+		<signal name="property_inspector_did_appear">
+			<param index="0" name="action" type="String" />
+			<param index="1" name="context" type="String" />
+			<param index="2" name="device" type="String" />
+			<description>
+				Emitted when the property inspector UI appears.
+			</description>
+		</signal>
+		<signal name="property_inspector_did_disappear">
+			<param index="0" name="action" type="String" />
+			<param index="1" name="context" type="String" />
+			<param index="2" name="device" type="String" />
+			<description>
+				Emitted when the property inspector UI disappears.
+			</description>
+		</signal>
+		<signal name="system_did_wake_up">
+			<description>
+				Emitted when the system wakes from sleep.
+			</description>
+		</signal>
+		<signal name="title_parameters_did_change">
+			<param index="0" name="action" type="String" />
+			<param index="1" name="context" type="String" />
+			<param index="2" name="device" type="String" />
+			<param index="3" name="payload" type="Dictionary" />
+			<description>
+				Emitted when the title or title parameters of an action instance change.
+			</description>
+		</signal>
+		<signal name="touch_tap">
+			<param index="0" name="action" type="String" />
+			<param index="1" name="context" type="String" />
+			<param index="2" name="device" type="String" />
+			<param index="3" name="payload" type="Dictionary" />
+			<description>
+				Emitted when the touchscreen is tapped. The payload contains "hold" (whether this is a long-touch) and "tapPos" (X/Y coordinates).
+			</description>
+		</signal>
+		<signal name="will_appear">
+			<param index="0" name="action" type="String" />
+			<param index="1" name="context" type="String" />
+			<param index="2" name="device" type="String" />
+			<param index="3" name="payload" type="Dictionary" />
+			<description>
+				Emitted when an action instance appears on the Stream Deck.
+			</description>
+		</signal>
+		<signal name="will_disappear">
+			<param index="0" name="action" type="String" />
+			<param index="1" name="context" type="String" />
+			<param index="2" name="device" type="String" />
+			<param index="3" name="payload" type="Dictionary" />
+			<description>
+				Emitted when an action instance disappears from the Stream Deck.
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="STATE_DISCONNECTED" value="0" enum="ConnectionState">
+			Not connected to Stream Deck.
+		</constant>
+		<constant name="STATE_CONNECTING" value="1" enum="ConnectionState">
+			Connection in progress.
+		</constant>
+		<constant name="STATE_REGISTERED" value="2" enum="ConnectionState">
+			Connected and registered with Stream Deck.
+		</constant>
+	</constants>
+</class>
