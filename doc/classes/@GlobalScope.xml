@@ -1650,6 +1650,8 @@
 		<member name="ResourceUID" type="ResourceUID" setter="" getter="">
 			The [ResourceUID] singleton.
 		</member>
+		<member name="SDClient" type="SDClient" setter="" getter="">
+		</member>
 		<member name="Steam" type="Steam" setter="" getter="">
 			The [Steam] singleton.
 		</member>

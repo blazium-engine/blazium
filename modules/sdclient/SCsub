@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+from misc.utility.scons_hints import *
+
+Import("env")
+Import("env_modules")
+
+# Clone the environment to avoid modifying the global one
+env_sdclient = env_modules.Clone()
+
+# Add source files from root directory
+env_sdclient.add_source_files(env.modules_sources, "*.cpp")
