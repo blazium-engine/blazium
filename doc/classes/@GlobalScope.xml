@@ -1604,6 +1604,9 @@
 			The [JavaScriptBridge] singleton.
 			[b]Note:[/b] Only implemented on the Web platform.
 		</member>
+		<member name="KickAPI" type="KickAPI" setter="" getter="">
+			The [KickAPI] singleton.
+		</member>
 		<member name="Marshalls" type="Marshalls" setter="" getter="">
 			The [Marshalls] singleton.
 		</member>
