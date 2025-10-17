@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="StreamlabsClient" inherits="Object" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="connect_to_streamlabs">
+			<return type="int" enum="Error" />
+			<param index="0" name="socket_token" type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="disconnect_from_streamlabs">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="get_connection_state" qualifiers="const">
+			<return type="int" enum="StreamlabsClient.ConnectionState" />
+			<description>
+			</description>
+		</method>
+		<method name="is_streamlabs_connected" qualifiers="const">
+			<return type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="poll">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="connected">
+			<description>
+			</description>
+		</signal>
+		<signal name="connection_error">
+			<param index="0" name="error" type="Dictionary" />
+			<description>
+			</description>
+		</signal>
+		<signal name="disconnected">
+			<param index="0" name="reason" type="String" />
+			<description>
+			</description>
+		</signal>
+		<signal name="donation">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+			</description>
+		</signal>
+		<signal name="mixer_follow">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+			</description>
+		</signal>
+		<signal name="mixer_host">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+			</description>
+		</signal>
+		<signal name="mixer_subscription">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+			</description>
+		</signal>
+		<signal name="twitch_bits">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+			</description>
+		</signal>
+		<signal name="twitch_follow">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+			</description>
+		</signal>
+		<signal name="twitch_host">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+			</description>
+		</signal>
+		<signal name="twitch_raid">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+			</description>
+		</signal>
+		<signal name="twitch_subscription">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+			</description>
+		</signal>
+		<signal name="youtube_follow">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+			</description>
+		</signal>
+		<signal name="youtube_subscription">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+			</description>
+		</signal>
+		<signal name="youtube_superchat">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="STATE_DISCONNECTED" value="0" enum="ConnectionState">
+		</constant>
+		<constant name="STATE_CONNECTING" value="1" enum="ConnectionState">
+		</constant>
+		<constant name="STATE_CONNECTED" value="2" enum="ConnectionState">
+		</constant>
+	</constants>
+</class>

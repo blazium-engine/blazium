@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="SocketIONamespace" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="connect_to_namespace">
+			<return type="int" enum="Error" />
+			<param index="0" name="auth" type="Dictionary" default="{}" />
+			<description>
+			</description>
+		</method>
+		<method name="disconnect_from_namespace">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="emit">
+			<return type="void" />
+			<param index="0" name="event" type="String" />
+			<param index="1" name="data" type="Array" default="[]" />
+			<description>
+			</description>
+		</method>
+		<method name="emit_with_ack">
+			<return type="void" />
+			<param index="0" name="event" type="String" />
+			<param index="1" name="data" type="Array" />
+			<param index="2" name="callback" type="Callable" />
+			<param index="3" name="timeout" type="float" default="5.0" />
+			<description>
+			</description>
+		</method>
+		<method name="get_connection_state" qualifiers="const">
+			<return type="int" enum="SocketIONamespace.ConnectionState" />
+			<description>
+			</description>
+		</method>
+		<method name="get_namespace_path" qualifiers="const">
+			<return type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="get_session_id" qualifiers="const">
+			<return type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="is_namespace_connected" qualifiers="const">
+			<return type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="off">
+			<return type="void" />
+			<param index="0" name="event" type="String" />
+			<param index="1" name="callback" type="Callable" />
+			<description>
+			</description>
+		</method>
+		<method name="on">
+			<return type="void" />
+			<param index="0" name="event" type="String" />
+			<param index="1" name="callback" type="Callable" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="connected">
+			<param index="0" name="session_id" type="String" />
+			<description>
+			</description>
+		</signal>
+		<signal name="disconnected">
+			<param index="0" name="reason" type="String" />
+			<description>
+			</description>
+		</signal>
+		<signal name="event_received">
+			<param index="0" name="event_name" type="String" />
+			<param index="1" name="data" type="Array" />
+			<description>
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="STATE_DISCONNECTED" value="0" enum="ConnectionState">
+		</constant>
+		<constant name="STATE_CONNECTING" value="1" enum="ConnectionState">
+		</constant>
+		<constant name="STATE_CONNECTED" value="2" enum="ConnectionState">
+		</constant>
+	</constants>
+</class>

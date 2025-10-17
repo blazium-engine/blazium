@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="SocketIOClient" inherits="Object" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="close">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="connect_to_url">
+			<return type="int" enum="Error" />
+			<param index="0" name="url" type="String" />
+			<param index="1" name="auth" type="Dictionary" default="{}" />
+			<param index="2" name="tls_options" type="TLSOptions" default="null" />
+			<description>
+			</description>
+		</method>
+		<method name="create_namespace">
+			<return type="SocketIONamespace" />
+			<param index="0" name="namespace" type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="get_connection_state" qualifiers="const">
+			<return type="int" enum="SocketIOClient.ConnectionState" />
+			<description>
+			</description>
+		</method>
+		<method name="get_connection_url" qualifiers="const">
+			<return type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="get_engine_io_session_id" qualifiers="const">
+			<return type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="get_namespace">
+			<return type="SocketIONamespace" />
+			<param index="0" name="namespace" type="String" default="&quot;/&quot;" />
+			<description>
+			</description>
+		</method>
+		<method name="has_namespace" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="namespace" type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="is_socket_connected" qualifiers="const">
+			<return type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="poll">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="connect_error">
+			<param index="0" name="error" type="Dictionary" />
+			<description>
+			</description>
+		</signal>
+		<signal name="connected">
+			<param index="0" name="session_id" type="String" />
+			<description>
+			</description>
+		</signal>
+		<signal name="disconnected">
+			<param index="0" name="reason" type="String" />
+			<description>
+			</description>
+		</signal>
+		<signal name="namespace_connected">
+			<param index="0" name="namespace_path" type="String" />
+			<description>
+			</description>
+		</signal>
+		<signal name="namespace_disconnected">
+			<param index="0" name="namespace_path" type="String" />
+			<description>
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="STATE_DISCONNECTED" value="0" enum="ConnectionState">
+		</constant>
+		<constant name="STATE_CONNECTING" value="1" enum="ConnectionState">
+		</constant>
+		<constant name="STATE_CONNECTED" value="2" enum="ConnectionState">
+		</constant>
+	</constants>
+</class>
