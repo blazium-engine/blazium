@@ -1653,6 +1653,8 @@
 		<member name="Steam" type="Steam" setter="" getter="">
 			The [Steam] singleton.
 		</member>
+		<member name="StreamElements" type="StreamElementsClient" setter="" getter="">
+		</member>
 		<member name="TextServerManager" type="TextServerManager" setter="" getter="">
 			The [TextServerManager] singleton.
 		</member>

@@ -1,0 +1,552 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="StreamElementsClient" inherits="Object" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Singleton client for connecting to StreamElements WebSocket API.
+	</brief_description>
+	<description>
+		StreamElementsClient provides real-time event notifications from StreamElements through the Astro WebSocket Gateway. It supports subscribing to various topics like channel activities, chat messages, tips, and stream status changes.
+		The client is a singleton accessible globally as [code]StreamElements[/code] and must be polled regularly to process WebSocket events.
+		[b]Basic Usage:[/b]
+		[codeblocks]
+		[gdscript]
+		extends Node
+
+		func _ready():
+		    # Connect signals
+		    StreamElements.connected.connect(_on_connected)
+		    StreamElements.activity_received.connect(_on_activity)
+		    StreamElements.chat_message_received.connect(_on_chat)
+
+		    # Connect to StreamElements with your JWT token
+		    var err = StreamElements.connect_to_service("YOUR_JWT_TOKEN", StreamElements.TOKEN_JWT)
+		    if err != OK:
+		        print("Failed to connect: ", err)
+
+		func _process(_delta):
+		    # Must poll regularly to process events
+		    StreamElements.poll()
+
+		func _on_connected():
+		    print("Connected to StreamElements!")
+		    # Subscribe to topics
+		    StreamElements.subscribe("channel.activities")
+		    StreamElements.subscribe("channel.chat.message")
+
+		func _on_activity(activity_type, provider, data):
+		    print("Activity: ", activity_type, " from ", provider)
+		    if activity_type == "follow":
+		        print("New follower: ", data.data.displayName)
+		    elif activity_type == "tip":
+		        print("Tip received: ", data.data.amount)
+
+		func _on_chat(data):
+		    print(data.displayName, ": ", data.message)
+		[/gdscript]
+		[/codeblocks]
+		[b]Example Payloads:[/b]
+		[b]Follow Event:[/b]
+		[codeblock]
+		{
+		    "type": "follow",
+		    "provider": "twitch",
+		    "channel": "6183c7d4ebc632abbf809890",
+		    "data": {
+		        "username": "newviewer",
+		        "displayName": "NewViewer",
+		        "providerId": "12345678",
+		        "avatar": "https://static-cdn.jtvnw.net/user-default-pictures-uv/profile_image-300x300.png"
+		    },
+		    "_id": "65ce2539b1585c5f909a91e1",
+		    "createdAt": "2024-02-15T14:52:41.608Z",
+		    "activityId": "65ce2539b1585c5f909a91e1"
+		}
+		[/codeblock]
+		[b]Tip Event:[/b]
+		[codeblock]
+		{
+		    "type": "tip",
+		    "provider": "streamelements",
+		    "channel": "6183c7d4ebc632abbf809890",
+		    "data": {
+		        "username": "generous_donor",
+		        "displayName": "GenerousDonor",
+		        "amount": 10.00,
+		        "currency": "USD",
+		        "message": "Great stream!",
+		        "avatar": "https://static-cdn.streamelements.com/avatar.png"
+		    },
+		    "_id": "65ce2539b1585c5f909a91e2",
+		    "createdAt": "2024-02-15T14:55:30.123Z"
+		}
+		[/codeblock]
+		[b]Subscriber Event:[/b]
+		[codeblock]
+		{
+		    "type": "subscriber",
+		    "provider": "twitch",
+		    "channel": "6183c7d4ebc632abbf809890",
+		    "data": {
+		        "username": "loyal_viewer",
+		        "displayName": "LoyalViewer",
+		        "tier": "1000",
+		        "gifted": false,
+		        "sender": null,
+		        "message": "Love your content!",
+		        "amount": 1,
+		        "avatar": "https://static-cdn.jtvnw.net/user-default-pictures-uv/profile_image-300x300.png"
+		    },
+		    "_id": "65ce2539b1585c5f909a91e3",
+		    "createdAt": "2024-02-15T15:00:12.456Z"
+		}
+		[/codeblock]
+		[b]Chat Message:[/b]
+		[codeblock]
+		{
+		    "username": "viewer123",
+		    "displayName": "Viewer123",
+		    "message": "Hello chat!",
+		    "channel": "6183c7d4ebc632abbf809890",
+		    "provider": "twitch",
+		    "badges": [{"type": "moderator", "version": "1"}],
+		    "emotes": []
+		}
+		[/codeblock]
+		[b]Stream Status:[/b]
+		[codeblock]
+		{
+		    "status": "online",
+		    "channel": "6183c7d4ebc632abbf809890",
+		    "provider": "twitch"
+		}
+		[/codeblock]
+		[b]Handling All Event Types:[/b]
+		[codeblocks]
+		[gdscript]
+		extends Node
+
+		func _ready():
+		    StreamElements.connected.connect(_on_connected)
+		    StreamElements.follow_received.connect(_on_follow)
+		    StreamElements.subscriber_received.connect(_on_subscriber)
+		    StreamElements.tip_received.connect(_on_tip)
+		    StreamElements.chat_message_received.connect(_on_chat)
+		    StreamElements.stream_status_changed.connect(_on_stream_status)
+
+		    StreamElements.connect_to_service("YOUR_JWT_TOKEN", StreamElements.TOKEN_JWT)
+
+		func _process(_delta):
+		    StreamElements.poll()
+
+		func _on_connected():
+		    StreamElements.subscribe("channel.activities")
+		    StreamElements.subscribe("channel.chat.message")
+		    StreamElements.subscribe("channel.stream.status")
+
+		func _on_follow(data):
+		    var follower_name = data.data.displayName
+		    var provider = data.provider
+		    print("[%s] New follower: %s" % [provider, follower_name])
+		    # Trigger your follow alert animation here
+		    show_alert("New Follower", follower_name)
+
+		func _on_subscriber(data):
+		    var sub_name = data.data.displayName
+		    var tier = data.data.get("tier", "1000")
+		    var is_gifted = data.data.get("gifted", false)
+		    var message = data.data.get("message", "")
+
+		    if is_gifted:
+		        var gifter = data.data.get("sender", "Anonymous")
+		        print("Gift sub from %s to %s (Tier %s)" % [gifter, sub_name, tier])
+		    else:
+		        print("New subscriber: %s (Tier %s)" % [sub_name, tier])
+
+		    if message:
+		        print("Message: %s" % message)
+
+		    show_alert("New Subscriber", sub_name)
+
+		func _on_tip(data):
+		    var tipper = data.data.displayName
+		    var amount = data.data.amount
+		    var currency = data.data.get("currency", "USD")
+		    var message = data.data.get("message", "")
+
+		    print("Tip: %s%.2f from %s" % [currency, amount, tipper])
+		    if message:
+		        print("Message: %s" % message)
+
+		    show_tip_alert(tipper, amount, message)
+
+		func _on_chat(data):
+		    var username = data.displayName
+		    var message = data.message
+		    var badges = data.get("badges", [])
+
+		    # Check for moderator badge
+		    var is_mod = false
+		    for badge in badges:
+		        if badge.type == "moderator":
+		            is_mod = true
+		            break
+
+		    var prefix = "[MOD] " if is_mod else ""
+		    print("%s%s: %s" % [prefix, username, message])
+
+		func _on_stream_status(status):
+		    if status == "online":
+		        print("Stream is now LIVE!")
+		        # Update your overlay/UI
+		    else:
+		        print("Stream went offline")
+
+		func show_alert(title: String, name: String):
+		    # Implement your alert display logic
+		    pass
+
+		func show_tip_alert(tipper: String, amount: float, message: String):
+		    # Implement your tip alert display logic
+		    pass
+		[/gdscript]
+		[/codeblocks]
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="close">
+			<return type="void" />
+			<description>
+				Closes the connection to StreamElements and clears all subscriptions. The connection can be re-established by calling [method connect_to_service] again.
+			</description>
+		</method>
+		<method name="connect_to_service">
+			<return type="int" enum="Error" />
+			<param index="0" name="token" type="String" />
+			<param index="1" name="token_type" type="int" enum="StreamElementsClient.TokenType" default="0" />
+			<description>
+				Connects to the StreamElements Astro Gateway using the provided authentication [param token] and [param token_type].
+				Returns [constant OK] on success, or an error code on failure.
+				You must call [method poll] regularly after connecting to process events.
+				Supported token types are [constant TOKEN_JWT] (recommended), [constant TOKEN_APIKEY], and [constant TOKEN_OAUTH].
+			</description>
+		</method>
+		<method name="get_connection_state" qualifiers="const">
+			<return type="int" enum="StreamElementsClient.ConnectionState" />
+			<description>
+				Returns the current connection state. See [enum ConnectionState] for possible values.
+			</description>
+		</method>
+		<method name="get_subscribed_topics" qualifiers="const">
+			<return type="Array" />
+			<description>
+				Returns an array of all currently subscribed topic names.
+			</description>
+		</method>
+		<method name="is_service_connected" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] if connected to StreamElements and ready to send/receive messages.
+			</description>
+		</method>
+		<method name="poll">
+			<return type="void" />
+			<description>
+				Processes WebSocket events and handles incoming messages. This method must be called regularly (typically in [method Node._process]) to receive events from StreamElements.
+				Also handles automatic reconnection if [member auto_reconnect] is enabled.
+			</description>
+		</method>
+		<method name="subscribe">
+			<return type="int" enum="Error" />
+			<param index="0" name="topic" type="String" />
+			<param index="1" name="room" type="String" default="&quot;&quot;" />
+			<description>
+				Subscribes to a StreamElements [param topic]. Optionally specify a [param room] (channel ID) to subscribe to a specific channel.
+				Returns [constant OK] on success. The [signal subscription_response] signal will be emitted when the server responds.
+				Common topics include:
+				- [code]channel.activities[/code] - Channel events (follows, tips, subscribers, etc.)
+				- [code]channel.chat.message[/code] - Chat messages
+				- [code]channel.tips[/code] - Tip/donation events
+				- [code]channel.stream.status[/code] - Stream online/offline status
+			</description>
+		</method>
+		<method name="unsubscribe">
+			<return type="int" enum="Error" />
+			<param index="0" name="topic" type="String" />
+			<param index="1" name="room" type="String" default="&quot;&quot;" />
+			<description>
+				Unsubscribes from a StreamElements [param topic]. If [param room] is omitted, unsubscribes from all rooms for that topic.
+				Returns [constant OK] on success.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="auto_reconnect" type="bool" setter="set_auto_reconnect" getter="get_auto_reconnect" default="true">
+			Enables automatic reconnection when the connection is lost. Uses exponential backoff between attempts.
+		</member>
+		<member name="reconnect_delay_max" type="float" setter="set_reconnect_delay_max" getter="get_reconnect_delay_max" default="30.0">
+			Maximum delay in seconds between reconnection attempts when using exponential backoff.
+		</member>
+		<member name="reconnect_delay_min" type="float" setter="set_reconnect_delay_min" getter="get_reconnect_delay_min" default="1.0">
+			Minimum delay in seconds between reconnection attempts. This is the initial delay.
+		</member>
+	</members>
+	<signals>
+		<signal name="activity_received">
+			<param index="0" name="activity_type" type="String" />
+			<param index="1" name="provider" type="String" />
+			<param index="2" name="data" type="Dictionary" />
+			<description>
+				Emitted when a channel activity is received (follows, tips, subscribers, etc.). The [param activity_type] indicates the type of activity (e.g., "follow", "tip", "subscriber"), [param provider] indicates the platform (e.g., "twitch", "youtube"), and [param data] contains the full event data.
+				[codeblock]
+				func _ready():
+				    StreamElements.activity_received.connect(_on_activity)
+
+				func _on_activity(activity_type: String, provider: String, data: Dictionary):
+				    print("Activity from %s: %s" % [provider, activity_type])
+				    match activity_type:
+				        "follow":
+				            print("New follower: %s" % data.data.displayName)
+				        "subscriber":
+				            var tier = data.data.get("tier", "1000")
+				            print("New sub: %s (Tier %s)" % [data.data.displayName, tier])
+				        "tip":
+				            print("Tip: $%.2f from %s" % [data.data.amount, data.data.displayName])
+				        "cheer":
+				            print("Cheer: %d bits from %s" % [data.data.amount, data.data.displayName])
+				[/codeblock]
+			</description>
+		</signal>
+		<signal name="chat_message_received">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Emitted when a chat message is received. The [param data] dictionary contains fields like [code]username[/code], [code]displayName[/code], [code]message[/code], [code]badges[/code], and [code]emotes[/code].
+				[codeblock]
+				func _ready():
+				    StreamElements.chat_message_received.connect(_on_chat)
+
+				func _on_chat(data: Dictionary):
+				    var username = data.displayName
+				    var message = data.message
+				    var badges = data.get("badges", [])
+
+				    # Check for special badges
+				    var is_mod = badges.any(func(b): return b.type == "moderator")
+				    var is_sub = badges.any(func(b): return b.type == "subscriber")
+
+				    var prefix = "[MOD] " if is_mod else "[SUB] " if is_sub else ""
+				    print("%s%s: %s" % [prefix, username, message])
+				[/codeblock]
+			</description>
+		</signal>
+		<signal name="connected">
+			<description>
+				Emitted when successfully connected to StreamElements. You can now subscribe to topics.
+				[codeblock]
+				func _ready():
+				    StreamElements.connected.connect(_on_connected)
+
+				func _on_connected():
+				    print("Connected to StreamElements!")
+				    # Subscribe to topics
+				    StreamElements.subscribe("channel.activities")
+				    StreamElements.subscribe("channel.chat.message")
+				    StreamElements.subscribe("channel.tips")
+				    StreamElements.subscribe("channel.stream.status")
+				[/codeblock]
+			</description>
+		</signal>
+		<signal name="connection_error">
+			<param index="0" name="error" type="String" />
+			<description>
+				Emitted when a connection error occurs. The [param error] parameter contains the error description.
+				[codeblock]
+				func _ready():
+				    StreamElements.connection_error.connect(_on_error)
+
+				func _on_error(error: String):
+				    push_error("StreamElements error: %s" % error)
+				    # Optionally show error to user
+				    show_notification("Connection Error", error)
+				[/codeblock]
+			</description>
+		</signal>
+		<signal name="disconnected">
+			<param index="0" name="reason" type="String" />
+			<description>
+				Emitted when disconnected from StreamElements. The [param reason] parameter contains the disconnection reason.
+				[codeblock]
+				func _ready():
+				    StreamElements.disconnected.connect(_on_disconnected)
+
+				func _on_disconnected(reason: String):
+				    print("Disconnected: %s" % reason)
+				    # If auto_reconnect is enabled, it will reconnect automatically
+				    if not StreamElements.auto_reconnect:
+				        # Handle manual reconnection
+				        show_notification("Disconnected", "Click to reconnect")
+				[/codeblock]
+			</description>
+		</signal>
+		<signal name="follow_received">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Emitted when a new follower event is received. This is a convenience signal that fires for "follow" type activities. The [param data] dictionary contains follower information like [code]username[/code], [code]displayName[/code], and [code]providerId[/code].
+				[codeblock]
+				func _ready():
+				    StreamElements.follow_received.connect(_on_follow)
+
+				func _on_follow(data: Dictionary):
+				    var follower_name = data.data.displayName
+				    var provider = data.provider
+				    var avatar_url = data.data.get("avatar", "")
+
+				    print("New follower from %s: %s" % [provider, follower_name])
+				    # Show follow alert with avatar
+				    show_follow_alert(follower_name, avatar_url)
+				[/codeblock]
+			</description>
+		</signal>
+		<signal name="message_received">
+			<param index="0" name="topic" type="String" />
+			<param index="1" name="data" type="Dictionary" />
+			<description>
+				Generic signal emitted for all events received from StreamElements. The [param topic] indicates which topic the event belongs to, and [param data] contains the event data.
+				[codeblock]
+				func _ready():
+				    StreamElements.message_received.connect(_on_message)
+
+				func _on_message(topic: String, data: Dictionary):
+				    print("Event from topic: %s" % topic)
+				    match topic:
+				        "channel.activities":
+				            handle_activity(data)
+				        "channel.chat.message":
+				            handle_chat(data)
+				        "channel.stream.status":
+				            handle_status(data)
+				        _:
+				            print("Unknown topic: %s" % topic)
+				[/codeblock]
+			</description>
+		</signal>
+		<signal name="stream_status_changed">
+			<param index="0" name="status" type="String" />
+			<description>
+				Emitted when the stream status changes. The [param status] is either "online" or "offline".
+				[codeblock]
+				func _ready():
+				    StreamElements.stream_status_changed.connect(_on_stream_status)
+
+				func _on_stream_status(status: String):
+				    if status == "online":
+				        print("Stream is now LIVE!")
+				        # Update UI to show live indicator
+				        $LiveIndicator.visible = true
+				        # Start tracking session
+				        start_session_tracking()
+				    else:
+				        print("Stream went offline")
+				        $LiveIndicator.visible = false
+				        stop_session_tracking()
+				[/codeblock]
+			</description>
+		</signal>
+		<signal name="subscriber_received">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Emitted when a new subscriber or resubscription event is received. The [param data] dictionary contains subscriber information.
+				[codeblock]
+				func _ready():
+				    StreamElements.subscriber_received.connect(_on_subscriber)
+
+				func _on_subscriber(data: Dictionary):
+				    var sub_name = data.data.displayName
+				    var tier = data.data.get("tier", "1000")
+				    var is_gifted = data.data.get("gifted", false)
+				    var months = data.data.get("amount", 1)
+				    var message = data.data.get("message", "")
+
+				    if is_gifted:
+				        var gifter = data.data.get("sender", "Anonymous")
+				        print("Gift sub from %s to %s!" % [gifter, sub_name])
+				        show_gift_sub_alert(gifter, sub_name, tier)
+				    else:
+				        print("%s subscribed for %d months (Tier %s)!" % [sub_name, months, tier])
+				        show_sub_alert(sub_name, months, tier, message)
+				[/codeblock]
+			</description>
+		</signal>
+		<signal name="subscription_response">
+			<param index="0" name="topic" type="String" />
+			<param index="1" name="success" type="bool" />
+			<param index="2" name="message" type="String" />
+			<description>
+				Emitted when the server responds to a subscription or unsubscription request. The [param topic] indicates which topic the response is for, [param success] is [code]true[/code] if successful, and [param message] contains a description.
+				[codeblock]
+				func _ready():
+				    StreamElements.subscription_response.connect(_on_subscription_response)
+
+				func _on_subscription_response(topic: String, success: bool, message: String):
+				    if success:
+				        print("Successfully subscribed to: %s" % topic)
+				    else:
+				        push_error("Subscription failed for %s: %s" % [topic, message])
+				        # Handle subscription error (e.g., invalid token)
+				        if "unauthorized" in message.to_lower():
+				            show_error("Invalid token, please check your credentials")
+				[/codeblock]
+			</description>
+		</signal>
+		<signal name="tip_received">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Emitted when a tip/donation is received. The [param data] dictionary contains tip information like amount, currency, and tipper name.
+				[codeblock]
+				func _ready():
+				    StreamElements.tip_received.connect(_on_tip)
+
+				func _on_tip(data: Dictionary):
+				    var tipper = data.data.displayName
+				    var amount = data.data.amount
+				    var currency = data.data.get("currency", "USD")
+				    var message = data.data.get("message", "")
+
+				    print("Tip: %s%.2f from %s" % [currency, amount, tipper])
+				    if message:
+				        print("Message: %s" % message)
+
+				    # Show tip alert with different styles based on amount
+				    if amount &gt;= 100:
+				        show_epic_tip_alert(tipper, amount, currency, message)
+				    elif amount &gt;= 10:
+				        show_big_tip_alert(tipper, amount, currency, message)
+				    else:
+				        show_tip_alert(tipper, amount, currency, message)
+				[/codeblock]
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="STATE_DISCONNECTED" value="0" enum="ConnectionState">
+			Not connected to StreamElements.
+		</constant>
+		<constant name="STATE_CONNECTING" value="1" enum="ConnectionState">
+			Connection in progress.
+		</constant>
+		<constant name="STATE_CONNECTED" value="2" enum="ConnectionState">
+			Connected and ready to send/receive messages.
+		</constant>
+		<constant name="STATE_RECONNECTING" value="3" enum="ConnectionState">
+			Attempting to reconnect after a disconnection.
+		</constant>
+		<constant name="TOKEN_JWT" value="0" enum="TokenType">
+			JWT token type (recommended). Can be obtained from StreamElements dashboard.
+		</constant>
+		<constant name="TOKEN_APIKEY" value="1" enum="TokenType">
+			API key token type (also known as Overlay Token).
+		</constant>
+		<constant name="TOKEN_OAUTH" value="2" enum="TokenType">
+			OAuth token type.
+		</constant>
+	</constants>
+</class>
