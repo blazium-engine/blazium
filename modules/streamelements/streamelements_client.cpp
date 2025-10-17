@@ -521,4 +521,3 @@ StreamElementsClient::~StreamElementsClient() {
 	close();
 	singleton = nullptr;
 }
-

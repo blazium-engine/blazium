@@ -49,4 +49,3 @@ void uninitialize_streamelements_module(ModuleInitializationLevel p_level) {
 		streamelements_singleton = nullptr;
 	}
 }
-

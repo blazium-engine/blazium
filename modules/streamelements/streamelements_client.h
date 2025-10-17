@@ -118,4 +118,3 @@ public:
 
 VARIANT_ENUM_CAST(StreamElementsClient::ConnectionState);
 VARIANT_ENUM_CAST(StreamElementsClient::TokenType);
-

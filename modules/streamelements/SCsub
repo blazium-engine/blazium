@@ -6,4 +6,3 @@ Import("env_modules")
 
 env_streamelements = env_modules.Clone()
 env_streamelements.add_source_files(env.modules_sources, "*.cpp")
-
