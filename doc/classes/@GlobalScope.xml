@@ -1656,6 +1656,8 @@
 		<member name="Steam" type="Steam" setter="" getter="">
 			The [Steam] singleton.
 		</member>
+		<member name="StreamlabsClient" type="StreamlabsClient" setter="" getter="">
+		</member>
 		<member name="TextServerManager" type="TextServerManager" setter="" getter="">
 			The [TextServerManager] singleton.
 		</member>
