@@ -499,7 +499,7 @@ void RCONClient::_process_battleye_packet(const PackedByteArray &p_packet) {
 					int index = parsed.get("packet_index", 0);
 					E->get().multi_packet_data[index] = data;
 
-					if (E->get().multi_packet_data.size() == total) {
+					if ((int)E->get().multi_packet_data.size() == total) {
 						// All packets received, reassemble
 						String complete_response;
 						for (int i = 0; i < total; i++) {
