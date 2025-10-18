@@ -202,6 +202,7 @@ void RCONServer::send_raw_packet(int p_client_id, const PackedByteArray &p_packe
 
 	Response response;
 	response.client_id = p_client_id;
+	response.request_id = 0;
 	response.raw_packet = p_packet;
 	response.is_raw = true;
 	response_queue.push_back(response);
