@@ -1581,6 +1581,9 @@
 		<member name="Geometry3D" type="Geometry3D" setter="" getter="">
 			The [Geometry3D] singleton.
 		</member>
+		<member name="HTTPServer" type="HTTPServer" setter="" getter="">
+			The [HTTPServer] singleton.
+		</member>
 		<member name="IP" type="IP" setter="" getter="">
 			The [IP] singleton.
 		</member>
