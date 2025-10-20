@@ -54,9 +54,9 @@
 			<param index="0" name="packet" type="Variant" />
 			<param index="1" name="channel" type="int" />
 			<param index="2" name="reliable" type="bool" />
-		<description>
-			Sends a packet to this peer. The packet will be automatically encoded using [ENetPacketUtils].
-		</description>
+			<description>
+				Sends a packet to this peer. The packet will be automatically encoded using [ENetPacketUtils].
+			</description>
 		</method>
 	</methods>
 	<members>
