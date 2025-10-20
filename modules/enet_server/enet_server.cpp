@@ -514,6 +514,11 @@ void ENetServer::_emit_event(const QueuedEvent &p_event) {
 			}
 		} break;
 
+		case EVENT_PEER_PRELOGIN: {
+			Dictionary login_data = p_event.data;
+			emit_signal("peer_prelogin", peer, login_data);
+		} break;
+
 		case EVENT_PEER_AUTHENTICATED: {
 			emit_signal("peer_authenticated", peer);
 		} break;
