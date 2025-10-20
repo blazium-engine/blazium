@@ -1562,6 +1562,12 @@
 		<member name="ENV" type="ENV" setter="" getter="">
 			The [ENV] singleton.
 		</member>
+		<member name="ENetClient" type="ENetClient" setter="" getter="">
+		</member>
+		<member name="ENetPacketUtils" type="ENetPacketUtils" setter="" getter="">
+		</member>
+		<member name="ENetServer" type="ENetServer" setter="" getter="">
+		</member>
 		<member name="EditorInterface" type="EditorInterface" setter="" getter="">
 			The [EditorInterface] singleton.
 			[b]Note:[/b] Only available in editor builds.
