@@ -46,6 +46,8 @@
 		<method name="close">
 			<return type="void" />
 			<description>
+				Closes the Socket.IO connection and disconnects all namespaces. This sends disconnect packets for all connected namespaces and closes the underlying WebSocket connection.
+				After calling this method, the client's connection state will be [constant STATE_DISCONNECTED].
 			</description>
 		</method>
 		<method name="connect_to_url">
@@ -105,6 +107,18 @@
 				The main namespace [code]"/"[/code] is created automatically when connecting.
 			</description>
 		</method>
+		<method name="get_singleton" qualifiers="static">
+			<return type="SocketIOClient" />
+			<description>
+				Returns the singleton instance of [SocketIOClient]. This is the primary way to access the Socket.IO client in GDScript.
+				[codeblocks]
+				[gdscript]
+				var socketio = SocketIOClient.get_singleton()
+				socketio.connect_to_url("ws://localhost:3000")
+				[/gdscript]
+				[/codeblocks]
+			</description>
+		</method>
 		<method name="has_namespace" qualifiers="const">
 			<return type="bool" />
 			<param index="0" name="namespace" type="String" />
@@ -115,6 +129,8 @@
 		<method name="is_socket_connected" qualifiers="const">
 			<return type="bool" />
 			<description>
+				Returns [code]true[/code] if the client is currently connected to the server and the WebSocket connection is open.
+				This checks both the connection state and the underlying WebSocket state.
 			</description>
 		</method>
 		<method name="poll">
