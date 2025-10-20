@@ -35,7 +35,7 @@ class CrowdControlEffectParameter : public Resource {
 	GDCLASS(CrowdControlEffectParameter, Resource);
 
 private:
-	String type = "options";
+	String parameter_type = "options";
 	String parameter_name;
 	Dictionary options;
 
@@ -43,8 +43,8 @@ protected:
 	static void _bind_methods();
 
 public:
-	void set_type(const String &p_type);
-	String get_type() const;
+	void set_parameter_type(const String &p_type);
+	String get_parameter_type() const;
 
 	void set_parameter_name(const String &p_name);
 	String get_parameter_name() const;

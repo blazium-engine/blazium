@@ -30,8 +30,8 @@
 #include "crowd_control_effect_parameter.h"
 
 void CrowdControlEffectParameter::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("set_type", "type"), &CrowdControlEffectParameter::set_type);
-	ClassDB::bind_method(D_METHOD("get_type"), &CrowdControlEffectParameter::get_type);
+	ClassDB::bind_method(D_METHOD("set_parameter_type", "type"), &CrowdControlEffectParameter::set_parameter_type);
+	ClassDB::bind_method(D_METHOD("get_parameter_type"), &CrowdControlEffectParameter::get_parameter_type);
 
 	ClassDB::bind_method(D_METHOD("set_parameter_name", "name"), &CrowdControlEffectParameter::set_parameter_name);
 	ClassDB::bind_method(D_METHOD("get_parameter_name"), &CrowdControlEffectParameter::get_parameter_name);
@@ -41,17 +41,17 @@ void CrowdControlEffectParameter::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("to_json"), &CrowdControlEffectParameter::to_json);
 
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "type"), "set_type", "get_type");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "parameter_type"), "set_parameter_type", "get_parameter_type");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "parameter_name"), "set_parameter_name", "get_parameter_name");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "options"), "set_options", "get_options");
 }
 
-void CrowdControlEffectParameter::set_type(const String &p_type) {
-	type = p_type;
+void CrowdControlEffectParameter::set_parameter_type(const String &p_type) {
+	parameter_type = p_type;
 }
 
-String CrowdControlEffectParameter::get_type() const {
-	return type;
+String CrowdControlEffectParameter::get_parameter_type() const {
+	return parameter_type;
 }
 
 void CrowdControlEffectParameter::set_parameter_name(const String &p_name) {
@@ -72,7 +72,7 @@ Dictionary CrowdControlEffectParameter::get_options() const {
 
 Dictionary CrowdControlEffectParameter::to_json() const {
 	Dictionary result;
-	result["type"] = type;
+	result["type"] = parameter_type;
 	result["name"] = parameter_name;
 
 	// Convert options to proper format

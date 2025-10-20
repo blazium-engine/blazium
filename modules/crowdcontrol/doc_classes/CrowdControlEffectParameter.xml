@@ -40,7 +40,7 @@
 		<member name="parameter_name" type="String" setter="set_parameter_name" getter="get_parameter_name" default="&quot;&quot;">
 			Display name for the parameter shown to viewers (e.g., "Color", "Difficulty").
 		</member>
-		<member name="type" type="String" setter="set_type" getter="get_type" default="&quot;options&quot;">
+		<member name="parameter_type" type="String" setter="set_parameter_type" getter="get_parameter_type" default="&quot;options&quot;">
 			Parameter type. Currently only "options" is supported for selectable options.
 		</member>
 	</members>
