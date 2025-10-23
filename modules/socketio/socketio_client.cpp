@@ -39,6 +39,9 @@ SocketIOClient *SocketIOClient::get_singleton() {
 }
 
 void SocketIOClient::_bind_methods() {
+	// Singleton access
+	ClassDB::bind_static_method("SocketIOClient", D_METHOD("get_singleton"), &SocketIOClient::get_singleton);
+
 	// Connection management
 	ClassDB::bind_method(D_METHOD("connect_to_url", "url", "auth", "tls_options"), &SocketIOClient::connect_to_url, DEFVAL(Dictionary()), DEFVAL(Ref<TLSOptions>()));
 	ClassDB::bind_method(D_METHOD("close"), &SocketIOClient::close);
