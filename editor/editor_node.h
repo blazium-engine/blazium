@@ -193,6 +193,7 @@ public:
 		HELP_FORUM,
 		HELP_COMMUNITY,
 		HELP_COPY_SYSTEM_INFO,
+		HELP_DEV_TOOLS,
 		HELP_REPORT_A_BUG,
 		HELP_SUGGEST_A_FEATURE,
 		HELP_SEND_DOCS_FEEDBACK,
@@ -260,6 +261,8 @@ private:
 	EditorSelection *editor_selection = nullptr;
 	EditorSettingsDialog *editor_settings_dialog = nullptr;
 	HistoryDock *history_dock = nullptr;
+
+	MenuButton *editor_logo_quick_menu = nullptr;
 
 	ProjectExportDialog *project_export = nullptr;
 	ProjectSettingsEditor *project_settings_editor = nullptr;

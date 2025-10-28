@@ -558,6 +558,10 @@ void EditorNode::_update_theme(bool p_skip_creation) {
 		distraction_free->set_button_icon(theme->get_icon(SNAME("DistractionFree"), EditorStringName(EditorIcons)));
 		distraction_free->add_theme_style_override(SceneStringName(pressed), theme->get_stylebox(CoreStringName(normal), "FlatMenuButton"));
 
+		if (EDITOR_GET("interface/editor/use_editor_logo_quick_menu")) {
+			editor_logo_quick_menu->set_button_icon(theme->get_icon(SNAME("TitleBarLogo"), EditorStringName(EditorIcons)));
+		}
+
 		help_menu->set_item_icon(help_menu->get_item_index(HELP_SEARCH), theme->get_icon(SNAME("HelpSearch"), EditorStringName(EditorIcons)));
 		help_menu->set_item_icon(help_menu->get_item_index(HELP_COPY_SYSTEM_INFO), theme->get_icon(SNAME("ActionCopy"), EditorStringName(EditorIcons)));
 		help_menu->set_item_icon(help_menu->get_item_index(HELP_ABOUT), theme->get_icon(SNAME("Godot"), EditorStringName(EditorIcons)));
@@ -3190,6 +3194,9 @@ void EditorNode::_menu_option_confirm(int p_option, bool p_confirmed) {
 		} break;
 		case EDITOR_COMMAND_PALETTE: {
 			command_palette->open_popup();
+		} break;
+		case HELP_DEV_TOOLS: {
+			OS::get_singleton()->shell_open("https://blazium.app/dev-tools");
 		} break;
 		case HELP_DOCS: {
 			OS::get_singleton()->shell_open(VERSION_DOCS_URL "/");
@@ -7330,6 +7337,24 @@ EditorNode::EditorNode() {
 		left_menu_spacer = memnew(Control);
 		left_menu_spacer->set_mouse_filter(Control::MOUSE_FILTER_PASS);
 		title_bar->add_child(left_menu_spacer);
+	}
+
+	if (EDITOR_GET("interface/editor/use_editor_logo_quick_menu")) {
+		editor_logo_quick_menu = memnew(MenuButton);
+		title_bar->add_child(editor_logo_quick_menu);
+		editor_logo_quick_menu->set_tooltip_text(TTR("Blazium Editor Quick Menu"));
+		editor_logo_quick_menu->get_popup()->add_item(TTR("About"), HELP_ABOUT);
+		editor_logo_quick_menu->get_popup()->add_item(TTR("Copy System Info"), HELP_COPY_SYSTEM_INFO);
+		editor_logo_quick_menu->get_popup()->add_separator();
+		editor_logo_quick_menu->get_popup()->add_item(TTR("Search Help"), HELP_SEARCH);
+		editor_logo_quick_menu->get_popup()->add_item(TTR("Online Documentation"), HELP_DOCS);
+		editor_logo_quick_menu->get_popup()->add_item(TTR("Developer Tools"), HELP_DEV_TOOLS);
+		editor_logo_quick_menu->get_popup()->add_item(TTR("Export"), PROJECT_EXPORT);
+		editor_logo_quick_menu->get_popup()->add_item(TTR("Manage Runtimes"), EDITOR_MANAGE_EXPORT_TEMPLATES);
+		editor_logo_quick_menu->get_popup()->add_separator();
+		editor_logo_quick_menu->get_popup()->add_item(TTR("Quit to Project Manager"), PROJECT_QUIT_TO_PROJECT_MANAGER);
+		editor_logo_quick_menu->get_popup()->add_item(TTR("Quit"), FILE_QUIT);
+		editor_logo_quick_menu->get_popup()->connect("id_pressed", callable_mp(this, &EditorNode::_menu_option));
 	}
 
 	menu_scroll_box = memnew(EditorHScrollBox);
