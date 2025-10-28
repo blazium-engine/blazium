@@ -174,7 +174,7 @@ void register_core_types() {
 	GDREGISTER_VIRTUAL_CLASS(ScriptExtension);
 	GDREGISTER_VIRTUAL_CLASS(ScriptLanguageExtension);
 
-	GDREGISTER_VIRTUAL_CLASS(MissingResource);
+	GDREGISTER_CLASS(MissingResource);
 	GDREGISTER_CLASS(Image);
 
 	GDREGISTER_CLASS(Shortcut);

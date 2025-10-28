@@ -1635,14 +1635,14 @@ ProjectManager::ProjectManager() {
 			erase_btn->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_erase_project));
 			project_list_sidebar->add_child(erase_btn);
 
-			Control *filler = memnew(Control);
-			filler->set_v_size_flags(Control::SIZE_EXPAND_FILL);
-			project_list_sidebar->add_child(filler);
-
 			erase_missing_btn = memnew(Button);
 			erase_missing_btn->set_text(TTRC("Remove Missing"));
 			erase_missing_btn->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_erase_missing_projects));
 			project_list_sidebar->add_child(erase_missing_btn);
+
+			Control *filler = memnew(Control);
+			filler->set_v_size_flags(Control::SIZE_EXPAND_FILL);
+			project_list_sidebar->add_child(filler);
 		}
 	}
 
