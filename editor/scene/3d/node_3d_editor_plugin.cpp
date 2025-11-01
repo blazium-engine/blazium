@@ -1674,7 +1674,7 @@ void Node3DEditorViewport::_list_select(Ref<InputEventMouseButton> b) {
 		for (int i = 0; i < selection_results.size(); i++) {
 			Node3D *spat = selection_results[i];
 
-			Ref<Texture2D> icon = EditorNode::get_singleton()->get_object_icon(spat, "Node");
+			Ref<Texture2D> icon = EditorNode::get_singleton()->get_object_icon(spat);
 
 			String node_path = "/" + root_name + "/" + String(root_path.rel_path_to(spat->get_path()));
 
@@ -7181,9 +7181,9 @@ void Node3DEditor::edit(Node3D *p_spatial) {
 }
 
 void Node3DEditor::_snap_changed() {
-	snap_translate_value = snap_translate->get_text().to_float();
-	snap_rotate_value = snap_rotate->get_text().to_float();
-	snap_scale_value = snap_scale->get_text().to_float();
+	snap_translate_value = snap_translate->get_value();
+	snap_rotate_value = snap_rotate->get_value();
+	snap_scale_value = snap_scale->get_value();
 
 	EditorSettings::get_singleton()->set_project_metadata("3d_editor", "snap_translate_value", snap_translate_value);
 	EditorSettings::get_singleton()->set_project_metadata("3d_editor", "snap_rotate_value", snap_rotate_value);
@@ -7191,12 +7191,9 @@ void Node3DEditor::_snap_changed() {
 }
 
 void Node3DEditor::_snap_update() {
-	double snap = EDITOR_GET("interface/inspector/default_float_step");
-	int snap_step_decimals = Math::range_step_decimals(snap);
-
-	snap_translate->set_text(String::num(snap_translate_value, snap_step_decimals));
-	snap_rotate->set_text(String::num(snap_rotate_value, snap_step_decimals));
-	snap_scale->set_text(String::num(snap_scale_value, snap_step_decimals));
+	snap_translate->set_value(snap_translate_value);
+	snap_rotate->set_value(snap_rotate_value);
+	snap_scale->set_value(snap_scale_value);
 }
 
 void Node3DEditor::_xform_dialog_action() {
@@ -9914,20 +9911,30 @@ Node3DEditor::Node3DEditor() {
 	VBoxContainer *snap_dialog_vbc = memnew(VBoxContainer);
 	snap_dialog->add_child(snap_dialog_vbc);
 
-	snap_translate = memnew(LineEdit);
-	snap_translate->set_select_all_on_focus(true);
-	snap_translate->set_accessibility_name(TTRC("Translate Snap:"));
-	snap_dialog_vbc->add_margin_child(TTRC("Translate Snap:"), snap_translate);
+	snap_translate = memnew(EditorSpinSlider);
+	snap_translate->set_min(0.0);
+	snap_translate->set_step(0.001);
+	snap_translate->set_max(10.0);
+	snap_translate->set_suffix("m");
+	snap_translate->set_allow_greater(true);
+	snap_translate->set_accessibility_name(TTRC("Translate Snap"));
+	snap_dialog_vbc->add_margin_child(TTR("Translate Snap:"), snap_translate);
 
-	snap_rotate = memnew(LineEdit);
-	snap_rotate->set_select_all_on_focus(true);
-	snap_rotate->set_accessibility_name(TTRC("Rotate Snap (deg.):"));
-	snap_dialog_vbc->add_margin_child(TTRC("Rotate Snap (deg.):"), snap_rotate);
+	snap_rotate = memnew(EditorSpinSlider);
+	snap_rotate->set_min(0.0);
+	snap_rotate->set_step(0.1);
+	snap_rotate->set_max(360);
+	snap_rotate->set_suffix(U"°");
+	snap_rotate->set_accessibility_name(TTRC("Rotate Snap"));
+	snap_dialog_vbc->add_margin_child(TTR("Rotate Snap:"), snap_rotate);
 
-	snap_scale = memnew(LineEdit);
-	snap_scale->set_select_all_on_focus(true);
-	snap_scale->set_accessibility_name(TTRC("Scale Snap (%):"));
-	snap_dialog_vbc->add_margin_child(TTRC("Scale Snap (%):"), snap_scale);
+	snap_scale = memnew(EditorSpinSlider);
+	snap_scale->set_min(0.0);
+	snap_scale->set_step(1.0);
+	snap_scale->set_max(100);
+	snap_scale->set_suffix("%");
+	snap_scale->set_accessibility_name(TTRC("Scale Snap"));
+	snap_dialog_vbc->add_margin_child(TTR("Scale Snap:"), snap_scale);
 
 	/* SETTINGS DIALOG */
 
@@ -9979,58 +9986,36 @@ Node3DEditor::Node3DEditor() {
 	VBoxContainer *xform_vbc = memnew(VBoxContainer);
 	xform_dialog->add_child(xform_vbc);
 
-	Label *l = memnew(Label);
-	l->set_text(TTRC("Translate:"));
-	xform_vbc->add_child(l);
-
-	HBoxContainer *xform_hbc = memnew(HBoxContainer);
-	xform_vbc->add_child(xform_hbc);
+	HBoxContainer *translate_hb = memnew(HBoxContainer);
+	xform_vbc->add_margin_child(TTRC("Translate:"), translate_hb);
+	HBoxContainer *rotate_hb = memnew(HBoxContainer);
+	xform_vbc->add_margin_child(TTRC("Rotate (deg.):"), rotate_hb);
+	HBoxContainer *scale_hb = memnew(HBoxContainer);
+	xform_vbc->add_margin_child(TTRC("Scale (ratio):"), scale_hb);
 
 	for (int i = 0; i < 3; i++) {
 		xform_translate[i] = memnew(LineEdit);
 		xform_translate[i]->set_h_size_flags(SIZE_EXPAND_FILL);
 		xform_translate[i]->set_select_all_on_focus(true);
-		xform_hbc->add_child(xform_translate[i]);
-	}
+		translate_hb->add_child(xform_translate[i]);
 
-	l = memnew(Label);
-	l->set_text(TTRC("Rotate (deg.):"));
-	xform_vbc->add_child(l);
-
-	xform_hbc = memnew(HBoxContainer);
-	xform_vbc->add_child(xform_hbc);
-
-	for (int i = 0; i < 3; i++) {
 		xform_rotate[i] = memnew(LineEdit);
 		xform_rotate[i]->set_h_size_flags(SIZE_EXPAND_FILL);
 		xform_rotate[i]->set_select_all_on_focus(true);
-		xform_hbc->add_child(xform_rotate[i]);
-	}
+		rotate_hb->add_child(xform_rotate[i]);
 
-	l = memnew(Label);
-	l->set_text(TTRC("Scale (ratio):"));
-	xform_vbc->add_child(l);
-
-	xform_hbc = memnew(HBoxContainer);
-	xform_vbc->add_child(xform_hbc);
-
-	for (int i = 0; i < 3; i++) {
 		xform_scale[i] = memnew(LineEdit);
 		xform_scale[i]->set_h_size_flags(SIZE_EXPAND_FILL);
 		xform_scale[i]->set_select_all_on_focus(true);
-		xform_hbc->add_child(xform_scale[i]);
+		scale_hb->add_child(xform_scale[i]);
 	}
-
-	l = memnew(Label);
-	l->set_text(TTRC("Transform Type"));
-	xform_vbc->add_child(l);
 
 	xform_type = memnew(OptionButton);
 	xform_type->set_h_size_flags(SIZE_EXPAND_FILL);
 	xform_type->set_accessibility_name(TTRC("Transform Type"));
 	xform_type->add_item(TTRC("Pre"));
 	xform_type->add_item(TTRC("Post"));
-	xform_vbc->add_child(xform_type);
+	xform_vbc->add_margin_child(TTRC("Transform Type"), xform_type);
 
 	xform_dialog->connect(SceneStringName(confirmed), callable_mp(this, &Node3DEditor::_xform_dialog_action));
 

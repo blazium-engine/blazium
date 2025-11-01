@@ -733,26 +733,6 @@ Ref<StyleBox> TextEdit::_get_current_stylebox() const {
 	return editable ? theme_cache.style_normal : theme_cache.style_readonly;
 }
 
-void TextEdit::_draw_rect_unfilled(RID p_canvas_item, const Rect2 &p_rect, const Color &p_color, real_t p_width, bool p_antialiased) const {
-	Rect2 rect = p_rect.abs();
-
-	if (p_width >= rect.size.width || p_width >= rect.size.height) {
-		RS::get_singleton()->canvas_item_add_rect(p_canvas_item, rect.grow(0.5f * p_width), p_color, p_antialiased);
-	} else {
-		Vector<Vector2> points;
-		points.resize(5);
-		points.write[0] = rect.position;
-		points.write[1] = rect.position + Vector2(rect.size.x, 0);
-		points.write[2] = rect.position + rect.size;
-		points.write[3] = rect.position + Vector2(0, rect.size.y);
-		points.write[4] = rect.position;
-
-		Vector<Color> colors = { p_color };
-
-		RS::get_singleton()->canvas_item_add_polyline(p_canvas_item, points, colors, p_width, p_antialiased);
-	}
-}
-
 void TextEdit::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_EXIT_TREE:
@@ -935,6 +915,8 @@ void TextEdit::_notification(int p_what) {
 
 			RID ci = get_canvas_item();
 			Ref<StyleBox> style = _get_current_stylebox();
+
+			// Draw normal/read_only style.
 			style->draw(ci, Rect2(Point2(), get_size()));
 
 			/* Prevent the resource getting lost between the editor and game. */
@@ -958,13 +940,13 @@ void TextEdit::_notification(int p_what) {
 			RS::get_singleton()->canvas_item_set_visibility_layer(text_ci, get_visibility_layer());
 			RS::get_singleton()->canvas_item_set_default_texture_filter(text_ci, RS::CanvasItemTextureFilter(get_texture_filter_in_tree()));
 
-			int xmargin_beg = Math::ceil(style->get_margin(SIDE_LEFT)) + gutters_width + gutter_padding;
+			int left_margin = Math::ceil(style->get_margin(SIDE_LEFT));
+			int xmargin_beg = left_margin + gutters_width + gutter_padding;
 
 			int xmargin_end = size.width - Math::ceil(style->get_margin(SIDE_RIGHT));
 			if (draw_minimap) {
 				xmargin_end -= minimap_width;
 			}
-
 			if (!editable) {
 				draw_caret = is_drawing_caret_when_editable_disabled();
 			}
@@ -1432,7 +1414,7 @@ void TextEdit::_notification(int p_what) {
 
 						cache_entry.y_offset = ofs_y;
 
-						int gutter_offset = Math::ceil(style->get_margin(SIDE_LEFT));
+						int gutter_offset = left_margin;
 						for (int g = 0; g < gutters.size(); g++) {
 							const GutterInfo &gutter = gutters[g];
 
@@ -1954,7 +1936,6 @@ void TextEdit::_notification(int p_what) {
 			}
 
 			if (has_focus()) {
-				theme_cache.style_focus->draw(ci, Rect2(Point2(), get_size()));
 				_update_ime_window_position();
 			}
 		} break;
@@ -2314,8 +2295,7 @@ void TextEdit::gui_input(const Ref<InputEvent> &p_gui_input) {
 					emit_signal(SNAME("gutter_clicked"), hovered_gutter.y, hovered_gutter.x);
 					return;
 				}
-				Ref<StyleBox> style = _get_current_stylebox();
-				int left_margin = Math::ceil(style->get_margin(SIDE_LEFT));
+				int left_margin = Math::ceil(_get_current_stylebox()->get_margin(SIDE_LEFT));
 				if (mpos.x < left_margin + gutters_width + gutter_padding) {
 					return;
 				}
@@ -2416,7 +2396,7 @@ void TextEdit::gui_input(const Ref<InputEvent> &p_gui_input) {
 
 				// Click inline objects.
 				if (inline_object_click_handler.is_valid()) {
-					int xmargin_beg = Math::ceil(style->get_margin(SIDE_LEFT)) + gutters_width + gutter_padding;
+					int xmargin_beg = left_margin + gutters_width + gutter_padding;
 					int wrap_i = get_line_wrap_index_at_column(pos.y, pos.x);
 					const float wrap_indent = _get_wrap_indent_offset(pos.y, wrap_i, is_layout_rtl());
 
@@ -3522,14 +3502,14 @@ void TextEdit::_show_virtual_keyboard() {
 
 /* General overrides. */
 Size2 TextEdit::get_minimum_size() const {
-	Size2 size = _get_current_stylebox()->get_minimum_size();
+	Size2 ms = _get_current_stylebox()->get_minimum_size();
 	if (fit_content_height) {
-		size.height += content_size_cache.height;
+		ms.height += content_size_cache.height;
 	}
 	if (fit_content_width) {
-		size.width += content_size_cache.width;
+		ms.width += content_size_cache.width;
 	}
-	return size;
+	return ms;
 }
 
 bool TextEdit::is_text_field() const {
@@ -3647,7 +3627,7 @@ Control::CursorShape TextEdit::get_cursor_shape(const Point2 &p_pos) const {
 	// Hover inline objects.
 	if (inline_object_click_handler.is_valid()) {
 		Point2i pos = get_line_column_at_pos(p_pos);
-		int xmargin_beg = Math::ceil(style->get_margin(SIDE_LEFT)) + gutters_width + gutter_padding;
+		int xmargin_beg = left_margin + gutters_width + gutter_padding;
 		int wrap_i = get_line_wrap_index_at_column(pos.y, pos.x);
 		const float wrap_indent = _get_wrap_indent_offset(pos.y, wrap_i, is_layout_rtl());
 
@@ -3908,7 +3888,6 @@ void TextEdit::show_emoji_and_symbol_picker() {
 void TextEdit::set_emoji_menu_enabled(bool p_enabled) {
 	if (emoji_menu_enabled != p_enabled) {
 		emoji_menu_enabled = p_enabled;
-		_update_context_menu();
 	}
 }
 
@@ -8596,6 +8575,7 @@ void TextEdit::_update_scrollbars() {
 	Size2 size = get_size();
 	Size2 hmin = h_scroll->get_combined_minimum_size();
 	Size2 vmin = v_scroll->get_combined_minimum_size();
+
 	Ref<StyleBox> style = _get_current_stylebox();
 	v_scroll->set_begin(Point2(size.width - vmin.width, style->get_margin(SIDE_TOP)));
 	v_scroll->set_end(Point2(size.width, size.height - style->get_margin(SIDE_TOP) - style->get_margin(SIDE_BOTTOM)));
@@ -9252,6 +9232,26 @@ void TextEdit::_base_remove_text(int p_from_line, int p_from_column, int p_to_li
 
 	_text_changed();
 	emit_signal(SNAME("lines_edited_from"), p_to_line, p_from_line);
+}
+
+void TextEdit::_draw_rect_unfilled(RID p_canvas_item, const Rect2 &p_rect, const Color &p_color, real_t p_width, bool p_antialiased) const {
+	Rect2 rect = p_rect.abs();
+
+	if (p_width >= rect.size.width || p_width >= rect.size.height) {
+		RS::get_singleton()->canvas_item_add_rect(p_canvas_item, rect.grow(0.5f * p_width), p_color, p_antialiased);
+	} else {
+		Vector<Vector2> points;
+		points.resize(5);
+		points.write[0] = rect.position;
+		points.write[1] = rect.position + Vector2(rect.size.x, 0);
+		points.write[2] = rect.position + rect.size;
+		points.write[3] = rect.position + Vector2(0, rect.size.y);
+		points.write[4] = rect.position;
+
+		Vector<Color> colors = { p_color };
+
+		RS::get_singleton()->canvas_item_add_polyline(p_canvas_item, points, colors, p_width, p_antialiased);
+	}
 }
 
 TextEdit::TextEdit(const String &p_placeholder) {

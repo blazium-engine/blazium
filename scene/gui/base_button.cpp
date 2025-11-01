@@ -570,7 +570,7 @@ void BaseButton::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_shortcut_in_tooltip_enabled"), &BaseButton::is_shortcut_in_tooltip_enabled);
 	ClassDB::bind_method(D_METHOD("set_disabled", "disabled"), &BaseButton::set_disabled);
 	ClassDB::bind_method(D_METHOD("is_disabled"), &BaseButton::is_disabled);
-	ClassDB::bind_method(D_METHOD("set_action_mode", "actionmode"), &BaseButton::set_action_mode);
+	ClassDB::bind_method(D_METHOD("set_action_mode", "action_mode"), &BaseButton::set_action_mode);
 	ClassDB::bind_method(D_METHOD("get_action_mode"), &BaseButton::get_action_mode);
 	ClassDB::bind_method(D_METHOD("set_size_mode", "size_mode"), &BaseButton::set_size_mode);
 	ClassDB::bind_method(D_METHOD("get_size_mode"), &BaseButton::get_size_mode);
