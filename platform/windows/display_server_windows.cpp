@@ -1330,7 +1330,7 @@ Rect2i DisplayServerWindows::screen_get_usable_rect(int p_screen) const {
 }
 
 typedef struct {
-	int count;
+	int current_index;
 	int screen;
 	int dpi;
 } EnumDpiData;
@@ -1342,7 +1342,7 @@ enum _MonitorDpiType {
 	MDT_Default = MDT_Effective_DPI
 };
 
-static int QueryDpiForMonitor(HMONITOR hmon, _MonitorDpiType dpiType = MDT_Default) {
+static int QueryDpiForMonitor(HMONITOR hmon) {
 	int dpiX = 96, dpiY = 96;
 
 	static HMODULE Shcore = nullptr;
@@ -1363,7 +1363,7 @@ static int QueryDpiForMonitor(HMONITOR hmon, _MonitorDpiType dpiType = MDT_Defau
 
 	UINT x = 0, y = 0;
 	if (hmon && (Shcore != (HMODULE)INVALID_HANDLE_VALUE)) {
-		HRESULT hr = getDPIForMonitor(hmon, dpiType /*MDT_Effective_DPI*/, &x, &y);
+		HRESULT hr = getDPIForMonitor(hmon, MDT_Default, &x, &y);
 		if (SUCCEEDED(hr) && (x > 0) && (y > 0)) {
 			dpiX = (int)x;
 			dpiY = (int)y;
@@ -1389,11 +1389,13 @@ static int QueryDpiForMonitor(HMONITOR hmon, _MonitorDpiType dpiType = MDT_Defau
 
 static BOOL CALLBACK _MonitorEnumProcDpi(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
 	EnumDpiData *data = (EnumDpiData *)dwData;
-	if (data->count == data->screen) {
-		data->dpi = QueryDpiForMonitor(hMonitor);
-	}
 
-	data->count++;
+	data->current_index++;
+
+	if (data->current_index == data->screen) {
+		data->dpi = QueryDpiForMonitor(hMonitor);
+		return FALSE;
+	}
 	return TRUE;
 }
 
@@ -1401,11 +1403,11 @@ int DisplayServerWindows::screen_get_dpi(int p_screen) const {
 	_THREAD_SAFE_METHOD_
 
 	p_screen = _get_screen_index(p_screen);
-	int screen_count = get_screen_count();
-	ERR_FAIL_INDEX_V(p_screen, screen_count, 72);
 
-	EnumDpiData data = { 0, p_screen, 72 };
+	EnumDpiData data = { -1, p_screen, 96 };
 	EnumDisplayMonitors(nullptr, nullptr, _MonitorEnumProcDpi, (LPARAM)&data);
+
+	ERR_FAIL_COND_V_MSG(data.current_index < p_screen, 96, vformat("Screen index %d out of range [0, %d].", p_screen, data.current_index));
 	return data.dpi;
 }
 
@@ -4392,7 +4394,7 @@ void DisplayServerWindows::set_context(Context p_context) {
 
 bool DisplayServerWindows::is_window_transparency_available() const {
 	BOOL dwm_enabled = true;
-	if (DwmIsCompositionEnabled(&dwm_enabled) == S_OK) { // Note: Always enabled on Windows 8+, this check can be removed after Windows 7 support is dropped.
+	if (DwmIsCompositionEnabled(&dwm_enabled) == S_OK) { // Note: Always enabled on Windows 8+.
 		if (!dwm_enabled) {
 			return false;
 		}
