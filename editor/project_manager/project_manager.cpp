@@ -1472,7 +1472,9 @@ ProjectManager::ProjectManager() {
 			hb->add_child(scan_btn);
 
 			loading_label = memnew(Label(TTRC("Loading, please wait...")));
+#ifdef ACCESSKIT_ENABLED
 			loading_label->set_accessibility_live(DisplayServer::AccessibilityLiveMode::LIVE_ASSERTIVE);
+#endif // ACCESSKIT_ENABLED
 			loading_label->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 			loading_label->hide();
 			hb->add_child(loading_label);

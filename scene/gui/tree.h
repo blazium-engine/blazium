@@ -60,7 +60,9 @@ private:
 	friend class Tree;
 
 	struct Cell {
+#ifdef ACCESSKIT_ENABLED
 		mutable RID accessibility_cell_element;
+#endif // ACCESSKIT_ENABLED
 		TreeCellMode mode = TreeItem::CELL_MODE_STRING;
 
 		Ref<Texture2D> icon;
@@ -110,7 +112,9 @@ private:
 		Callable custom_draw_callback;
 
 		struct Button {
+#ifdef ACCESSKIT_ENABLED
 			mutable RID accessibility_button_element;
+#endif // ACCESSKIT_ENABLED
 			int id = 0;
 			bool disabled = false;
 			Ref<Texture2D> texture;
@@ -133,8 +137,10 @@ private:
 		void draw_icon(const RID &p_where, const Point2 &p_pos, const Size2 &p_size = Size2(), const Color &p_color = Color()) const;
 	};
 
+#ifdef ACCESSKIT_ENABLED
 	mutable RID accessibility_row_element;
 	mutable bool accessibility_row_dirty = true;
+#endif // ACCESSKIT_ENABLED
 
 	Vector<Cell> cells;
 
@@ -176,6 +182,7 @@ private:
 	}
 
 	_FORCE_INLINE_ void _unlink_from_tree() {
+#ifdef ACCESSKIT_ENABLED
 		if (accessibility_row_element.is_valid()) {
 			DisplayServer::get_singleton()->accessibility_free_element(accessibility_row_element);
 			accessibility_row_element = RID();
@@ -192,6 +199,8 @@ private:
 				}
 			}
 		}
+#endif // ACCESSKIT_ENABLED
+
 		TreeItem *p = get_prev();
 		if (p) {
 			p->next = next;
@@ -507,7 +516,9 @@ private:
 	int drop_mode_flags = 0;
 
 	struct ColumnInfo {
+#ifdef ACCESSKIT_ENABLED
 		mutable RID accessibility_col_element;
+#endif // ACCESSKIT_ENABLED
 		int custom_min_width = 0;
 		int expand_ratio = 1;
 		bool expand = true;
@@ -530,7 +541,10 @@ private:
 	bool show_column_titles = false;
 
 	bool popup_edit_committed = true;
+
+#ifdef ACCESSKIT_ENABLED
 	RID accessibility_scroll_element;
+#endif // ACCESSKIT_ENABLED
 
 	VBoxContainer *popup_editor_vb = nullptr;
 	Popup *popup_editor = nullptr;
@@ -768,10 +782,12 @@ private:
 	Rect2 _get_content_rect() const; // Considering the background stylebox and scrollbars.
 	Rect2 _get_item_focus_rect(const TreeItem *p_item) const;
 
+#ifdef ACCESSKIT_ENABLED
 	void _check_item_accessibility(TreeItem *p_item, PackedStringArray &r_warnings, int &r_row) const;
 
 	void _accessibility_clean_info(TreeItem *p_item);
 	void _accessibility_update_item(Point2 &r_ofs, TreeItem *p_item, int &r_row, int p_level);
+#endif // ACCESSKIT_ENABLED
 
 protected:
 	virtual void _update_theme_item_cache() override;
@@ -779,6 +795,7 @@ protected:
 	void _notification(int p_what);
 	static void _bind_methods();
 
+#ifdef ACCESSKIT_ENABLED
 	void _accessibility_action_scroll_down(const Variant &p_data);
 	void _accessibility_action_scroll_left(const Variant &p_data);
 	void _accessibility_action_scroll_right(const Variant &p_data);
@@ -796,10 +813,13 @@ protected:
 	void _accessibility_action_set_dec(const Variant &p_data, TreeItem *p_item, int p_col);
 	void _accessibility_action_edit_custom(const Variant &p_data, TreeItem *p_item, int p_col);
 	void _accessibility_action_button_press(const Variant &p_data, TreeItem *p_item, int p_col, int p_btn);
+#endif // ACCESSKIT_ENABLED
 
 public:
+#ifdef ACCESSKIT_ENABLED
 	PackedStringArray get_accessibility_configuration_warnings() const override;
 	virtual RID get_focused_accessibility_element() const override;
+#endif // ACCESSKIT_ENABLED
 
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
 

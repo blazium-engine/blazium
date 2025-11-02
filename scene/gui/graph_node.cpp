@@ -309,6 +309,7 @@ void GraphNode::draw_port(int p_slot_index, Point2i p_pos, bool p_left, const Co
 	port_icon->draw(get_canvas_item(), p_pos + icon_offset, p_color);
 }
 
+#ifdef ACCESSKIT_ENABLED
 void GraphNode::_accessibility_action_slot(const Variant &p_data) {
 	CustomAccessibilityAction action = (CustomAccessibilityAction)p_data.operator int();
 	switch (action) {
@@ -399,6 +400,7 @@ void GraphNode::_accessibility_action_slot(const Variant &p_data) {
 		} break;
 	}
 }
+#endif // ACCESSKIT_ENABLED
 
 void GraphNode::gui_input(const Ref<InputEvent> &p_event) {
 	ERR_FAIL_COND(p_event.is_null());
@@ -541,6 +543,7 @@ void GraphNode::gui_input(const Ref<InputEvent> &p_event) {
 
 void GraphNode::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -613,6 +616,8 @@ void GraphNode::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_add_custom_action(ae, CustomAccessibilityAction::ACTION_FOLLOW_OUTPUT, ETR("Follow Output Port Connection"));
 			DisplayServer::get_singleton()->accessibility_update_add_action(ae, DisplayServer::AccessibilityAction::ACTION_CUSTOM, callable_mp(this, &GraphNode::_accessibility_action_slot));
 		} break;
+#endif // ACCESSKIT_ENABLED
+
 		case NOTIFICATION_FOCUS_EXIT: {
 			selected_slot = -1;
 			queue_redraw();
@@ -1125,6 +1130,7 @@ int GraphNode::get_output_port_slot(int p_port_idx) {
 	return right_port_cache[p_port_idx].slot_index;
 }
 
+#ifdef ACCESSKIT_ENABLED
 String GraphNode::get_accessibility_container_name(const Node *p_node) const {
 	int idx = 0;
 	for (int i = 0; i < get_child_count(false); i++) {
@@ -1143,6 +1149,7 @@ String GraphNode::get_accessibility_container_name(const Node *p_node) const {
 	}
 	return String();
 }
+#endif // ACCESSKIT_ENABLED
 
 void GraphNode::set_title(const String &p_title) {
 	if (title == p_title) {

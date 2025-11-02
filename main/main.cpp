@@ -3129,7 +3129,9 @@ Error Main::setup2(bool p_show_boot_logo) {
 				accessibility_mode = (DisplayServer::AccessibilityMode)GLOBAL_GET("accessibility/general/accessibility_support").operator int64_t();
 			}
 		}
+#ifdef ACCESSKIT_ENABLED
 		DisplayServer::accessibility_set_mode(accessibility_mode);
+#endif // ACCESSKIT_ENABLED
 
 		// rendering_driver now held in static global String in main and initialized in setup()
 		Error err;

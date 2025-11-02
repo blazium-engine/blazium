@@ -34,6 +34,7 @@
 #include "core/math/expression.h"
 #include "scene/theme/theme_db.h"
 
+#ifdef ACCESSKIT_ENABLED
 void SpinBoxLineEdit::_accessibility_action_inc(const Variant &p_data) {
 	SpinBox *parent_sb = Object::cast_to<SpinBox>(get_parent());
 	if (parent_sb) {
@@ -77,6 +78,7 @@ void SpinBoxLineEdit::_notification(int p_what) {
 		} break;
 	}
 }
+#endif // ACCESSKIT_ENABLED
 
 Size2 SpinBox::get_minimum_size() const {
 	Size2 ms = line_edit->get_combined_minimum_size();

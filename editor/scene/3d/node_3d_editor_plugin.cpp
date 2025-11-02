@@ -8822,6 +8822,7 @@ void Node3DEditor::_notification(int p_what) {
 			EditorSettings::get_singleton()->connect("settings_changed", callable_mp(this, &Node3DEditor::_on_editor_settings_changed));
 		} break;
 
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -8830,6 +8831,7 @@ void Node3DEditor::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_STATIC_TEXT);
 			DisplayServer::get_singleton()->accessibility_update_set_value(ae, TTR(vformat("The %s is not accessible at this time.", "3D editor")));
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_ENTER_TREE: {
 			_update_theme();

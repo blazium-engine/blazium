@@ -66,6 +66,7 @@ class GraphNode : public GraphElement {
 		int final_size = 0;
 	};
 
+#ifdef ACCESSKIT_ENABLED
 	enum CustomAccessibilityAction {
 		ACTION_CONNECT_INPUT,
 		ACTION_CONNECT_OUTPUT,
@@ -73,6 +74,7 @@ class GraphNode : public GraphElement {
 		ACTION_FOLLOW_OUTPUT,
 	};
 	void _accessibility_action_slot(const Variant &p_data);
+#endif // ACCESSKIT_ENABLED
 
 	HBoxContainer *titlebar_hbox = nullptr;
 	Label *title_label = nullptr;
@@ -126,7 +128,9 @@ protected:
 	void _get_property_list(List<PropertyInfo> *p_list) const;
 
 public:
+#ifdef ACCESSKIT_ENABLED
 	virtual String get_accessibility_container_name(const Node *p_node) const override;
+#endif // ACCESSKIT_ENABLED
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
 
 	void set_title(const String &p_title);

@@ -144,6 +144,7 @@ Point2 Sprite2D::_get_rect_offset(const Size2i &p_size) const {
 
 void Sprite2D::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -154,6 +155,7 @@ void Sprite2D::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_transform(ae, get_transform());
 			DisplayServer::get_singleton()->accessibility_update_set_bounds(ae, dst_rect);
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_DRAW: {
 			if (texture.is_null()) {

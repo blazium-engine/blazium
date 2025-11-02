@@ -137,6 +137,7 @@ int MenuButton::get_item_count() const {
 
 void MenuButton::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -144,6 +145,7 @@ void MenuButton::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_BUTTON);
 			DisplayServer::get_singleton()->accessibility_update_set_popup_type(ae, DisplayServer::AccessibilityPopupType::POPUP_MENU);
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_TRANSLATION_CHANGED:
 		case NOTIFICATION_LAYOUT_DIRECTION_CHANGED: {

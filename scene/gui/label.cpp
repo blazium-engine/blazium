@@ -701,6 +701,7 @@ PackedStringArray Label::get_configuration_warnings() const {
 
 void Label::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -709,6 +710,7 @@ void Label::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_value(ae, xl_text);
 			DisplayServer::get_singleton()->accessibility_update_set_text_align(ae, horizontal_alignment);
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_TRANSLATION_CHANGED: {
 			const String new_text = atr(text);

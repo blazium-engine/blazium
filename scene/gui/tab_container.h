@@ -97,7 +97,9 @@ private:
 		int tab_font_size;
 	} theme_cache;
 
+#ifdef ACCESSKIT_ENABLED
 	HashMap<Node *, RID> tab_panels;
+#endif // ACCESSKIT_ENABLED
 
 	Rect2 _get_tab_rect() const;
 	int _get_tab_height() const;
@@ -132,7 +134,9 @@ protected:
 	static void _bind_methods();
 
 public:
+#ifdef ACCESSKIT_ENABLED
 	virtual bool accessibility_override_tree_hierarchy() const override { return true; }
+#endif // ACCESSKIT_ENABLED
 
 	TabBar *get_tab_bar() const;
 

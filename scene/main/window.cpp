@@ -745,6 +745,8 @@ void Window::_rect_changed_callback(const Rect2i &p_callback) {
 		size = p_callback.size;
 		_update_viewport_size();
 	}
+
+#ifdef ACCESSKIT_ENABLED
 	if (window_id != DisplayServer::INVALID_WINDOW_ID && !DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_SELF_FITTING_WINDOWS)) {
 		Vector2 sz_out = DisplayServer::get_singleton()->window_get_size_with_decorations(window_id);
 		Vector2 pos_out = DisplayServer::get_singleton()->window_get_position_with_decorations(window_id);
@@ -753,6 +755,7 @@ void Window::_rect_changed_callback(const Rect2i &p_callback) {
 		DisplayServer::get_singleton()->accessibility_set_window_rect(window_id, Rect2(pos_out, sz_out), Rect2(pos_in, sz_in));
 	}
 	queue_accessibility_update();
+#endif // ACCESSKIT_ENABLED
 }
 
 void Window::_propagate_window_notification(Node *p_node, int p_notification) {
@@ -876,6 +879,7 @@ void Window::hide() {
 }
 
 void Window::_accessibility_notify_enter(Node *p_node) {
+#ifdef ACCESSKIT_ENABLED
 	p_node->queue_accessibility_update();
 
 	if (p_node != this) {
@@ -888,9 +892,11 @@ void Window::_accessibility_notify_enter(Node *p_node) {
 	for (int i = 0; i < p_node->get_child_count(); i++) {
 		_accessibility_notify_enter(p_node->get_child(i));
 	}
+#endif // ACCESSKIT_ENABLED
 }
 
 void Window::_accessibility_notify_exit(Node *p_node) {
+#ifdef ACCESSKIT_ENABLED
 	p_node->notification(Node::NOTIFICATION_ACCESSIBILITY_INVALIDATE);
 
 	if (p_node != this) {
@@ -903,6 +909,7 @@ void Window::_accessibility_notify_exit(Node *p_node) {
 	for (int i = 0; i < p_node->get_child_count(); i++) {
 		_accessibility_notify_exit(p_node->get_child(i));
 	}
+#endif // ACCESSKIT_ENABLED
 }
 
 void Window::set_visible(bool p_visible) {
@@ -1378,6 +1385,7 @@ Viewport *Window::get_embedder() const {
 	return nullptr;
 }
 
+#ifdef ACCESSKIT_ENABLED
 RID Window::get_accessibility_element() const {
 	if (!visible || is_part_of_edited_scene()) {
 		return RID();
@@ -1399,10 +1407,12 @@ RID Window::get_focused_accessibility_element() const {
 	}
 	return Node::get_focused_accessibility_element();
 }
+#endif // ACCESSKIT_ENABLED
 
 void Window::_notification(int p_what) {
 	ERR_MAIN_THREAD_GUARD;
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_INVALIDATE: {
 			accessibility_title_element = RID();
 			accessibility_announcement_element = RID();
@@ -1465,6 +1475,7 @@ void Window::_notification(int p_what) {
 				}
 			}
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_POSTINITIALIZE: {
 			initialized = true;
@@ -1621,8 +1632,10 @@ void Window::_notification(int p_what) {
 				}
 			}
 
+#ifdef ACCESSKIT_ENABLED
 			accessibility_title_element = RID();
 			accessibility_announcement_element = RID();
+#endif // ACCESSKIT_ENABLED
 
 			if (transient) {
 				_clear_transient();
@@ -2229,18 +2242,25 @@ Rect2i Window::get_usable_parent_rect() const {
 }
 
 void Window::set_accessibility_name(const String &p_name) {
+#ifdef ACCESSKIT_ENABLED
 	ERR_MAIN_THREAD_GUARD;
 	if (accessibility_name != p_name) {
 		accessibility_name = p_name;
 		queue_accessibility_update();
 		update_configuration_warnings();
 	}
+#endif // ACCESSKIT_ENABLED
 }
 
 String Window::get_accessibility_name() const {
+#ifdef ACCESSKIT_ENABLED
 	return tr(accessibility_name);
+#else
+	return String();
+#endif // ACCESSKIT_ENABLED
 }
 
+#ifdef ACCESSKIT_ENABLED
 void Window::set_accessibility_description(const String &p_description) {
 	ERR_MAIN_THREAD_GUARD;
 	if (accessibility_description != p_description) {
@@ -2258,6 +2278,7 @@ void Window::accessibility_announcement(const String &p_announcement) {
 	announcement = p_announcement;
 	queue_accessibility_update();
 }
+#endif // ACCESSKIT_ENABLED
 
 void Window::add_child_notify(Node *p_child) {
 	if (is_inside_tree() && wrap_controls) {
@@ -3285,10 +3306,12 @@ void Window::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("get_window_id"), &Window::get_window_id);
 
+#ifdef ACCESSKIT_ENABLED
 	ClassDB::bind_method(D_METHOD("set_accessibility_name", "name"), &Window::set_accessibility_name);
 	ClassDB::bind_method(D_METHOD("get_accessibility_name"), &Window::get_accessibility_name);
 	ClassDB::bind_method(D_METHOD("set_accessibility_description", "description"), &Window::set_accessibility_description);
 	ClassDB::bind_method(D_METHOD("get_accessibility_description"), &Window::get_accessibility_description);
+#endif // ACCESSKIT_ENABLED
 
 	ClassDB::bind_static_method("Window", D_METHOD("get_focused_window"), &Window::get_focused_window);
 
@@ -3366,9 +3389,11 @@ void Window::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "auto_translate", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NONE), "set_auto_translate", "is_auto_translating");
 #endif
 
+#ifdef ACCESSKIT_ENABLED
 	ADD_GROUP("Accessibility", "accessibility_");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "accessibility_name"), "set_accessibility_name", "get_accessibility_name");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "accessibility_description"), "set_accessibility_description", "get_accessibility_description");
+#endif // ACCESSKIT_ENABLED
 
 	ADD_GROUP("Theme", "theme_");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "theme", PROPERTY_HINT_RESOURCE_TYPE, "Theme"), "set_theme", "get_theme");

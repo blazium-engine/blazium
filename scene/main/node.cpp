@@ -52,6 +52,7 @@ thread_local Node *Node::current_process_thread_group = nullptr;
 
 void Node::_notification(int p_notification) {
 	switch (p_notification) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_INVALIDATE: {
 			if (data.accessibility_element.is_valid()) {
 				DisplayServer::get_singleton()->accessibility_free_element(data.accessibility_element);
@@ -80,6 +81,7 @@ void Node::_notification(int p_notification) {
 				}
 			}
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_PROCESS: {
 			GDVIRTUAL_CALL(_process, get_process_delta_time());
@@ -3495,6 +3497,7 @@ void Node::clear_internal_tree_resource_paths() {
 	}
 }
 
+#ifdef ACCESSKIT_ENABLED
 PackedStringArray Node::get_accessibility_configuration_warnings() const {
 	ERR_THREAD_GUARD_V(PackedStringArray());
 	PackedStringArray ret;
@@ -3506,6 +3509,7 @@ PackedStringArray Node::get_accessibility_configuration_warnings() const {
 
 	return ret;
 }
+#endif // ACCESSKIT_ENABLED
 
 PackedStringArray Node::get_configuration_warnings() const {
 	ERR_THREAD_GUARD_V(PackedStringArray());
@@ -3704,32 +3708,7 @@ void Node::notify_thread_safe(int p_notification) {
 	}
 }
 
-bool Node::_is_accessibility_enabled() const {
 #ifdef ACCESSKIT_ENABLED
-	if (data.tree) {
-		return data.tree->is_accessibility_enabled();
-	}
-
-	ERR_FAIL_NULL_V(SceneTree::get_singleton(), false);
-	return SceneTree::get_singleton()->is_accessibility_enabled();
-#else
-	return false;
-#endif // ACCESSKIT_ENABLED
-}
-
-bool Node::_is_accessibility_supported() const {
-#ifdef ACCESSKIT_ENABLED
-	if (data.tree) {
-		return data.tree->is_accessibility_supported();
-	}
-
-	ERR_FAIL_NULL_V(SceneTree::get_singleton(), false);
-	return SceneTree::get_singleton()->is_accessibility_supported();
-#else
-	return false;
-#endif // ACCESSKIT_ENABLED
-}
-
 RID Node::get_focused_accessibility_element() const {
 	RID id;
 	if (GDVIRTUAL_CALL(_get_focused_accessibility_element, id)) {
@@ -3737,14 +3716,6 @@ RID Node::get_focused_accessibility_element() const {
 	} else {
 		return get_accessibility_element();
 	}
-}
-
-void Node::queue_accessibility_update() {
-#ifdef ACCESSKIT_ENABLED
-	if (is_inside_tree() && !is_part_of_edited_scene()) {
-		data.tree->_accessibility_notify_change(this);
-	}
-#endif // ACCESSKIT_ENABLED
 }
 
 RID Node::get_accessibility_element() const {
@@ -3758,6 +3729,31 @@ RID Node::get_accessibility_element() const {
 		}
 	}
 	return data.accessibility_element;
+}
+#endif // ACCESSKIT_ENABLED
+
+bool Node::_is_accessibility_enabled() const {
+#ifdef ACCESSKIT_ENABLED
+	return get_tree() && get_tree()->is_accessibility_enabled();
+#else
+	return false;
+#endif // ACCESSKIT_ENABLED
+}
+
+bool Node::_is_accessibility_supported() const {
+#ifdef ACCESSKIT_ENABLED
+	return get_tree() && get_tree()->is_accessibility_supported();
+#else
+	return false;
+#endif // ACCESSKIT_ENABLED
+}
+
+void Node::queue_accessibility_update() {
+#ifdef ACCESSKIT_ENABLED
+	if (is_inside_tree() && !is_part_of_edited_scene()) {
+		data.tree->_accessibility_notify_change(this);
+	}
+#endif // ACCESSKIT_ENABLED
 }
 
 void Node::_bind_methods() {
@@ -3839,8 +3835,10 @@ void Node::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_process_thread_group_order", "order"), &Node::set_process_thread_group_order);
 	ClassDB::bind_method(D_METHOD("get_process_thread_group_order"), &Node::get_process_thread_group_order);
 
+#ifdef ACCESSKIT_ENABLED
 	ClassDB::bind_method(D_METHOD("queue_accessibility_update"), &Node::queue_accessibility_update);
 	ClassDB::bind_method(D_METHOD("get_accessibility_element"), &Node::get_accessibility_element);
+#endif // ACCESSKIT_ENABLED
 
 	ClassDB::bind_method(D_METHOD("set_display_folded", "fold"), &Node::set_display_folded);
 	ClassDB::bind_method(D_METHOD("is_displayed_folded"), &Node::is_displayed_folded);
@@ -4070,12 +4068,15 @@ void Node::_bind_methods() {
 	GDVIRTUAL_BIND(_exit_tree);
 	GDVIRTUAL_BIND(_ready);
 	GDVIRTUAL_BIND(_get_configuration_warnings);
-	GDVIRTUAL_BIND(_get_accessibility_configuration_warnings);
 	GDVIRTUAL_BIND(_input, "event");
 	GDVIRTUAL_BIND(_shortcut_input, "event");
 	GDVIRTUAL_BIND(_unhandled_input, "event");
 	GDVIRTUAL_BIND(_unhandled_key_input, "event");
+
+#ifdef ACCESSKIT_ENABLED
+	GDVIRTUAL_BIND(_get_accessibility_configuration_warnings);
 	GDVIRTUAL_BIND(_get_focused_accessibility_element);
+#endif // ACCESSKIT_ENABLED
 }
 
 String Node::_get_name_num_separator() {

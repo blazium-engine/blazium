@@ -137,7 +137,9 @@ class SceneTreeEditor : public Control {
 	void _compute_hash(Node *p_node, uint64_t &hash);
 	void _reset();
 	PackedStringArray _get_node_configuration_warnings(Node *p_node);
+#ifdef ACCESSKIT_ENABLED
 	PackedStringArray _get_node_accessibility_configuration_warnings(Node *p_node);
+#endif // ACCESSKIT_ENABLED
 
 	void _update_node_path(Node *p_node, bool p_recursive = true);
 	void _update_node_subtree(Node *p_node, TreeItem *p_parent, bool p_force = false);

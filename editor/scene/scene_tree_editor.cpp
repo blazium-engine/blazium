@@ -77,11 +77,13 @@ PackedStringArray SceneTreeEditor::_get_node_configuration_warnings(Node *p_node
 	return warnings;
 }
 
+#ifdef ACCESSKIT_ENABLED
 PackedStringArray SceneTreeEditor::_get_node_accessibility_configuration_warnings(Node *p_node) {
 	PackedStringArray warnings = p_node->get_accessibility_configuration_warnings();
 
 	return warnings;
 }
+#endif // ACCESSKIT_ENABLED
 
 void SceneTreeEditor::_cell_button_pressed(Object *p_item, int p_column, int p_id, MouseButton p_button) {
 	if (p_button != MouseButton::LEFT) {
@@ -158,9 +160,11 @@ void SceneTreeEditor::_cell_button_pressed(Object *p_item, int p_column, int p_i
 		undo_redo->commit_action();
 	} else if (p_id == BUTTON_WARNING) {
 		PackedStringArray warnings = _get_node_configuration_warnings(n);
+#ifdef ACCESSKIT_ENABLED
 		if (accessibility_warnings) {
 			warnings.append_array(_get_node_accessibility_configuration_warnings(n));
 		}
+#endif // ACCESSKIT_ENABLED
 		if (warnings.is_empty()) {
 			return;
 		}
@@ -482,9 +486,11 @@ void SceneTreeEditor::_update_node(Node *p_node, TreeItem *p_item, bool p_part_o
 
 	if (can_rename) { // TODO Should be can edit..
 		PackedStringArray warnings = _get_node_configuration_warnings(p_node);
+#ifdef ACCESSKIT_ENABLED
 		if (accessibility_warnings) {
 			warnings.append_array(_get_node_accessibility_configuration_warnings(p_node));
 		}
+#endif // ACCESSKIT_ENABLED
 
 		const int num_warnings = warnings.size();
 		if (num_warnings > 0) {

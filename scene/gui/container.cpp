@@ -184,12 +184,14 @@ Vector<int> Container::get_allowed_size_flags_vertical() const {
 
 void Container::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
 
 			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_CONTAINER);
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_RESIZED:
 		case NOTIFICATION_THEME_CHANGED: {

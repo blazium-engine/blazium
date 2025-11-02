@@ -36,10 +36,12 @@
 
 void AudioStreamPlayer::_notification(int p_what) {
 	if (p_what == NOTIFICATION_ACCESSIBILITY_UPDATE) {
+#ifdef ACCESSKIT_ENABLED
 		RID ae = get_accessibility_element();
 		ERR_FAIL_COND(ae.is_null());
 
 		DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_AUDIO);
+#endif // ACCESSKIT_ENABLED
 	} else {
 		internal->notification(p_what);
 	}

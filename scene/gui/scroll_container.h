@@ -104,11 +104,13 @@ protected:
 	void _update_scrollbar_position();
 	void _scroll_moved(float);
 
+#ifdef ACCESSKIT_ENABLED
 	void _accessibility_action_scroll_set(const Variant &p_data);
 	void _accessibility_action_scroll_up(const Variant &p_data);
 	void _accessibility_action_scroll_down(const Variant &p_data);
 	void _accessibility_action_scroll_left(const Variant &p_data);
 	void _accessibility_action_scroll_right(const Variant &p_data);
+#endif // ACCESSKIT_ENABLED
 
 public:
 	virtual void gui_input(const Ref<InputEvent> &p_gui_input) override;

@@ -4282,6 +4282,7 @@ void CanvasItemEditor::_notification(int p_what) {
 			ProjectSettings::get_singleton()->connect("settings_changed", callable_mp(this, &CanvasItemEditor::_project_settings_changed));
 		} break;
 
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -4290,6 +4291,7 @@ void CanvasItemEditor::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_STATIC_TEXT);
 			DisplayServer::get_singleton()->accessibility_update_set_value(ae, TTR(vformat("The %s is not accessible at this time.", "Canvas item editor")));
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_PROCESS: {
 			// Update the viewport if the canvas_item changes

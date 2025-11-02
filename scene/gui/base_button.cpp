@@ -85,6 +85,7 @@ void BaseButton::gui_input(const Ref<InputEvent> &p_event) {
 	}
 }
 
+#ifdef ACCESSKIT_ENABLED
 void BaseButton::_accessibility_action_click(const Variant &p_data) {
 	if (toggle_mode) {
 		status.pressed = !status.pressed;
@@ -104,9 +105,11 @@ void BaseButton::_accessibility_action_click(const Variant &p_data) {
 	queue_accessibility_update();
 	queue_redraw();
 }
+#endif // ACCESSKIT_ENABLED
 
 void BaseButton::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -135,6 +138,7 @@ void BaseButton::_notification(int p_what) {
 				DisplayServer::get_singleton()->accessibility_update_set_tooltip(ae, text);
 			}
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_MOUSE_ENTER: {
 			status.hovering = true;

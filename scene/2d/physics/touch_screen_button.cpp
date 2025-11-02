@@ -112,13 +112,16 @@ bool TouchScreenButton::is_shape_centered() const {
 	return shape_centered;
 }
 
+#ifdef ACCESSKIT_ENABLED
 void TouchScreenButton::_accessibility_action_click(const Variant &p_data) {
 	_press(0);
 	_release();
 }
+#endif // ACCESSKIT_ENABLED
 
 void TouchScreenButton::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -132,6 +135,7 @@ void TouchScreenButton::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_transform(ae, get_transform());
 			DisplayServer::get_singleton()->accessibility_update_set_bounds(ae, dst_rect);
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_DRAW: {
 			if (!is_inside_tree()) {

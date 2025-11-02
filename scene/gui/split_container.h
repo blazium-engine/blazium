@@ -43,9 +43,11 @@ protected:
 	void _notification(int p_what);
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
 
+#ifdef ACCESSKIT_ENABLED
 	void _accessibility_action_inc(const Variant &p_data);
 	void _accessibility_action_dec(const Variant &p_data);
 	void _accessibility_action_set_value(const Variant &p_data);
+#endif // ACCESSKIT_ENABLED
 
 private:
 	bool dragging = false;

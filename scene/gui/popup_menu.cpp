@@ -1137,6 +1137,7 @@ void PopupMenu::remove_child_notify(Node *p_child) {
 	_menu_changed();
 }
 
+#ifdef ACCESSKIT_ENABLED
 void PopupMenu::_accessibility_action_click(const Variant &p_data, int p_idx) {
 	activate_item(p_idx);
 }
@@ -1149,6 +1150,7 @@ RID PopupMenu::get_focused_accessibility_element() const {
 		return item.accessibility_item_element;
 	}
 }
+#endif // ACCESSKIT_ENABLED
 
 void PopupMenu::_notification(int p_what) {
 	switch (p_what) {
@@ -1159,6 +1161,7 @@ void PopupMenu::_notification(int p_what) {
 			[[fallthrough]];
 		}
 
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_INVALIDATE: {
 			for (int i = 0; i < items.size(); i++) {
 				items.write[i].accessibility_item_element = RID();
@@ -1235,6 +1238,7 @@ void PopupMenu::_notification(int p_what) {
 			prev_mouse_over = -1;
 
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_ENTER_TREE: {
 			PopupMenu *pm = Object::cast_to<PopupMenu>(get_parent());
@@ -1275,7 +1279,9 @@ void PopupMenu::_notification(int p_what) {
 				if (is_global) {
 					nmenu->set_item_text(global_menu, i, item.xl_text);
 				}
+#ifdef ACCESSKIT_ENABLED
 				item.accessibility_item_dirty = true;
+#endif // ACCESSKIT_ENABLED
 				_shape_item(i);
 				queue_accessibility_update();
 			}
@@ -1843,7 +1849,9 @@ void PopupMenu::add_submenu_node_item(const String &p_label, PopupMenu *p_submen
 	item.text = p_label;
 	item.xl_text = atr(p_label);
 	item.id = p_id == -1 ? items.size() : p_id;
+#ifdef ACCESSKIT_ENABLED
 	item.accessibility_item_dirty = true;
+#endif // ACCESSKIT_ENABLED
 	item.submenu = p_submenu;
 	item.submenu_name = p_submenu->get_name();
 	items.push_back(item);
@@ -1881,7 +1889,9 @@ void PopupMenu::set_item_text(int p_idx, const String &p_text) {
 	items.write[p_idx].text = p_text;
 	items.write[p_idx].xl_text = _atr(p_idx, p_text);
 	items.write[p_idx].dirty = true;
+#ifdef ACCESSKIT_ENABLED
 	items.write[p_idx].accessibility_item_dirty = true;
+#endif // ACCESSKIT_ENABLED
 
 	if (global_menu.is_valid()) {
 		NativeMenu::get_singleton()->set_item_text(global_menu, p_idx, items[p_idx].xl_text);
@@ -1905,7 +1915,9 @@ void PopupMenu::set_item_text_direction(int p_idx, Control::TextDirection p_text
 	if (items[p_idx].text_direction != p_text_direction) {
 		items.write[p_idx].text_direction = p_text_direction;
 		items.write[p_idx].dirty = true;
+#ifdef ACCESSKIT_ENABLED
 		items.write[p_idx].accessibility_item_dirty = true;
+#endif // ACCESSKIT_ENABLED
 
 		_shape_item(p_idx);
 		queue_accessibility_update();
@@ -1921,7 +1933,9 @@ void PopupMenu::set_item_language(int p_idx, const String &p_language) {
 	if (items[p_idx].language != p_language) {
 		items.write[p_idx].language = p_language;
 		items.write[p_idx].dirty = true;
+#ifdef ACCESSKIT_ENABLED
 		items.write[p_idx].accessibility_item_dirty = true;
+#endif // ACCESSKIT_ENABLED
 
 		_shape_item(p_idx);
 		queue_accessibility_update();
@@ -2006,7 +2020,9 @@ void PopupMenu::set_item_checked(int p_idx, bool p_checked) {
 	}
 
 	items.write[p_idx].checked = p_checked;
+#ifdef ACCESSKIT_ENABLED
 	items.write[p_idx].accessibility_item_dirty = true;
+#endif // ACCESSKIT_ENABLED
 
 	if (global_menu.is_valid()) {
 		NativeMenu::get_singleton()->set_item_checked(global_menu, p_idx, p_checked);
@@ -2051,7 +2067,9 @@ void PopupMenu::set_item_accelerator(int p_idx, Key p_accel) {
 
 	items.write[p_idx].accel = p_accel;
 	items.write[p_idx].dirty = true;
+#ifdef ACCESSKIT_ENABLED
 	items.write[p_idx].accessibility_item_dirty = true;
+#endif // ACCESSKIT_ENABLED
 
 	if (global_menu.is_valid()) {
 		NativeMenu::get_singleton()->set_item_accelerator(global_menu, p_idx, p_accel);
@@ -2089,7 +2107,9 @@ void PopupMenu::set_item_disabled(int p_idx, bool p_disabled) {
 	}
 
 	items.write[p_idx].disabled = p_disabled;
+#ifdef ACCESSKIT_ENABLED
 	items.write[p_idx].accessibility_item_dirty = true;
+#endif // ACCESSKIT_ENABLED
 
 	if (global_menu.is_valid()) {
 		NativeMenu::get_singleton()->set_item_disabled(global_menu, p_idx, p_disabled);
@@ -2159,7 +2179,9 @@ void PopupMenu::set_item_submenu_node(int p_idx, PopupMenu *p_submenu) {
 void PopupMenu::toggle_item_checked(int p_idx) {
 	ERR_FAIL_INDEX(p_idx, items.size());
 	items.write[p_idx].checked = !items[p_idx].checked;
+#ifdef ACCESSKIT_ENABLED
 	items.write[p_idx].accessibility_item_dirty = true;
+#endif // ACCESSKIT_ENABLED
 
 	if (global_menu.is_valid()) {
 		NativeMenu::get_singleton()->set_item_checked(global_menu, p_idx, items[p_idx].checked);
@@ -2302,9 +2324,12 @@ void PopupMenu::set_item_as_separator(int p_idx, bool p_separator) {
 	}
 
 	items.write[p_idx].separator = p_separator;
+#ifdef ACCESSKIT_ENABLED
 	items.write[p_idx].accessibility_item_dirty = true;
 
 	queue_accessibility_update();
+#endif // ACCESSKIT_ENABLED
+
 	control->queue_redraw();
 }
 
@@ -2325,7 +2350,9 @@ void PopupMenu::set_item_as_checkable(int p_idx, bool p_checkable) {
 	}
 
 	items.write[p_idx].checkable_type = p_checkable ? Item::CHECKABLE_TYPE_CHECK_BOX : Item::CHECKABLE_TYPE_NONE;
+#ifdef ACCESSKIT_ENABLED
 	items.write[p_idx].accessibility_item_dirty = true;
+#endif // ACCESSKIT_ENABLED
 
 	if (global_menu.is_valid()) {
 		NativeMenu::get_singleton()->set_item_checkable(global_menu, p_idx, p_checkable);
@@ -2348,7 +2375,9 @@ void PopupMenu::set_item_as_radio_checkable(int p_idx, bool p_radio_checkable) {
 	}
 
 	items.write[p_idx].checkable_type = p_radio_checkable ? Item::CHECKABLE_TYPE_RADIO_BUTTON : Item::CHECKABLE_TYPE_NONE;
+#ifdef ACCESSKIT_ENABLED
 	items.write[p_idx].accessibility_item_dirty = true;
+#endif // ACCESSKIT_ENABLED
 
 	if (global_menu.is_valid()) {
 		NativeMenu::get_singleton()->set_item_radio_checkable(global_menu, p_idx, p_radio_checkable);
@@ -2370,7 +2399,9 @@ void PopupMenu::set_item_tooltip(int p_idx, const String &p_tooltip) {
 	}
 
 	items.write[p_idx].tooltip = p_tooltip;
+#ifdef ACCESSKIT_ENABLED
 	items.write[p_idx].accessibility_item_dirty = true;
+#endif // ACCESSKIT_ENABLED
 
 	if (global_menu.is_valid()) {
 		NativeMenu::get_singleton()->set_item_tooltip(global_menu, p_idx, p_tooltip);
@@ -2476,7 +2507,9 @@ void PopupMenu::set_item_multistate(int p_idx, int p_state) {
 	}
 
 	items.write[p_idx].state = p_state;
+#ifdef ACCESSKIT_ENABLED
 	items.write[p_idx].accessibility_item_dirty = true;
+#endif // ACCESSKIT_ENABLED
 
 	if (global_menu.is_valid()) {
 		NativeMenu::get_singleton()->set_item_state(global_menu, p_idx, p_state);
@@ -2527,7 +2560,9 @@ void PopupMenu::toggle_item_multistate(int p_idx) {
 	if (items.write[p_idx].max_states <= items[p_idx].state) {
 		items.write[p_idx].state = 0;
 	}
+#ifdef ACCESSKIT_ENABLED
 	items.write[p_idx].accessibility_item_dirty = true;
+#endif // ACCESSKIT_ENABLED
 
 	if (global_menu.is_valid()) {
 		NativeMenu::get_singleton()->set_item_state(global_menu, p_idx, items[p_idx].state);
@@ -2594,10 +2629,12 @@ void PopupMenu::set_item_count(int p_count) {
 	if (is_global && prev_size > p_count) {
 		for (int i = prev_size - 1; i >= p_count; i--) {
 			nmenu->remove_item(global_menu, i);
+#ifdef ACCESSKIT_ENABLED
 			if (items[i].accessibility_item_element.is_valid()) {
 				DisplayServer::get_singleton()->accessibility_free_element(items.write[i].accessibility_item_element);
 				items.write[i].accessibility_item_element = RID();
 			}
+#endif // ACCESSKIT_ENABLED
 		}
 	}
 
@@ -2778,10 +2815,12 @@ void PopupMenu::activate_item(int p_idx) {
 void PopupMenu::remove_item(int p_idx) {
 	ERR_FAIL_INDEX(p_idx, items.size());
 
+#ifdef ACCESSKIT_ENABLED
 	if (items[p_idx].accessibility_item_element.is_valid()) {
 		DisplayServer::get_singleton()->accessibility_free_element(items.write[p_idx].accessibility_item_element);
 		items.write[p_idx].accessibility_item_element = RID();
 	}
+#endif // ACCESSKIT_ENABLED
 	if (items[p_idx].shortcut.is_valid()) {
 		_unref_shortcut(items[p_idx].shortcut);
 	}
@@ -2801,7 +2840,10 @@ void PopupMenu::add_separator(const String &p_text, int p_id) {
 	Item sep;
 	sep.separator = true;
 	sep.id = p_id;
+
+#ifdef ACCESSKIT_ENABLED
 	sep.accessibility_item_dirty = true;
+#endif // ACCESSKIT_ENABLED
 	if (!p_text.is_empty()) {
 		sep.text = p_text;
 		sep.xl_text = atr(p_text);
@@ -2818,10 +2860,12 @@ void PopupMenu::add_separator(const String &p_text, int p_id) {
 
 void PopupMenu::clear(bool p_free_submenus) {
 	for (Item &I : items) {
+#ifdef ACCESSKIT_ENABLED
 		if (I.accessibility_item_element.is_valid()) {
 			DisplayServer::get_singleton()->accessibility_free_element(I.accessibility_item_element);
 			I.accessibility_item_element = RID();
 		}
+#endif // ACCESSKIT_ENABLED
 		if (I.shortcut.is_valid()) {
 			_unref_shortcut(I.shortcut);
 		}

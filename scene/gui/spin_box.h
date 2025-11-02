@@ -38,10 +38,12 @@ class SpinBoxLineEdit : public LineEdit {
 	GDCLASS(SpinBoxLineEdit, LineEdit);
 
 protected:
+#ifdef ACCESSKIT_ENABLED
 	void _notification(int p_what);
 
 	void _accessibility_action_inc(const Variant &p_data);
 	void _accessibility_action_dec(const Variant &p_data);
+#endif // ACCESSKIT_ENABLED
 };
 
 class SpinBox : public Range {

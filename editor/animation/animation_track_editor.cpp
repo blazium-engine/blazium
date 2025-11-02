@@ -1491,6 +1491,7 @@ void AnimationTimelineEdit::_notification(int p_what) {
 			add_track_hb->set_size(Size2(name_limit - ((hsize_icon_width + 16) * EDSCALE), 0));
 		} break;
 
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -1499,6 +1500,7 @@ void AnimationTimelineEdit::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_STATIC_TEXT);
 			DisplayServer::get_singleton()->accessibility_update_set_value(ae, TTR(vformat("The %s is not accessible at this time.", "Animation timeline editor")));
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_DRAW: {
 			int key_range = get_size().width - get_buttons_width() - get_name_limit();
@@ -2092,6 +2094,7 @@ void AnimationTrackEdit::_notification(int p_what) {
 			selected_icon = get_editor_theme_icon(SNAME("KeySelected"));
 		} break;
 
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -2100,6 +2103,7 @@ void AnimationTrackEdit::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_STATIC_TEXT);
 			DisplayServer::get_singleton()->accessibility_update_set_value(ae, TTR(vformat("The %s is not accessible at this time.", "Animation track editor")));
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_DRAW: {
 			if (animation.is_null()) {
@@ -3732,6 +3736,7 @@ void AnimationTrackEditGroup::_notification(int p_what) {
 			icon_size = Vector2(1, 1) * get_theme_constant(SNAME("class_icon_size"), EditorStringName(Editor));
 		} break;
 
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -3740,6 +3745,7 @@ void AnimationTrackEditGroup::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_STATIC_TEXT);
 			DisplayServer::get_singleton()->accessibility_update_set_value(ae, TTR(vformat("The %s is not accessible at this time.", "Animation track group")));
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_DRAW: {
 			const Ref<Font> font = get_theme_font(SceneStringName(font), SNAME("Label"));
@@ -8679,6 +8685,7 @@ void AnimationMarkerEdit::_notification(int p_what) {
 			selected_icon = get_editor_theme_icon(SNAME("MarkerSelected"));
 		} break;
 
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -8687,6 +8694,7 @@ void AnimationMarkerEdit::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_STATIC_TEXT);
 			DisplayServer::get_singleton()->accessibility_update_set_value(ae, TTR(vformat("The %s is not accessible at this time.", "Animation marker editor")));
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_DRAW: {
 			if (animation.is_null()) {

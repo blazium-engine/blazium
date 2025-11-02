@@ -2862,6 +2862,7 @@ int DisplayServerWindows::accessibility_should_reduce_transparency() const {
 }
 
 int DisplayServerWindows::accessibility_screen_reader_active() const {
+#ifdef ACCESSKIT_ENABLED
 	BOOL sr_enabled = false; // Note: this should be BOOL (WinAPI), not bool (C++), since SystemParametersInfoA expect variable with specific size.
 	if (SystemParametersInfoA(SPI_GETSCREENREADER, 0, &sr_enabled, 0) && sr_enabled) {
 		return true;
@@ -2873,6 +2874,7 @@ int DisplayServerWindows::accessibility_screen_reader_active() const {
 		CloseHandle(narrator_mutex);
 		return true;
 	}
+#endif // ACCESSKIT_ENABLED
 	return false;
 }
 

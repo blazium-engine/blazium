@@ -392,6 +392,7 @@ void ScrollContainer::_reposition_children() {
 	queue_redraw();
 }
 
+#ifdef ACCESSKIT_ENABLED
 void ScrollContainer::_accessibility_action_scroll_set(const Variant &p_data) {
 	const Point2 &pos = p_data;
 	h_scroll->set_value(pos.x);
@@ -429,9 +430,11 @@ void ScrollContainer::_accessibility_action_scroll_right(const Variant &p_data) 
 		h_scroll->set_value(h_scroll->get_value() + h_scroll->get_page());
 	}
 }
+#endif // ACCESSKIT_ENABLED
 
 void ScrollContainer::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -444,6 +447,7 @@ void ScrollContainer::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_add_action(ae, DisplayServer::AccessibilityAction::ACTION_SCROLL_UP, callable_mp(this, &ScrollContainer::_accessibility_action_scroll_up));
 			DisplayServer::get_singleton()->accessibility_update_add_action(ae, DisplayServer::AccessibilityAction::ACTION_SET_SCROLL_OFFSET, callable_mp(this, &ScrollContainer::_accessibility_action_scroll_set));
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_THEME_CHANGED:
 		case NOTIFICATION_LAYOUT_DIRECTION_CHANGED:

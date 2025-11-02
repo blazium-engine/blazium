@@ -429,12 +429,14 @@ Point2 Node2D::to_global(Point2 p_local) const {
 
 void Node2D::_notification(int p_notification) {
 	switch (p_notification) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
 
 			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_CONTAINER);
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_ENTER_TREE: {
 			ERR_MAIN_THREAD_GUARD;

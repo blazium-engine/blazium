@@ -287,6 +287,7 @@ void EditorProperty::_notification(int p_what) {
 			EditorInspector::initialize_property_theme(theme_cache, this);
 		} break;
 
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -305,6 +306,7 @@ void EditorProperty::_notification(int p_what) {
 				DisplayServer::get_singleton()->accessibility_update_set_checked(ae, checked);
 			}
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_SORT_CHILDREN: {
 			Size2 size = get_size();
@@ -1150,6 +1152,7 @@ void EditorProperty::gui_input(const Ref<InputEvent> &p_event) {
 	}
 }
 
+#ifdef ACCESSKIT_ENABLED
 void EditorProperty::_accessibility_action_click(const Variant &p_data) {
 	select();
 	if (checkable) {
@@ -1176,6 +1179,7 @@ void EditorProperty::_accessibility_action_menu(const Variant &p_data) {
 	menu->reset_size();
 	menu->popup();
 }
+#endif // ACCESSKIT_ENABLED
 
 void EditorProperty::shortcut_input(const Ref<InputEvent> &p_event) {
 	if (!selected || !p_event->is_pressed()) {
@@ -1695,6 +1699,7 @@ void EditorInspectorCategory::_bind_methods() {
 
 void EditorInspectorCategory::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -1707,6 +1712,7 @@ void EditorInspectorCategory::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_popup_type(ae, DisplayServer::AccessibilityPopupType::POPUP_MENU);
 			DisplayServer::get_singleton()->accessibility_update_add_action(ae, DisplayServer::AccessibilityAction::ACTION_SHOW_CONTEXT_MENU, callable_mp(this, &EditorInspectorCategory::_accessibility_action_menu));
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_THEME_CHANGED: {
 			EditorInspector::initialize_category_theme(theme_cache, this);
@@ -1773,9 +1779,11 @@ void EditorInspectorCategory::_notification(int p_what) {
 	}
 }
 
+#ifdef ACCESSKIT_ENABLED
 void EditorInspectorCategory::_accessibility_action_menu(const Variant &p_data) {
 	_popup_context_menu(get_screen_position());
 }
+#endif // ACCESSKIT_ENABLED
 
 Control *EditorInspectorCategory::make_custom_tooltip(const String &p_text) const {
 	// If it's not a doc tooltip, fallback to the default one.
@@ -1961,6 +1969,7 @@ int EditorInspectorSection::_get_header_height() {
 
 void EditorInspectorSection::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -1972,6 +1981,7 @@ void EditorInspectorSection::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_add_action(ae, DisplayServer::AccessibilityAction::ACTION_COLLAPSE, callable_mp(this, &EditorInspectorSection::_accessibility_action_collapse));
 			DisplayServer::get_singleton()->accessibility_update_add_action(ae, DisplayServer::AccessibilityAction::ACTION_EXPAND, callable_mp(this, &EditorInspectorSection::_accessibility_action_expand));
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_THEME_CHANGED: {
 			EditorInspector::initialize_section_theme(theme_cache, this);
@@ -2396,6 +2406,7 @@ VBoxContainer *EditorInspectorSection::get_vbox() {
 	return vbox;
 }
 
+#ifdef ACCESSKIT_ENABLED
 void EditorInspectorSection::_accessibility_action_collapse(const Variant &p_data) {
 	fold();
 }
@@ -2403,6 +2414,7 @@ void EditorInspectorSection::_accessibility_action_collapse(const Variant &p_dat
 void EditorInspectorSection::_accessibility_action_expand(const Variant &p_data) {
 	unfold();
 }
+#endif // ACCESSKIT_ENABLED
 
 void EditorInspectorSection::unfold() {
 	if ((!foldable && !checkable) || (!checkbox_only && checkable && !checked)) {
@@ -3227,6 +3239,7 @@ bool EditorInspectorArray::can_drop_data_fw(const Point2 &p_point, const Variant
 	return drop_array_index != moved_array_index && drop_array_index - 1 != moved_array_index;
 }
 
+#ifdef ACCESSKIT_ENABLED
 void ArrayPanelContainer::_accessibility_action_menu(const Variant &p_data) {
 	EditorInspectorArray *el = Object::cast_to<EditorInspectorArray>(get_meta("element"));
 	if (el) {
@@ -3251,6 +3264,7 @@ void ArrayPanelContainer::_notification(int p_what) {
 		} break;
 	}
 }
+#endif // ACCESSKIT_ENABLED
 
 ArrayPanelContainer::ArrayPanelContainer() {
 	set_focus_mode(FOCUS_ACCESSIBILITY);
@@ -3258,6 +3272,7 @@ ArrayPanelContainer::ArrayPanelContainer() {
 
 void EditorInspectorArray::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -3265,6 +3280,7 @@ void EditorInspectorArray::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_name(ae, vformat(TTR("Array: %s"), get_label()));
 			DisplayServer::get_singleton()->accessibility_update_set_value(ae, vformat(TTR("Array: %s"), get_label()));
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_THEME_CHANGED: {
 			Color color = get_theme_color(SNAME("dark_color_1"), EditorStringName(Editor));

@@ -224,12 +224,14 @@ void ScrollBar::gui_input(const Ref<InputEvent> &p_event) {
 
 void ScrollBar::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
 
 			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_SCROLL_BAR);
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_DRAW: {
 			RID ci = get_canvas_item();
