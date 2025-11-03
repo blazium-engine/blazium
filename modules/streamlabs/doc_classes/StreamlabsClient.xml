@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="StreamlabsClient" inherits="Object" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+	<brief_description>
+		Client for connecting to the Streamlabs Socket API to receive real-time streaming events.
+	</brief_description>
+	<description>
+		StreamlabsClient is a singleton that provides access to the Streamlabs Socket API for receiving real-time streaming events such as donations, subscriptions, follows, hosts, raids, and platform-specific actions from Twitch, YouTube, and Mixer.
+		The client wraps the [SocketIOClient] and handles authentication, event parsing, and routing to platform-specific signals.
+		[b]Important:[/b] You must call [method poll] regularly (e.g., in [code]_process[/code]) to receive events.
+		[b]Prerequisites:[/b] You must obtain a socket token from the Streamlabs API before connecting. Make a GET request to [code]https://streamlabs.com/api/v2.0/socket/token[/code] with your OAuth2 Bearer token to retrieve the socket token.
+		[codeblocks]
+		[gdscript]
+		extends Node
+
+		func _ready():
+		    # Connect signals
+		    StreamlabsClient.donation.connect(_on_donation)
+		    StreamlabsClient.twitch_follow.connect(_on_twitch_follow)
+		    StreamlabsClient.twitch_subscription.connect(_on_twitch_subscription)
+		    StreamlabsClient.connected.connect(_on_connected)
+		    StreamlabsClient.disconnected.connect(_on_disconnected)
+
+		    # Connect with socket token
+		    var err = StreamlabsClient.connect_to_streamlabs("your_socket_token_here")
+		    if err != OK:
+		        print("Failed to connect: ", err)
+
+		func _process(delta):
+		    # Must poll regularly to receive events
+		    StreamlabsClient.poll()
+
+		func _on_connected():
+		    print("Connected to Streamlabs!")
+
+		func _on_disconnected(reason: String):
+		    print("Disconnected: ", reason)
+
+		func _on_donation(data: Dictionary):
+		    print("Donation from %s: %s - %s" % [data.from, data.formatted_amount, data.message])
+
+		func _on_twitch_follow(data: Dictionary):
+		    print("New Twitch follower: ", data.name)
+
+		func _on_twitch_subscription(data: Dictionary):
+		    print("Twitch subscription from %s for %d months" % [data.name, data.months])
+		[/gdscript]
+		[/codeblocks]
+		For more information about the Streamlabs Socket API, see: https://dev.streamlabs.com/docs/socket-api
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="connect_to_streamlabs">
+			<return type="int" enum="Error" />
+			<param index="0" name="socket_token" type="String" />
+			<description>
+				Connects to the Streamlabs Socket API using the provided [param socket_token]. Returns [constant OK] on success, or an error code on failure.
+				The socket token must be obtained from the Streamlabs API endpoint [code]/socket/token[/code] using your OAuth2 access token.
+				After calling this method, listen for the [signal connected] signal to know when the connection is established.
+				[b]Note:[/b] You must call [method poll] regularly for the connection to work and to receive events.
+			</description>
+		</method>
+		<method name="disconnect_from_streamlabs">
+			<return type="void" />
+			<description>
+				Disconnects from the Streamlabs Socket API and cleans up resources. The [signal disconnected] signal will be emitted.
+			</description>
+		</method>
+		<method name="get_connection_state" qualifiers="const">
+			<return type="int" enum="StreamlabsClient.ConnectionState" />
+			<description>
+				Returns the current connection state as a [enum ConnectionState] value.
+			</description>
+		</method>
+		<method name="is_streamlabs_connected" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] if currently connected to the Streamlabs Socket API, [code]false[/code] otherwise.
+			</description>
+		</method>
+		<method name="poll">
+			<return type="void" />
+			<description>
+				Processes incoming Streamlabs events. This method must be called regularly (typically in [code]_process[/code]) for the client to receive and emit events.
+				Without calling this method, no events will be received or processed.
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="connected">
+			<description>
+				Emitted when successfully connected to the Streamlabs Socket API.
+			</description>
+		</signal>
+		<signal name="connection_error">
+			<param index="0" name="error" type="Dictionary" />
+			<description>
+				Emitted when a connection error occurs. The [param error] dictionary contains error information from the server.
+			</description>
+		</signal>
+		<signal name="disconnected">
+			<param index="0" name="reason" type="String" />
+			<description>
+				Emitted when disconnected from the Streamlabs Socket API. The [param reason] describes why the disconnection occurred.
+			</description>
+		</signal>
+		<signal name="donation">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Emitted when a platform-agnostic donation is received through Streamlabs.
+				The [param data] dictionary contains:
+				- [code]id[/code] (int): Donation ID
+				- [code]name[/code] (String): Donor name
+				- [code]amount[/code] (String): Numeric amount
+				- [code]formatted_amount[/code] (String): Currency-formatted amount (e.g., "$13.37")
+				- [code]message[/code] (String): Donation message
+				- [code]currency[/code] (String): Currency code (USD, EUR, etc.)
+				- [code]from[/code] (String): Donor name
+				- [code]to[/code] (Dictionary): Recipient information with [code]name[/code] field
+				- [code]_id[/code] (String): Unique event identifier
+			</description>
+		</signal>
+		<signal name="mixer_follow">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Emitted when a Mixer channel receives a new follower.
+				The [param data] dictionary contains:
+				- [code]id[/code] (int): Follower user ID
+				- [code]name[/code] (String): Follower username
+				- [code]created_at[/code] (String): Timestamp of follow (YYYY-MM-DD HH:MM:SS)
+				- [code]_id[/code] (String): Unique event identifier
+			</description>
+		</signal>
+		<signal name="mixer_host">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Emitted when a Mixer channel is hosted.
+				The [param data] dictionary contains:
+				- [code]name[/code] (String): Host username
+				- [code]viewers[/code] (String): Number of viewers from the host
+				- [code]type[/code] (String): Host type ("manual" or "auto")
+				- [code]_id[/code] (String): Unique event identifier
+			</description>
+		</signal>
+		<signal name="mixer_subscription">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Emitted when a Mixer channel receives a subscription.
+				The [param data] dictionary contains:
+				- [code]id[/code] (String): Subscriber user ID
+				- [code]name[/code] (String): Subscriber username
+				- [code]months[/code] (int): Total months subscribed
+				- [code]since[/code] (String): Timestamp of subscription start (YYYY-MM-DD HH:MM:SS)
+				- [code]_id[/code] (String): Unique event identifier
+			</description>
+		</signal>
+		<signal name="twitch_bits">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Emitted when bits (cheers) are received on a Twitch channel.
+				The [param data] dictionary contains:
+				- [code]id[/code] (String): Event ID
+				- [code]name[/code] (String): Cheerer username
+				- [code]amount[/code] (String): Number of bits
+				- [code]message[/code] (String): Cheer message
+				- [code]_id[/code] (String): Unique event identifier
+			</description>
+		</signal>
+		<signal name="twitch_follow">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Emitted when a Twitch channel receives a new follower.
+				The [param data] dictionary contains:
+				- [code]created_at[/code] (String): Timestamp of follow (YYYY-MM-DD HH:MM:SS)
+				- [code]id[/code] (String): Follower user ID
+				- [code]name[/code] (String): Follower username
+				- [code]_id[/code] (String): Unique event identifier
+			</description>
+		</signal>
+		<signal name="twitch_host">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Emitted when a Twitch channel is hosted.
+				The [param data] dictionary contains:
+				- [code]name[/code] (String): Host username
+				- [code]viewers[/code] (String): Number of viewers from the host
+				- [code]type[/code] (String): Host type ("manual" or "auto")
+				- [code]_id[/code] (String): Unique event identifier
+			</description>
+		</signal>
+		<signal name="twitch_raid">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Emitted when a Twitch channel is raided.
+				The [param data] dictionary contains:
+				- [code]name[/code] (String): Raider username
+				- [code]raiders[/code] (int): Number of raiders
+				- [code]_id[/code] (String): Unique event identifier
+			</description>
+		</signal>
+		<signal name="twitch_subscription">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Emitted when a Twitch channel receives a subscription or resub.
+				The [param data] dictionary contains:
+				- [code]name[/code] (String): Subscriber username
+				- [code]months[/code] (int): Total months subscribed
+				- [code]message[/code] (String): Subscription message
+				- [code]sub_plan[/code] (String): Subscription tier ("1000", "2000", "3000", or "Prime")
+				- [code]sub_plan_name[/code] (String): Display name of subscription plan
+				- [code]sub_type[/code] (String): Subscription type ("sub" or "resub")
+				- [code]_id[/code] (String): Unique event identifier
+			</description>
+		</signal>
+		<signal name="youtube_follow">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Emitted when a YouTube channel receives a new subscriber (channel subscriber).
+				The [param data] dictionary contains:
+				- [code]publishedAt[/code] (String): Timestamp of subscription (YYYY-MM-DD HH:MM:SS)
+				- [code]id[/code] (String): Subscriber channel ID
+				- [code]name[/code] (String): Subscriber channel name
+				- [code]_id[/code] (String): Unique event identifier
+			</description>
+		</signal>
+		<signal name="youtube_subscription">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Emitted when a YouTube channel receives a membership (sponsor).
+				The [param data] dictionary contains:
+				- [code]sponsorSince[/code] (String): Timestamp when sponsorship started (YYYY-MM-DD HH:MM:SS)
+				- [code]id[/code] (String): Sponsor channel ID
+				- [code]name[/code] (String): Sponsor channel name
+				- [code]channelUrl[/code] (String): Full URL to sponsor's channel
+				- [code]months[/code] (int): Total months as sponsor
+				- [code]_id[/code] (String): Unique event identifier
+			</description>
+		</signal>
+		<signal name="youtube_superchat">
+			<param index="0" name="data" type="Dictionary" />
+			<description>
+				Emitted when a YouTube superchat is received.
+				The [param data] dictionary contains:
+				- [code]id[/code] (String): Superchat ID
+				- [code]channelId[/code] (String): Sender channel ID
+				- [code]channelUrl[/code] (String): Full URL to sender's channel
+				- [code]name[/code] (String): Sender channel name
+				- [code]comment[/code] (String): Superchat message
+				- [code]amount[/code] (String): Amount in micros (e.g., "2000000" = $2.00)
+				- [code]currency[/code] (String): Currency code
+				- [code]displayString[/code] (String): Formatted display amount
+				- [code]messageType[/code] (int): Message type identifier
+				- [code]createdAt[/code] (String): Timestamp (YYYY-MM-DD HH:MM:SS)
+				- [code]_id[/code] (String): Unique event identifier
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="STATE_DISCONNECTED" value="0" enum="ConnectionState">
+			The client is not connected to Streamlabs.
+		</constant>
+		<constant name="STATE_CONNECTING" value="1" enum="ConnectionState">
+			The client is attempting to connect to Streamlabs.
+		</constant>
+		<constant name="STATE_CONNECTED" value="2" enum="ConnectionState">
+			The client is connected to Streamlabs.
+		</constant>
+	</constants>
+</class>
