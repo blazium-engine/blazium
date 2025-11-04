@@ -54,6 +54,7 @@ class EditorResourcePicker : public HBoxContainer {
 	mutable HashSet<StringName> allowed_types_with_convert;
 
 	Button *assign_button = nullptr;
+	Button *make_unique_button = nullptr;
 	TextureRect *preview_rect = nullptr;
 	Button *edit_button = nullptr;
 	Button *quick_load_button = nullptr;
@@ -101,6 +102,7 @@ class EditorResourcePicker : public HBoxContainer {
 
 	void _button_draw();
 	void _button_input(const Ref<InputEvent> &p_event);
+	void _on_unique_button_pressed();
 
 	String _get_owner_path() const;
 	String _get_resource_type(const Ref<Resource> &p_resource) const;
@@ -116,6 +118,8 @@ class EditorResourcePicker : public HBoxContainer {
 	void _ensure_resource_menu();
 	void _gather_resources_to_duplicate(const Ref<Resource> p_resource, TreeItem *p_item, const String &p_property_name = "") const;
 	void _duplicate_selected_resources();
+	bool _is_uniqueness_enabled(bool p_check_recursive = false);
+	Ref<Resource> _has_parent_resource();
 
 protected:
 	virtual void _update_resource();
