@@ -1677,6 +1677,9 @@
 		<member name="Time" type="Time" setter="" getter="">
 			The [Time] singleton.
 		</member>
+		<member name="TownSDK" type="TownSdkClient" setter="" getter="">
+			The [TownSdkClient] singleton.
+		</member>
 		<member name="TranslationServer" type="TranslationServer" setter="" getter="">
 			The [TranslationServer] singleton.
 		</member>
