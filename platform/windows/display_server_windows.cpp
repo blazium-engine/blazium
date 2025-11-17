@@ -2329,6 +2329,11 @@ Size2i DisplayServerWindows::window_get_size_with_decorations(WindowID p_window)
 	ERR_FAIL_COND_V(!windows.has(p_window), Size2i());
 	const WindowData &wd = windows[p_window];
 
+	// GetWindowRect() returns a zero rect for a minimized window, so we need to get the size in another way.
+	if (wd.minimized) {
+		return Size2(wd.width_with_decorations, wd.height_with_decorations);
+	}
+
 	RECT r;
 	if (GetWindowRect(wd.hWnd, &r)) { // Retrieves area inside of window border, including decoration.
 		int off_x = (wd.multiwindow_fs || (!wd.fullscreen && wd.borderless && wd.maximized)) ? FS_TRANSP_BORDER : 0;
@@ -5840,20 +5845,22 @@ LRESULT DisplayServerWindows::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 				if (!window.minimized) {
 					window.width = window_client_rect.size.width;
 					window.height = window_client_rect.size.height;
+					window.width_with_decorations = window_rect.size.width;
+					window.height_with_decorations = window_rect.size.height;
 
 					rect_changed = true;
 				}
 #if defined(RD_ENABLED)
-				if (window.create_completed && rendering_context && window.context_created) {
+				if (window.create_completed && rendering_context && window.rendering_context_window_created) {
 					// Note: Trigger resize event to update swapchains when window is minimized/restored, even if size is not changed.
 					rendering_context->window_set_size(window_id, window.width, window.height);
 				}
 #endif
 #if defined(GLES3_ENABLED)
-				if (window.create_completed && gl_manager_native) {
+				if (window.create_completed && gl_manager_native && window.gl_native_window_created) {
 					gl_manager_native->window_resize(window_id, window.width, window.height);
 				}
-				if (window.create_completed && gl_manager_angle) {
+				if (window.create_completed && gl_manager_angle && window.gl_angle_window_created) {
 					gl_manager_angle->window_resize(window_id, window.width, window.height);
 				}
 #endif
@@ -6662,7 +6669,7 @@ Error DisplayServerWindows::_create_rendering_context_window(WindowID p_window_i
 	ERR_FAIL_COND_V_MSG(err != OK, err, vformat("Failed to create %s window.", rendering_driver));
 
 	rendering_context->window_set_size(p_window_id, wd.width, wd.height);
-	wd.context_created = true;
+	wd.rendering_context_window_created = true;
 
 	return OK;
 }
@@ -6671,10 +6678,10 @@ void DisplayServerWindows::_destroy_rendering_context_window(WindowID p_window_i
 	DEV_ASSERT(rendering_context != nullptr);
 
 	WindowData &wd = windows[p_window_id];
-	DEV_ASSERT(wd.context_created);
+	DEV_ASSERT(wd.rendering_context_window_created);
 
 	rendering_context->window_destroy(p_window_id);
-	wd.context_created = false;
+	wd.rendering_context_window_created = false;
 }
 #endif
 
@@ -6682,12 +6689,20 @@ void DisplayServerWindows::_destroy_rendering_context_window(WindowID p_window_i
 Error DisplayServerWindows::_create_gl_window(WindowID p_window_id) {
 	if (gl_manager_native) {
 		WindowData &wd = windows[p_window_id];
-		return gl_manager_native->window_create(p_window_id, wd.hWnd, hInstance, wd.width, wd.height);
+
+		Error err = gl_manager_native->window_create(p_window_id, wd.hWnd, hInstance, wd.width, wd.height);
+		ERR_FAIL_COND_V_MSG(err != OK, err, "Failed to create native OpenGL window.");
+
+		wd.gl_native_window_created = true;
 	}
 
 	if (gl_manager_angle) {
 		WindowData &wd = windows[p_window_id];
-		return gl_manager_angle->window_create(p_window_id, nullptr, wd.hWnd, wd.width, wd.height);
+
+		Error err = gl_manager_angle->window_create(p_window_id, nullptr, wd.hWnd, wd.width, wd.height);
+		ERR_FAIL_COND_V_MSG(err != OK, err, "Failed to create ANGLE OpenGL window.");
+
+		wd.gl_angle_window_created = true;
 	}
 
 	return OK;
@@ -7479,7 +7494,7 @@ DisplayServerWindows::DisplayServerWindows(const String &p_rendering_driver, Win
 			gl_manager_native = nullptr;
 			windows.erase(MAIN_WINDOW_ID);
 			r_error = ERR_UNAVAILABLE;
-			ERR_FAIL_MSG("Failed to create an OpenGL window.");
+			return;
 		}
 		RasterizerGLES3::make_current(true);
 	}
@@ -7489,7 +7504,7 @@ DisplayServerWindows::DisplayServerWindows(const String &p_rendering_driver, Win
 			gl_manager_angle = nullptr;
 			windows.erase(MAIN_WINDOW_ID);
 			r_error = ERR_UNAVAILABLE;
-			ERR_FAIL_MSG("Failed to create an OpenGL window.");
+			return;
 		}
 		RasterizerGLES3::make_current(false);
 	}

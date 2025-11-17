@@ -363,7 +363,6 @@ private:
 
 	Ref<Theme> theme;
 
-	Timer *system_theme_timer = nullptr;
 	bool follow_system_theme = false;
 	bool use_system_accent_color = false;
 	bool last_dark_mode_state = false;
@@ -1031,35 +1030,6 @@ public:
 	bool ensure_main_scene(bool p_from_native);
 	bool validate_custom_directory();
 	void run_editor_script(const Ref<Script> &p_script);
-};
-
-class EditorPluginList : public Object {
-	GDSOFTCLASS(EditorPluginList, Object);
-
-private:
-	Vector<EditorPlugin *> plugins_list;
-
-public:
-	void set_plugins_list(Vector<EditorPlugin *> p_plugins_list) {
-		plugins_list = p_plugins_list;
-	}
-
-	Vector<EditorPlugin *> &get_plugins_list() {
-		return plugins_list;
-	}
-
-	void make_visible(bool p_visible);
-	void edit(Object *p_object);
-	bool forward_gui_input(const Ref<InputEvent> &p_event);
-	void forward_canvas_draw_over_viewport(Control *p_overlay);
-	void forward_canvas_force_draw_over_viewport(Control *p_overlay);
-	EditorPlugin::AfterGUIInput forward_3d_gui_input(Camera3D *p_camera, const Ref<InputEvent> &p_event, bool serve_when_force_input_enabled);
-	void forward_3d_draw_over_viewport(Control *p_overlay);
-	void forward_3d_force_draw_over_viewport(Control *p_overlay);
-	void add_plugin(EditorPlugin *p_plugin);
-	void remove_plugin(EditorPlugin *p_plugin);
-	void clear();
-	bool is_empty();
 };
 
 struct EditorProgressBG {

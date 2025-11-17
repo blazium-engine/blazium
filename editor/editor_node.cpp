@@ -47,6 +47,7 @@
 #include "core/version.h"
 #include "editor/editor_string_names.h"
 #include "editor/inspector/editor_context_menu_plugin.h"
+#include "editor/plugins/editor_plugin_list.h"
 #include "main/main.h"
 #include "scene/2d/node_2d.h"
 #include "scene/3d/bone_attachment_3d.h"
@@ -2922,16 +2923,6 @@ void EditorNode::hide_unused_editors(const Object *p_editing_owner) {
 	}
 }
 
-static bool overrides_external_editor(Object *p_object) {
-	Script *script = Object::cast_to<Script>(p_object);
-
-	if (!script) {
-		return false;
-	}
-
-	return script->get_language()->overrides_external_editor();
-}
-
 void EditorNode::_add_to_history(const Object *p_object, const String &p_property, bool p_inspector_only) {
 	ObjectID id = p_object->get_instance_id();
 	ObjectID history_id = editor_history.get_current();
@@ -3120,15 +3111,17 @@ void EditorNode::_edit_current(bool p_skip_foreign, bool p_skip_inspector_update
 
 		ObjectID editor_owner_id = editor_owner->get_instance_id();
 		if (main_plugin && !skip_main_plugin) {
-			// Special case if use of external editor is true.
-			Resource *current_res = Object::cast_to<Resource>(current_obj);
-			if (main_plugin->get_plugin_name() == "Script" && current_res && !current_res->is_built_in() && (bool(EDITOR_GET("text_editor/external/use_external_editor")) || overrides_external_editor(current_obj))) {
+			// Special case if current_obj is a script.
+			Script *current_script = Object::cast_to<Script>(current_obj);
+			if (current_script) {
 				if (!changing_scene) {
-					main_plugin->edit(current_obj);
+					// Only update main editor screen if using in-engine editor.
+					if (current_script->is_built_in() || (!bool(EDITOR_GET("text_editor/external/use_external_editor")) && !current_script->get_language()->overrides_external_editor())) {
+						editor_main_screen->select(plugin_index);
+					}
+
+					main_plugin->edit(current_script);
 				}
-			} else if (Object::cast_to<Script>(current_obj)) {
-				editor_main_screen->select(plugin_index);
-				main_plugin->edit(current_obj);
 			} else if (main_plugin != editor_plugin_screen) {
 				// Unedit previous plugin.
 				editor_plugin_screen->edit(nullptr);
@@ -8305,6 +8298,7 @@ EditorNode::EditorNode() {
 
 	editor_settings_dialog = memnew(EditorSettingsDialog);
 	gui_base->add_child(editor_settings_dialog);
+	editor_settings_dialog->connect("restart_requested", callable_mp(this, &EditorNode::_restart_editor).bind(false));
 
 	project_settings_editor = memnew(ProjectSettingsEditor(&editor_data));
 	gui_base->add_child(project_settings_editor);
@@ -9126,12 +9120,6 @@ EditorNode::EditorNode() {
 
 	follow_system_theme = EDITOR_GET("interface/theme/follow_system_theme");
 	use_system_accent_color = EDITOR_GET("interface/theme/use_system_accent_color");
-	system_theme_timer = memnew(Timer);
-	system_theme_timer->set_wait_time(1.0);
-	system_theme_timer->connect("timeout", callable_mp(this, &EditorNode::_check_system_theme_changed));
-	add_child(system_theme_timer);
-	system_theme_timer->set_owner(get_owner());
-	system_theme_timer->set_autostart(true);
 }
 
 EditorNode::~EditorNode() {
@@ -9170,93 +9158,4 @@ EditorNode::~EditorNode() {
 	editor_file_dialogs.clear();
 
 	singleton = nullptr;
-}
-
-/*
- * EDITOR PLUGIN LIST
- */
-
-void EditorPluginList::make_visible(bool p_visible) {
-	for (int i = 0; i < plugins_list.size(); i++) {
-		plugins_list[i]->make_visible(p_visible);
-	}
-}
-
-void EditorPluginList::edit(Object *p_object) {
-	for (int i = 0; i < plugins_list.size(); i++) {
-		plugins_list[i]->edit(p_object);
-	}
-}
-
-bool EditorPluginList::forward_gui_input(const Ref<InputEvent> &p_event) {
-	bool discard = false;
-
-	for (int i = 0; i < plugins_list.size(); i++) {
-		if (plugins_list[i]->forward_canvas_gui_input(p_event)) {
-			discard = true;
-		}
-	}
-
-	return discard;
-}
-
-EditorPlugin::AfterGUIInput EditorPluginList::forward_3d_gui_input(Camera3D *p_camera, const Ref<InputEvent> &p_event, bool serve_when_force_input_enabled) {
-	EditorPlugin::AfterGUIInput after = EditorPlugin::AFTER_GUI_INPUT_PASS;
-
-	for (int i = 0; i < plugins_list.size(); i++) {
-		if ((!serve_when_force_input_enabled) && plugins_list[i]->is_input_event_forwarding_always_enabled()) {
-			continue;
-		}
-
-		EditorPlugin::AfterGUIInput current_after = plugins_list[i]->forward_3d_gui_input(p_camera, p_event);
-		if (current_after == EditorPlugin::AFTER_GUI_INPUT_STOP) {
-			after = EditorPlugin::AFTER_GUI_INPUT_STOP;
-		}
-		if (after != EditorPlugin::AFTER_GUI_INPUT_STOP && current_after == EditorPlugin::AFTER_GUI_INPUT_CUSTOM) {
-			after = EditorPlugin::AFTER_GUI_INPUT_CUSTOM;
-		}
-	}
-
-	return after;
-}
-
-void EditorPluginList::forward_canvas_draw_over_viewport(Control *p_overlay) {
-	for (int i = 0; i < plugins_list.size(); i++) {
-		plugins_list[i]->forward_canvas_draw_over_viewport(p_overlay);
-	}
-}
-
-void EditorPluginList::forward_canvas_force_draw_over_viewport(Control *p_overlay) {
-	for (int i = 0; i < plugins_list.size(); i++) {
-		plugins_list[i]->forward_canvas_force_draw_over_viewport(p_overlay);
-	}
-}
-
-void EditorPluginList::forward_3d_draw_over_viewport(Control *p_overlay) {
-	for (int i = 0; i < plugins_list.size(); i++) {
-		plugins_list[i]->forward_3d_draw_over_viewport(p_overlay);
-	}
-}
-
-void EditorPluginList::forward_3d_force_draw_over_viewport(Control *p_overlay) {
-	for (int i = 0; i < plugins_list.size(); i++) {
-		plugins_list[i]->forward_3d_force_draw_over_viewport(p_overlay);
-	}
-}
-
-void EditorPluginList::add_plugin(EditorPlugin *p_plugin) {
-	ERR_FAIL_COND(plugins_list.has(p_plugin));
-	plugins_list.push_back(p_plugin);
-}
-
-void EditorPluginList::remove_plugin(EditorPlugin *p_plugin) {
-	plugins_list.erase(p_plugin);
-}
-
-bool EditorPluginList::is_empty() {
-	return plugins_list.is_empty();
-}
-
-void EditorPluginList::clear() {
-	plugins_list.clear();
 }

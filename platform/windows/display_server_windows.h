@@ -493,7 +493,9 @@ class DisplayServerWindows : public DisplayServer {
 		bool always_on_top = false;
 		bool no_focus = false;
 		bool exclusive = false;
-		bool context_created = false;
+		bool rendering_context_window_created = false;
+		bool gl_native_window_created = false;
+		bool gl_angle_window_created = false;
 		bool mpass = false;
 		bool sharp_corners = false;
 		bool hide_from_capture = false;
@@ -522,6 +524,7 @@ class DisplayServerWindows : public DisplayServer {
 		Size2 min_size;
 		Size2 max_size;
 		int width = 0, height = 0;
+		int width_with_decorations = 0, height_with_decorations = 0;
 
 		Size2 window_rect;
 		Point2 last_pos;

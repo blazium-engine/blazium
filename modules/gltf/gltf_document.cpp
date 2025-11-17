@@ -2716,7 +2716,7 @@ Error GLTFDocument::_serialize_meshes(Ref<GLTFState> p_state) {
 		if (import_mesh.is_null()) {
 			continue;
 		}
-		Array instance_materials = gltf_mesh->get_instance_materials();
+		const Array &instance_materials = gltf_mesh->get_instance_materials();
 		Array primitives;
 		Dictionary mesh_dict;
 		Array target_names;
@@ -3910,14 +3910,14 @@ Ref<Image> GLTFDocument::_parse_image_bytes_into_image(Ref<GLTFState> p_state, c
 }
 
 void GLTFDocument::_parse_image_save_image(Ref<GLTFState> p_state, const Vector<uint8_t> &p_bytes, const String &p_resource_uri, const String &p_file_extension, int p_index, Ref<Image> p_image) {
-	GLTFState::GLTFHandleBinary handling = GLTFState::GLTFHandleBinary(p_state->handle_binary_image);
-	if (p_image->is_empty() || handling == GLTFState::GLTFHandleBinary::HANDLE_BINARY_DISCARD_TEXTURES) {
+	GLTFState::HandleBinaryImageMode handling = GLTFState::HandleBinaryImageMode(p_state->handle_binary_image_mode);
+	if (p_image->is_empty() || handling == GLTFState::HandleBinaryImageMode::HANDLE_BINARY_IMAGE_MODE_DISCARD_TEXTURES) {
 		p_state->images.push_back(Ref<Texture2D>());
 		p_state->source_images.push_back(Ref<Image>());
 		return;
 	}
 #ifdef TOOLS_ENABLED
-	if (Engine::get_singleton()->is_editor_hint() && handling == GLTFState::GLTFHandleBinary::HANDLE_BINARY_EXTRACT_TEXTURES) {
+	if (Engine::get_singleton()->is_editor_hint() && handling == GLTFState::HandleBinaryImageMode::HANDLE_BINARY_IMAGE_MODE_EXTRACT_TEXTURES) {
 		if (p_state->extract_path.is_empty()) {
 			WARN_PRINT("glTF: Couldn't extract image because the base and extract paths are empty. It will be loaded directly instead, uncompressed.");
 		} else if (p_state->extract_path.begins_with("res://.godot/imported")) {
@@ -4000,7 +4000,7 @@ void GLTFDocument::_parse_image_save_image(Ref<GLTFState> p_state, const Vector<
 		}
 	}
 #endif // TOOLS_ENABLED
-	if (handling == GLTFState::GLTFHandleBinary::HANDLE_BINARY_EMBED_AS_BASISU) {
+	if (handling == GLTFState::HandleBinaryImageMode::HANDLE_BINARY_IMAGE_MODE_EMBED_AS_BASISU) {
 		Ref<PortableCompressedTexture2D> tex;
 		tex.instantiate();
 		tex->set_name(p_image->get_name());
@@ -4010,8 +4010,8 @@ void GLTFDocument::_parse_image_save_image(Ref<GLTFState> p_state, const Vector<
 		p_state->source_images.push_back(p_image);
 		return;
 	}
-	// This handles the case of HANDLE_BINARY_EMBED_AS_UNCOMPRESSED, and it also serves
-	// as a fallback for HANDLE_BINARY_EXTRACT_TEXTURES when this is not the editor.
+	// This handles the case of HANDLE_BINARY_IMAGE_MODE_EMBED_AS_UNCOMPRESSED, and it also serves
+	// as a fallback for HANDLE_BINARY_IMAGE_MODE_EXTRACT_TEXTURES when this is not the editor.
 	Ref<ImageTexture> tex;
 	tex.instantiate();
 	tex->set_name(p_image->get_name());
@@ -4244,7 +4244,7 @@ Ref<Texture2D> GLTFDocument::_get_texture(Ref<GLTFState> p_state, const GLTFText
 	ERR_FAIL_INDEX_V(p_texture, p_state->textures.size(), Ref<Texture2D>());
 	const GLTFImageIndex image = p_state->textures[p_texture]->get_src_image();
 	ERR_FAIL_INDEX_V(image, p_state->images.size(), Ref<Texture2D>());
-	if (GLTFState::GLTFHandleBinary(p_state->handle_binary_image) == GLTFState::GLTFHandleBinary::HANDLE_BINARY_EMBED_AS_BASISU) {
+	if (GLTFState::HandleBinaryImageMode(p_state->handle_binary_image_mode) == GLTFState::HandleBinaryImageMode::HANDLE_BINARY_IMAGE_MODE_EMBED_AS_BASISU) {
 		ERR_FAIL_INDEX_V(image, p_state->source_images.size(), Ref<Texture2D>());
 		Ref<PortableCompressedTexture2D> portable_texture;
 		portable_texture.instantiate();
@@ -4675,7 +4675,9 @@ Error GLTFDocument::_serialize_materials(Ref<GLTFState> p_state) {
 			extensions["KHR_materials_emissive_strength"] = mat_emissive_strength;
 			p_state->add_used_extension("KHR_materials_emissive_strength");
 		}
-		mat_dict["extensions"] = extensions;
+		if (!extensions.is_empty()) {
+			mat_dict["extensions"] = extensions;
+		}
 
 		_attach_meta_to_extras(material, mat_dict);
 		materials.push_back(mat_dict);
@@ -5123,7 +5125,7 @@ Error GLTFDocument::_create_skins(Ref<GLTFState> p_state) {
 	return OK;
 }
 
-bool GLTFDocument::_skins_are_same(const Ref<Skin> p_skin_a, const Ref<Skin> p_skin_b) {
+bool GLTFDocument::_skins_are_same(const Ref<Skin> &p_skin_a, const Ref<Skin> &p_skin_b) {
 	if (p_skin_a->get_bind_count() != p_skin_b->get_bind_count()) {
 		return false;
 	}
@@ -6034,7 +6036,7 @@ void GLTFDocument::_convert_grid_map_to_gltf(GridMap *p_grid_map, GLTFNodeIndex 
 #ifndef MODULE_GRIDMAP_ENABLED
 	ERR_FAIL_MSG("gridmap module is disabled.");
 #else
-	Array cells = p_grid_map->get_used_cells();
+	const Array &cells = p_grid_map->get_used_cells();
 	for (int32_t k = 0; k < cells.size(); k++) {
 		GLTFNode *new_gltf_node = memnew(GLTFNode);
 		p_gltf_node->children.push_back(p_state->nodes.size());
@@ -6755,7 +6757,7 @@ T GLTFDocument::_interpolate_track(const Vector<double> &p_times, const Vector<T
 	ERR_FAIL_V(p_values[0]);
 }
 
-NodePath GLTFDocument::_find_material_node_path(Ref<GLTFState> p_state, Ref<Material> p_material) {
+NodePath GLTFDocument::_find_material_node_path(Ref<GLTFState> p_state, const Ref<Material> &p_material) {
 	int mesh_index = 0;
 	for (Ref<GLTFMesh> gltf_mesh : p_state->meshes) {
 		TypedArray<Material> materials = gltf_mesh->get_instance_materials();
@@ -8271,7 +8273,7 @@ void GLTFDocument::_convert_animation(Ref<GLTFState> p_state, AnimationPlayer *p
 	}
 }
 
-Error GLTFDocument::_parse(Ref<GLTFState> p_state, String p_path, Ref<FileAccess> p_file) {
+Error GLTFDocument::_parse(Ref<GLTFState> p_state, const String &p_path, Ref<FileAccess> p_file) {
 	Error err;
 	if (p_file.is_null()) {
 		return FAILED;
@@ -8339,14 +8341,14 @@ Dictionary _serialize_texture_transform_uv(Vector2 p_offset, Vector2 p_scale) {
 	return extension;
 }
 
-Dictionary GLTFDocument::_serialize_texture_transform_uv1(Ref<BaseMaterial3D> p_material) {
+Dictionary GLTFDocument::_serialize_texture_transform_uv1(const Ref<BaseMaterial3D> &p_material) {
 	ERR_FAIL_COND_V(p_material.is_null(), Dictionary());
 	Vector3 offset = p_material->get_uv1_offset();
 	Vector3 scale = p_material->get_uv1_scale();
 	return _serialize_texture_transform_uv(Vector2(offset.x, offset.y), Vector2(scale.x, scale.y));
 }
 
-Dictionary GLTFDocument::_serialize_texture_transform_uv2(Ref<BaseMaterial3D> p_material) {
+Dictionary GLTFDocument::_serialize_texture_transform_uv2(const Ref<BaseMaterial3D> &p_material) {
 	ERR_FAIL_COND_V(p_material.is_null(), Dictionary());
 	Vector3 offset = p_material->get_uv2_offset();
 	Vector3 scale = p_material->get_uv2_scale();
@@ -8897,7 +8899,7 @@ Error GLTFDocument::append_from_scene(Node *p_node, Ref<GLTFState> p_state, uint
 	return OK;
 }
 
-Error GLTFDocument::append_from_buffer(PackedByteArray p_bytes, String p_base_path, Ref<GLTFState> p_state, uint32_t p_flags) {
+Error GLTFDocument::append_from_buffer(const PackedByteArray &p_bytes, const String &p_base_path, Ref<GLTFState> p_state, uint32_t p_flags) {
 	Ref<GLTFState> state = p_state;
 	ERR_FAIL_COND_V(state.is_null(), FAILED);
 	// TODO Add missing texture and missing .bin file paths to r_missing_deps 2021-09-10 fire
@@ -8921,7 +8923,7 @@ Error GLTFDocument::append_from_buffer(PackedByteArray p_bytes, String p_base_pa
 	return OK;
 }
 
-Error GLTFDocument::append_from_file(String p_path, Ref<GLTFState> p_state, uint32_t p_flags, String p_base_path) {
+Error GLTFDocument::append_from_file(const String &p_path, Ref<GLTFState> p_state, uint32_t p_flags, const String &p_base_path) {
 	Ref<GLTFState> state = p_state;
 	// TODO Add missing texture and missing .bin file paths to r_missing_deps 2021-09-10 fire
 	if (state == Ref<GLTFState>()) {

@@ -1836,8 +1836,8 @@ void AnimationTimelineEdit::update_values() {
 
 	editing = true;
 	if (use_fps && animation->get_step() > 0.0) {
-		length->set_value(animation->get_length() / animation->get_step());
 		length->set_step(FPS_DECIMAL);
+		length->set_value(animation->get_length() / animation->get_step());
 		length->set_tooltip_text(TTR("Animation length (frames)"));
 		time_icon->set_tooltip_text(TTR("Animation length (frames)"));
 		if (track_edit) {
@@ -1845,8 +1845,8 @@ void AnimationTimelineEdit::update_values() {
 			track_edit->editor->marker_edit->_update_key_edit();
 		}
 	} else {
-		length->set_value(animation->get_length());
 		length->set_step(SECOND_DECIMAL);
+		length->set_value(animation->get_length());
 		length->set_tooltip_text(TTR("Animation length (seconds)"));
 		time_icon->set_tooltip_text(TTR("Animation length (seconds)"));
 	}
@@ -3920,8 +3920,13 @@ void AnimationTrackEditor::remove_track_edit_plugin(const Ref<AnimationTrackEdit
 }
 
 void AnimationTrackEditor::set_animation(const Ref<Animation> &p_anim, bool p_read_only) {
-	if (animation != p_anim && _get_track_selected() >= 0) {
-		track_edits[_get_track_selected()]->release_focus();
+	if (animation != p_anim) {
+		for (int i = 0; i < track_edits.size(); i++) {
+			if (track_edits[i]->has_focus()) {
+				track_edits[i]->release_focus();
+				break;
+			}
+		}
 	}
 	if (animation.is_valid()) {
 		animation->disconnect_changed(callable_mp(this, &AnimationTrackEditor::_animation_changed));
@@ -4190,7 +4195,11 @@ void AnimationTrackEditor::_animation_track_remove_request(int p_track, Ref<Anim
 void AnimationTrackEditor::_track_grab_focus(int p_track) {
 	// Don't steal focus if not working with the track editor.
 	if (Object::cast_to<AnimationTrackEdit>(get_viewport()->gui_get_focus_owner())) {
-		track_edits[p_track]->grab_focus();
+		for (int i = 0; i < track_edits.size(); i++) {
+			if (track_edits[i]->get_track() == p_track) {
+				track_edits[i]->grab_focus();
+			}
+		}
 	}
 }
 
@@ -5700,7 +5709,7 @@ void AnimationTrackEditor::_timeline_value_changed(double) {
 int AnimationTrackEditor::_get_track_selected() {
 	for (int i = 0; i < track_edits.size(); i++) {
 		if (track_edits[i]->has_focus()) {
-			return i;
+			return track_edits[i]->get_track();
 		}
 	}
 
@@ -7280,6 +7289,13 @@ void AnimationTrackEditor::_edit_menu_pressed(int p_option) {
 			goto_prev_step(false);
 		} break;
 
+		case EDIT_GOTO_NEXT_KEYFRAME: {
+			AnimationPlayerEditor::get_singleton()->go_to_nearest_keyframe(false);
+		} break;
+		case EDIT_GOTO_PREV_KEYFRAME: {
+			AnimationPlayerEditor::get_singleton()->go_to_nearest_keyframe(true);
+		} break;
+
 		case EDIT_APPLY_RESET: {
 			AnimationPlayerEditor::get_singleton()->get_player()->apply_reset(true);
 		} break;
@@ -8109,6 +8125,9 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	edit->get_popup()->add_separator();
 	edit->get_popup()->add_shortcut(ED_SHORTCUT("animation_editor/goto_next_step", TTRC("Go to Next Step"), KeyModifierMask::CMD_OR_CTRL | Key::RIGHT), EDIT_GOTO_NEXT_STEP);
 	edit->get_popup()->add_shortcut(ED_SHORTCUT("animation_editor/goto_prev_step", TTRC("Go to Previous Step"), KeyModifierMask::CMD_OR_CTRL | Key::LEFT), EDIT_GOTO_PREV_STEP);
+	edit->get_popup()->add_separator();
+	edit->get_popup()->add_shortcut(ED_SHORTCUT("animation_editor/go_to_next_keyframe", TTRC("Go to Next Keyframe"), KeyModifierMask::SHIFT | KeyModifierMask::ALT | Key::D), EDIT_GOTO_NEXT_KEYFRAME);
+	edit->get_popup()->add_shortcut(ED_SHORTCUT("animation_editor/go_to_previous_keyframe", TTRC("Go to Previous Keyframe"), KeyModifierMask::SHIFT | KeyModifierMask::ALT | Key::A), EDIT_GOTO_PREV_KEYFRAME);
 	edit->get_popup()->add_separator();
 	edit->get_popup()->add_shortcut(ED_SHORTCUT("animation_editor/apply_reset", TTRC("Apply Reset")), EDIT_APPLY_RESET);
 	edit->get_popup()->add_separator();
