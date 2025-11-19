@@ -228,8 +228,10 @@ protected:
 
 	void _update_property_bg();
 
+#ifdef ACCESSKIT_ENABLED
 	void _accessibility_action_menu(const Variant &p_data);
 	void _accessibility_action_click(const Variant &p_data);
+#endif // ACCESSKIT_ENABLED
 
 public:
 	void emit_changed(const StringName &p_property, const Variant &p_value, const StringName &p_field = StringName(), bool p_changing = false);
@@ -416,7 +418,9 @@ protected:
 	void _notification(int p_what);
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
 
+#ifdef ACCESSKIT_ENABLED
 	void _accessibility_action_menu(const Variant &p_data);
+#endif // ACCESSKIT_ENABLED
 
 public:
 	void set_as_favorite();
@@ -507,8 +511,10 @@ protected:
 	static void _bind_methods();
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
 
+#ifdef ACCESSKIT_ENABLED
 	void _accessibility_action_collapse(const Variant &p_data);
 	void _accessibility_action_expand(const Variant &p_data);
+#endif // ACCESSKIT_ENABLED
 
 public:
 	virtual Size2 get_minimum_size() const override;
@@ -540,9 +546,11 @@ class ArrayPanelContainer : public PanelContainer {
 	GDCLASS(ArrayPanelContainer, PanelContainer);
 
 protected:
+#ifdef ACCESSKIT_ENABLED
 	void _notification(int p_what);
 
 	void _accessibility_action_menu(const Variant &p_data);
+#endif // ACCESSKIT_ENABLED
 
 public:
 	ArrayPanelContainer();

@@ -54,8 +54,10 @@ public:
 
 private:
 	struct Tab {
+#ifdef ACCESSKIT_ENABLED
 		mutable RID accessibility_item_element;
 		mutable bool accessibility_item_dirty = true;
+#endif // ACCESSKIT_ENABLED
 
 		String text;
 		String tooltip;
@@ -195,8 +197,10 @@ protected:
 	void _move_tab_from(TabBar *p_from_tabbar, int p_from_index, int p_to_index);
 
 public:
+#ifdef ACCESSKIT_ENABLED
 	RID get_tab_accessibility_element(int p_tab) const;
 	virtual RID get_focused_accessibility_element() const override;
+#endif // ACCESSKIT_ENABLED
 
 	Variant _handle_get_drag_data(const String &p_type, const Point2 &p_point);
 	bool _handle_can_drop_data(const String &p_type, const Point2 &p_point, const Variant &p_data) const;

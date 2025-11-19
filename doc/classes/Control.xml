@@ -24,12 +24,6 @@
 		<link title="All GUI Demos">https://github.com/godotengine/godot-demo-projects/tree/master/gui</link>
 	</tutorials>
 	<methods>
-		<method name="_accessibility_get_contextual_info" qualifiers="virtual const">
-			<return type="String" />
-			<description>
-				Return the description of the keyboard shortcuts and other contextual help for this control.
-			</description>
-		</method>
 		<method name="_can_drop_data" qualifiers="virtual const">
 			<return type="bool" />
 			<param index="0" name="at_position" type="Vector2" />
@@ -37,7 +31,7 @@
 			<description>
 				Godot calls this method to test if [param data] from a control's [method _get_drag_data] can be dropped at [param at_position]. [param at_position] is local to this control.
 				This method should only be used to test the data. Process the data in [method _drop_data].
-				[b]Note:[/b] If the drag was initiated by a keyboard shortcut or [method accessibility_drag], [param at_position] is set to [constant Vector2.INF], and the currently selected item/text position should be used as the drop position.
+				[b]Note:[/b] If the drag was initiated by a keyboard shortcut, [param at_position] is set to [constant Vector2.INF], and the currently selected item/text position should be used as the drop position.
 				[codeblocks]
 				[gdscript]
 				func _can_drop_data(position, data):
@@ -62,7 +56,7 @@
 			<param index="1" name="data" type="Variant" />
 			<description>
 				Godot calls this method to pass you the [param data] from a control's [method _get_drag_data] result. Godot first calls [method _can_drop_data] to test if [param data] is allowed to drop at [param at_position] where [param at_position] is local to this control.
-				[b]Note:[/b] If the drag was initiated by a keyboard shortcut or [method accessibility_drag], [param at_position] is set to [constant Vector2.INF], and the currently selected item/text position should be used as the drop position.
+				[b]Note:[/b] If the drag was initiated by a keyboard shortcut, [param at_position] is set to [constant Vector2.INF], and the currently selected item/text position should be used as the drop position.
 				[codeblocks]
 				[gdscript]
 				func _can_drop_data(position, data):
@@ -85,20 +79,13 @@
 				[/codeblocks]
 			</description>
 		</method>
-		<method name="_get_accessibility_container_name" qualifiers="virtual const">
-			<return type="String" />
-			<param index="0" name="node" type="Node" />
-			<description>
-				Override this method to return a human-readable description of the position of the child [param node] in the custom container, added to the [member accessibility_name].
-			</description>
-		</method>
 		<method name="_get_drag_data" qualifiers="virtual">
 			<return type="Variant" />
 			<param index="0" name="at_position" type="Vector2" />
 			<description>
 				Godot calls this method to get data that can be dragged and dropped onto controls that expect drop data. Returns [code]null[/code] if there is no data to drag. Controls that want to receive drop data should implement [method _can_drop_data] and [method _drop_data]. [param at_position] is local to this control. Drag may be forced with [method force_drag].
 				A preview that will follow the mouse that should represent the data can be set with [method set_drag_preview]. A good time to set the preview is in this method.
-				[b]Note:[/b] If the drag was initiated by a keyboard shortcut or [method accessibility_drag], [param at_position] is set to [constant Vector2.INF], and the currently selected item/text position should be used as the drag position.
+				[b]Note:[/b] If the drag was initiated by a keyboard shortcut, [param at_position] is set to [constant Vector2.INF], and the currently selected item/text position should be used as the drag position.
 				[codeblocks]
 				[gdscript]
 				func _get_drag_data(position):
@@ -237,18 +224,6 @@
 			<description>
 				Marks an input event as handled. Once you accept an input event, it stops propagating, even to nodes listening to [method Node._unhandled_input] or [method Node._unhandled_key_input].
 				[b]Note:[/b] This does not affect the methods in [Input], only the way events are propagated.
-			</description>
-		</method>
-		<method name="accessibility_drag">
-			<return type="void" />
-			<description>
-				Starts drag-and-drop operation without using a mouse.
-			</description>
-		</method>
-		<method name="accessibility_drop">
-			<return type="void" />
-			<description>
-				Ends drag-and-drop operation without using a mouse.
 			</description>
 		</method>
 		<method name="add_theme_color_override">
@@ -975,27 +950,6 @@
 		</method>
 	</methods>
 	<members>
-		<member name="accessibility_controls_nodes" type="NodePath[]" setter="set_accessibility_controls_nodes" getter="get_accessibility_controls_nodes" default="[]">
-			The paths to the nodes which are controlled by this node.
-		</member>
-		<member name="accessibility_described_by_nodes" type="NodePath[]" setter="set_accessibility_described_by_nodes" getter="get_accessibility_described_by_nodes" default="[]">
-			The paths to the nodes which are describing this node.
-		</member>
-		<member name="accessibility_description" type="String" setter="set_accessibility_description" getter="get_accessibility_description" default="&quot;&quot;">
-			The human-readable node description that is reported to assistive apps.
-		</member>
-		<member name="accessibility_flow_to_nodes" type="NodePath[]" setter="set_accessibility_flow_to_nodes" getter="get_accessibility_flow_to_nodes" default="[]">
-			The paths to the nodes which this node flows into.
-		</member>
-		<member name="accessibility_labeled_by_nodes" type="NodePath[]" setter="set_accessibility_labeled_by_nodes" getter="get_accessibility_labeled_by_nodes" default="[]">
-			The paths to the nodes which label this node.
-		</member>
-		<member name="accessibility_live" type="int" setter="set_accessibility_live" getter="get_accessibility_live" enum="DisplayServer.AccessibilityLiveMode" default="0">
-			The mode with which a live region updates. A live region is a [Node] that is updated as a result of an external event when the user's focus may be elsewhere.
-		</member>
-		<member name="accessibility_name" type="String" setter="set_accessibility_name" getter="get_accessibility_name" default="&quot;&quot;">
-			The human-readable node name that is reported to assistive apps.
-		</member>
 		<member name="anchor_bottom" type="float" setter="_set_anchor" getter="get_anchor" default="0.0">
 			Anchors the bottom edge of the node to the origin, the center, or the end of its parent control. It changes how the bottom offset updates when the node moves or changes size. You can use one of the [enum Anchor] constants for convenience.
 		</member>

@@ -38,7 +38,10 @@
 #include "servers/display/native_menu.h"
 
 class Texture2D;
+
+#ifdef ACCESSKIT_ENABLED
 class AccessibilityDriver;
+#endif // ACCESSKIT
 
 class DisplayServer : public Object {
 	GDCLASS(DisplayServer, Object)
@@ -549,7 +552,9 @@ public:
 	};
 
 protected:
+#ifdef ACCESSKIT_ENABLED
 	AccessibilityDriver *accessibility_driver = nullptr;
+#endif // ACCESSKIT_ENABLED
 	static AccessibilityMode accessibility_mode;
 
 public:
@@ -668,13 +673,14 @@ public:
 		SCROLL_HINT_RIGHT_EDGE,
 	};
 
-	static AccessibilityMode accessibility_get_mode() { return accessibility_mode; }
-	static void accessibility_set_mode(AccessibilityMode p_mode) { accessibility_mode = p_mode; }
-
 	virtual int accessibility_should_increase_contrast() const { return -1; }
 	virtual int accessibility_should_reduce_animation() const { return -1; }
 	virtual int accessibility_should_reduce_transparency() const { return -1; }
 	virtual int accessibility_screen_reader_active() const { return -1; }
+
+#ifdef ACCESSKIT_ENABLED
+	static AccessibilityMode accessibility_get_mode() { return accessibility_mode; }
+	static void accessibility_set_mode(AccessibilityMode p_mode) { accessibility_mode = p_mode; }
 
 	virtual RID accessibility_create_element(WindowID p_window_id, DisplayServer::AccessibilityRole p_role);
 	virtual RID accessibility_create_sub_element(const RID &p_parent_rid, DisplayServer::AccessibilityRole p_role, int p_insert_pos = -1);
@@ -754,6 +760,7 @@ public:
 	virtual void accessibility_update_set_color_value(const RID &p_id, const Color &p_color);
 	virtual void accessibility_update_set_background_color(const RID &p_id, const Color &p_color);
 	virtual void accessibility_update_set_foreground_color(const RID &p_id, const Color &p_color);
+#endif // ACCESSKIT_ENABLED
 
 	// necessary for GL focus, may be able to use one of the existing functions for this, not sure yet
 	virtual void gl_window_make_current(DisplayServer::WindowID p_window_id);
@@ -901,6 +908,7 @@ public:
 
 /**************************************************************************/
 
+#ifdef ACCESSKIT_ENABLED
 class AccessibilityDriver {
 public:
 	virtual Error init() = 0;
@@ -990,6 +998,7 @@ public:
 	AccessibilityDriver() {}
 	virtual ~AccessibilityDriver() {}
 };
+#endif // ACCESSKIT_ENABLED
 
 VARIANT_ENUM_CAST(DisplayServer::AccessibilityAction)
 VARIANT_ENUM_CAST(DisplayServer::AccessibilityFlags)

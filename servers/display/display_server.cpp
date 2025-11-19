@@ -632,6 +632,7 @@ void DisplayServer::window_set_ime_position(const Point2i &p_pos, WindowID p_win
 	WARN_PRINT("IME not supported by this display server.");
 }
 
+#ifdef ACCESSKIT_ENABLED
 RID DisplayServer::accessibility_create_element(WindowID p_window, DisplayServer::AccessibilityRole p_role) {
 	if (accessibility_driver) {
 		return accessibility_driver->accessibility_create_element(p_window, p_role);
@@ -1081,6 +1082,7 @@ void DisplayServer::accessibility_update_set_foreground_color(const RID &p_id, c
 		accessibility_driver->accessibility_update_set_foreground_color(p_id, p_color);
 	}
 }
+#endif // ACCESSKIT_ENABLED
 
 Point2i DisplayServer::ime_get_selection() const {
 	ERR_FAIL_V_MSG(Point2i(), "IME or NOTIFICATION_WM_IME_UPDATE not supported by this display server.");
@@ -1483,6 +1485,7 @@ void DisplayServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("accessibility_should_reduce_transparency"), &DisplayServer::accessibility_should_reduce_transparency);
 	ClassDB::bind_method(D_METHOD("accessibility_screen_reader_active"), &DisplayServer::accessibility_screen_reader_active);
 
+#ifdef ACCESSKIT_ENABLED
 	ClassDB::bind_method(D_METHOD("accessibility_create_element", "window_id", "role"), &DisplayServer::accessibility_create_element);
 	ClassDB::bind_method(D_METHOD("accessibility_create_sub_element", "parent_rid", "role", "insert_pos"), &DisplayServer::accessibility_create_sub_element, DEFVAL(-1));
 	ClassDB::bind_method(D_METHOD("accessibility_create_sub_text_edit_elements", "parent_rid", "shaped_text", "min_height", "insert_pos"), &DisplayServer::accessibility_create_sub_text_edit_elements, DEFVAL(-1));
@@ -1559,6 +1562,7 @@ void DisplayServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("accessibility_update_set_color_value", "id", "color"), &DisplayServer::accessibility_update_set_color_value);
 	ClassDB::bind_method(D_METHOD("accessibility_update_set_background_color", "id", "color"), &DisplayServer::accessibility_update_set_background_color);
 	ClassDB::bind_method(D_METHOD("accessibility_update_set_foreground_color", "id", "color"), &DisplayServer::accessibility_update_set_foreground_color);
+#endif // ACCESSKIT_ENABLED
 
 	ClassDB::bind_method(D_METHOD("ime_get_selection"), &DisplayServer::ime_get_selection);
 	ClassDB::bind_method(D_METHOD("ime_get_text"), &DisplayServer::ime_get_text);

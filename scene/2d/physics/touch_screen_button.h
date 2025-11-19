@@ -73,9 +73,9 @@ protected:
 #ifndef DISABLE_DEPRECATED
 	bool _set(const StringName &p_name, const Variant &p_value);
 #endif // DISABLE_DEPRECATED
-
+#ifdef ACCESSKIT_ENABLED
 	void _accessibility_action_click(const Variant &p_data);
-
+#endif // ACCESSKIT_ENABLED
 public:
 #ifdef DEBUG_ENABLED
 	virtual Rect2 _edit_get_rect() const override;

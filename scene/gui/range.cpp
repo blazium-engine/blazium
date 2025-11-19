@@ -90,6 +90,7 @@ void Range::_value_changed_notify() {
 	queue_redraw();
 }
 
+#ifdef ACCESSKIT_ENABLED
 void Range::_accessibility_action_inc(const Variant &p_data) {
 	double step = ((shared->step > 0) ? shared->step : 1);
 	set_value(shared->val + step);
@@ -126,6 +127,7 @@ void Range::_notification(int p_what) {
 		} break;
 	}
 }
+#endif // ACCESSKIT_ENABLED
 
 void Range::Shared::emit_value_changed() {
 	for (Range *E : owners) {

@@ -155,17 +155,20 @@ private:
 	ContentScaleStretch content_scale_stretch = CONTENT_SCALE_STRETCH_FRACTIONAL;
 	real_t content_scale_factor = 1.0;
 
+#ifdef ACCESSKIT_ENABLED
 	RID accessibility_title_element;
 	RID accessibility_announcement_element;
 	String announcement;
 	String accessibility_name;
 	String accessibility_description;
+#endif // ACCESSKIT_ENABLED
+
+	void _accessibility_notify_enter(Node *p_node);
+	void _accessibility_notify_exit(Node *p_node);
 
 	void _make_window();
 	void _clear_window();
 	void _update_from_window();
-	void _accessibility_notify_enter(Node *p_node);
-	void _accessibility_notify_exit(Node *p_node);
 
 	bool _try_parent_dialog(Node *p_from_node);
 
@@ -276,9 +279,9 @@ protected:
 	void _get_property_list(List<PropertyInfo> *p_list) const;
 	void _validate_property(PropertyInfo &p_property) const;
 
-	void _accessibility_action_grab_focus(const Variant &p_data) {
-		grab_focus();
-	}
+#ifdef ACCESSKIT_ENABLED
+	void _accessibility_action_grab_focus(const Variant &p_data) { grab_focus(); }
+#endif // ACCESSKIT_ENABLED
 
 	virtual void add_child_notify(Node *p_child) override;
 	virtual void remove_child_notify(Node *p_child) override;
@@ -295,8 +298,10 @@ public:
 	static void set_root_layout_direction(int p_root_dir);
 	static Window *get_from_id(DisplayServer::WindowID p_window_id);
 
+#ifdef ACCESSKIT_ENABLED
 	RID get_accessibility_element() const override;
 	virtual RID get_focused_accessibility_element() const override;
+#endif // ACCESSKIT_ENABLED
 
 	void set_title(const String &p_title);
 	String get_title() const;
@@ -437,10 +442,12 @@ public:
 	void set_accessibility_name(const String &p_name);
 	String get_accessibility_name() const;
 
+#ifdef ACCESSKIT_ENABLED
 	void set_accessibility_description(const String &p_description);
 	String get_accessibility_description() const;
 
 	void accessibility_announcement(const String &p_announcement);
+#endif // ACCESSKIT_ENABLED
 
 	// Internationalization.
 

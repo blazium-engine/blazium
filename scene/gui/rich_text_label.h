@@ -168,8 +168,10 @@ private:
 		Ref<TextParagraph> text_buf;
 		Ref<TextParagraph> text_buf_disp;
 
+#ifdef ACCESSKIT_ENABLED
 		RID accessibility_line_element;
 		RID accessibility_text_element;
+#endif // ACCESSKIT_ENABLED
 
 		Item *dc_item = nullptr;
 		Color dc_color;
@@ -185,11 +187,13 @@ private:
 			text_buf.instantiate();
 		}
 		~Line() {
+#ifdef ACCESSKIT_ENABLED
 			if (accessibility_line_element.is_valid()) {
 				DisplayServer::get_singleton()->accessibility_free_element(accessibility_line_element);
 				accessibility_line_element = RID();
 				accessibility_text_element = RID();
 			}
+#endif // ACCESSKIT_ENABLED
 		}
 
 		_FORCE_INLINE_ float get_height(float p_line_separation, float p_paragraph_separation) const {
@@ -818,8 +822,10 @@ private:
 	} theme_cache;
 
 public:
+#ifdef ACCESSKIT_ENABLED
 	virtual RID get_focused_accessibility_element() const override;
 	PackedStringArray get_accessibility_configuration_warnings() const override;
+#endif // ACCESSKIT_ENABLED
 
 	String get_parsed_text() const;
 	void add_text(const String &p_text);

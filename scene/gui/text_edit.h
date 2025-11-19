@@ -152,7 +152,9 @@ private:
 			String data;
 			Array bidi_override;
 			Ref<TextParagraph> data_buf;
+#ifdef ACCESSKIT_ENABLED
 			Vector<RID> accessibility_text_root_element;
+#endif // ACCESSKIT_ENABLED
 
 			String ime_data;
 			Array ime_bidi_override;
@@ -232,6 +234,7 @@ private:
 		BitField<TextServer::LineBreakFlag> get_brk_flags() const;
 		int get_line_wrap_amount(int p_line) const;
 
+#ifdef ACCESSKIT_ENABLED
 		const Vector<RID> get_accessibility_elements(int p_line);
 		void update_accessibility(int p_line, RID p_root);
 		void clear_accessibility() {
@@ -239,6 +242,7 @@ private:
 				text.write[i].accessibility_text_root_element.clear();
 			}
 		}
+#endif // ACCESSKIT_ENABLED
 
 		Vector<Vector2i> get_line_wrap_ranges(int p_line) const;
 		const Ref<TextParagraph> get_line_data(int p_line) const;
@@ -656,7 +660,9 @@ private:
 	bool draw_tabs = false;
 	bool draw_spaces = false;
 
+#ifdef ACCESSKIT_ENABLED
 	RID accessibility_text_root_element_nl;
+#endif // ACCESSKIT_ENABLED
 
 	// FIXME: Helper method to draw unfilled rects, should be moved to RenderingServer.
 	void _draw_rect_unfilled(RID p_canvas_item, const Rect2 &p_rect, const Color &p_color, real_t p_width = -1.0, bool p_antialiased = false) const;
@@ -756,6 +762,7 @@ protected:
 	virtual void _paste_internal(int p_caret);
 	virtual void _paste_primary_clipboard_internal(int p_caret);
 
+#ifdef ACCESSKIT_ENABLED
 	void _accessibility_action_set_selection(const Variant &p_data);
 	void _accessibility_action_replace_selected(const Variant &p_data);
 	void _accessibility_action_set_value(const Variant &p_data);
@@ -766,6 +773,7 @@ protected:
 	void _accessibility_scroll_up(const Variant &p_data);
 	void _accessibility_scroll_set(const Variant &p_data);
 	void _accessibility_action_scroll_into_view(const Variant &p_data, int p_line, int p_wrap);
+#endif // ACCESSKIT_ENABLED
 
 	GDVIRTUAL2(_handle_unicode_input, int, int)
 	GDVIRTUAL1(_backspace, int)

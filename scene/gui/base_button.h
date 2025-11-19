@@ -97,7 +97,10 @@ protected:
 	Size2 _get_final_minimum_size(const Size2 &p_min_size) const;
 
 	bool _was_pressed_by_mouse() const;
+
+#ifdef ACCESSKIT_ENABLED
 	void _accessibility_action_click(const Variant &p_data);
+#endif // ACCESSKIT_ENABLED
 
 	GDVIRTUAL0(_pressed)
 	GDVIRTUAL1(_toggled, bool)

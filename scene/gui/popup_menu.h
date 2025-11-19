@@ -45,8 +45,10 @@ class PopupMenu : public Popup {
 	static HashMap<NativeMenu::SystemMenus, PopupMenu *> system_menus;
 
 	struct Item {
+#ifdef ACCESSKIT_ENABLED
 		mutable RID accessibility_item_element;
 		mutable bool accessibility_item_dirty = true;
+#endif // ACCESSKIT_ENABLED
 
 		Ref<Texture2D> icon;
 		int icon_max_width = 0;
@@ -99,7 +101,9 @@ class PopupMenu : public Popup {
 
 		Item(bool p_dummy) {}
 	};
+#ifdef ACCESSKIT_ENABLED
 	RID accessibility_scroll_element;
+#endif // ACCESSKIT_ENABLED
 
 	mutable Rect2i pre_popup_rect;
 	void _update_shadow_offsets() const;
@@ -140,7 +144,9 @@ class PopupMenu : public Popup {
 
 	void _shape_item(int p_idx) const;
 
+#ifdef ACCESSKIT_ENABLED
 	void _accessibility_action_click(const Variant &p_data, int p_idx);
+#endif // ACCESSKIT_ENABLED
 
 	void _activate_submenu(int p_over, bool p_by_keyboard = false);
 	void _submenu_timeout();
@@ -261,7 +267,9 @@ public:
 	// this value should be updated to reflect the new size.
 	static const int ITEM_PROPERTY_SIZE = 10;
 
+#ifdef ACCESSKIT_ENABLED
 	virtual RID get_focused_accessibility_element() const override;
+#endif // ACCESSKIT_ENABLED
 
 	virtual void _parent_focused() override;
 

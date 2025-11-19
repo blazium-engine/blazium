@@ -153,6 +153,7 @@ Size2 LinkButton::get_minimum_size() const {
 
 void LinkButton::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -166,6 +167,7 @@ void LinkButton::_notification(int p_what) {
 			}
 			DisplayServer::get_singleton()->accessibility_update_set_url(ae, uri);
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_TRANSLATION_CHANGED: {
 			xl_text = atr(text);

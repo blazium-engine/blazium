@@ -104,6 +104,7 @@ void ColorButton::_validate_property(PropertyInfo &p_property) const {
 
 void ColorButton::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -111,6 +112,7 @@ void ColorButton::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_COLOR_PICKER);
 			DisplayServer::get_singleton()->accessibility_update_set_color_value(ae, color);
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_DRAW: {
 			RID ci = get_canvas_item();

@@ -108,7 +108,9 @@ void TreeItem::_change_tree(Tree *p_tree) {
 	if (p_tree == tree) {
 		return;
 	}
+#ifdef ACCESSKIT_ENABLED
 	accessibility_row_dirty = true;
+#endif // ACCESSKIT_ENABLED
 
 	TreeItem *c = first_child;
 	while (c) {
@@ -158,6 +160,7 @@ void TreeItem::_change_tree(Tree *p_tree) {
 
 	tree = p_tree;
 
+#ifdef ACCESSKIT_ENABLED
 	if (accessibility_row_element.is_valid()) {
 		DisplayServer::get_singleton()->accessibility_free_element(accessibility_row_element);
 		accessibility_row_element = RID();
@@ -174,6 +177,7 @@ void TreeItem::_change_tree(Tree *p_tree) {
 			}
 		}
 	}
+#endif // ACCESSKIT_ENABLED
 
 	if (tree) {
 		tree->queue_accessibility_update();
@@ -1332,11 +1336,13 @@ void TreeItem::clear_buttons() {
 	int i = 0;
 	for (Cell &cell : cells) {
 		if (!cell.buttons.is_empty()) {
+#ifdef ACCESSKIT_ENABLED
 			for (Cell::Button &btn : cell.buttons) {
 				if (btn.accessibility_button_element.is_valid()) {
 					DisplayServer::get_singleton()->accessibility_free_element(btn.accessibility_button_element);
 				}
 			}
+#endif // ACCESSKIT_ENABLED
 			cell.buttons.clear();
 			cell.cached_minimum_size_dirty = true;
 			_changed_notify(i);
@@ -1392,9 +1398,11 @@ int TreeItem::get_button_id(int p_column, int p_index) const {
 void TreeItem::erase_button(int p_column, int p_index) {
 	ERR_FAIL_INDEX(p_column, cells.size());
 	ERR_FAIL_INDEX(p_index, cells[p_column].buttons.size());
+#ifdef ACCESSKIT_ENABLED
 	if (cells[p_column].buttons[p_index].accessibility_button_element.is_valid()) {
 		DisplayServer::get_singleton()->accessibility_free_element(cells.write[p_column].buttons.write[p_index].accessibility_button_element);
 	}
+#endif // ACCESSKIT_ENABLED
 	cells.write[p_column].buttons.remove_at(p_index);
 	_changed_notify(p_column);
 	if (get_tree()) {
@@ -4552,6 +4560,7 @@ int Tree::_get_title_button_height() const {
 	return h;
 }
 
+#ifdef ACCESSKIT_ENABLED
 void Tree::_check_item_accessibility(TreeItem *p_item, PackedStringArray &r_warnings, int &r_row) const {
 	for (int i = 0; i < p_item->cells.size(); i++) {
 		const TreeItem::Cell &cell = p_item->cells[i];
@@ -4849,6 +4858,7 @@ void Tree::_accessibility_update_item(Point2 &r_ofs, TreeItem *p_item, int &r_ro
 		}
 	}
 }
+#endif // ACCESSKIT_ENABLED
 
 void Tree::_notification(int p_what) {
 	switch (p_what) {
@@ -5217,7 +5227,9 @@ void Tree::item_changed(int p_column, TreeItem *p_item) {
 				columns.write[i].cached_minimum_width_dirty = true;
 			}
 		}
+#ifdef ACCESSKIT_ENABLED
 		p_item->accessibility_row_dirty = true;
+#endif // ACCESSKIT_ENABLED
 	}
 	update_min_size_for_item_change();
 	queue_accessibility_update();
@@ -5239,8 +5251,10 @@ void Tree::item_selected(int p_column, TreeItem *p_item) {
 	} else {
 		select_single_item(p_item, root, p_column);
 	}
+#ifdef ACCESSKIT_ENABLED
 	p_item->accessibility_row_dirty = true;
 	queue_accessibility_update();
+#endif // ACCESSKIT_ENABLED
 	queue_redraw();
 }
 
@@ -5268,8 +5282,10 @@ void Tree::item_deselected(int p_column, TreeItem *p_item) {
 			p_item->cells.write[i].selected = false;
 		}
 	}
+#ifdef ACCESSKIT_ENABLED
 	p_item->accessibility_row_dirty = true;
 	queue_accessibility_update();
+#endif // ACCESSKIT_ENABLED
 	queue_redraw();
 }
 
@@ -5572,6 +5588,7 @@ int Tree::get_column_width(int p_column) const {
 
 void Tree::propagate_set_columns(TreeItem *p_item) {
 	p_item->cells.resize(columns.size());
+#ifdef ACCESSKIT_ENABLED
 	p_item->accessibility_row_dirty = true;
 	for (TreeItem::Cell &cell : p_item->cells) {
 		if (cell.accessibility_cell_element.is_valid()) {
@@ -5585,6 +5602,7 @@ void Tree::propagate_set_columns(TreeItem *p_item) {
 			}
 		}
 	}
+#endif // ACCESSKIT_ENABLED
 
 	TreeItem *c = p_item->get_first_child();
 	while (c) {
@@ -5597,6 +5615,7 @@ void Tree::set_columns(int p_columns) {
 	ERR_FAIL_COND(p_columns < 1);
 	ERR_FAIL_COND(blocked > 0);
 
+#ifdef ACCESSKIT_ENABLED
 	if (columns.size() > p_columns) {
 		for (int i = p_columns; i < columns.size(); i++) {
 			if (columns[i].accessibility_col_element.is_valid()) {
@@ -5605,6 +5624,7 @@ void Tree::set_columns(int p_columns) {
 			}
 		}
 	}
+#endif // ACCESSKIT_ENABLED
 
 	columns.resize(p_columns);
 

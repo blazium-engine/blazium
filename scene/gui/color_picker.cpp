@@ -77,6 +77,7 @@ static inline String color_to_string(const Color &color, bool show_alpha = true,
 
 void ColorPicker::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -84,6 +85,7 @@ void ColorPicker::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_COLOR_PICKER);
 			DisplayServer::get_singleton()->accessibility_update_set_color_value(ae, color);
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_ENTER_TREE: {
 			_update_color();
@@ -2487,6 +2489,7 @@ void ColorPickerButton::pressed() {
 
 void ColorPickerButton::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -2495,6 +2498,7 @@ void ColorPickerButton::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_popup_type(ae, DisplayServer::AccessibilityPopupType::POPUP_DIALOG);
 			DisplayServer::get_singleton()->accessibility_update_set_color_value(ae, color);
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_DRAW: {
 			const Rect2 r = Rect2(theme_cache.normal_style->get_offset(), get_size() - theme_cache.normal_style->get_minimum_size());
@@ -2628,6 +2632,7 @@ ColorPickerButton::ColorPickerButton(const String &p_text) :
 
 void ColorPresetButton::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -2635,6 +2640,7 @@ void ColorPresetButton::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_BUTTON);
 			DisplayServer::get_singleton()->accessibility_update_set_color_value(ae, preset_color);
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_DRAW: {
 			const Rect2 r = Rect2(Point2(0, 0), get_size());

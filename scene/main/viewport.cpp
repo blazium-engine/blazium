@@ -2292,6 +2292,7 @@ void Viewport::_gui_input_event(Ref<InputEvent> p_event) {
 					next = from->find_prev_valid_focus();
 				}
 
+#ifdef ACCESSKIT_ENABLED
 				if (p_event->is_action_pressed(SNAME("ui_accessibility_drag_and_drop")) && input->is_action_just_pressed_by_event(SNAME("ui_accessibility_drag_and_drop"), p_event)) {
 					if (gui_is_dragging()) {
 						from->accessibility_drop();
@@ -2299,6 +2300,7 @@ void Viewport::_gui_input_event(Ref<InputEvent> p_event) {
 						from->accessibility_drag();
 					}
 				}
+#endif // ACCESSKIT_ENABLED
 
 				if (p_event->is_action_pressed(SNAME("ui_up")) && input->is_action_just_pressed_by_event(SNAME("ui_up"), p_event)) {
 					next = from->_get_focus_neighbor(SIDE_TOP);
@@ -2324,6 +2326,7 @@ void Viewport::_gui_input_event(Ref<InputEvent> p_event) {
 					next = from->find_prev_valid_focus();
 				}
 
+#ifdef ACCESSKIT_ENABLED
 				if (p_event->is_action_pressed(SNAME("ui_accessibility_drag_and_drop"), true, true)) {
 					if (gui_is_dragging()) {
 						from->accessibility_drop();
@@ -2331,6 +2334,7 @@ void Viewport::_gui_input_event(Ref<InputEvent> p_event) {
 						from->accessibility_drag();
 					}
 				}
+#endif // ACCESSKIT_ENABLED
 
 				if (p_event->is_action_pressed(SNAME("ui_up"), true, true)) {
 					next = from->_get_focus_neighbor(SIDE_TOP);

@@ -530,6 +530,7 @@ void ItemList::set_item_count(int p_count) {
 		return;
 	}
 
+#ifdef ACCESSKIT_ENABLED
 	if (items.size() > p_count) {
 		for (int i = p_count; i < items.size(); i++) {
 			if (items[i].accessibility_item_element.is_valid()) {
@@ -538,6 +539,7 @@ void ItemList::set_item_count(int p_count) {
 			}
 		}
 	}
+#endif // ACCESSKIT_ENABLED
 
 	items.resize(p_count);
 	queue_accessibility_update();
@@ -553,10 +555,12 @@ int ItemList::get_item_count() const {
 void ItemList::remove_item(int p_idx) {
 	ERR_FAIL_INDEX(p_idx, items.size());
 
+#ifdef ACCESSKIT_ENABLED
 	if (items[p_idx].accessibility_item_element.is_valid()) {
 		DisplayServer::get_singleton()->accessibility_free_element(items.write[p_idx].accessibility_item_element);
 		items.write[p_idx].accessibility_item_element = RID();
 	}
+#endif // ACCESSKIT_ENABLED
 	items.remove_at(p_idx);
 	if (current == p_idx) {
 		current = -1;
@@ -569,12 +573,14 @@ void ItemList::remove_item(int p_idx) {
 }
 
 void ItemList::clear() {
+#ifdef ACCESSKIT_ENABLED
 	for (int i = 0; i < items.size(); i++) {
 		if (items[i].accessibility_item_element.is_valid()) {
 			DisplayServer::get_singleton()->accessibility_free_element(items.write[i].accessibility_item_element);
 			items.write[i].accessibility_item_element = RID();
 		}
 	}
+#endif // ACCESSKIT_ENABLED
 	items.clear();
 	current = -1;
 	ensure_selected_visible = false;
@@ -1198,6 +1204,7 @@ static Rect2 _adjust_to_max_size(Size2 p_size, Size2 p_max_size) {
 	return Rect2(ofs_x, ofs_y, tex_width, tex_height);
 }
 
+#ifdef ACCESSKIT_ENABLED
 RID ItemList::get_focused_accessibility_element() const {
 	if (current == -1) {
 		return get_accessibility_element();
@@ -1273,10 +1280,12 @@ void ItemList::_accessibility_action_focus(const Variant &p_data, int p_index) {
 void ItemList::_accessibility_action_blur(const Variant &p_data, int p_index) {
 	deselect(p_index);
 }
+#endif // ACCESSKIT_ENABLED
 
 void ItemList::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_EXIT_TREE:
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_INVALIDATE: {
 			for (int i = 0; i < items.size(); i++) {
 				items.write[i].accessibility_item_element = RID();
@@ -1338,6 +1347,7 @@ void ItemList::_notification(int p_what) {
 			prev_hovered = -1;
 
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_RESIZED: {
 			shape_changed = true;

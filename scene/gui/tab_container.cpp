@@ -135,6 +135,7 @@ void TabContainer::gui_input(const Ref<InputEvent> &p_event) {
 
 void TabContainer::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_INVALIDATE: {
 			tab_panels.clear();
 		} break;
@@ -173,6 +174,7 @@ void TabContainer::_notification(int p_what) {
 				}
 			}
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_ENTER_TREE: {
 			// If some nodes happen to be renamed outside the tree, the tab names need to be updated manually.
@@ -631,10 +633,12 @@ void TabContainer::move_child_notify(Node *p_child) {
 void TabContainer::remove_child_notify(Node *p_child) {
 	Container::remove_child_notify(p_child);
 
+#ifdef ACCESSKIT_ENABLED
 	if (tab_panels.has(p_child)) {
 		DisplayServer::get_singleton()->accessibility_free_element(tab_panels[p_child]);
 		tab_panels.erase(p_child);
 	}
+#endif // ACCESSKIT_ENABLED
 
 	if (p_child == tab_bar) {
 		return;

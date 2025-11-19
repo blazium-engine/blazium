@@ -1145,6 +1145,7 @@ void LineEdit::_update_theme_item_cache() {
 	theme_cache.base_scale = get_theme_default_base_scale();
 }
 
+#ifdef ACCESSKIT_ENABLED
 void LineEdit::_accessibility_action_set_selection(const Variant &p_data) {
 	Dictionary new_selection = p_data;
 	int sel_start_pos = new_selection["start_char"];
@@ -1171,6 +1172,7 @@ void LineEdit::_accessibility_action_menu(const Variant &p_data) {
 	menu->popup();
 	menu->grab_focus();
 }
+#endif // ACCESSKIT_ENABLED
 
 void LineEdit::_notification(int p_what) {
 	switch (p_what) {
@@ -1188,9 +1190,12 @@ void LineEdit::_notification(int p_what) {
 #endif
 		case NOTIFICATION_EXIT_TREE:
 		case NOTIFICATION_ACCESSIBILITY_INVALIDATE: {
+#ifdef ACCESSKIT_ENABLED
 			accessibility_text_root_element = RID();
+#endif // ACCESSKIT_ENABLED
 		} break;
 
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -1286,6 +1291,7 @@ void LineEdit::_notification(int p_what) {
 				DisplayServer::get_singleton()->accessibility_update_set_text_selection(ae, accessibility_text_root_element, caret_column, accessibility_text_root_element, caret_column);
 			}
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_RESIZED: {
 			_fit_to_width();
@@ -3024,12 +3030,14 @@ void LineEdit::_shape() {
 		update_minimum_size();
 	}
 
+#ifdef ACCESSKIT_ENABLED
 	if (accessibility_text_root_element.is_valid()) {
 		DisplayServer::get_singleton()->accessibility_free_element(accessibility_text_root_element);
 		accessibility_text_root_element = RID();
 	}
 
 	queue_accessibility_update();
+#endif // ACCESSKIT_ENABLED
 }
 
 void LineEdit::_fit_to_width() {

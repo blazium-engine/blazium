@@ -186,20 +186,26 @@ void EngineUpdateLabel::_set_status(UpdateStatus p_status) {
 			} else {
 				_set_message(TTR("Update checks disabled."), theme_cache.disabled_color);
 			}
+#ifdef ACCESSKIT_ENABLED
 			set_accessibility_live(DisplayServer::AccessibilityLiveMode::LIVE_OFF);
+#endif // ACCESSKIT_ENABLED
 			set_tooltip_text("");
 			break;
 		}
 
 		case UpdateStatus::ERROR: {
 			set_disabled(false);
+#ifdef ACCESSKIT_ENABLED
 			set_accessibility_live(DisplayServer::AccessibilityLiveMode::LIVE_POLITE);
+#endif // ACCESSKIT_ENABLED
 			set_tooltip_text(TTR("An error has occurred. Click to try again."));
 		} break;
 
 		case UpdateStatus::UPDATE_AVAILABLE: {
 			set_disabled(false);
+#ifdef ACCESSKIT_ENABLED
 			set_accessibility_live(DisplayServer::AccessibilityLiveMode::LIVE_POLITE);
+#endif // ACCESSKIT_ENABLED
 			set_tooltip_text(TTR("Click to open download page."));
 		} break;
 

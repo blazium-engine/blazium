@@ -2026,6 +2026,7 @@ void RichTextLabel::_update_theme_item_cache() {
 	use_selected_font_color = theme_cache.font_selected_color != Color(0, 0, 0, 0);
 }
 
+#ifdef ACCESSKIT_ENABLED
 PackedStringArray RichTextLabel::get_accessibility_configuration_warnings() const {
 	PackedStringArray warnings = Control::get_accessibility_configuration_warnings();
 
@@ -2324,7 +2325,26 @@ void RichTextLabel::_accessibility_scroll_to_item(const Variant &p_data, uint64_
 	}
 }
 
+RID RichTextLabel::get_focused_accessibility_element() const {
+	if (keyboard_focus_frame && keyboard_focus_item) {
+		if (keyboard_focus_on_text) {
+			return keyboard_focus_frame->lines[keyboard_focus_line].accessibility_text_element;
+		} else {
+			if (keyboard_focus_item->accessibility_item_element.is_valid()) {
+				return keyboard_focus_item->accessibility_item_element;
+			}
+		}
+	} else {
+		if (!main->lines.is_empty()) {
+			return main->lines[0].accessibility_text_element;
+		}
+	}
+	return get_accessibility_element();
+}
+#endif // ACCESSKIT_ENABLED
+
 void RichTextLabel::_invalidate_accessibility() {
+#ifdef ACCESSKIT_ENABLED
 	if (accessibility_scroll_element.is_null()) {
 		return;
 	}
@@ -2344,23 +2364,7 @@ void RichTextLabel::_invalidate_accessibility() {
 		it->accessibility_item_element = RID();
 		it = _get_next_item(it, true);
 	}
-}
-
-RID RichTextLabel::get_focused_accessibility_element() const {
-	if (keyboard_focus_frame && keyboard_focus_item) {
-		if (keyboard_focus_on_text) {
-			return keyboard_focus_frame->lines[keyboard_focus_line].accessibility_text_element;
-		} else {
-			if (keyboard_focus_item->accessibility_item_element.is_valid()) {
-				return keyboard_focus_item->accessibility_item_element;
-			}
-		}
-	} else {
-		if (!main->lines.is_empty()) {
-			return main->lines[0].accessibility_text_element;
-		}
-	}
-	return get_accessibility_element();
+#endif // ACCESSKIT_ENABLED
 }
 
 void RichTextLabel::_prepare_scroll_anchor() {
@@ -2370,6 +2374,7 @@ void RichTextLabel::_prepare_scroll_anchor() {
 
 void RichTextLabel::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_INVALIDATE: {
 			accessibility_scroll_element = RID();
 			Item *it = main;
@@ -2464,6 +2469,7 @@ void RichTextLabel::_notification(int p_what) {
 				from_line++;
 			}
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_MOUSE_EXIT: {
 			if (meta_hovering) {
@@ -2525,6 +2531,7 @@ void RichTextLabel::_notification(int p_what) {
 		case NOTIFICATION_EXIT_TREE: {
 			_stop_thread();
 
+#ifdef ACCESSKIT_ENABLED
 			accessibility_scroll_element = RID();
 			Item *it = main;
 			while (it) {
@@ -2537,6 +2544,7 @@ void RichTextLabel::_notification(int p_what) {
 				}
 				it = _get_next_item(it, true);
 			}
+#endif // ACCESSKIT_ENABLED
 		} break;
 
 		case NOTIFICATION_LAYOUT_DIRECTION_CHANGED:
@@ -2660,6 +2668,7 @@ void RichTextLabel::_notification(int p_what) {
 				scroll_visible = follow_vc_pos > 0;
 				vscroll->set_visible(follow_vc_pos > 0);
 			}
+#ifdef ACCESSKIT_ENABLED
 			if (has_focus() && get_tree()->is_accessibility_enabled()) {
 				RID ae;
 				if (keyboard_focus_frame && keyboard_focus_item) {
@@ -2679,6 +2688,7 @@ void RichTextLabel::_notification(int p_what) {
 					draw_style_box(theme_cache.focus_style, ac_element_bounds_cache[ae]);
 				}
 			}
+#endif // ACCESSKIT_ENABLED
 		} break;
 
 		case NOTIFICATION_INTERNAL_PROCESS: {

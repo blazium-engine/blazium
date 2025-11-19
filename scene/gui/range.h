@@ -66,13 +66,17 @@ protected:
 	double _calc_value(double p_val, double p_step) const;
 	virtual void _value_changed(double p_value);
 	void _notify_shared_value_changed() { shared->emit_value_changed(); }
+#ifdef ACCESSKIT_ENABLED
 	void _notification(int p_what);
+#endif // ACCESSKIT_ENABLED
 
 	static void _bind_methods();
 
+#ifdef ACCESSKIT_ENABLED
 	void _accessibility_action_inc(const Variant &p_data);
 	void _accessibility_action_dec(const Variant &p_data);
 	void _accessibility_action_set_value(const Variant &p_data);
+#endif // ACCESSKIT_ENABLED
 
 	bool _rounded_values = false;
 

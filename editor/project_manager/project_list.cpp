@@ -100,6 +100,7 @@ void ProjectListItemControl::_notification(int p_what) {
 			queue_accessibility_update();
 		} break;
 
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -120,6 +121,7 @@ void ProjectListItemControl::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_list_item_level(ae, 0);
 			DisplayServer::get_singleton()->accessibility_update_set_list_item_selected(ae, is_selected);
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_FOCUS_ENTER: {
 			ProjectList *pl = get_list();
@@ -505,6 +507,7 @@ void ProjectList::_notification(int p_what) {
 			}
 		} break;
 
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
@@ -512,7 +515,8 @@ void ProjectList::_notification(int p_what) {
 			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_LIST_BOX);
 			DisplayServer::get_singleton()->accessibility_update_set_list_item_count(ae, _projects.size());
 			DisplayServer::get_singleton()->accessibility_update_set_flag(ae, DisplayServer::AccessibilityFlags::FLAG_MULTISELECTABLE, false);
-		}
+		} break;
+#endif // ACCESSKIT_ENABLED
 	}
 }
 

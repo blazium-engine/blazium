@@ -187,6 +187,7 @@ protected:
 	bool _property_get_revert(const StringName &p_name, Variant &r_property) const { return property_helper.property_get_revert(p_name, r_property); }
 	static void _bind_methods();
 
+#ifdef ACCESSKIT_ENABLED
 	void _accessibility_action_scroll_set(const Variant &p_data);
 	void _accessibility_action_scroll_up(const Variant &p_data);
 	void _accessibility_action_scroll_down(const Variant &p_data);
@@ -195,9 +196,12 @@ protected:
 	void _accessibility_action_scroll_into_view(const Variant &p_data, int p_index);
 	void _accessibility_action_focus(const Variant &p_data, int p_index);
 	void _accessibility_action_blur(const Variant &p_data, int p_index);
+#endif // ACCESSKIT_ENABLED
 
 public:
+#ifdef ACCESSKIT_ENABLED
 	virtual RID get_focused_accessibility_element() const override;
+#endif // ACCESSKIT_ENABLED
 
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
 

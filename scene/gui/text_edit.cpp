@@ -231,6 +231,7 @@ _FORCE_INLINE_ const String &TextEdit::Text::get_text_with_ime(int p_line) const
 	}
 }
 
+#ifdef ACCESSKIT_ENABLED
 const Vector<RID> TextEdit::Text::get_accessibility_elements(int p_line) {
 	ERR_FAIL_INDEX_V(p_line, text.size(), Vector<RID>());
 
@@ -248,6 +249,7 @@ void TextEdit::Text::update_accessibility(int p_line, RID p_root) {
 		}
 	}
 }
+#endif // ACCESSKIT_ENABLED
 
 inline bool is_inline_info_valid(const Variant &p_info) {
 	if (p_info.get_type() != Variant::DICTIONARY) {
@@ -263,6 +265,7 @@ inline bool is_inline_info_valid(const Variant &p_info) {
 void TextEdit::Text::invalidate_cache(int p_line, bool p_text_changed) {
 	ERR_FAIL_INDEX(p_line, text.size());
 
+#ifdef ACCESSKIT_ENABLED
 	Line &l = text.write[p_line];
 	for (const RID rid : l.accessibility_text_root_element) {
 		if (rid.is_valid()) {
@@ -270,6 +273,7 @@ void TextEdit::Text::invalidate_cache(int p_line, bool p_text_changed) {
 		}
 	}
 	l.accessibility_text_root_element.clear();
+#endif // ACCESSKIT_ENABLED
 
 	if (font.is_null()) {
 		return; // Not in tree?
@@ -642,6 +646,7 @@ String TextEdit::Text::get_enabled_word_separators() const {
 ///                            TEXT EDIT                                    ///
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef ACCESSKIT_ENABLED
 void TextEdit::_accessibility_action_set_selection(const Variant &p_data) {
 	Dictionary new_selection = p_data;
 	RID sel_start = new_selection["start_element"];
@@ -728,6 +733,7 @@ void TextEdit::_accessibility_action_scroll_into_view(const Variant &p_data, int
 		_scroll_down(delta, false);
 	}
 }
+#endif // ACCESSKIT_ENABLED
 
 Ref<StyleBox> TextEdit::_get_current_stylebox() const {
 	return editable ? theme_cache.style_normal : theme_cache.style_readonly;
@@ -736,6 +742,7 @@ Ref<StyleBox> TextEdit::_get_current_stylebox() const {
 void TextEdit::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_EXIT_TREE:
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_INVALIDATE: {
 			text.clear_accessibility();
 			accessibility_text_root_element_nl = RID();
@@ -830,6 +837,7 @@ void TextEdit::_notification(int p_what) {
 				}
 			}
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_POSTINITIALIZE: {
 			_update_caches();

@@ -229,12 +229,14 @@ void EventListenerLineEdit::grab_focus() {
 
 void EventListenerLineEdit::_notification(int p_what) {
 	switch (p_what) {
+#ifdef ACCESSKIT_ENABLED
 		case NOTIFICATION_ACCESSIBILITY_UPDATE: {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
 
 			DisplayServer::get_singleton()->accessibility_update_set_extra_info(ae, vformat(TTR("Listening for Input. Hold %s to release focus."), InputMap::get_singleton()->get_action_description("ui_cancel")));
 		} break;
+#endif // ACCESSKIT_ENABLED
 
 		case NOTIFICATION_THEME_CHANGED: {
 			set_right_icon(get_editor_theme_icon(SNAME("Keyboard")));
