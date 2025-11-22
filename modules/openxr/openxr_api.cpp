@@ -2072,7 +2072,7 @@ bool OpenXRAPI::poll_events() {
 				}
 
 				if (xr_interface) {
-					xr_interface->on_reference_space_change_pending();
+					xr_interface->on_reference_space_change_pending(event->referenceSpaceType);
 				}
 			} break;
 			case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED: {
