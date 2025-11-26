@@ -1010,7 +1010,7 @@ static void _find_annotation_arguments(const GDScriptParser::AnnotationNode *p_a
 			if (warning_code >= GDScriptWarning::FIRST_DEPRECATED_WARNING) {
 				break; // Don't suggest deprecated warnings as they are never produced.
 			}
-#endif
+#endif // DISABLE_DEPRECATED
 			ScriptLanguage::CodeCompletionOption warning(GDScriptWarning::get_name_from_code((GDScriptWarning::Code)warning_code).to_lower(), ScriptLanguage::CODE_COMPLETION_KIND_PLAIN_TEXT);
 			warning.insert_text = warning.display.quote(p_quote_style);
 			r_result.insert(warning.display, warning);
@@ -1027,15 +1027,13 @@ static void _find_annotation_arguments(const GDScriptParser::AnnotationNode *p_a
 	}
 }
 
-static void _find_built_in_variants(HashMap<String, ScriptLanguage::CodeCompletionOption> &r_result, bool exclude_nil = false) {
+static void _find_built_in_variants(HashMap<String, ScriptLanguage::CodeCompletionOption> &r_result) {
 	for (int i = 0; i < Variant::VARIANT_MAX; i++) {
-		if (!exclude_nil && Variant::Type(i) == Variant::Type::NIL) {
-			ScriptLanguage::CodeCompletionOption option("null", ScriptLanguage::CODE_COMPLETION_KIND_CLASS);
-			r_result.insert(option.display, option);
-		} else {
-			ScriptLanguage::CodeCompletionOption option(Variant::get_type_name(Variant::Type(i)), ScriptLanguage::CODE_COMPLETION_KIND_CLASS);
-			r_result.insert(option.display, option);
+		if (Variant::Type(i) == Variant::Type::NIL) {
+			continue;
 		}
+		ScriptLanguage::CodeCompletionOption option(Variant::get_type_name(Variant::Type(i)), ScriptLanguage::CODE_COMPLETION_KIND_CLASS);
+		r_result.insert(option.display, option);
 	}
 }
 
@@ -1050,7 +1048,13 @@ static void _find_global_enums(HashMap<String, ScriptLanguage::CodeCompletionOpt
 
 static void _list_available_types(bool p_inherit_only, GDScriptParser::CompletionContext &p_context, HashMap<String, ScriptLanguage::CodeCompletionOption> &r_result) {
 	// Built-in Variant Types
-	_find_built_in_variants(r_result, true);
+	_find_built_in_variants(r_result);
+
+	// Variant meta-type
+	if (!p_inherit_only) {
+		ScriptLanguage::CodeCompletionOption variant_option("Variant", ScriptLanguage::CODE_COMPLETION_KIND_CLASS);
+		r_result.insert(variant_option.display, variant_option);
+	}
 
 	LocalVector<StringName> native_types;
 	ClassDB::get_class_list(native_types);
@@ -1290,6 +1294,9 @@ static void _find_identifiers_in_base(const GDScriptCompletionIdentifier &p_base
 							List<MethodInfo> signals;
 							scr->get_script_signal_list(&signals);
 							for (const MethodInfo &E : signals) {
+								if (E.name.begins_with("_")) {
+									continue;
+								}
 								int location = p_recursion_depth + _get_signal_location(scr, E.name);
 								ScriptLanguage::CodeCompletionOption option(E.name, ScriptLanguage::CODE_COMPLETION_KIND_SIGNAL, location);
 								r_result.insert(option.display, option);
@@ -1383,6 +1390,9 @@ static void _find_identifiers_in_base(const GDScriptCompletionIdentifier &p_base
 						List<MethodInfo> signals;
 						ClassDB::get_signal_list(type, &signals);
 						for (const MethodInfo &E : signals) {
+							if (E.name.begins_with("_")) {
+								continue;
+							}
 							int location = p_recursion_depth + _get_signal_location(type, StringName(E.name));
 							ScriptLanguage::CodeCompletionOption option(E.name, ScriptLanguage::CODE_COMPLETION_KIND_SIGNAL, location);
 							r_result.insert(option.display, option);

@@ -100,7 +100,7 @@ bool EditorSettings::_set_only(const StringName &p_name, const Variant &p_value)
 			Ref<Shortcut> sc;
 			sc.instantiate();
 			sc->set_events(shortcut_events);
-			add_shortcut(shortcut_name, sc);
+			_add_shortcut_default(shortcut_name, sc);
 		}
 
 		return false;
@@ -649,6 +649,7 @@ void EditorSettings::_load_defaults(Ref<ConfigFile> p_extra_config) {
 	// On save
 	_initial_set("filesystem/on_save/compress_binary_resources", true);
 	_initial_set("filesystem/on_save/safe_save_on_backup_then_rename", true);
+	_initial_set("filesystem/on_save/warn_on_saving_large_text_resources", true);
 
 	// EditorFileServer
 	_initial_set("filesystem/file_server/port", 6010);

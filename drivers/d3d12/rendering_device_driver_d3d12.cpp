@@ -491,13 +491,15 @@ Error RenderingDeviceDriverD3D12::CPUDescriptorsHeapPool::release(const CPUDescr
 	} else if (next != free_blocks_by_offset.end()) {
 		// Connects to the next block.
 		remove_from_size_map(next->value);
+
+		FreeBlockInfo merged_block = next->value;
+		merged_block.global_offset -= p_result.count;
+		merged_block.size += p_result.count;
+
+		// Replace with the merged block.
 		free_blocks_by_offset.erase(next->value.global_offset);
-
-		next->value.global_offset -= p_result.count;
-		next->value.size += p_result.count;
-
-		DEV_ASSERT(!free_blocks_by_offset.has(next->value.global_offset));
-		new_block = free_blocks_by_offset.insert(next->value.global_offset, next->value);
+		DEV_ASSERT(!free_blocks_by_offset.has(merged_block.global_offset));
+		new_block = free_blocks_by_offset.insert(merged_block.global_offset, merged_block);
 	} else {
 		// Connects to no block.
 		new_block = free_blocks_by_offset.insert(global_offset, FreeBlockInfo{ p_result.heap, global_offset, p_result.base_offset, p_result.count });
@@ -1058,6 +1060,11 @@ RDD::BufferID RenderingDeviceDriverD3D12::buffer_create(uint64_t p_size, BitFiel
 			// Use default parameters.
 			if (p_usage.has_flag(BUFFER_USAGE_DYNAMIC_PERSISTENT_BIT)) {
 				allocation_desc.HeapType = dynamic_persistent_upload_heap;
+
+				// D3D12_HEAP_TYPE_UPLOAD mandates D3D12_RESOURCE_STATE_GENERIC_READ.
+				if (dynamic_persistent_upload_heap == D3D12_HEAP_TYPE_UPLOAD) {
+					initial_state = D3D12_RESOURCE_STATE_GENERIC_READ;
+				}
 
 				// We can't use STORAGE for write access, just for read.
 				resource_desc.Flags = resource_desc.Flags & ~D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
@@ -6204,7 +6211,7 @@ uint64_t RenderingDeviceDriverD3D12::api_trait_get(ApiTrait p_trait) {
 bool RenderingDeviceDriverD3D12::has_feature(Features p_feature) {
 	switch (p_feature) {
 		case SUPPORTS_HALF_FLOAT:
-			return shader_capabilities.native_16bit_ops && storage_buffer_capabilities.storage_buffer_16_bit_access_is_supported;
+			return shader_capabilities.native_16bit_ops;
 		case SUPPORTS_FRAGMENT_SHADER_WITH_ONLY_SIDE_EFFECTS:
 			return true;
 		case SUPPORTS_BUFFER_DEVICE_ADDRESS:
@@ -6434,7 +6441,6 @@ Error RenderingDeviceDriverD3D12::_check_capabilities() {
 	subgroup_capabilities.wave_ops_supported = false;
 	shader_capabilities.shader_model = (D3D_SHADER_MODEL)0;
 	shader_capabilities.native_16bit_ops = false;
-	storage_buffer_capabilities.storage_buffer_16_bit_access_is_supported = false;
 	format_capabilities.relaxed_casting_supported = false;
 
 	{
@@ -6475,9 +6481,8 @@ Error RenderingDeviceDriverD3D12::_check_capabilities() {
 
 	D3D12_FEATURE_DATA_D3D12_OPTIONS options = {};
 	res = device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &options, sizeof(options));
-	if (SUCCEEDED(res)) {
-		storage_buffer_capabilities.storage_buffer_16_bit_access_is_supported = options.TypedUAVLoadAdditionalFormats;
-	}
+	ERR_FAIL_COND_V_MSG(!SUCCEEDED(res), ERR_UNAVAILABLE, "CheckFeatureSupport failed with error " + vformat("0x%08ux", (uint64_t)res) + ".");
+	ERR_FAIL_COND_V_MSG(!options.TypedUAVLoadAdditionalFormats, ERR_UNAVAILABLE, "No support for Typed UAV Load Additional Formats has been found.");
 
 	D3D12_FEATURE_DATA_D3D12_OPTIONS1 options1 = {};
 	res = device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS1, &options1, sizeof(options1));

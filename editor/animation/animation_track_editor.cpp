@@ -2931,21 +2931,28 @@ String AnimationTrackEdit::get_tooltip(const Point2 &p_pos) const {
 					text += TTR("In-Handle:") + " " + String(ih) + "\n";
 					Vector2 oh = animation->bezier_track_get_key_out_handle(track, key_idx);
 					text += TTR("Out-Handle:") + " " + String(oh) + "\n";
+
+					String handle_mode;
 					int hm = animation->bezier_track_get_key_handle_mode(track, key_idx);
 					switch (hm) {
 						case Animation::HANDLE_MODE_FREE: {
-							text += TTR("Handle mode: Free\n");
+							handle_mode = TTR("Free", "Bezier Handle Mode");
 						} break;
 						case Animation::HANDLE_MODE_LINEAR: {
-							text += TTR("Handle mode: Linear\n");
+							handle_mode = TTR("Linear", "Bezier Handle Mode");
 						} break;
 						case Animation::HANDLE_MODE_BALANCED: {
-							text += TTR("Handle mode: Balanced\n");
+							handle_mode = TTR("Balanced", "Bezier Handle Mode");
 						} break;
 						case Animation::HANDLE_MODE_MIRRORED: {
-							text += TTR("Handle mode: Mirrored\n");
+							handle_mode = TTR("Mirrored", "Bezier Handle Mode");
+						} break;
+						default: {
+							// Unknown modes may occur when editing a file from a newer version of Godot.
+							handle_mode = itos(hm);
 						} break;
 					}
+					text += vformat(TTR("Handle mode: %s\n"), handle_mode);
 				} break;
 				case Animation::TYPE_AUDIO: {
 					String stream_name = "null";
@@ -3197,11 +3204,14 @@ void AnimationTrackEdit::gui_input(const Ref<InputEvent> &p_event) {
 					menu->add_icon_item(get_editor_theme_icon(SNAME("ActionPaste")), TTR("Paste Key(s)"), MENU_KEY_PASTE);
 				}
 				if (selected || editor->is_selection_active()) {
-					AnimationPlayer *player = AnimationPlayerEditor::get_singleton()->get_player();
-					if ((!player->has_animation(SceneStringName(RESET)) || animation != player->get_animation(SceneStringName(RESET))) && editor->can_add_reset_key()) {
-						menu->add_icon_item(get_editor_theme_icon(SNAME("Reload")), TTR("Add RESET Value(s)"), MENU_KEY_ADD_RESET);
+					AnimationPlayerEditor *ape = AnimationPlayerEditor::get_singleton();
+					if (ape) {
+						AnimationPlayer *ap = ape->get_player();
+						if (ap && editor->can_add_reset_key() && animation != ap->get_animation(SceneStringName(RESET))) {
+							menu->add_separator();
+							menu->add_icon_item(get_editor_theme_icon(SNAME("MoveUp")), TTR("Send Key(s) to RESET"), MENU_KEY_ADD_RESET);
+						}
 					}
-
 					menu->add_separator();
 					menu->add_icon_item(get_editor_theme_icon(SNAME("Remove")), TTR("Delete Key(s)"), MENU_KEY_DELETE);
 				}
@@ -3610,11 +3620,9 @@ void AnimationTrackEdit::_menu_selected(int p_index) {
 		} break;
 		case MENU_KEY_ADD_RESET: {
 			emit_signal(SNAME("create_reset_request"));
-
 		} break;
 		case MENU_KEY_DELETE: {
 			emit_signal(SNAME("delete_request"));
-
 		} break;
 		case MENU_KEY_LOOKUP: {
 			_lookup_key(lookup_key_idx);
@@ -4233,6 +4241,10 @@ static bool track_type_is_resettable(Animation::TrackType p_type) {
 	}
 }
 
+bool AnimationTrackEditor::is_read_only() const {
+	return read_only;
+}
+
 void AnimationTrackEditor::make_insert_queue() {
 	insert_data.clear();
 	insert_queue = true;
@@ -4241,7 +4253,7 @@ void AnimationTrackEditor::make_insert_queue() {
 void AnimationTrackEditor::commit_insert_queue() {
 	bool reset_allowed = true;
 	AnimationPlayer *player = AnimationPlayerEditor::get_singleton()->get_player();
-	if (player->has_animation(SceneStringName(RESET)) && player->get_animation(SceneStringName(RESET)) == animation) {
+	if (is_global_library_read_only() || (player->has_animation(SceneStringName(RESET)) && player->get_animation(SceneStringName(RESET)) == animation)) {
 		// Avoid messing with the reset animation itself.
 		reset_allowed = false;
 	} else {
@@ -4323,6 +4335,8 @@ void AnimationTrackEditor::commit_insert_queue() {
 }
 
 void AnimationTrackEditor::_query_insert(const InsertData &p_id) {
+	ERR_FAIL_COND_EDMSG(read_only, "Animation is read-only."); // Should have been prevented by dialog, but for safety.
+
 	if (!insert_queue) {
 		insert_data.clear();
 	}
@@ -4369,6 +4383,11 @@ void AnimationTrackEditor::_insert_track(bool p_reset_wanted, bool p_create_bezi
 }
 
 void AnimationTrackEditor::insert_transform_key(Node3D *p_node, const String &p_sub, const Animation::TrackType p_type, const Variant &p_value) {
+	if (read_only) {
+		popup_read_only_dialog();
+		return;
+	}
+
 	ERR_FAIL_NULL(root);
 	ERR_FAIL_COND_MSG(
 			(p_type != Animation::TYPE_POSITION_3D && p_type != Animation::TYPE_ROTATION_3D && p_type != Animation::TYPE_SCALE_3D),
@@ -4434,6 +4453,11 @@ bool AnimationTrackEditor::has_track(Node3D *p_node, const String &p_sub, const 
 }
 
 void AnimationTrackEditor::_insert_animation_key(NodePath p_path, const Variant &p_value) {
+	if (read_only) {
+		popup_read_only_dialog();
+		return;
+	}
+
 	String path = String(p_path);
 
 	// Animation property is a special case, always creates an animation track.
@@ -4468,6 +4492,11 @@ void AnimationTrackEditor::_insert_animation_key(NodePath p_path, const Variant 
 }
 
 void AnimationTrackEditor::insert_node_value_key(Node *p_node, const String &p_property, bool p_only_if_exists, bool p_advance) {
+	if (read_only) {
+		popup_read_only_dialog();
+		return;
+	}
+
 	ERR_FAIL_NULL(root);
 
 	// Let's build a node path.
@@ -4582,6 +4611,11 @@ float AnimationTrackEditor::get_marker_moving_selection_offset() const {
 }
 
 void AnimationTrackEditor::insert_value_key(const String &p_property, bool p_advance) {
+	if (read_only) {
+		popup_read_only_dialog();
+		return;
+	}
+
 	EditorSelectionHistory *history = EditorNode::get_singleton()->get_editor_selection_history();
 
 	ERR_FAIL_NULL(root);
@@ -4609,6 +4643,29 @@ void AnimationTrackEditor::insert_value_key(const String &p_property, bool p_adv
 		insert_node_value_key(node, p_property, false, p_advance);
 		commit_insert_queue();
 	}
+}
+
+bool AnimationTrackEditor::is_global_library_read_only() const {
+	Ref<AnimationLibrary> al;
+	AnimationMixer *mixer = AnimationPlayerEditor::get_singleton()->fetch_mixer_for_library();
+	if (mixer) {
+		if (!mixer->has_animation_library("")) {
+			return false;
+		} else {
+			al = mixer->get_animation_library("");
+		}
+	}
+	if (al.is_valid()) {
+		String base = al->get_path();
+		int srpos = base.find("::");
+		if (srpos != -1) {
+			base = base.substr(0, srpos);
+		}
+		if (FileAccess::exists(base + ".import")) {
+			return true;
+		}
+	}
+	return false;
 }
 
 Ref<Animation> AnimationTrackEditor::_create_and_get_reset_animation() {
@@ -4957,6 +5014,9 @@ bool AnimationTrackEditor::is_bezier_editor_active() const {
 }
 
 bool AnimationTrackEditor::can_add_reset_key() const {
+	if (is_global_library_read_only()) {
+		return false;
+	}
 	for (const KeyValue<SelectedKey, KeyInfo> &E : selection) {
 		const Animation::TrackType track_type = animation->track_get_type(E.key.track);
 		if (track_type != Animation::TYPE_ANIMATION && track_type != Animation::TYPE_AUDIO && track_type != Animation::TYPE_METHOD) {
@@ -5287,6 +5347,11 @@ void AnimationTrackEditor::_update_step_spinbox() {
 	_update_snap_unit();
 }
 
+void AnimationTrackEditor::_store_snap_states() {
+	EditorSettings::get_singleton()->set_project_metadata("animation_track_editor", "snap_timeline", snap_timeline->is_pressed());
+	EditorSettings::get_singleton()->set_project_metadata("animation_track_editor", "snap_keys", snap_keys->is_pressed());
+}
+
 void AnimationTrackEditor::_update_fps_compat_mode(bool p_enabled) {
 	_update_snap_unit();
 }
@@ -5372,6 +5437,7 @@ void AnimationTrackEditor::_notification(int p_what) {
 			dummy_player_warning->set_button_icon(get_editor_theme_icon(SNAME("NodeWarning")));
 			inactive_player_warning->set_button_icon(get_editor_theme_icon(SNAME("NodeWarning")));
 			main_panel->add_theme_style_override(SceneStringName(panel), get_theme_stylebox(SceneStringName(panel), SNAME("Tree")));
+			edit->get_popup()->set_item_icon(edit->get_popup()->get_item_index(EDIT_ADD_RESET_KEY), get_editor_theme_icon(SNAME("MoveUp")));
 			edit->get_popup()->set_item_icon(edit->get_popup()->get_item_index(EDIT_APPLY_RESET), get_editor_theme_icon(SNAME("Reload")));
 			auto_fit->set_button_icon(get_editor_theme_icon(SNAME("AnimationAutoFit")));
 			auto_fit_bezier->set_button_icon(get_editor_theme_icon(SNAME("AnimationAutoFitBezier")));
@@ -5383,6 +5449,11 @@ void AnimationTrackEditor::_notification(int p_what) {
 			track_vbox->add_theme_constant_override("separation", track_separation);
 
 			function_name_toggler->add_theme_color_override("icon_pressed_color", get_theme_color("icon_disabled_color", EditorStringName(Editor)));
+
+			bezier_key_mode->set_item_icon(bezier_key_mode->get_item_index(Animation::HANDLE_MODE_FREE), get_editor_theme_icon(SNAME("BezierHandlesFree")));
+			bezier_key_mode->set_item_icon(bezier_key_mode->get_item_index(Animation::HANDLE_MODE_LINEAR), get_editor_theme_icon(SNAME("BezierHandlesLinear")));
+			bezier_key_mode->set_item_icon(bezier_key_mode->get_item_index(Animation::HANDLE_MODE_BALANCED), get_editor_theme_icon(SNAME("BezierHandlesBalanced")));
+			bezier_key_mode->set_item_icon(bezier_key_mode->get_item_index(Animation::HANDLE_MODE_MIRRORED), get_editor_theme_icon(SNAME("BezierHandlesMirror")));
 		} break;
 
 		case NOTIFICATION_READY: {
@@ -5396,6 +5467,14 @@ void AnimationTrackEditor::_notification(int p_what) {
 
 		case NOTIFICATION_VISIBILITY_CHANGED: {
 			update_keying();
+		} break;
+
+		case NOTIFICATION_TRANSLATION_CHANGED: {
+			bezier_key_mode->set_item_text(bezier_key_mode->get_item_index(Animation::HANDLE_MODE_FREE), TTR("Free", "Bezier Handle Mode"));
+			bezier_key_mode->set_item_text(bezier_key_mode->get_item_index(Animation::HANDLE_MODE_LINEAR), TTR("Linear", "Bezier Handle Mode"));
+			bezier_key_mode->set_item_text(bezier_key_mode->get_item_index(Animation::HANDLE_MODE_BALANCED), TTR("Balanced", "Bezier Handle Mode"));
+			bezier_key_mode->set_item_text(bezier_key_mode->get_item_index(Animation::HANDLE_MODE_MIRRORED), TTR("Mirrored", "Bezier Handle Mode"));
+			bezier_key_mode->set_tooltip_text(TTR("Bezier Default Mode") + "\n" + TTR("Set the default handle mode of new bezier keys."));
 		} break;
 	}
 }
@@ -5717,6 +5796,11 @@ int AnimationTrackEditor::_get_track_selected() {
 }
 
 void AnimationTrackEditor::_insert_key_from_track(float p_ofs, int p_track) {
+	if (read_only) {
+		popup_read_only_dialog();
+		return;
+	}
+
 	ERR_FAIL_INDEX(p_track, animation->get_track_count());
 
 	if (snap_keys->is_pressed() && step->get_value() != 0) {
@@ -6645,6 +6729,7 @@ bool AnimationTrackEditor::_is_track_compatible(int p_target_track_idx, Variant:
 
 void AnimationTrackEditor::_edit_menu_about_to_popup() {
 	AnimationPlayer *player = AnimationPlayerEditor::get_singleton()->get_player();
+	edit->get_popup()->set_item_disabled(edit->get_popup()->get_item_index(EDIT_ADD_RESET_KEY), !can_add_reset_key() || animation == player->get_animation(SceneStringName(RESET)));
 	edit->get_popup()->set_item_disabled(edit->get_popup()->get_item_index(EDIT_APPLY_RESET), !player->can_apply_reset());
 
 	bool has_length = false;
@@ -7810,6 +7895,10 @@ void AnimationTrackEditor::_pick_track_select_recursive(TreeItem *p_item, const 
 	}
 }
 
+void AnimationTrackEditor::popup_read_only_dialog() {
+	read_only_dialog->popup_centered(Size2(200, 100) * EDSCALE);
+}
+
 AnimationTrackEditor::AnimationTrackEditor() {
 	main_panel = memnew(PanelContainer);
 	main_panel->set_focus_mode(FOCUS_ALL); // Allow panel to have focus so that shortcuts work as expected.
@@ -7940,17 +8029,14 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	spacer->set_h_size_flags(SIZE_EXPAND_FILL);
 	bottom_hf->add_child(spacer);
 
-	Label *bezier_key_default_label = memnew(Label);
-	bezier_key_default_label->set_text(TTR("Bezier Default Mode:"));
-	bottom_hf->add_child(bezier_key_default_label);
-
 	bezier_key_mode = memnew(OptionButton);
-	bezier_key_mode->add_item(TTR("Free"));
-	bezier_key_mode->add_item(TTR("Linear"));
-	bezier_key_mode->add_item(TTR("Balanced"));
-	bezier_key_mode->add_item(TTR("Mirrored"));
-	bezier_key_mode->set_tooltip_text(TTR("Set the default behavior of new bezier keys."));
-	bezier_key_mode->select(2);
+	bezier_key_mode->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
+	bezier_key_mode->add_item(String(), Animation::HANDLE_MODE_FREE);
+	bezier_key_mode->add_item(String(), Animation::HANDLE_MODE_LINEAR);
+	bezier_key_mode->add_item(String(), Animation::HANDLE_MODE_BALANCED);
+	bezier_key_mode->add_item(String(), Animation::HANDLE_MODE_MIRRORED);
+	bezier_key_mode->select(Animation::HANDLE_MODE_BALANCED);
+	bezier_key_mode->set_accessibility_name(TTRC("Bezier Default Mode"));
 
 	bottom_hf->add_child(bezier_key_mode);
 	bottom_hf->add_child(memnew(VSeparator));
@@ -8010,19 +8096,21 @@ AnimationTrackEditor::AnimationTrackEditor() {
 
 	snap_timeline = memnew(Button);
 	snap_timeline->set_flat(true);
-	bottom_hf->add_child(snap_timeline);
 	snap_timeline->set_disabled(true);
 	snap_timeline->set_toggle_mode(true);
-	snap_timeline->set_pressed(false);
 	snap_timeline->set_tooltip_text(TTR("Apply snapping to timeline cursor."));
+	snap_timeline->set_pressed(EditorSettings::get_singleton()->get_project_metadata("animation_track_editor", "snap_timeline", false));
+	bottom_hf->add_child(snap_timeline);
+	snap_timeline->connect(SceneStringName(toggled), callable_mp(this, &AnimationTrackEditor::_store_snap_states).unbind(1));
 
 	snap_keys = memnew(Button);
 	snap_keys->set_flat(true);
-	bottom_hf->add_child(snap_keys);
 	snap_keys->set_disabled(true);
 	snap_keys->set_toggle_mode(true);
-	snap_keys->set_pressed(true);
 	snap_keys->set_tooltip_text(TTR("Apply snapping to selected key(s)."));
+	snap_keys->set_pressed(EditorSettings::get_singleton()->get_project_metadata("animation_track_editor", "snap_keys", true));
+	bottom_hf->add_child(snap_keys);
+	snap_keys->connect(SceneStringName(toggled), callable_mp(this, &AnimationTrackEditor::_store_snap_states).unbind(1));
 
 	fps_compat = memnew(Button);
 	fps_compat->set_flat(true);
@@ -8115,7 +8203,7 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	edit->get_popup()->add_shortcut(ED_SHORTCUT("animation_editor/cut_selected_keys", TTRC("Cut Selected Keys"), KeyModifierMask::CMD_OR_CTRL | Key::X), EDIT_CUT_KEYS);
 	edit->get_popup()->add_shortcut(ED_SHORTCUT("animation_editor/copy_selected_keys", TTRC("Copy Selected Keys"), KeyModifierMask::CMD_OR_CTRL | Key::C), EDIT_COPY_KEYS);
 	edit->get_popup()->add_shortcut(ED_SHORTCUT("animation_editor/paste_keys", TTRC("Paste Keys"), KeyModifierMask::CMD_OR_CTRL | Key::V), EDIT_PASTE_KEYS);
-	edit->get_popup()->add_shortcut(ED_SHORTCUT("animation_editor/add_reset_value", TTRC("Add RESET Value(s)")));
+
 	edit->get_popup()->add_separator();
 	edit->get_popup()->add_shortcut(ED_SHORTCUT("animation_editor/move_first_selected_key_to_cursor", TTRC("Move First Selected Key to Cursor"), Key::BRACKETLEFT), EDIT_MOVE_FIRST_SELECTED_KEY_TO_CURSOR);
 	edit->get_popup()->add_shortcut(ED_SHORTCUT("animation_editor/move_last_selected_key_to_cursor", TTRC("Move Last Selected Key to Cursor"), Key::BRACKETRIGHT), EDIT_MOVE_LAST_SELECTED_KEY_TO_CURSOR);
@@ -8129,7 +8217,9 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	edit->get_popup()->add_shortcut(ED_SHORTCUT("animation_editor/go_to_next_keyframe", TTRC("Go to Next Keyframe"), KeyModifierMask::SHIFT | KeyModifierMask::ALT | Key::D), EDIT_GOTO_NEXT_KEYFRAME);
 	edit->get_popup()->add_shortcut(ED_SHORTCUT("animation_editor/go_to_previous_keyframe", TTRC("Go to Previous Keyframe"), KeyModifierMask::SHIFT | KeyModifierMask::ALT | Key::A), EDIT_GOTO_PREV_KEYFRAME);
 	edit->get_popup()->add_separator();
-	edit->get_popup()->add_shortcut(ED_SHORTCUT("animation_editor/apply_reset", TTRC("Apply Reset")), EDIT_APPLY_RESET);
+
+	edit->get_popup()->add_shortcut(ED_SHORTCUT("animation_editor/add_reset_value", TTRC("Add tracks to RESET")), EDIT_ADD_RESET_KEY);
+	edit->get_popup()->add_shortcut(ED_SHORTCUT("animation_editor/apply_reset", TTRC("Apply RESET")), EDIT_APPLY_RESET);
 	edit->get_popup()->add_separator();
 	edit->get_popup()->add_item(TTR("Bake Animation..."), EDIT_BAKE_ANIMATION);
 	edit->get_popup()->add_item(TTR("Optimize Animation (no undo)..."), EDIT_OPTIMIZE_ANIMATION);
@@ -8368,6 +8458,11 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	track_copy_select->set_hide_root(true);
 	track_copy_vbox->add_child(track_copy_select);
 	track_copy_dialog->connect(SceneStringName(confirmed), callable_mp(this, &AnimationTrackEditor::_edit_menu_pressed).bind(EDIT_COPY_TRACKS_CONFIRM));
+
+	read_only_dialog = memnew(AcceptDialog);
+	read_only_dialog->set_title(TTRC("Key Insertion Error"));
+	read_only_dialog->set_text(TTRC("Imported Animation cannot be edited!"));
+	add_child(read_only_dialog);
 }
 
 AnimationTrackEditor::~AnimationTrackEditor() {
