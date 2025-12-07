@@ -38,8 +38,8 @@ def parse_unicode_data() -> None:
             upper_to_lower.append((f"0x{code_value}", f"0x{lowercase_mapping}"))
 
 
-def make_cap_table(table_name: str, len_name: str, table: List[Tuple[str, str]]) -> str:
-    result: str = f"static const int {table_name}[{len_name}][2] = {{\n"
+def make_cap_table(table_name: str, table: List[Tuple[str, str]]) -> str:
+    result: str = f"static const HashMap<int, int> {table_name} = {{\n"
 
     for first, second in table:
         result += f"\t{{ {first}, {second} }},\n"
@@ -54,55 +54,26 @@ def generate_ucaps_fetch() -> None:
 
     source: str = generate_copyright_header("ucaps.h")
 
-    source += f"""
+    source += """
 #pragma once
 
 // This file was generated using the `misc/scripts/ucaps_fetch.py` script.
 
-#define LTU_LEN {len(lower_to_upper)}
-#define UTL_LEN {len(upper_to_lower)}\n\n"""
+#include "core/templates/hash_map.h"
 
-    source += make_cap_table("caps_table", "LTU_LEN", lower_to_upper)
-    source += make_cap_table("reverse_caps_table", "UTL_LEN", upper_to_lower)
+"""
 
-    source += """static int _find_upper(int ch) {
-\tint low = 0;
-\tint high = LTU_LEN - 1;
-\tint middle;
+    source += make_cap_table("caps_table", lower_to_upper)
+    source += make_cap_table("reverse_caps_table", upper_to_lower)
 
-\twhile (low <= high) {
-\t\tmiddle = (low + high) / 2;
-
-\t\tif (ch < caps_table[middle][0]) {
-\t\t\thigh = middle - 1; // Search low end of array.
-\t\t} else if (caps_table[middle][0] < ch) {
-\t\t\tlow = middle + 1; // Search high end of array.
-\t\t} else {
-\t\t\treturn caps_table[middle][1];
-\t\t}
-\t}
-
-\treturn ch;
+    source += """static int _find_upper(const int ch) {
+\tconst int *value = caps_table.getptr(ch);
+\treturn value != nullptr ? *value : ch;
 }
 
-static int _find_lower(int ch) {
-\tint low = 0;
-\tint high = UTL_LEN - 1;
-\tint middle;
-
-\twhile (low <= high) {
-\t\tmiddle = (low + high) / 2;
-
-\t\tif (ch < reverse_caps_table[middle][0]) {
-\t\t\thigh = middle - 1; // Search low end of array.
-\t\t} else if (reverse_caps_table[middle][0] < ch) {
-\t\t\tlow = middle + 1; // Search high end of array.
-\t\t} else {
-\t\t\treturn reverse_caps_table[middle][1];
-\t\t}
-\t}
-
-\treturn ch;
+static int _find_lower(const int ch) {
+\tconst int *value = reverse_caps_table.getptr(ch);
+\treturn value != nullptr ? *value : ch;
 }
 """
 

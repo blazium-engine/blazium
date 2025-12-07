@@ -32,10 +32,9 @@
 
 // This file was generated using the `misc/scripts/ucaps_fetch.py` script.
 
-#define LTU_LEN 1477
-#define UTL_LEN 1460
+#include "core/templates/hash_map.h"
 
-static const int caps_table[LTU_LEN][2] = {
+static const HashMap<int, int> caps_table = {
 	{ 0x0061, 0x0041 },
 	{ 0x0062, 0x0042 },
 	{ 0x0063, 0x0043 },
@@ -1515,7 +1514,7 @@ static const int caps_table[LTU_LEN][2] = {
 	{ 0x1E943, 0x1E921 },
 };
 
-static const int reverse_caps_table[UTL_LEN][2] = {
+static const HashMap<int, int> reverse_caps_table = {
 	{ 0x0041, 0x0061 },
 	{ 0x0042, 0x0062 },
 	{ 0x0043, 0x0063 },
@@ -2978,42 +2977,12 @@ static const int reverse_caps_table[UTL_LEN][2] = {
 	{ 0x1E921, 0x1E943 },
 };
 
-static int _find_upper(int ch) {
-	int low = 0;
-	int high = LTU_LEN - 1;
-	int middle;
-
-	while (low <= high) {
-		middle = (low + high) / 2;
-
-		if (ch < caps_table[middle][0]) {
-			high = middle - 1; // Search low end of array.
-		} else if (caps_table[middle][0] < ch) {
-			low = middle + 1; // Search high end of array.
-		} else {
-			return caps_table[middle][1];
-		}
-	}
-
-	return ch;
+static int _find_upper(const int ch) {
+	const int *value = caps_table.getptr(ch);
+	return value != nullptr ? *value : ch;
 }
 
-static int _find_lower(int ch) {
-	int low = 0;
-	int high = UTL_LEN - 1;
-	int middle;
-
-	while (low <= high) {
-		middle = (low + high) / 2;
-
-		if (ch < reverse_caps_table[middle][0]) {
-			high = middle - 1; // Search low end of array.
-		} else if (reverse_caps_table[middle][0] < ch) {
-			low = middle + 1; // Search high end of array.
-		} else {
-			return reverse_caps_table[middle][1];
-		}
-	}
-
-	return ch;
+static int _find_lower(const int ch) {
+	const int *value = reverse_caps_table.getptr(ch);
+	return value != nullptr ? *value : ch;
 }
