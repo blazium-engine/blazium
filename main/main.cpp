@@ -991,7 +991,7 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 
 #if !defined(OVERRIDE_PATH_ENABLED) && !defined(TOOLS_ENABLED)
 	String old_cwd = OS::get_singleton()->get_cwd();
-#ifdef MACOS_ENABLED
+#if defined(MACOS_ENABLED) || defined(APPLE_EMBEDDED_ENABLED)
 	String new_cwd = OS::get_singleton()->get_bundle_resource_dir();
 	if (new_cwd.is_empty() || !new_cwd.is_absolute_path()) {
 		new_cwd = OS::get_singleton()->get_executable_path().get_base_dir();
@@ -2186,7 +2186,8 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 	initialize_modules(MODULE_INITIALIZATION_LEVEL_CORE);
 	register_core_extensions(); // core extensions must be registered after globals setup and before display
 
-	ResourceUID::get_singleton()->load_from_cache(true); // load UUIDs from cache.
+	ResourceUID::get_singleton()->load_from_cache(true); // Load UUIDs from cache.
+	ProjectSettings::get_singleton()->fix_autoload_paths(); // Handles autoloads saved as UID.
 
 	if (ProjectSettings::get_singleton()->has_custom_feature("dedicated_server")) {
 		audio_driver = NULL_AUDIO_DRIVER;

@@ -4933,7 +4933,7 @@ FindBar::FindBar() {
 	hide_button->set_tooltip_text(TTR("Hide"));
 	hide_button->set_focus_mode(FOCUS_ACCESSIBILITY);
 	hide_button->connect(SceneStringName(pressed), callable_mp(this, &FindBar::_hide_bar));
-	hide_button->set_v_size_flags(SIZE_SHRINK_CENTER);
+	hide_button->set_v_size_flags(SIZE_EXPAND_FILL);
 	add_child(hide_button);
 }
 
@@ -4999,6 +4999,11 @@ bool FindBar::_search(bool p_search_previous) {
 		results_count = 0;
 		results_count_to_current = 0;
 	}
+
+	if (results_count == 1) {
+		rich_text_label->scroll_to_selection();
+	}
+
 	_update_matches_label();
 
 	return ret;

@@ -1793,7 +1793,7 @@ RDD::TextureID RenderingDeviceDriverD3D12::_texture_create_shared_from_slice(Tex
 					uav_desc.Texture2DArray.ArraySize = 1;
 					uav_desc.Texture2DArray.PlaneSlice = 0;
 				} else if ((srv_desc.ViewDimension == D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY || (srv_desc.ViewDimension == D3D12_SRV_DIMENSION_TEXTURE2DMS && p_layer))) {
-					srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+					srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY;
 					srv_desc.Texture2DMSArray.FirstArraySlice = p_layer;
 					srv_desc.Texture2DMSArray.ArraySize = 1;
 
@@ -4676,7 +4676,6 @@ void RenderingDeviceDriverD3D12::command_bind_push_constants(CommandBufferID p_c
 // ----- CACHE -----
 
 bool RenderingDeviceDriverD3D12::pipeline_cache_create(const Vector<uint8_t> &p_data) {
-	WARN_PRINT("PSO caching is not implemented yet in the Direct3D 12 driver.");
 	return false;
 }
 
@@ -4827,7 +4826,6 @@ void RenderingDeviceDriverD3D12::command_begin_render_pass(CommandBufferID p_cmd
 	command_next_render_subpass(p_cmd_buffer, p_cmd_buffer_type);
 
 	AttachmentClear *clears = ALLOCA_ARRAY(AttachmentClear, pass_info->attachments.size());
-	Rect2i *clear_rects = ALLOCA_ARRAY(Rect2i, pass_info->attachments.size());
 	uint32_t num_clears = 0;
 
 	for (uint32_t i = 0; i < pass_info->attachments.size(); i++) {
@@ -4853,13 +4851,12 @@ void RenderingDeviceDriverD3D12::command_begin_render_pass(CommandBufferID p_cmd
 		if (!clear.aspect.is_empty()) {
 			clear.value = p_attachment_clears[i];
 			clears[num_clears] = clear;
-			clear_rects[num_clears] = p_rect;
 			num_clears++;
 		}
 	}
 
 	if (num_clears) {
-		command_render_clear_attachments(p_cmd_buffer, VectorView(clears, num_clears), VectorView(clear_rects, num_clears));
+		command_render_clear_attachments(p_cmd_buffer, VectorView(clears, num_clears), VectorView(p_rect));
 	}
 }
 
@@ -6611,7 +6608,7 @@ Error RenderingDeviceDriverD3D12::_initialize_allocator() {
 		dynamic_persistent_upload_heap = D3D12_HEAP_TYPE_UPLOAD;
 		// Print it as a warning (instead of verbose) because in the rare chance this lesser-used code path
 		// causes bugs, we get an inkling of what's going on (i.e. in order to repro bugs locally).
-		WARN_PRINT("D3D12: Device does NOT support GPU UPLOAD heap. ReBAR must be enabled for this feature. Regular UPLOAD heaps will be used as fallback.");
+		print_verbose("D3D12: Device does NOT support GPU UPLOAD heap. ReBAR must be enabled for this feature. Regular UPLOAD heaps will be used as fallback.");
 	}
 
 	return OK;

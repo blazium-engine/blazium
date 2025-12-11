@@ -721,9 +721,9 @@ public:
 	Node *duplicate(int p_flags = DUPLICATE_GROUPS | DUPLICATE_SIGNALS | DUPLICATE_SCRIPTS) const;
 #ifdef TOOLS_ENABLED
 	Node *duplicate_from_editor(HashMap<const Node *, Node *> &r_duplimap) const;
-	Node *duplicate_from_editor(HashMap<const Node *, Node *> &r_duplimap, const HashMap<Ref<Resource>, Ref<Resource>> &p_resource_remap) const;
-	void remap_node_resources(Node *p_node, const HashMap<Ref<Resource>, Ref<Resource>> &p_resource_remap) const;
-	void remap_nested_resources(Ref<Resource> p_resource, const HashMap<Ref<Resource>, Ref<Resource>> &p_resource_remap) const;
+	Node *duplicate_from_editor(HashMap<const Node *, Node *> &r_duplimap, Node *p_scene_root, HashMap<Node *, HashMap<Ref<Resource>, Ref<Resource>>> &p_resource_remap) const;
+	void remap_node_resources(Node *p_node, Node *p_scene_root, HashMap<Node *, HashMap<Ref<Resource>, Ref<Resource>>> &p_resource_remap) const;
+	void remap_nested_resources(Ref<Resource> p_resource, HashMap<Ref<Resource>, Ref<Resource>> &p_resource_remap) const;
 #endif
 
 	// used by editors, to save what has changed only
@@ -919,12 +919,12 @@ Error Node::rpc_id(int p_peer_id, const StringName &p_method, VarArgs... p_args)
 }
 
 #ifdef DEBUG_ENABLED
-#define ERR_THREAD_GUARD ERR_FAIL_COND_MSG(!is_accessible_from_caller_thread(), vformat("Caller thread can't call this function in this node (%s). Use call_deferred() or call_deferred_thread_group() instead.", get_description()));
-#define ERR_THREAD_GUARD_V(m_ret) ERR_FAIL_COND_V_MSG(!is_accessible_from_caller_thread(), (m_ret), vformat("Caller thread can't call this function in this node (%s). Use call_deferred() or call_deferred_thread_group() instead.", get_description()));
-#define ERR_MAIN_THREAD_GUARD ERR_FAIL_COND_MSG(is_inside_tree() && !is_current_thread_safe_for_nodes(), vformat("This function in this node (%s) can only be accessed from the main thread. Use call_deferred() instead.", get_description()));
-#define ERR_MAIN_THREAD_GUARD_V(m_ret) ERR_FAIL_COND_V_MSG(is_inside_tree() && !is_current_thread_safe_for_nodes(), (m_ret), vformat("This function in this node (%s) can only be accessed from the main thread. Use call_deferred() instead.", get_description()));
-#define ERR_READ_THREAD_GUARD ERR_FAIL_COND_MSG(!is_readable_from_caller_thread(), vformat("This function in this node (%s) can only be accessed from either the main thread or a thread group. Use call_deferred() instead.", get_description()));
-#define ERR_READ_THREAD_GUARD_V(m_ret) ERR_FAIL_COND_V_MSG(!is_readable_from_caller_thread(), (m_ret), vformat("This function in this node (%s) can only be accessed from either the main thread or a thread group. Use call_deferred() instead.", get_description()));
+#define ERR_THREAD_GUARD ERR_FAIL_COND_MSG(!is_accessible_from_caller_thread(), vformat("%s: The caller thread can't call the function `%s()` on this node. Use `call_deferred()` or `call_deferred_thread_group()` instead.", get_description(), FUNCTION_STR));
+#define ERR_THREAD_GUARD_V(m_ret) ERR_FAIL_COND_V_MSG(!is_accessible_from_caller_thread(), (m_ret), vformat("%s: The caller thread can't call the function `%s()` on this node. Use `call_deferred()` or `call_deferred_thread_group()` instead.", get_description(), FUNCTION_STR));
+#define ERR_MAIN_THREAD_GUARD ERR_FAIL_COND_MSG(is_inside_tree() && !is_current_thread_safe_for_nodes(), vformat("%s: The function `%s()` on this node can only be accessed from the main thread. Use `call_deferred()` instead.", get_description(), FUNCTION_STR));
+#define ERR_MAIN_THREAD_GUARD_V(m_ret) ERR_FAIL_COND_V_MSG(is_inside_tree() && !is_current_thread_safe_for_nodes(), (m_ret), vformat("%s: The function `%s()` on this node can only be accessed from the main thread. Use `call_deferred()` instead.", get_description(), FUNCTION_STR));
+#define ERR_READ_THREAD_GUARD ERR_FAIL_COND_MSG(!is_readable_from_caller_thread(), vformat("%s: The function `%s()` on this node can only be accessed from either the main thread or a thread group. Use `call_deferred()` instead.", get_description(), FUNCTION_STR));
+#define ERR_READ_THREAD_GUARD_V(m_ret) ERR_FAIL_COND_V_MSG(!is_readable_from_caller_thread(), (m_ret), vformat("%s: The function `%s()` on this node can only be accessed from either the main thread or a thread group. Use `call_deferred()` instead.", get_description(), FUNCTION_STR));
 #else
 #define ERR_THREAD_GUARD
 #define ERR_THREAD_GUARD_V(m_ret)

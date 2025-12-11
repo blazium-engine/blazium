@@ -4031,6 +4031,7 @@ void RichTextLabel::add_text(const String &p_text) {
 				//append text condition!
 				ItemText *ti = static_cast<ItemText *>(current->subitems.back()->get());
 				ti->text += line;
+				current_char_ofs += line.length();
 				_invalidate_current_line(main);
 
 			} else {

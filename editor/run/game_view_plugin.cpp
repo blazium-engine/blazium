@@ -44,6 +44,7 @@
 #include "editor/gui/window_wrapper.h"
 #include "editor/run/editor_run_bar.h"
 #include "editor/run/embedded_process.h"
+#include "editor/run/run_instances_dialog.h"
 #include "editor/settings/editor_feature_profile.h"
 #include "editor/settings/editor_settings.h"
 #include "editor/themes/editor_scale.h"
@@ -357,7 +358,9 @@ void GameView::_instance_starting(int p_idx, List<String> &r_arguments) {
 
 		_show_update_window_wrapper();
 
-		embedded_process->grab_focus();
+		if (embedded_process->get_focus_mode_with_override() != FOCUS_NONE) {
+			embedded_process->grab_focus();
+		}
 	}
 
 	_update_arguments_for_instance(p_idx, r_arguments);
@@ -444,7 +447,10 @@ void GameView::_play_pressed() {
 			EditorNode::get_singleton()->get_editor_main_screen()->select(EditorMainScreen::EDITOR_GAME);
 			// Reset the normal size of the bottom panel when fully expanded.
 			EditorNode::get_singleton()->get_bottom_panel()->set_expanded(false);
-			embedded_process->grab_focus();
+
+			if (embedded_process->get_focus_mode_with_override() != FOCUS_NONE) {
+				embedded_process->grab_focus();
+			}
 		}
 		embedded_process->embed_process(current_process_id);
 		_update_ui();
@@ -672,6 +678,14 @@ GameView::EmbedAvailability GameView::_get_embed_available() {
 		return EMBED_NOT_AVAILABLE_PROJECT_DISPLAY_DRIVER;
 	}
 
+	if (RunInstancesDialog::get_singleton()) {
+		List<String> instance_args;
+		RunInstancesDialog::get_singleton()->get_argument_list_for_instance(0, instance_args);
+		if (instance_args.find("--headless")) {
+			return EMBED_NOT_AVAILABLE_HEADLESS;
+		}
+	}
+
 	EditorRun::WindowPlacement placement = EditorRun::get_window_placement();
 	if (placement.force_fullscreen) {
 		return EMBED_NOT_AVAILABLE_FULLSCREEN;
@@ -734,6 +748,9 @@ void GameView::_update_ui() {
 			break;
 		case EMBED_NOT_AVAILABLE_SINGLE_WINDOW_MODE:
 			state_label->set_text(TTRC("Game embedding not available in single window mode."));
+			break;
+		case EMBED_NOT_AVAILABLE_HEADLESS:
+			state_label->set_text(TTRC("Game embedding not available when the game starts in headless mode."));
 			break;
 	}
 
